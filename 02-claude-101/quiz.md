@@ -71,3 +71,23 @@
 ### Q18. What's a faster way to refine a message than sending a new follow-up?
 ---
 **A:** Click the pencil icon on your own message to edit and resubmit it in place.
+
+### Q19. How does Learning mode differ from Claude simply answering a question?
+---
+**A:** Learning mode guides the user's reasoning and helps them work toward the answer instead of only providing the answer directly.
+
+### Q20. What does scoped connector access mean in practice?
+---
+**A:** Claude can see only the data the user is already allowed to access in the connected service; individual permissions can be toggled and the connection can be revoked.
+
+### Q21. What becomes public when an Artifact is published?
+---
+**A:** Only the selected Artifact version is published; the surrounding chat remains private, and other people can remix the published Artifact.
+
+### Q22. What does a custom Skill contain, and what must be enabled for it to run?
+---
+**A:** A custom Skill packages instructions, scripts, and resources for a specialized workflow. Code execution and file creation must be enabled, and they run in a sandboxed environment.
+
+### Q23. Which Claude surface best fits each task: interactive brainstorming, a delegated multi-step deliverable, and work inside a software repository?
+---
+**A:** Chat fits interactive turn-by-turn work, Cowork fits delegated multi-step deliverables that may use files or connectors, and Code fits inspecting, editing, testing, and committing changes in a codebase.

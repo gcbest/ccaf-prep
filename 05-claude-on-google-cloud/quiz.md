@@ -39,3 +39,23 @@
 ### Q10. Across Vertex, Bedrock, and the direct Anthropic API, what stays constant and what changes?
 ---
 **A:** What changes: authentication method, client class, exact call shape, and model-ID format. What stays constant: prompt engineering technique, tool schema design, RAG strategy, evaluation methodology, and agentic orchestration patterns — the "thinking layer" is identical everywhere.
+
+### Q11. How does the Anthropic Vertex SDK obtain credentials, and what command establishes them?
+---
+**A:** It uses Google Cloud application-default credentials rather than an Anthropic API key; `gcloud auth application-default login` establishes the credentials that the SDK picks up automatically.
+
+### Q12. What does a Vertex response contain, and why should the application inspect its stop reason?
+---
+**A:** It contains the generated message, usage information, and a stop reason. The stop reason distinguishes a natural completion from reaching the token budget or a configured stop sequence, which can affect logging and retry behavior.
+
+### Q13. How can a Vertex application constrain a response to a small machine-readable format such as JSON or CSV?
+---
+**A:** Use an assistant prefill together with a stop sequence for the delimiter, or use a dedicated tool schema when the production output contract is strict; always parse and validate the result in application code.
+
+### Q14. What must a Vertex tool loop preserve on the follow-up request after Claude asks to call a tool?
+---
+**A:** Preserve the complete assistant content, execute and validate the requested tool, send a matching result with its tool-use ID, and retain the original tool definitions.
+
+### Q15. How can you tell whether a wrong RAG answer came from retrieval or generation?
+---
+**A:** Evaluate retrieval separately from generation: check whether the needed chunk was retrieved, whether Claude interpreted the supplied context correctly, and whether it synthesized the answer accurately.

@@ -289,3 +289,23 @@
 ### Q68. When should you reach for managed agents instead of writing your own agent loop?
 ---
 **A:** When the loop would run too long (minutes to hours), touch too many tools/files, or needs to survive interruptions (resumability).
+
+### Q69. What does the `system` parameter control in a Messages API request?
+---
+**A:** It sets Claude's persona and behavior, such as instructing it to act as a terse senior code reviewer.
+
+### Q70. Why might a production application route different task types to different Claude models?
+---
+**A:** Routing lets the application match each task to the cheapest model that meets its quality needs—for example, Haiku for classification, Sonnet for drafting, and Opus for complex reasoning—balancing quality, latency, and cost.
+
+### Q71. What changes are needed when adding another client-side tool to a hand-written agent loop?
+---
+**A:** Add the tool definition to the `tools` array and add a corresponding dispatch case in the tool-execution function; the rest of the loop can remain the same.
+
+### Q72. Why combine code graders with model graders in a prompt evaluation pipeline?
+---
+**A:** Code graders provide objective checks such as syntax or keyword validation, while model graders assess qualities such as completeness and instruction-following; combining them covers both format correctness and response quality.
+
+### Q73. How does reciprocal rank fusion help a hybrid search system?
+---
+**A:** It combines the rank positions from different retrieval methods, such as semantic search and BM25, rewarding results that appear near the top across multiple ranked lists.

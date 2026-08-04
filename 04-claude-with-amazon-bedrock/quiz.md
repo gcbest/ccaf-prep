@@ -35,3 +35,23 @@
 ### Q9. What does this course teach that ISN'T Bedrock-specific — i.e., what carries over unchanged from Building with the Claude API?
 ---
 **A:** Prompt engineering technique, tool schema design, RAG chunking/retrieval strategy, evaluation methodology, and agentic orchestration patterns (workflows vs. agents) — Bedrock only changes the auth/client/call layer, not how you design prompts, tools, or systems.
+
+### Q10. Why might a plain Bedrock model ID fail even when the model is available somewhere in AWS, and what solves the problem?
+---
+**A:** A plain model ID is region-locked, so it can fail when the configured region does not host that model. A cross-region inference profile routes the request to a supported region automatically.
+
+### Q11. How can you force Claude to return structured data through Bedrock's Converse API?
+---
+**A:** Provide a dedicated tool schema and select it with `toolChoice` set to that specific tool; the application should still parse and validate the returned data.
+
+### Q12. What must a Bedrock application preserve when continuing a tool-use conversation?
+---
+**A:** Preserve the complete assistant content blocks, including each `toolUse`, send matching `toolResult` blocks with the correct IDs, and keep the original tool definitions available on the follow-up request.
+
+### Q13. When is a batch-tool pattern appropriate, and when should it be avoided?
+---
+**A:** Use it for independent calls that can safely run concurrently to reduce latency. Avoid it when calls depend on one another or could duplicate unsafe side effects.
+
+### Q14. What safety responsibilities remain with the application when Claude runs through Bedrock?
+---
+**A:** The application still owns authentication and authorization, input and path validation, rate limits, retries, timeouts, audit logging, and human approval for consequential actions; Bedrock does not make side effects safe by itself.

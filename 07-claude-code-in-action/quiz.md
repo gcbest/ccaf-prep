@@ -217,3 +217,23 @@
 ### Q49. What's the only required field in a plugin manifest (`.claude-plugin/plugin.json`), and what does it do?
 ---
 **A:** `name` — it namespaces the plugin's skills as `company-name:skill-name`, preventing collisions with other plugins/skills.
+
+### Q50. What does `/loop` do, and how do you stop it?
+---
+**A:** It runs a prompt at an interval between turns, which is useful for polling external state; press Escape to stop the loop.
+
+### Q51. What does `.worktreeinclude` control?
+---
+**A:** It lists git-ignored files, such as local environment or configuration files, that should be copied into each new worktree.
+
+### Q52. Why should project-level hook scripts use `$CLAUDE_PROJECT_DIR` in their paths?
+---
+**A:** It makes the paths portable across clones and worktrees, while project-level hooks in `.claude/settings.json` can be shared with the team through version control.
+
+### Q53. What is the enforcement difference between `PreToolUse` and `PostToolUse` hooks?
+---
+**A:** `PreToolUse` runs before a tool call and can block it; `PostToolUse` runs after the tool has already run, so it is too late to prevent that call.
+
+### Q54. What do the main custom GitHub Action inputs `trigger_phrase`, `prompt`, and `claude_args` control?
+---
+**A:** `trigger_phrase` defines the phrase that starts the action, `prompt` supplies the task for Claude, and `claude_args` passes raw CLI arguments such as a turn limit.

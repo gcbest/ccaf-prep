@@ -35,3 +35,23 @@
 ### Q9. Which 4D competency does "showing an example of the format you want" most directly draw on, and why?
 ---
 **A:** Description — it's about communicating effectively with the AI and defining the desired output, of which examples are one technique.
+
+### Q10. What three awareness checks support good Delegation?
+---
+**A:** Problem Awareness (understand the goal, audience, success criteria, and constraints), Platform Awareness (understand the AI system's capabilities and limits), and Task Delegation (deliberately divide the work between human and AI).
+
+### Q11. What are the three dimensions of a good Description?
+---
+**A:** Product Description defines the desired deliverable, Process Description defines the method or steps, and Performance Description defines how the AI should collaborate and respond to feedback.
+
+### Q12. How should Discernment evaluate an AI output across the same three dimensions?
+---
+**A:** Check the product for accuracy, relevance, completeness, and audience fit; inspect the process for logical steps, visible assumptions, and appropriate evidence; and assess performance for adherence to the requested terminology, tone, boundaries, and feedback.
+
+### Q13. What is the Description–Discernment loop?
+---
+**A:** Define the desired product, process, and collaboration behavior, evaluate the result across those same dimensions, then refine the request and repeat until the output is fit for purpose.
+
+### Q14. Name the three forms of Diligence and the responsibility each emphasizes.
+---
+**A:** Creation Diligence concerns choosing systems, tools, data, and workflows responsibly; Transparency Diligence concerns disclosing AI's role when appropriate; and Deployment Diligence concerns verifying the result and personally owning what is shared or used.
