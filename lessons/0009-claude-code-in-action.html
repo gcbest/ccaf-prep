@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Claude Code in Action — The Keys to the Repo</title>
+  <style>
+    :root {
+      --ink: #242321;
+      --muted: #706b63;
+      --paper: #f7f3ec;
+      --paper-deep: #ece4d7;
+      --rust: #8f3f3f;
+      --rust-dark: #6a2c2c;
+      --sage: #dfe9df;
+      --blue: #dce8ee;
+      --line: #d6ccbd;
+      --white: #fffdfa;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.7 Georgia, 'Times New Roman', serif;
+    }
+    main { max-width: 780px; margin: 0 auto; padding: 44px 24px 80px; }
+    .masthead {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+      border-bottom: 1px solid var(--line); padding-bottom: 10px;
+      color: var(--muted); font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .13em; text-transform: uppercase;
+    }
+    h1 { max-width: 680px; margin: 28px 0 12px; font: 700 clamp(2.5rem, 8vw, 5.2rem)/.98 Georgia, serif; letter-spacing: -.04em; }
+    .dek { max-width: 670px; margin: 0 0 34px; color: var(--muted); font-size: 1.2rem; }
+    .progress { position: sticky; top: 0; z-index: 2; height: 4px; background: var(--paper-deep); }
+    .progress span { display: block; width: 0; height: 100%; background: var(--rust); transition: width .25s ease; }
+    .scene {
+      position: relative; margin: 34px 0 0; padding: 25px 28px 28px;
+      background: var(--white); border: 1px solid var(--line); border-radius: 3px;
+    }
+    .scene::before { content: ''; position: absolute; left: -1px; top: 0; bottom: 0; width: 4px; background: var(--rust); }
+    .opening { background: #fff8ed; }
+    .time { margin: 0 0 7px; color: var(--rust-dark); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    h2 { margin: 0 0 13px; font: 700 1.65rem/1.2 Georgia, serif; }
+    h3 { margin: 27px 0 7px; font: 700 1.1rem/1.3 Georgia, serif; }
+    p { max-width: 70ch; margin: 0 0 13px; }
+    ul, ol { max-width: 68ch; padding-left: 1.35em; }
+    li { margin: 5px 0; }
+    .voice { margin: 18px 0; padding-left: 19px; border-left: 2px solid var(--paper-deep); font-style: italic; }
+    .choice { margin: 20px 0 2px; color: var(--muted); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+    .choices { display: flex; flex-wrap: wrap; gap: 9px; margin: 10px 0 5px; }
+    button {
+      border: 1px solid var(--rust); border-radius: 3px; background: var(--white); color: var(--rust-dark);
+      padding: 9px 13px; font: 600 14px/1.2 system-ui, sans-serif; cursor: pointer;
+    }
+    button:hover, button:focus-visible { background: var(--rust); color: #fff; outline: none; }
+    button:focus-visible { box-shadow: 0 0 0 3px rgba(143, 63, 63, .22); }
+    .outcome { display: none; margin-top: 13px; padding: 14px 16px; border-left: 3px solid var(--sage); background: #f1f6ef; }
+    .outcome.visible { display: block; }
+    .outcome strong { color: var(--rust-dark); }
+    .lesson { margin: 25px 0 0; padding: 17px 18px; background: var(--paper-deep); }
+    .lesson p:last-child { margin-bottom: 0; }
+    .blue-note { margin: 18px 0; padding: 15px 17px; background: #f1f6f8; border-left: 3px solid #7b9cac; }
+    .blue-note p:last-child { margin-bottom: 0; }
+    .rule { margin: 38px 0; padding: 25px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); text-align: center; }
+    .rule strong { display: block; color: var(--rust-dark); font: 700 1.35rem/1.25 Georgia, serif; }
+    .prompt { margin: 15px 0; padding: 17px 18px; background: #fff4eb; border-left: 3px solid var(--rust); font-size: .98rem; }
+    .prompt strong { color: var(--rust-dark); }
+    .prompt code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em; }
+    .mini-table { width: 100%; margin: 17px 0; border-collapse: collapse; font-size: .95rem; }
+    .mini-table th, .mini-table td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    .mini-table th { background: var(--paper-deep); color: var(--rust-dark); font: 700 12px/1.25 system-ui, sans-serif; letter-spacing: .05em; text-transform: uppercase; }
+    .end { margin-top: 39px; padding: 27px 28px; background: var(--rust-dark); color: #fff8f1; }
+    .end h2 { color: #fff; }
+    .end p { color: #f6dfd1; }
+    .source, footer { color: var(--muted); font-size: .9rem; }
+    footer { margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--line); }
+    a { color: var(--rust-dark); }
+    code { background: var(--paper-deep); padding: .08em .28em; border-radius: 3px; }
+    pre { max-width: 70ch; margin: 15px 0; padding: 14px 16px; background: var(--paper-deep); border-left: 3px solid var(--rust); overflow-x: auto; font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    pre code { background: none; padding: 0; }
+    @media (max-width: 560px) {
+      main { padding-top: 28px; }
+      .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
+      .scene { padding: 21px 19px 23px; }
+      .choices { display: grid; grid-template-columns: 1fr; }
+      button { text-align: left; }
+      .mini-table { font-size: .88rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+  <main>
+    <div class="masthead"><span>CCA-F · Section 7</span><span>Northstar Dispatch · Thursday</span></div>
+    <h1>The keys to the repo</h1>
+    <p class="dek">You are the architect. Northstar’s engineering org is adopting Claude Code across a real payments codebase, and every hour someone asks for a little more autonomy than the last person. Your job is to decide how much to grant, where the rules live, and what must never be automatic.</p>
+
+    <section class="scene opening" id="scene0">
+      <p class="time">7:50 a.m. · Before anyone opens a terminal</p>
+      <h2>A coworker with hands</h2>
+      <p>Claude.ai is a consultant across the table. <strong>Claude Code</strong> is the engineer inside the workshop: it has direct access to your files, your terminal, and your entire codebase, and it edits and executes directly rather than making you copy-paste between a chat window and an editor.</p>
+      <p>The course’s definition of an <strong>AI agent</strong>: software that interacts with its environment and performs actions to complete a defined goal — an LLM operating in a real-time loop, potentially with access to tools, external services, or other agents.</p>
+      <h3>The agentic loop</h3>
+      <p>Prompt in → Claude gathers context and gets back text or a tool call from the model → it takes an action (edit a file, run a command) → it verifies the result against the original intent → if the goal is met it stops and waits for your next prompt; if not, it loops back and retries.</p>
+      <h3>Three things to hold in your head</h3>
+      <ul>
+        <li><strong>The context window</strong> is finite working memory. That is <em>why</em> Claude Code is agentic: it strategically hunts for the information it needs instead of loading the whole repository.</li>
+        <li><strong>Permissions</strong> exist. By default Claude asks before edits and commands.</li>
+        <li><strong>It can make mistakes.</strong> Stay in the loop early enough to catch them cheaply.</li>
+      </ul>
+      <h3>Setup, in four moves</h3>
+      <p>Install Node.js (check with <code>npm help</code>), install Claude Code with <code>npm install</code>, run <code>claude</code> in the terminal to log in to your Anthropic account, then point it at the project: ask it to read the README and follow the setup directions. Running <code>/init</code> makes Claude scan the codebase for architecture and coding style and write a <code>CLAUDE.md</code> that is automatically included as context in future requests.</p>
+      <p>The cast for today: <strong>Toby Vance</strong>, staff engineer on payments, who has already typed <code>--dangerously-skip-permissions</code> once this week. <strong>Rosa Ibarra</strong>, release manager, who owns CI and the merge queue and does not enjoy surprises. <strong>Kenji Abbott</strong>, platform engineer, who owns the shared <code>.claude</code> directory. And <strong>Lila Moreau</strong>, two weeks in, asking the questions everyone else stopped asking.</p>
+      <div class="lesson"><p><strong>First principle:</strong> giving an agent hands is a permissions decision before it is a productivity decision. The architect chooses the mode, the mechanism, and the evidence.</p></div>
+    </section>
+
+    <section class="scene" id="scene1">
+      <p class="time">8:15 a.m. · The one thing to take away</p>
+      <h2>Explore → Plan → Code → Commit</h2>
+      <p>Lila wants to know the “right” way to use it. There is one core recommended workflow, and it has four steps.</p>
+      <ul>
+        <li><strong>Explore.</strong> Let Claude investigate the codebase before it acts.</li>
+        <li><strong>Plan.</strong> This is the best place to course-correct, because it happens <em>before</em> any code is written. Reviewing and revising a plan is far cheaper than reviewing and undoing code that already exists. Actually read the plan — do not skim it.</li>
+        <li><strong>Code.</strong> Define explicit success criteria up front. Give Claude tools that let it verify its own work. Provide a reliable test suite to validate against continuously.</li>
+        <li><strong>Commit.</strong> Run a <strong>subagent code review before committing</strong> — a fresh, unbiased context, with none of the same-session bias that comes from having just written the code yourself.</li>
+      </ul>
+      <p>Two conveniences at the commit end: the <code>/commit-push-pr</code> skill handles commit, push, and PR in one step (and can post the PR link to Slack if an MCP server is configured in <code>CLAUDE.md</code>), and <code>claude --from-pr &lt;PR_NUMBER&gt;</code> resumes a session linked to a specific PR with full context, which is how you come back later to address review comments or a failing build.</p>
+      <p class="voice">“Map the trail, draw the blueprint, build the bridge, stamp the permit.”</p>
+    </section>
+
+    <section class="scene" id="scene2">
+      <p class="time">8:40 a.m. · The big one</p>
+      <h2>“Break the monolith into services.”</h2>
+      <p>Northstar’s billing monolith needs to become three services. Dozens of files, real decisions about service boundaries, and no single obviously-correct answer. Toby has already opened a session and started typing an instruction that is four paragraphs long.</p>
+      <p class="voice">“If I write a detailed enough prompt, it can just do it. Detail is the same as planning, right?”</p>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Choose an opening approach for the restructure">
+        <button type="button" onclick="choose('plan','plan', 7)">Start in Plan mode</button>
+        <button type="button" onclick="choose('plan','detail', 7)">Direct execution, very detailed prompt</button>
+        <button type="button" onclick="choose('plan','iterate', 7)">Accept edits and iterate live</button>
+        <button type="button" onclick="choose('plan','later', 7)">Start coding, switch to Plan if it gets messy</button>
+      </div>
+      <div class="outcome" id="plan-plan" aria-live="polite"><strong>Right.</strong> Plan mode is read-only: Claude researches and proposes without editing, then hands you a plan to review before a single line is written. Large-scale, multi-valid-approach, architectural work is exactly what it is for — and iterating on a plan is much faster than letting Claude run and cleaning up afterward.</div>
+      <div class="outcome" id="plan-detail" aria-live="polite"><strong>Wrong assumption.</strong> A detailed prompt assumes you already know the right structure. The whole point of this task is that the service boundaries are a discovery, not an input. Explore in Plan mode first.</div>
+      <div class="outcome" id="plan-iterate" aria-live="polite"><strong>Expensive.</strong> Accept edits lets Claude write files without asking; on a dozens-of-files restructure that means reviewing and undoing real code instead of revising a paragraph of plan. Plan mode is the cheap place to course-correct.</div>
+      <div class="outcome" id="plan-later" aria-live="polite"><strong>Backwards.</strong> You already know the complexity up front — that is the trigger for Plan mode, not a fallback for when things go wrong. Start in Plan mode.</div>
+      <div class="lesson"><p><strong>Match the entry mode to what you don’t know yet.</strong> A single-file bug fix with a clear stack trace deserves direct execution. An architectural restructure deserves Plan mode.</p></div>
+      <div class="blue-note"><p><strong>From the exam guide, not the course notes:</strong> the official study reference also names the <strong>interview pattern</strong> — having Claude ask you clarifying questions before implementing, to surface design considerations in a domain you don’t know well. Same instinct as Plan mode, applied to your own knowledge gaps.</p></div>
+    </section>
+
+    <section class="scene" id="scene3">
+      <p class="time">9:05 a.m. · The dial with six settings</p>
+      <h2>Permission modes</h2>
+      <p>Permission modes decide <em>once</em> what Claude can run without asking. Shift-Tab cycles the everyday ones (Manual, Accept edits, Plan, Auto), and the status bar shows which mode is currently active.</p>
+      <table class="mini-table"><thead><tr><th>Mode</th><th>What it actually does</th><th>When to use it</th></tr></thead><tbody>
+        <tr><td><strong>Manual</strong></td><td>Reads run without prompting; everything else asks first.</td><td>Unfamiliar or sensitive repos where you want every action in front of you.</td></tr>
+        <tr><td><strong>Accept edits</strong></td><td>Reads, file edits, and common filesystem bash commands run without asking; other commands still ask.</td><td>Iterating on code you intend to review after the fact.</td></tr>
+        <tr><td><strong>Plan</strong></td><td>Read-only. Researches and proposes without editing.</td><td>Exploration, architecture, anything where the approach is the question.</td></tr>
+        <tr><td><strong>Auto</strong></td><td>Accepts everything, but a separate classifier model reviews each action <em>before</em> it runs, checking intent.</td><td>Hands-off work you are not watching — paired with a Stop hook for correctness.</td></tr>
+        <tr><td><strong>Don’t ask</strong></td><td>Only pre-approved tools run; everything else is auto-denied with no prompt.</td><td>Unattended pipelines (CI, scheduled jobs) where a prompt no one will answer would hang the run.</td></tr>
+        <tr><td><strong>Bypass permissions</strong></td><td>Skips all checks. Equivalent to <code>--dangerously-skip-permissions</code>.</td><td>Only inside an isolated container or VM. Never as a default for a real repo.</td></tr>
+      </tbody></table>
+      <p>Toby wants to kick off an overnight refactor on his own laptop, unattended, and he wants no prompts at all.</p>
+      <p class="voice">“Nobody’s awake to click approve. Just turn the guards off.”</p>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Choose a permission mode for the overnight run">
+        <button type="button" onclick="choose('mode','bypass', 14)">Bypass permissions</button>
+        <button type="button" onclick="choose('mode','auto', 14)">Auto mode plus a Stop hook</button>
+        <button type="button" onclick="choose('mode','accept', 14)">Accept edits</button>
+        <button type="button" onclick="choose('mode','manual', 14)">Manual, and he can review in the morning</button>
+      </div>
+      <div class="outcome" id="mode-bypass" aria-live="polite"><strong>No.</strong> Bypass skips every check, and the course is explicit: only run it inside an isolated container or VM. Toby’s laptop, with credentials and a live checkout of the payments repo, is not that. Keep unattended runs in Auto mode — the classifier is still a safety net.</div>
+      <div class="outcome" id="mode-auto" aria-live="polite"><strong>That’s the pairing.</strong> Auto accepts everything, but a separate classifier reviews each action for intent before it runs. The classifier never judges correctness, so you add a Stop hook that runs the tests: the classifier watches what Claude <em>tries to do</em>, the hook confirms the code actually <em>works</em>.</div>
+      <div class="outcome" id="mode-accept" aria-live="polite"><strong>Half a solution.</strong> Accept edits still asks for commands outside the common filesystem set, so an overnight run stalls on the first prompt nobody is awake to answer — and it gives you no classifier and no correctness gate. Auto plus a Stop hook is the unattended shape.</div>
+      <div class="outcome" id="mode-manual" aria-live="polite"><strong>It won’t run.</strong> Manual asks for everything but reads, so an unattended session parks on the first approval and does nothing for eight hours. If you genuinely want hands-off, Auto plus a Stop hook is the answer.</div>
+      <div class="lesson"><p><strong>The modes are a risk spectrum:</strong> Manual → Accept edits → Plan → Auto → Don’t ask → Bypass. Don’t ask and Bypass are for deliberately isolated contexts, not defaults for sensitive repositories.</p></div>
+    </section>
+
+    <section class="scene" id="scene4">
+      <p class="time">9:30 a.m. · What the classifier actually guards</p>
+      <h2>Intent, not correctness</h2>
+      <p>Toby is unconvinced, so you spell out the boundary. Auto mode’s classifier is designed to block moves that <strong>escalate beyond what you asked for</strong>: production deploys and migrations, force pushes, piping downloaded code into a shell, sending sensitive data to external endpoints, destroying files outside the session.</p>
+      <p>It allows the everyday: local edits inside your project, installing dependencies from the lockfile, read-only requests, pushing to your own branch.</p>
+      <p>And it never judges correctness. Broken code is not <em>dangerous</em>, so broken code sails straight through.</p>
+      <p class="voice">Airport security asks whether the package is dangerous. It does not check whether the book inside is spelled correctly.</p>
+      <p>The course also warns that auto mode’s guardrails are still evolving, so the current block and allow lists live in the docs, not in your memory.</p>
+      <div class="lesson"><p><strong>Two different questions, two different mechanisms.</strong> “Is this action safe?” is the classifier’s job, before the fact. “Is this code right?” is a hook, a test suite, and a diff — after the fact.</p></div>
+    </section>
+
+    <div class="rule"><strong>Instructions steer behavior. Verification produces evidence. Permissions constrain capability.</strong><span>Three different jobs. Do not ask one to do another’s work.</span></div>
+
+    <section class="scene" id="scene5">
+      <p class="time">9:55 a.m. · The file everyone wants to edit</p>
+      <h2>CLAUDE.md is guidance, not configuration</h2>
+      <p>Kenji opens the project <code>CLAUDE.md</code>. It is 400 lines long and growing, because every time Claude did something someone disliked, they appended a paragraph.</p>
+      <p><strong>Every line competes with every other line for attention.</strong> The longer the file, the less reliably Claude follows any single rule. It is a stack of sticky notes, not a steel door.</p>
+      <p>Without one, Claude re-explores your codebase from scratch every session and makes assumptions. With one, its contents are read every session and appended to your prompt — so commit it to version control and let the whole team benefit.</p>
+      <h3>Four locations, all loaded together, stacking</h3>
+      <ol>
+        <li><strong>Managed policy</strong> — org-level, controlled by the platform team, cannot be excluded.</li>
+        <li><strong>User</strong> — your personal preferences, following you across all projects.</li>
+        <li><strong>Project</strong> — shared with the team, checked into the repo.</li>
+        <li><strong>Local</strong> — git-ignored, personal notes for this one repo (in-progress architectural decisions on your branch).</li>
+      </ol>
+      <p>A teammate missing instructions everyone else has is almost always a scope bug: the rule lives in somebody’s user-level file instead of the project file.</p>
+      <h3>Phrasing that actually gets followed</h3>
+      <pre><code># Northstar payments service
+
+## Commands
+- Test: npm run test -- --run
+- Type check: npm run typecheck
+
+## Conventions
+- Use named exports, not default exports.
+- Put new API routes in src/api/handlers, one per file.
+
+## Definition of done
+IMPORTANT: a change is not done until the test suite has been
+run and its result stated explicitly in the reply.
+
+@.claude/conventions/code-style.md</code></pre>
+      <p>Three rules are doing the work there. <strong>Be specific and checkable</strong> — “put new API routes in src/api/handlers, one per file,” not “follow best practices.” <strong>Name the replacement</strong> — “use named exports, not default exports,” not “don’t use default exports.” And <strong>emphasis is a budget</strong>: IMPORTANT and YOU MUST only raise priority relative to the quieter rules around them, so spend them on the two or three rules that hurt when broken. If everything shouts, nothing does.</p>
+      <p>That last line is an <strong>import</strong>. Imports split a big file into organized pieces — but Claude Code expands them inline at launch, so <strong>imports help organization, not context size</strong>. The moving truck still carries every page.</p>
+      <p>Keep the file under revision. When Claude does the wrong thing, treat it as a bug report against the file: tell Claude “add that to <code>CLAUDE.md</code>” and it writes the rule. Treat it like production code — if you cannot justify a line, delete it. And the course’s counterintuitive tip: <strong>start a project without one</strong>, so you discover where you actually have to course-correct instead of guessing.</p>
+      <div class="blue-note"><p><strong>From the exam guide, not the course notes:</strong> the official study reference adds three Claude Code memory objects the course does not name — <code>.claude/rules/</code>, a directory of topic-specific rule files whose YAML frontmatter carries glob <code>paths</code> (e.g. <code>["**/*.test.tsx"]</code>) so conventions apply by file path rather than by directory; <code>@import</code> syntax as the modularity mechanism; and <code>/memory</code>, which shows which memory files are actually loaded in the current session. If a question asks how to apply one convention to test files scattered across many directories, the exam-guide answer is <code>.claude/rules/</code> with glob paths, not a CLAUDE.md per directory.</p></div>
+    </section>
+
+    <section class="scene" id="scene6">
+      <p class="time">10:20 a.m. · The rule that cannot bend</p>
+      <h2>“Never push to main.”</h2>
+      <p>Rosa has one non-negotiable. The merge queue is the only thing allowed to touch <code>main</code>. She wants it written down somewhere Claude will respect at 3 a.m. on an unwatched run.</p>
+      <p class="voice">“I don’t want a request. I want a locked door.”</p>
+      <p class="choice">Where does this rule live?</p>
+      <div class="choices" role="group" aria-label="Choose a mechanism for the never-push-to-main rule">
+        <button type="button" onclick="choose('live','md', 21)">A line in CLAUDE.md, in caps</button>
+        <button type="button" onclick="choose('live','hook', 21)">A PreToolUse hook</button>
+        <button type="button" onclick="choose('live','skill', 21)">A verification skill</button>
+        <button type="button" onclick="choose('live','cmd', 21)">A custom slash command</button>
+      </div>
+      <div class="outcome" id="live-md" aria-live="polite"><strong>Not strong enough.</strong> CLAUDE.md is guidance Claude usually follows — a polite “please,” not a gate. Capitalising it spends emphasis budget without changing the mechanism. A hard rule that must never be crossed belongs in a hook.</div>
+      <div class="outcome" id="live-hook" aria-live="polite"><strong>Correct.</strong> Hooks are deterministic code at a fixed point in the loop. A PreToolUse hook fires <em>before</em> the tool call and can block it, turning “Claude usually listens” into “Claude can’t skip it” — including on runs nobody is watching.</div>
+      <div class="outcome" id="live-skill" aria-live="polite"><strong>Wrong surface.</strong> A skill is a reusable procedure that loads when its description matches the situation — instructions Claude follows, not code that runs. It cannot prevent a push. Use a PreToolUse hook.</div>
+      <div class="outcome" id="live-cmd" aria-live="polite"><strong>Wrong surface.</strong> A slash command is something a human invokes deliberately; it does nothing on a turn where nobody typed it. Enforcement that must fire every time belongs in a PreToolUse hook.</div>
+      <div class="lesson"><p><strong>The rule of thumb:</strong> if it must happen every time without fail, it belongs in a hook, not a prompt. CLAUDE.md and skills are instructions Claude follows; hooks are code that runs.</p></div>
+    </section>
+
+    <section class="scene" id="scene7">
+      <p class="time">10:45 a.m. · Kenji’s afternoon project</p>
+      <h2>Hooks, past auto-formatting</h2>
+      <p>Claude Code fires around <strong>30 hook events</strong> across a session. These are the ones you will actually reach for:</p>
+      <ul>
+        <li><code>PreToolUse</code> — fires before a tool call. The enforcement primitive; it can block.</li>
+        <li><code>PostToolUse</code> — fires after a <em>successful</em> tool call. Where auto-format and auto-lint go.</li>
+        <li><code>Stop</code> — fires when Claude wants to end its turn. You can refuse. <code>SubagentStop</code> is the same signal for a subagent finishing.</li>
+        <li><code>PreCompact</code> / <code>PostCompact</code> — fire around compaction.</li>
+        <li><code>InstructionsLoaded</code> — fires when a CLAUDE.md or rule file loads, so you can audit exactly what made it into context.</li>
+        <li><code>SessionStart</code> — primes the environment; check <code>source=startup</code> to run only on fresh starts.</li>
+      </ul>
+      <p>Project-level hooks live in <code>.claude/settings.json</code> and get checked into the repo, so the team inherits them. Use <code>$CLAUDE_PROJECT_DIR</code> in script paths so they stay portable across clones and worktrees.</p>
+      <pre><code>{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/guard.sh" }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          { "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/run-tests.sh" }
+        ]
+      }
+    ]
+  }
+}</code></pre>
+      <div class="blue-note"><p><strong>Read this for the ideas, not the exact braces.</strong> The course notes name the event names, the matcher, the settings file, and <code>$CLAUDE_PROJECT_DIR</code>; the surrounding JSON layout is the ordinary settings-file shape. What the exam cares about is <em>which event</em>, <em>what it can do</em>, and <em>which exit code</em>.</p></div>
+      <p class="voice">Kenji: “The first time one of these catches something on a run nobody watched, it has paid for itself.”</p>
+    </section>
+
+    <section class="scene" id="scene8">
+      <p class="time">11:10 a.m. · The hook that didn’t</p>
+      <h2>“It’s exiting with an error and Claude ignores it.”</h2>
+      <p>Kenji wired a lint hook. When lint fails, his script exits with code <code>1</code>. Claude cheerfully carries on anyway, and he cannot work out why.</p>
+      <p class="choice">Which exit code actually blocks and feeds the failure back to Claude?</p>
+      <div class="choices" role="group" aria-label="Choose the blocking hook exit code">
+        <button type="button" onclick="choose('exit','zero', 28)">0</button>
+        <button type="button" onclick="choose('exit','one', 28)">1</button>
+        <button type="button" onclick="choose('exit','two', 28)">2</button>
+        <button type="button" onclick="choose('exit','any', 28)">Any non-zero code</button>
+      </div>
+      <div class="outcome" id="exit-zero" aria-live="polite"><strong>No.</strong> <code>0</code> is success. On exit 0, JSON on stdout is parsed; plain text is ignored on most events, though it is added to context on <code>SessionStart</code>, <code>UserPromptSubmit</code>, and prompt expansion. To block, use exit <code>2</code>.</div>
+      <div class="outcome" id="exit-one" aria-live="polite"><strong>This is exactly Kenji’s bug, and the classic mistake.</strong> Exit <code>1</code> <em>feels</em> like an error but is non-blocking — it is just logged, and Claude proceeds. The blocking code is <code>2</code>.</div>
+      <div class="outcome" id="exit-two" aria-live="polite"><strong>Correct.</strong> Exit <code>2</code> is a blocking error, and stderr is fed back to Claude as context — which is the good part: Claude reads the lint failure and fixes it unprompted. It blocks almost everywhere, including blocking <code>Stop</code> (“no, you are not done”).</div>
+      <div class="outcome" id="exit-any" aria-live="polite"><strong>Too generous.</strong> Only <code>2</code> blocks. Anything else non-zero, including <code>1</code>, is non-blocking and merely logged. The one noted exception runs the other way: <code>WorktreeCreate</code> aborts on any non-zero exit.</div>
+      <div class="lesson"><p><strong>0 opens the gate, 2 slams it shut, 1 merely grumbles from the sidewalk.</strong> And remember which events ignore blocking entirely — <code>Notification</code>, <code>SessionStart</code>, and <code>FileChange</code> show stderr and carry on regardless. <code>PostToolUse</code> fires after the tool already ran, so it can never stop that call; it can only feed text back.</p></div>
+    </section>
+
+    <section class="scene" id="scene9">
+      <p class="time">11:30 a.m. · The amnesia problem</p>
+      <h2>“It forgets which files it was working on after a compaction.”</h2>
+      <p>Lila’s long refactor sessions compact partway through, and afterwards Claude drifts — it has lost the thread of which files were in play. She wants a short summary of the working set re-injected into context the moment compaction finishes.</p>
+      <p class="choice">Which hook event does that?</p>
+      <div class="choices" role="group" aria-label="Choose a hook event for re-injecting context after compaction">
+        <button type="button" onclick="choose('event','post', 35)">PostCompact</button>
+        <button type="button" onclick="choose('event','pre', 35)">PreCompact</button>
+        <button type="button" onclick="choose('event','session', 35)">SessionStart with the compact matcher</button>
+        <button type="button" onclick="choose('event','stop', 35)">Stop</button>
+      </div>
+      <div class="outcome" id="event-post" aria-live="polite"><strong>The trap answer.</strong> The name is perfect and the behaviour is wrong: <code>PostCompact</code>’s output does not get fed back into the conversation. It writes a note the players never read. Use <code>SessionStart</code> with the <code>compact</code> matcher.</div>
+      <div class="outcome" id="event-pre" aria-live="polite"><strong>Wrong side of the event.</strong> <code>PreCompact</code> fires <em>before</em> compaction, so anything it emits is part of what gets summarised away. You want output that lands in the fresh post-compaction context: <code>SessionStart</code> with the <code>compact</code> matcher.</div>
+      <div class="outcome" id="event-session" aria-live="polite"><strong>Correct, and it is a favourite exam distinction.</strong> A <code>SessionStart</code> hook with the <code>compact</code> matcher prints a short summary of the working files right after compaction, and that output goes back into context, so Claude picks up where it was.</div>
+      <div class="outcome" id="event-stop" aria-live="polite"><strong>Wrong moment.</strong> <code>Stop</code> fires when Claude wants to end its turn — useful as a test gate, useless for compaction. Use <code>SessionStart</code> with the <code>compact</code> matcher.</div>
+      <div class="lesson"><p><strong>SessionStart is the coach re-entering the huddle at halftime. PostCompact writes a note that never reaches the players.</strong></p></div>
+    </section>
+
+    <section class="scene" id="scene10">
+      <p class="time">11:55 a.m. · A live key in a command</p>
+      <h2>Redact instead of block</h2>
+      <p>Toby’s debugging session keeps producing bash commands with a live <code>sk_live_</code> key pasted straight into a <code>curl</code>. Blocking the command outright stops the work; letting it through leaks the key into logs and transcripts.</p>
+      <p>A <code>PreToolUse</code> hook returns JSON with exit 0. The field that matters is <code>permissionDecision</code>, with three values — <code>allow</code>, <code>deny</code>, and <code>ask</code>. There is a rare fourth, <code>defer</code>, which applies only to non-interactive <code>-p</code> runs, where a calling process pauses and resumes the tool.</p>
+      <p>But there is a third option beyond yes and no: <code>updatedInput</code> rewrites the tool call instead of blocking it.</p>
+      <pre><code>{
+  "permissionDecision": "allow",
+  "updatedInput": {
+    "command": "curl -H 'Authorization: Bearer sk_live_REDACTED' https://api.northstar.test/charges",
+    "description": "Probe the charges endpoint"
+  }
+}</code></pre>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Choose a secret-handling strategy">
+        <button type="button" onclick="choose('redact','deny', 42)">permissionDecision: deny</button>
+        <button type="button" onclick="choose('redact','update', 42)">updatedInput with the key swapped for a placeholder</button>
+        <button type="button" onclick="choose('redact','post', 42)">A PostToolUse hook that scrubs the transcript</button>
+        <button type="button" onclick="choose('redact','md', 42)">A CLAUDE.md rule about never pasting keys</button>
+      </div>
+      <div class="outcome" id="redact-deny" aria-live="polite"><strong>Safe but blunt.</strong> Deny does stop the leak, and it is the right call when the command should not run at all. Here the command is legitimate — only the secret is the problem — so <code>updatedInput</code> lets it run without the secret making it through.</div>
+      <div class="outcome" id="redact-update" aria-live="polite"><strong>That’s the pattern.</strong> A matcher picks the tool, an optional condition narrows to the specific command, and <code>updatedInput</code> rewrites it so the work continues and the secret never lands. <strong>The catch:</strong> <code>updatedInput</code> replaces the <em>whole</em> input object, so you must echo back every field you are not changing or you lose it.</div>
+      <div class="outcome" id="redact-post" aria-live="polite"><strong>Too late.</strong> <code>PostToolUse</code> fires after the tool already ran — the request has gone out with the live key. Prevention belongs in <code>PreToolUse</code>.</div>
+      <div class="outcome" id="redact-md" aria-live="polite"><strong>A request, not a guard.</strong> CLAUDE.md cannot stop the call. For something that must never slip through, use a <code>PreToolUse</code> hook — deny to block it, or <code>updatedInput</code> to redact and let it run.</div>
+      <div class="lesson"><p><strong>Hooks are not just yes and no.</strong> Allow, deny, ask, defer — and rewrite. Rewriting is often the answer when the action is fine and only one field is dangerous.</p></div>
+    </section>
+
+    <section class="scene" id="scene11">
+      <p class="time">12:30 p.m. · Procedures worth packaging</p>
+      <h2>Skills, and the one to build first</h2>
+      <p>A <strong>skill</strong> is a folder with a <code>skill.md</code> holding a name, a description that triggers it, and a procedure. Only descriptions load until a skill is actually needed.</p>
+      <p>The one to build first is the <strong>verification skill</strong>, because manual checking depends on you remembering to ask for it every single time. Its shape: it fires when its description matches the situation (say, after Claude edits code), it runs the test suite, it reads the diff, it <strong>checks that no test was quietly weakened just to make it pass</strong>, and it reports pass or fail with evidence. “Done” means the gates ran and the results were stated explicitly — not “the code looks right” from a diff read.</p>
+      <p>A skill folder holds more than <code>skill.md</code>. A <code>reference.md</code> alongside it carries detailed material Claude reads only when it needs depth, and <strong>scripts in the folder are executed rather than loaded</strong>, so a skill can carry its own tooling without bloating context. Check skills into <code>.claude/skills</code> so the whole team inherits them. If you have typed the same multi-step instruction twice, that was a skill.</p>
+      <h3>Custom slash commands</h3>
+      <p>Rosa wants a <code>/review</code> command every developer gets automatically. Custom commands are markdown files holding prompts, with an <code>$ARGUMENTS</code> placeholder for dynamic values — the same mechanism the course uses to automate worktree creation.</p>
+      <p class="choice">Where should the file live?</p>
+      <div class="choices" role="group" aria-label="Choose where a shared slash command lives">
+        <button type="button" onclick="choose('cmd','project', 49)">.claude/commands/ in the repo</button>
+        <button type="button" onclick="choose('cmd','user', 49)">~/.claude/commands/ on each machine</button>
+        <button type="button" onclick="choose('cmd','md', 49)">Defined inside CLAUDE.md</button>
+        <button type="button" onclick="choose('cmd','settings', 49)">A commands array in a config file</button>
+      </div>
+      <div class="outcome" id="cmd-project" aria-live="polite"><strong>Correct.</strong> Project-scoped commands in <code>.claude/commands/</code> are version-controlled, so everyone who clones or pulls gets them automatically — no per-developer setup step to forget.</div>
+      <div class="outcome" id="cmd-user" aria-live="polite"><strong>That’s the personal scope.</strong> <code>~/.claude/commands/</code> is for your own non-shared commands and follows you across projects; it is never shared with teammates. For a team-wide command, use <code>.claude/commands/</code> in the repo.</div>
+      <div class="outcome" id="cmd-md" aria-live="polite"><strong>Wrong file.</strong> CLAUDE.md carries context and conventions, not command definitions. Commands are markdown files in <code>.claude/commands/</code>.</div>
+      <div class="outcome" id="cmd-settings" aria-live="polite"><strong>Not a real mechanism.</strong> Commands are discovered by directory convention, not declared in an array. Put the file in <code>.claude/commands/</code>.</div>
+      <div class="blue-note"><p><strong>From the exam guide, not the course notes:</strong> the official study reference names <code>SKILL.md</code> frontmatter options the course does not — <code>context: fork</code> (run the skill in an isolated sub-agent context so verbose output does not pollute the main conversation), <code>allowed-tools</code> (restrict which tools the skill may use), and <code>argument-hint</code> (prompt the developer for a missing required parameter).</p></div>
+    </section>
+
+    <section class="scene" id="scene12">
+      <p class="time">1:15 p.m. · The whiteboard everyone photographs</p>
+      <h2>Where does this instruction live?</h2>
+      <p>By lunchtime the team has asked the same question six different ways, so you draw the table.</p>
+      <table class="mini-table"><thead><tr><th>Mechanism</th><th>What it is</th><th>Reach for it when…</th></tr></thead><tbody>
+        <tr><td><strong>CLAUDE.md</strong></td><td>Always-on guidance, loaded every session, appended to your prompt. Guidance, not enforcement.</td><td>The rule is a durable project convention: commands, architecture, naming, definition of done.</td></tr>
+        <tr><td><strong>Slash command</strong></td><td>A saved prompt in a markdown file, invoked deliberately by a human.</td><td>You want a person to be able to trigger a known prompt on demand.</td></tr>
+        <tr><td><strong>Skill</strong></td><td>A folder with a triggering description, a procedure, optional reference material and scripts. Loads when relevant.</td><td>It is a repeated multi-step procedure tied to a kind of task — verification, releases, migrations.</td></tr>
+        <tr><td><strong>Hook</strong></td><td>Deterministic code at a fixed point in the loop. Can block, rewrite, or gate the turn.</td><td>The rule must never be skippable, including on runs nobody watched.</td></tr>
+        <tr><td><strong>Subagent</strong></td><td>A delegated task in its own isolated context window, returning only a summary.</td><td>The work is exploratory or verbose and you only need the answer, not the trail.</td></tr>
+        <tr><td><strong>Plugin</strong></td><td>One installable unit bundling skills, subagents, hooks, and MCP configs.</td><td>A working setup needs to move between machines and teammates as a single version.</td></tr>
+        <tr><td><strong>MCP server</strong></td><td>An external tool or service connected through Claude Code’s MCP client.</td><td>Claude needs capabilities that live outside the repo — issue trackers, monitoring, document processing.</td></tr>
+      </tbody></table>
+      <div class="lesson"><p><strong>Memorise the three-way core:</strong> conventions that apply all the time → CLAUDE.md. Procedures tied to a kind of task → a skill. Rules Claude must not be able to skip → a hook. Everything else on the table is a delivery or capability question, not an instruction question.</p></div>
+    </section>
+
+    <section class="scene" id="scene13">
+      <p class="time">1:40 p.m. · Four engineers, one repo</p>
+      <h2>Subagents and parallel work</h2>
+      <p>A <strong>subagent</strong> runs a delegated task in its own isolated context window, in parallel with the main agent, and returns only a <strong>summary</strong> — so the exploration trail never clutters the main conversation. You create one via <code>/agents</code> → “Create new agent”; Claude auto-generates the name, description, and prompt, and the <em>description</em> is also what determines when Claude invokes it on future prompts.</p>
+      <p>One sharp edge: preloading a skill into a subagent via the <code>skill</code> key loads the <strong>entire</strong> skill content immediately — unlike the main conversation, where skills load progressively, name and description first.</p>
+      <h3>Worktrees</h3>
+      <p>Multiple sessions editing one checkout conflict and produce invalid code. Git worktrees give each session its own independent file tree — complete project copies in separate directories, each on its own branch. Clean worktrees are auto-removed when the session exits, and a <code>.worktreeinclude</code> file at the repo root lists git-ignored files (env files, local config) to copy into every new worktree.</p>
+      <p>Toby is mid-implementation on the retry logic and stops to ask where the retry configuration is actually defined. It is a five-file question and he is nowhere near it.</p>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Choose how to answer a mid-session discovery question">
+        <button type="button" onclick="choose('sub','main', 56)">Ask in the main session</button>
+        <button type="button" onclick="choose('sub','agent', 56)">Send a subagent</button>
+        <button type="button" onclick="choose('sub','clear', 56)">/clear and search from a clean slate</button>
+        <button type="button" onclick="choose('sub','tree', 56)">Spin up a new worktree</button>
+      </div>
+      <div class="outcome" id="sub-main" aria-live="polite"><strong>It works, and it costs you.</strong> Every file Claude opens hunting for the answer stays in your main context for the rest of the feature. Subagents exist precisely for “where is X” questions where you only need the answer.</div>
+      <div class="outcome" id="sub-agent" aria-live="polite"><strong>Right.</strong> The subagent explores in its own context window and hands back one clean summary. Your main session keeps its implementation context intact and gains a sentence instead of a search trail.</div>
+      <div class="outcome" id="sub-clear" aria-live="polite"><strong>Destructive overkill.</strong> <code>/clear</code> wipes everything, including the implementation context Toby is halfway through. Delegate the lookup to a subagent instead.</div>
+      <div class="outcome" id="sub-tree" aria-live="polite"><strong>Wrong tool for the problem.</strong> Worktrees solve file conflicts between simultaneous sessions, not context pollution inside one session. Use a subagent.</div>
+      <div class="lesson"><p><strong>A subagent is a scout with its own notebook.</strong> It walks the maze and comes back with one map, not every footprint. That is also why a fresh subagent makes the best pre-commit reviewer — no memory of having written the code.</p></div>
+    </section>
+
+    <section class="scene" id="scene14">
+      <p class="time">2:10 p.m. · The session that stopped being useful</p>
+      <h2>Steering long sessions</h2>
+      <p>Two habits keep a multi-hour session on track: <strong>scope the work before Claude starts</strong>, and <strong>steer it while it runs</strong>.</p>
+      <ul>
+        <li><code>/context</code> shows a breakdown of what is consuming your context window — the first thing to run when a session feels degraded.</li>
+        <li><code>/compact</code> summarises the conversation, uses the summary as new context, and deletes the old messages. <strong>Add instructions after the command</strong> to shape what survives: <code>/compact Focus on the --version flag implementation</code>. Without steering, something important can get dropped and Claude drifts.</li>
+        <li><code>/clear</code> wipes everything and starts fresh with no memory of the prior session — the right move when the task has changed and you do not want old-conversation bias bleeding in.</li>
+        <li>The <strong>rewind menu</strong> opens by double-tapping Escape on an empty prompt. Every user prompt creates a checkpoint. Options: restore code and conversation, restore conversation only, restore code only, “summarize from here” (compresses everything after a checkpoint — good for side conversations), and “summarize up to here” (compresses everything before it, keeping recent implementation intact).</li>
+        <li><code>/goal</code> sets a completion condition and Claude keeps working across turns until a fast evaluator confirms it is met. <strong>The constraint that matters:</strong> the evaluator only reads the transcript, so your condition must be checkable from Claude’s own output — test results, not external state. <code>/goal clear</code> cancels it.</li>
+        <li><code>/loop</code> runs a prompt on an interval between turns, which is how you poll external state like a CI run or a deploy and act when it changes. Escape stops it.</li>
+      </ul>
+      <p>And the counterintuitive one: <strong>being specific in prompts saves context.</strong> A vague prompt forces more exploration and more of Claude’s own reasoning to fill the gaps, which costs far more context than the detailed prompt would have.</p>
+      <p>Lila is 70% through a payments feature. Her context is nearly full, Claude has started repeating itself, but the remaining work still depends on everything decided so far.</p>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Choose a context recovery move">
+        <button type="button" onclick="choose('ctx','clear', 63)">/clear and restate the feature</button>
+        <button type="button" onclick="choose('ctx','compact', 63)">/compact with explicit instructions</button>
+        <button type="button" onclick="choose('ctx','push', 63)">Push through and hope</button>
+        <button type="button" onclick="choose('ctx','rewind', 63)">Rewind: restore code and conversation</button>
+      </div>
+      <div class="outcome" id="ctx-clear" aria-live="polite"><strong>Too destructive here.</strong> <code>/clear</code> is for when the <em>task</em> has changed and old bias would hurt. Mid-feature, it throws away decisions Lila still needs. Use <code>/compact</code> with direction.</div>
+      <div class="outcome" id="ctx-compact" aria-live="polite"><strong>Right.</strong> Compact is vacuum-sealing the suitcase; clear is burning it. And the direction is the important half — tell the summariser which chapters must survive (“focus on the retry policy and the schema migration”) or it may keep the picnic menu and lose the plot.</div>
+      <div class="outcome" id="ctx-push" aria-live="polite"><strong>That is how drift becomes damage.</strong> Repetition is the symptom of budget pressure. Run <code>/context</code> to see what is consuming the window, then <code>/compact</code> with direction.</div>
+      <div class="outcome" id="ctx-rewind" aria-live="polite"><strong>Solves a different problem.</strong> Rewind is for when Claude went down a wrong path and you want to undo it — “summarize up to here” would help with a long setup phase, but a full restore discards good work. For a full context window mid-feature, compact with direction.</div>
+      <div class="lesson"><p><strong>Diagnose, then choose:</strong> <code>/context</code> to see the pressure, <code>/compact &lt;direction&gt;</code> to keep going, <code>/clear</code> when the task changed, rewind when the path was wrong.</p></div>
+    </section>
+
+    <section class="scene" id="scene15">
+      <p class="time">2:40 p.m. · The context thief</p>
+      <h2>MCP inside Claude Code</h2>
+      <p>Claude Code has an embedded MCP client. You add a server with <code>claude mcp add</code> — the course’s example is a document-processing server exposing a “document path to markdown” tool, which lets Claude read PDFs and Word files it otherwise could not. Common production uses: monitoring, issue trackers, chat. Two transports: <strong>HTTP</strong> for remote hosted services, <strong>Stdio</strong> for a local process on your machine. Manage servers in-session with <code>/mcp</code>.</p>
+      <p>Scoping mirrors CLAUDE.md’s logic: <strong>Local</strong> (just you, this project), <strong>User</strong> (all your projects), and <strong>Project</strong> — a <code>.mcp.json</code> committed to the repo, so the whole team automatically gets identical servers.</p>
+      <p>Kenji runs <code>/context</code> and finds MCP tool definitions eating an alarming share of the window. Six servers are configured; two are actually used.</p>
+      <p class="voice">“We’re paying rent on four tools nobody has called in a month.”</p>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Choose an MCP context mitigation">
+        <button type="button" onclick="choose('mcp','nothing', 70)">Nothing — unused servers cost nothing</button>
+        <button type="button" onclick="choose('mcp','prune', 70)">Disable unused servers, prefer a CLI, or use a skill</button>
+        <button type="button" onclick="choose('mcp','search', 70)">Let tool search mode handle it</button>
+        <button type="button" onclick="choose('mcp','md', 70)">List the servers in CLAUDE.md so Claude ignores the rest</button>
+      </div>
+      <div class="outcome" id="mcp-nothing" aria-live="polite"><strong>The expensive misconception.</strong> Every configured server’s tool definitions load into context <em>regardless of use</em>. Unused servers are pure overhead.</div>
+      <div class="outcome" id="mcp-prune" aria-live="polite"><strong>All three, in order.</strong> Disable unused servers via <code>/mcp</code>. Prefer a CLI equivalent where one exists (<code>gh</code>, <code>aws</code>) since a CLI carries no persistent tool definitions. And a skill can be the lighter alternative — only its name and description load until it is needed.</div>
+      <div class="outcome" id="mcp-search" aria-live="polite"><strong>That is a fallback, not a plan.</strong> If MCP tools exceed <strong>10% of the context window</strong>, Claude Code auto-switches to “tool search mode,” discovering tools on demand — but the course flags it as <em>less reliable</em>. Prune first; let the threshold be a safety net, not a strategy.</div>
+      <div class="outcome" id="mcp-md" aria-live="polite"><strong>Doesn’t work.</strong> CLAUDE.md is guidance about behaviour; it cannot unload tool definitions that are already in the window. Disable the servers.</div>
+      <div class="lesson"><p><strong>Tool design principle:</strong> Claude Code’s own toolset — <code>bash</code>, <code>read</code>, <code>write</code>, <code>edit</code>, <code>glob</code>, <code>grep</code> — is deliberately generic. Give Claude abstract, combinable primitives it can compose, rather than a wall of hyper-specialised tools that each cost context forever.</p></div>
+    </section>
+
+    <div class="rule"><strong>Everything you configure has a context price, whether or not you use it.</strong><span>MCP definitions, CLAUDE.md lines, imported files — all loaded up front.</span></div>
+
+    <section class="scene" id="scene16">
+      <p class="time">3:15 p.m. · The suitcase from a stranger</p>
+      <h2>Plugins</h2>
+      <p>Kenji’s <code>.claude</code> setup finally works, and now four teams want it. A <strong>plugin</strong> is one installable unit bundling skills, subagents, hooks, and MCP server configs — plus LSP servers, background monitors, themes, and a slice of settings. It solves the “copy .claude files between machines” problem.</p>
+      <p>Install one directly with <code>/plugin install org-name@plugin-name</code>, then <code>/reload-plugins</code>. For a team, add a private marketplace once — <code>/plugin marketplace add your-org/claude-plugins</code> — and every install after that resolves through it, giving centralised discovery, version tracking, and updates.</p>
+      <p>Packaging your own uses the same <code>.claude</code> shape you already have, discovered by directory convention: one folder per skill, one markdown file per subagent under <code>agents/</code>, <code>hooks/hooks.json</code> and <code>.mcp.json</code> at the plugin root. The optional manifest at <code>.claude-plugin/plugin.json</code> takes name, version, description, and author — <strong><code>name</code> is the only required field</strong>, and it namespaces skills as <code>plugin-name:skill-name</code>.</p>
+      <p>Meanwhile Toby has found a community plugin with an appealing set of refactoring skills and a “reviewed” badge.</p>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Choose how to handle a community plugin">
+        <button type="button" onclick="choose('plug','install', 77)">Install it — it passed review</button>
+        <button type="button" onclick="choose('plug','read', 77)">Read every hook, agent, and MCP server it adds first</button>
+        <button type="button" onclick="choose('plug','market', 77)">Add it to the team marketplace so everyone gets it</button>
+        <button type="button" onclick="choose('plug','never', 77)">Ban plugins outright</button>
+      </div>
+      <div class="outcome" id="plug-install" aria-live="polite"><strong>The exam’s favourite trap.</strong> <em>Reviewed is not the same as trusted.</em> The in-app submission form posts to the community marketplace after Anthropic’s automated review, and automated review catches some things, not everything. A plugin runs code on your machine with your privileges.</div>
+      <div class="outcome" id="plug-read" aria-live="polite"><strong>Correct.</strong> You install for the skills and you also get its <code>PreToolUse</code> and <code>Stop</code> hooks, which fire on every matching tool call whether or not you read them — a community plugin could ship a Stop hook calling a network endpoint every time, with no warning in your own configuration. Claude Code shows what will be installed and estimates the context cost; read it.</div>
+      <div class="outcome" id="plug-market" aria-live="polite"><strong>Right mechanism, wrong sequence.</strong> A private marketplace is exactly how you centralise discovery and versioning for a team — but curating it means you have vouched for what is in it. Review first, then publish.</div>
+      <div class="outcome" id="plug-never" aria-live="polite"><strong>Overcorrection.</strong> Plugins are the supported way to move a working setup across a team. The discipline is reading before installing and sourcing from places you genuinely trust, not abstinence.</div>
+      <div class="lesson"><p><strong>Components run alongside yours, not instead of them.</strong> Hooks <em>stack</em> — a plugin’s <code>PreToolUse</code> and yours both fire. Skills, agents, and commands are namespaced under the plugin name so they never clash. And a plugin’s own <code>settings.json</code> is honoured narrowly: only the <strong>agent</strong> key and the subagent status line key. The agent key promotes one of the plugin’s subagents to the main thread — its system prompt, tool restrictions, and model — so simply enabling a plugin can change how Claude Code behaves by default.</p></div>
+    </section>
+
+    <section class="scene" id="scene17">
+      <p class="time">3:50 p.m. · Rosa’s turn</p>
+      <h2>The automation spectrum</h2>
+      <p>Once you trust Claude with a task, stop doing it by hand. There are three rungs.</p>
+      <h3>Routines — build nothing</h3>
+      <p>A saved prompt plus repositories and connectors, running on <strong>Anthropic’s managed infrastructure</strong>. No machine of yours stays on and no workflow file to maintain. Three triggers: a <strong>cron schedule</strong>, an <strong>HTTP POST</strong> to its API endpoint, or a <strong>GitHub event</strong> such as a new PR. Create one from the web at <code>claude.ai/code/routines</code> or inside Claude Code with <code>/schedule</code>. Three limits to know before relying on it: it is a <strong>research preview</strong>; recurring schedules run <strong>at most hourly</strong>; and each run starts from a <strong>fresh clone of your default branch</strong> and can only push to <code>claude/</code>-prefixed branches unless you loosen that per repo — the guardrail that keeps autonomous runs from rewriting main.</p>
+      <h3>Headless — your pipeline</h3>
+      <p>The <code>-p</code> flag (alias <code>--print</code>) runs Claude Code as a one-shot command with no interactive TUI: it reads stdin, writes stdout, and pipes like any shell tool. It is the fix for the classic CI symptom of <code>claude "review this PR"</code> hanging forever waiting for input. <code>--bare</code> skips auto-discovery of hooks, skills, plugins, MCP servers, and CLAUDE.md — you get Claude plus only the tools you explicitly allow, with faster startup, and deterministic, repeatable output run to run.</p>
+      <pre><code>claude -p "Review the staged diff for security issues" \
+  --bare \
+  --output-format json \
+  --json-schema '{"type":"object","properties":{"findings":{"type":"array"}}}' \
+  &gt; result.json
+
+jq -r '.structured_output.findings[]' result.json
+
+claude --resume "$(jq -r .session_id result.json)" \
+  -p "Open a PR with the fixes"</code></pre>
+      <p>That is the whole headless idiom: schema-constrained output lands in <code>structured_output</code>, <code>jq</code> lifts it out into a database or another script, and capturing the session ID lets you resume later with full context, turning one-shot runs into multi-step automation.</p>
+      <h3>Agent SDK — your product</h3>
+      <p>TypeScript and Python libraries that embed Claude Code inside your own application. Both expose a <code>query</code> function with the same primitives as the CLI — prompt plus options such as allowed tools, system prompt, and permission mode — and you iterate the streamed messages it returns.</p>
+      <p class="choice">Rosa needs machine-parseable review findings, identical run to run, inside the existing merge-queue pipeline. Your call</p>
+      <div class="choices" role="group" aria-label="Choose an automation rung for the CI review job">
+        <button type="button" onclick="choose('ci','interactive', 84)">An interactive session someone babysits</button>
+        <button type="button" onclick="choose('ci','headless', 84)">Headless: -p with --bare, --output-format json, --json-schema</button>
+        <button type="button" onclick="choose('ci','routine', 84)">A routine on a cron schedule</button>
+        <button type="button" onclick="choose('ci','sdk', 84)">The Agent SDK</button>
+      </div>
+      <div class="outcome" id="ci-interactive" aria-live="polite"><strong>Not automation.</strong> An interactive session needs a human and produces prose, not parseable findings. And plain <code>claude "…"</code> in a pipeline hangs waiting for input — that is exactly what <code>-p</code> exists to fix.</div>
+      <div class="outcome" id="ci-headless" aria-live="polite"><strong>Right rung.</strong> The job needs Rosa’s own pipeline, so headless is the fit: <code>-p</code> for non-interactive, <code>--bare</code> for deterministic runs, and <code>--output-format json</code> with <code>--json-schema</code> so the result arrives in <code>structured_output</code> ready for <code>jq</code> to post as inline comments.</div>
+      <div class="outcome" id="ci-routine" aria-live="polite"><strong>Wrong trigger shape.</strong> Routines are the default for repeat work on a schedule with nothing to host — and note the constraints: research preview, at most hourly, fresh clone, <code>claude/</code>-prefixed branches. A merge-queue gate fires per PR inside an existing pipeline Rosa already owns, so headless is the fit.</div>
+      <div class="outcome" id="ci-sdk" aria-live="polite"><strong>Reserved for a different case.</strong> The Agent SDK is for when the work belongs <em>inside your own product</em> and your application owns the loop. A CI step is a pipeline job, not a product feature — use headless.</div>
+      <div class="blue-note"><p><strong>One wrinkle worth knowing before test day:</strong> this workspace’s derived <code>notes.md</code> attaches the “skips auto-discovery of hooks, skills, plugins, MCP servers, and CLAUDE.md” behaviour to headless mode generally, while the course transcript in <code>anthropic-notes.md</code> attaches it specifically to <code>--bare</code>. Either way, associate that skip-list with the headless path, and associate <code>-p</code> itself with “non-interactive, prints and exits.”</p></div>
+      <div class="lesson"><p><strong>Decision guide:</strong> routines are the default for repeat work. Headless <code>-p</code> when the job needs your own pipeline. <code>--bare</code> when CI needs identical results every run. Agent SDK when the work belongs inside your own product.</p></div>
+    </section>
+
+    <section class="scene" id="scene18">
+      <p class="time">4:20 p.m. · The pull request as a handoff point</p>
+      <h2>Managed Code Review vs. the GitHub Action</h2>
+      <p><strong>Managed Code Review</strong> is Anthropic-hosted, running through the Claude GitHub app with nothing to build. An org admin enables it from Claude Code admin settings, installs the app, and picks the repos and the trigger: on PR open, on every push, or only on an <code>@claude review</code> comment. Review agents analyse the diff <em>against the full codebase</em> and post findings as inline comments on specific lines, tagged by severity, with a summary table in the check run. It deduplicates and ranks findings, so you get a handful of real issues rather than a wall of nits.</p>
+      <p>Two hard limits: it <strong>never approves or blocks a PR</strong> — judgment stays with a human — and there is <strong>no managed autofix</strong>. It posts findings only; you apply them locally with <code>/code-review</code> and its <code>--fix</code> flag. It is a research preview, currently for Team and Enterprise plans.</p>
+      <p>The <strong>GitHub Action</strong> is the do-it-yourself path for anything beyond review. <code>/install-github-app</code> (which needs repo admin) walks through installing the app and setting the API key secret, and the action itself is <code>anthropics/claude-code-action@v1</code>. Its inputs: <code>anthropic_api_key</code>, <code>github_token</code> (defaulting to <code>secrets.GITHUB_TOKEN</code>), <code>trigger_phrase</code> (defaulting to <code>@claude</code>), provider switches for Bedrock or Vertex, <code>prompt</code>, and <code>claude_args</code> for raw CLI arguments passed through — capping the agent loop with a max-turns argument, setting the “don’t ask” permission mode for unattended runs, or scoping allowed tools to read-only for a report. Beyond an <code>@claude</code> mention, it can fire on a cron schedule or via <code>workflow_dispatch</code> for manual runs from the Actions tab.</p>
+      <h3>Automated debugging, end to end</h3>
+      <p>The course’s worked example stitches these together. A GitHub Action runs daily against production: the AWS CLI fetches the last 24 hours of CloudWatch logs, Claude identifies and <strong>deduplicates</strong> the errors, analyses each one, generates fixes, and opens a pull request with the proposed solutions. It catches production-only failures — invalid model IDs, wrong API keys, configuration that works locally and breaks in production — and it ends in something reviewable rather than something already merged.</p>
+      <p class="choice">Someone comments “@claude implement the spec in the linked issue.” Which path handles that?</p>
+      <div class="choices" role="group" aria-label="Choose between managed code review and the GitHub Action">
+        <button type="button" onclick="choose('gh','managed', 90)">Managed Code Review</button>
+        <button type="button" onclick="choose('gh','action', 90)">The GitHub Action</button>
+        <button type="button" onclick="choose('gh','routine', 90)">A routine</button>
+        <button type="button" onclick="choose('gh','local', 90)">/code-review --fix locally</button>
+      </div>
+      <div class="outcome" id="gh-managed" aria-live="polite"><strong>Out of scope.</strong> Managed Code Review comments; it never approves, never blocks, and has no managed autofix. Implementing a spec means <em>doing</em> something, which is the GitHub Action’s job.</div>
+      <div class="outcome" id="gh-action" aria-live="polite"><strong>Correct.</strong> A workflow listening for the trigger phrase on PR and issue comments picks it up, pushes commits, and posts comments. The decision rule: managed Code Review for PR review; the Action once the job needs to <em>do</em> something in CI, not just comment.</div>
+      <div class="outcome" id="gh-routine" aria-live="polite"><strong>Close but not the fit.</strong> Routines do respond to GitHub events, and they are the default when you want nothing to host — but this is a triggered comment inside a repo workflow, and the Action is the purpose-built path with <code>trigger_phrase</code>, <code>prompt</code>, and <code>claude_args</code>.</div>
+      <div class="outcome" id="gh-local" aria-live="polite"><strong>That is the fix path for review findings,</strong> not a way to respond to a comment in CI. <code>/code-review --fix</code> is how you apply managed review findings locally. For work triggered from a comment, use the GitHub Action.</div>
+    </section>
+
+    <section class="scene" id="scene19">
+      <p class="time">5:10 p.m. · The morning after, in advance</p>
+      <h2>Trust it — but verify in proportion</h2>
+      <p>The governing rule: <strong>verify in proportion to how little you watched.</strong> A session you watched scroll by needs a glance. An unattended or CI run needs a real, reconstructed check, because nobody saw it happen.</p>
+      <p>Toby’s overnight run finished. There is a clean, well-written summary at the top of the transcript and a green check.</p>
+      <p class="choice">First move</p>
+      <div class="choices" role="group" aria-label="Choose the first verification move">
+        <button type="button" onclick="choose('diff','summary', 96)">Read the summary and merge</button>
+        <button type="button" onclick="choose('diff','diff', 96)">Run /code-review, then read git diff yourself</button>
+        <button type="button" onclick="choose('diff','rerun', 96)">Re-run the task and compare</button>
+        <button type="button" onclick="choose('diff','tests', 96)">Ask Claude whether the tests passed</button>
+      </div>
+      <div class="outcome" id="diff-summary" aria-live="polite"><strong>The exact trap the course names.</strong> A tidy summary that reads fine can sit on top of a diff that touched files you never expected. Start from the diff, not the summary.</div>
+      <div class="outcome" id="diff-diff" aria-live="polite"><strong>Right order.</strong> <code>/code-review</code> walks the changes and flags issues; then your own eyes go on <code>git diff</code>, reading the files that were in the plan first. Evidence beats narrative.</div>
+      <div class="outcome" id="diff-rerun" aria-live="polite"><strong>Expensive and non-conclusive.</strong> A second run produces a second thing to review, not proof about the first. Read the diff, and get a cold second opinion from a fresh session if the change is risky.</div>
+      <div class="outcome" id="diff-tests" aria-live="polite"><strong>Asking is not evidence.</strong> The real question is whether the tests passed <em>and</em> whether Claude actually ran them or only claimed to — which is precisely why that check belongs in a Stop hook that fires on every run, not in a question you might forget to ask.</div>
+      <h3>The four disciplines</h3>
+      <ul>
+        <li><strong>Keep unattended runs in auto mode</strong>, not bypass — the classifier is still a safety net, though it only checks intent.</li>
+        <li><strong>Start from the diff</strong>, not the summary.</li>
+        <li><strong>Make tests a gate, not a promise.</strong> A <code>Stop</code> hook that runs the tests and refuses to end the turn on failure, or a <code>PostToolUse</code> hook that lints and type-checks after every edit. A hook exiting with code <code>2</code> feeds the failure straight back to Claude, which reads it and fixes it unprompted.</li>
+        <li><strong>Get a cold second opinion.</strong> A fresh session or subagent with no memory of how the code was built has no stake in the approach and catches what the original run talked itself past. Headless runs get verified by their JSON result and exit code.</li>
+      </ul>
+      <div class="lesson"><p><strong>A reliable workflow leaves evidence:</strong> state the goal and success criteria → inspect and plan the smallest change → make the change with the least privilege needed → run the build, tests, lint, or type checks → review the diff and confirm no test was weakened or deleted → report what was verified and what remains uncertain → ask for a cold second opinion when the change is risky or the session has accumulated too much context.</p></div>
+    </section>
+
+    <section class="end">
+      <h2>The architect’s pocket card</h2>
+      <p>At the end of the day Rosa asks how you kept making the same call so fast. You answer:</p>
+      <p><strong>Match the control surface to the risk.</strong> Plan mode for anything architectural. Manual and Accept edits while you are watching. Auto plus a Stop hook when you are not. Don’t ask for unattended pipelines. Bypass only inside an isolated container or VM.</p>
+      <p><strong>Put each rule in the right mechanism.</strong> Always-true conventions → CLAUDE.md, kept lean, specific, and checkable, with emphasis spent on two or three rules. Repeated procedures → skills, starting with verification. Rules that must never be skipped → hooks: <code>PreToolUse</code> to block or rewrite, <code>PostToolUse</code> to format after the fact, <code>Stop</code> to gate the turn, <code>SessionStart</code> with the <code>compact</code> matcher to survive compaction. Exit 0 succeeds, exit 2 blocks, exit 1 does nothing.</p>
+      <p><strong>Protect the context window.</strong> Delegate exploration to subagents. Prune unused MCP servers before the 10% threshold forces tool search mode. Compact with direction, clear when the task changes, rewind when the path was wrong, and be specific — vagueness is the most expensive thing you can type.</p>
+      <p><strong>Automate in the right order.</strong> Routines when there is nothing to host. Headless <code>-p</code> when the pipeline is yours, <code>--bare</code> when CI must be deterministic, the Agent SDK when the work lives inside your product. Managed Code Review to comment; the GitHub Action to act.</p>
+      <p><strong>Then verify in proportion to how little you watched.</strong> That is Claude Code in action: not “how much can it do?” but “how much autonomy has been earned, and what evidence will prove it was used well?”</p>
+    </section>
+
+    <p class="source">Primary source: <code>07-claude-code-in-action/notes.md</code>, <code>07-claude-code-in-action/anthropic-notes.md</code>, and <code>07-claude-code-in-action/quiz.md</code> in this study workspace, with bonus Claude Code background from <code>03-building-with-the-claude-api/anthropic-notes.md</code>. Exam-guide-only terminology is flagged inline and drawn from <code>study-reference/ccaf_study_reference.md</code>.</p>
+    <footer>Claude Code Configuration &amp; Workflows is 20% of the exam and Claude Code carries part of the 15% Context Management &amp; Reliability domain, so this chapter is worth a second pass. When you are ready, ask your teacher to drill the two tables — permission modes, and where each instruction lives — one row at a time.</footer>
+  </main>
+  <script>
+    function choose(scene, answer, progress) {
+      document.querySelectorAll('[id^="' + scene + '-"]').forEach(function (el) { el.classList.remove('visible'); });
+      var selected = document.getElementById(scene + '-' + answer);
+      if (selected) selected.classList.add('visible');
+      var bar = document.getElementById('progressBar');
+      if (bar && progress) bar.style.width = progress + '%';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agentic Orchestration — The Shape of the System</title>
+  <style>
+    :root {
+      --ink: #242321;
+      --muted: #706b63;
+      --paper: #f7f3ec;
+      --paper-deep: #ece4d7;
+      --rust: #2f6b6b;
+      --rust-dark: #1f4b4b;
+      --sage: #dfe9df;
+      --blue: #dce8ee;
+      --line: #d6ccbd;
+      --white: #fffdfa;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.7 Georgia, 'Times New Roman', serif;
+    }
+    main { max-width: 780px; margin: 0 auto; padding: 44px 24px 80px; }
+    .masthead {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+      border-bottom: 1px solid var(--line); padding-bottom: 10px;
+      color: var(--muted); font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .13em; text-transform: uppercase;
+    }
+    h1 { max-width: 680px; margin: 28px 0 12px; font: 700 clamp(2.5rem, 8vw, 5.2rem)/.98 Georgia, serif; letter-spacing: -.04em; }
+    .dek { max-width: 670px; margin: 0 0 34px; color: var(--muted); font-size: 1.2rem; }
+    .progress { position: sticky; top: 0; z-index: 2; height: 4px; background: var(--paper-deep); }
+    .progress span { display: block; width: 0; height: 100%; background: var(--rust); transition: width .25s ease; }
+    .scene {
+      position: relative; margin: 34px 0 0; padding: 25px 28px 28px;
+      background: var(--white); border: 1px solid var(--line); border-radius: 3px;
+    }
+    .scene::before { content: ''; position: absolute; left: -1px; top: 0; bottom: 0; width: 4px; background: var(--rust); }
+    .opening { background: #fff8ed; }
+    .time { margin: 0 0 7px; color: var(--rust-dark); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    h2 { margin: 0 0 13px; font: 700 1.65rem/1.2 Georgia, serif; }
+    h3 { margin: 27px 0 7px; font: 700 1.1rem/1.3 Georgia, serif; }
+    p { max-width: 70ch; margin: 0 0 13px; }
+    ul, ol { max-width: 68ch; padding-left: 1.35em; }
+    li { margin: 5px 0; }
+    .voice { margin: 18px 0; padding-left: 19px; border-left: 2px solid var(--paper-deep); font-style: italic; }
+    .choice { margin: 20px 0 2px; color: var(--muted); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+    .choices { display: flex; flex-wrap: wrap; gap: 9px; margin: 10px 0 5px; }
+    button {
+      border: 1px solid var(--rust); border-radius: 3px; background: var(--white); color: var(--rust-dark);
+      padding: 9px 13px; font: 600 14px/1.2 system-ui, sans-serif; cursor: pointer;
+    }
+    button:hover, button:focus-visible { background: var(--rust); color: #fff; outline: none; }
+    button:focus-visible { box-shadow: 0 0 0 3px rgba(47, 107, 107, .22); }
+    .outcome { display: none; margin-top: 13px; padding: 14px 16px; border-left: 3px solid var(--sage); background: #f1f6ef; }
+    .outcome.visible { display: block; }
+    .outcome strong { color: var(--rust-dark); }
+    .lesson { margin: 25px 0 0; padding: 17px 18px; background: var(--paper-deep); }
+    .lesson p:last-child { margin-bottom: 0; }
+    .blue-note { margin: 18px 0; padding: 15px 17px; background: #f1f6f8; border-left: 3px solid #7b9cac; }
+    .blue-note p:last-child { margin-bottom: 0; }
+    .rule { margin: 38px 0; padding: 25px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); text-align: center; }
+    .rule strong { display: block; color: var(--rust-dark); font: 700 1.35rem/1.25 Georgia, serif; }
+    .prompt { margin: 15px 0; padding: 17px 18px; background: #fff4eb; border-left: 3px solid var(--rust); font-size: .98rem; }
+    .prompt strong { color: var(--rust-dark); }
+    .prompt code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em; }
+    .mini-table { width: 100%; margin: 17px 0; border-collapse: collapse; font-size: .95rem; }
+    .mini-table th, .mini-table td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    .mini-table th { background: var(--paper-deep); color: var(--rust-dark); font: 700 12px/1.25 system-ui, sans-serif; letter-spacing: .05em; text-transform: uppercase; }
+    .end { margin-top: 39px; padding: 27px 28px; background: var(--rust-dark); color: #fff8f1; }
+    .end h2 { color: #fff; }
+    .end p { color: #f6dfd1; }
+    .source, footer { color: var(--muted); font-size: .9rem; }
+    footer { margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--line); }
+    a { color: var(--rust-dark); }
+    code { background: var(--paper-deep); padding: .08em .28em; border-radius: 3px; }
+    pre { max-width: 70ch; margin: 15px 0; padding: 14px 16px; background: var(--paper-deep); border-left: 3px solid var(--rust); overflow-x: auto; font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    pre code { background: none; padding: 0; }
+    @media (max-width: 560px) {
+      main { padding-top: 28px; }
+      .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
+      .scene { padding: 21px 19px 23px; }
+      .choices { display: grid; grid-template-columns: 1fr; }
+      button { text-align: left; }
+      .mini-table { font-size: .88rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+  <main>
+    <div class="masthead"><span>CCA-F · Section 3 · Part 3 of 3</span><span>Northstar Dispatch · Tuesday</span></div>
+    <h1>The shape of the system</h1>
+    <p class="dek">One Claude call is no longer enough. You are the architect, and today the question stops being “what do I send?” and becomes “what kind of system am I building?”</p>
+
+    <section class="scene opening" id="scene0">
+      <p class="time">8:10 a.m. · The whiteboard nobody erased</p>
+      <h2>One call is not enough anymore</h2>
+      <p>Northstar’s returns desk has outgrown a single request. A customer sends a photo, a receipt, a sentence of frustration, and a question. The answer needs a policy lookup, a warranty calculation, a tone that survives legal review, and — sometimes — a human.</p>
+      <p>Three people are waiting for you at the whiteboard.</p>
+      <p class="voice">“Give Claude the tools and a goal and let it cook.” — <strong>Rosa Delgado</strong>, platform lead. Rosa wants everything agentic.</p>
+      <p class="voice">“Every unpredictable step is an unpredictable invoice and an unpredictable incident.” — <strong>Callum Beckett</strong>, reliability and cost. Callum wants everything deterministic.</p>
+      <p class="voice">“I just need the same customer to get the same answer twice.” — <strong>Ines Okafor</strong>, who runs the returns desk and owns the outcome.</p>
+      <p><strong>Toby Kerr</strong>, the engineer who will actually build it, has a marker in his hand and no idea what to draw.</p>
+      <p>Everything below is about that drawing. Two shapes are available — a <strong>workflow</strong> and an <strong>agent</strong> — and four named patterns for building the first one.</p>
+      <div class="blue-note">
+        <p><strong>Assumed from parts 1 and 2:</strong> you already know how a request is made and how tools are defined, and you know the <strong>agent loop</strong> — send a message with <code>tools</code>, get back either an answer or a tool-use request, execute the tool, return a <code>tool_result</code>, repeat until <code>stop_reason</code> is <code>end_turn</code>. This chapter is about the architecture wrapped <em>around</em> that loop.</p>
+      </div>
+      <div class="lesson"><p><strong>First principle:</strong> orchestration is not a bigger prompt. It is a decision about how much of the control flow you write and how much you delegate.</p></div>
+    </section>
+
+    <section class="scene" id="scene1">
+      <p class="time">8:34 a.m. · The two shapes</p>
+      <h2>Workflow or agent?</h2>
+      <p>You draw the definitions before anyone argues.</p>
+      <p>A <strong>workflow</strong> is a predefined series of Claude calls that solves a <em>known</em> problem. You can picture the exact steps ahead of time, so you write them as code.</p>
+      <p>An <strong>agent</strong> is given a goal and a set of tools and figures out its own path. You reach for it when you <em>don’t</em> know exactly what task or parameters will come in.</p>
+      <table class="mini-table"><thead><tr><th></th><th>Benefits</th><th>Downsides</th></tr></thead><tbody>
+        <tr><td><strong>Workflows</strong></td><td>Higher accuracy (focus per subtask), easier to test and evaluate because the steps are known, more predictable, better for well-defined problems</td><td>Less flexible, more constrained UX, more upfront design work</td></tr>
+        <tr><td><strong>Agents</strong></td><td>Flexible UX, can combine tools in unexpected ways, handles novel situations, can ask for more input</td><td>Lower success rate, harder to test and instrument because the steps are unknown ahead of time, less predictable</td></tr>
+      </tbody></table>
+      <p>Ines describes the first job: every returns email must be turned into a customer reply through the same four moves — read the policy, compute the warranty window, draft the reply, check it against tone rules. Every email. Every time.</p>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Workflow or agent for the returns reply">
+        <button type="button" onclick="choose('shape','workflow', 8)">Build a workflow</button>
+        <button type="button" onclick="choose('shape','agent', 8)">Build an agent</button>
+        <button type="button" onclick="choose('shape','both', 8)">Agent now, workflow later if it misbehaves</button>
+      </div>
+      <div class="outcome" id="shape-workflow" aria-live="polite"><strong>Correct.</strong> You can picture the exact steps ahead of time, and they are the same steps every time. That is the definition of a workflow: a predefined series of Claude calls for a known problem. You get higher accuracy per subtask and a system you can actually test.</div>
+      <div class="outcome" id="shape-agent" aria-live="polite"><strong>Over-built.</strong> An agent is for when you don’t know what will come in or which steps are needed. Here the four moves are fixed, so handing Claude a goal and a toolbox trades away predictability and testability for flexibility you don’t need.</div>
+      <div class="outcome" id="shape-both" aria-live="polite"><strong>Backwards.</strong> The general recommendation runs the other way: prefer workflows where possible and only reach for agents when truly required. Starting agentic on a known problem means starting with the lower success rate and the harder-to-test design.</div>
+      <div class="lesson"><p><strong>The recommendation is not neutral.</strong> Prefer workflows wherever possible; reach for agents only when truly required. Users want a product that works, not a fancy agent.</p></div>
+    </section>
+
+    <div class="rule"><strong>The exam’s decision rule.</strong><span>Steps knowable in advance → workflow (then pick the pattern). Steps genuinely unknowable, model must improvise across a flexible toolset → agent.</span></div>
+
+    <section class="scene" id="scene2">
+      <p class="time">9:05 a.m. · Rosa’s counterexample</p>
+      <h2>“Then explain this one to me”</h2>
+      <p>Rosa reads out a real message from the queue: <em>“I bought something from you people at some point last year, it broke, do I still have coverage and can you also tell me if the replacement ships to Malta?”</em></p>
+      <p>There is no purchase date. There is no product name. There may or may not be a shipping question. Toby cannot draw a fixed set of boxes for it, because he does not know how many boxes there will be.</p>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Shape for the open-ended message">
+        <button type="button" onclick="choose('rule','agent', 15)">Agent with an abstract toolset</button>
+        <button type="button" onclick="choose('rule','chain', 15)">A longer workflow with more steps</button>
+        <button type="button" onclick="choose('rule','branch', 15)">A workflow with a branch for every possible question</button>
+      </div>
+      <div class="outcome" id="rule-agent" aria-live="polite"><strong>Yes.</strong> The steps are not knowable in advance, and the system must be able to recognise that it is missing required information and ask for it — “when did you purchase this?” — before it can calculate anything. That is agent behaviour: goal plus tools, path chosen at runtime.</div>
+      <div class="outcome" id="rule-chain" aria-live="polite"><strong>More steps is not the same as the right shape.</strong> A longer chain still assumes you know which steps run and in what order. Here the number and order of steps depend on what the customer turns out to have asked. That is the agent condition.</div>
+      <div class="outcome" id="rule-branch" aria-live="polite"><strong>This is the trap the decision rule exists to prevent.</strong> Enumerating every branch is how a workflow quietly becomes unmaintainable. When you cannot enumerate the cases, stop enumerating — give Claude a goal and a small set of combinable tools instead.</div>
+      <div class="lesson"><p><strong>Read the scenario for one thing:</strong> can you list the steps before the input arrives? Yes → workflow. No, and the model needs to choose tools and next steps dynamically → agent.</p></div>
+    </section>
+
+    <section class="scene" id="scene3">
+      <p class="time">9:41 a.m. · Pattern one — Chaining</p>
+      <h2>The prompt that ignores half its own rules</h2>
+      <p>Toby’s launch-announcement prompt has eleven constraints: no emoji, no exclamation marks, under 120 words, mention the warranty, don’t mention competitors, professional tone, and six more. Claude honours most of them and quietly drops two or three. Repeating the rules louder does not help.</p>
+      <p>This is the <strong>long prompt problem</strong>, and <strong>chaining</strong> (also called prompt chaining) is the pattern that solves it: break a large task into smaller <em>sequential</em> subtasks that build on each other.</p>
+      <pre><code>input ──▶ [ step 1: generate ] ──▶ [ step 2: focused revision ] ──▶ output
+              (imperfect)              (fix only the named misses)</code></pre>
+      <p>Step one generates the content and is allowed to be imperfect. Step two is a focused revision pass that targets specific fixes only. Each call juggles fewer constraints, so each call gets more of them right.</p>
+      <p class="choice">Toby asks which fix to try first</p>
+      <div class="choices" role="group" aria-label="Fix for the constraint-heavy prompt">
+        <button type="button" onclick="choose('chain','two', 22)">Two calls: draft, then a revision pass naming the violations</button>
+        <button type="button" onclick="choose('chain','repeat', 22)">Repeat every constraint twice in the same prompt</button>
+        <button type="button" onclick="choose('chain','agent', 22)">Hand Claude the rules as tools and let an agent sort it out</button>
+        <button type="button" onclick="choose('chain','parallel', 22)">Run eleven parallel calls, one per constraint</button>
+      </div>
+      <div class="outcome" id="chain-two" aria-live="polite"><strong>That is chaining.</strong> The two-step fix is exactly the remedy the pattern prescribes: accept an imperfect first draft, then send a second, narrow request that addresses only the constraints that were violated.</div>
+      <div class="outcome" id="chain-repeat" aria-live="polite"><strong>Already tried, already failed.</strong> Repetition inside one long prompt is the known failure mode — Claude keeps partially ignoring constraints no matter how many times they appear. Split the work into sequential steps instead.</div>
+      <div class="outcome" id="chain-agent" aria-live="polite"><strong>Wrong shape.</strong> You know the exact steps: generate, then revise. That is a workflow, and specifically a chain. Introducing autonomy here buys unpredictability on a problem you had fully specified.</div>
+      <div class="outcome" id="chain-parallel" aria-live="polite"><strong>Wrong pattern.</strong> Parallelization is for independent evaluations that get aggregated. These constraints all apply to one evolving draft, so the steps must build on each other — that is chaining.</div>
+      <div class="lesson"><p><strong>Chaining:</strong> sequential subtasks that build on each other. Reach for it whenever one prompt is being asked to satisfy more rules than it can hold at once.</p></div>
+    </section>
+
+    <section class="scene" id="scene4">
+      <p class="time">10:20 a.m. · Pattern two — Parallelization</p>
+      <h2>Four analyses, one decision</h2>
+      <p>Northstar’s hardware team must choose a housing material: metal, polymer, ceramic, or composite. One giant prompt asking Claude to weigh all four against cost, weight, thermal tolerance and moulding complexity produces mush — every consideration dilutes every other.</p>
+      <p><strong>Parallelization</strong> splits one complex task into multiple independent sub-tasks, runs them <em>simultaneously</em>, and then <strong>aggregates</strong> the results into a final decision.</p>
+      <pre><code>              ┌─▶ [ evaluate metal     ] ─┐
+              ├─▶ [ evaluate polymer   ] ─┤
+input ────────┤                          ├──▶ [ aggregator ] ──▶ decision
+              ├─▶ [ evaluate ceramic   ] ─┤
+              └─▶ [ evaluate composite ] ─┘</code></pre>
+      <p>The sub-tasks do not have to be identical — they only have to be meaningfully independent. The payoff is focus (each call analyses one thing thoroughly), modularity (each sub-prompt can be improved and evaluated on its own), and scalability (adding a fifth material does not disturb the first four).</p>
+      <p class="choice">Callum asks what makes this pattern legal here</p>
+      <div class="choices" role="group" aria-label="Why parallelization applies">
+        <button type="button" onclick="choose('parallel','independent', 30)">The four evaluations don’t depend on each other’s output</button>
+        <button type="button" onclick="choose('parallel','speed', 30)">It’s always faster than doing things one at a time</button>
+        <button type="button" onclick="choose('parallel','same', 30)">All four sub-tasks use the identical prompt</button>
+      </div>
+      <div class="outcome" id="parallel-independent" aria-live="polite"><strong>Exactly.</strong> Independence is the entry condition. Each material can be judged without knowing the verdict on the others, so the four evaluations can run simultaneously and an aggregation step compares them at the end.</div>
+      <div class="outcome" id="parallel-speed" aria-live="polite"><strong>Not the reason.</strong> Speed is a side effect, not the criterion — and it disappears the moment one sub-task needs another’s output. Parallelization applies when the sub-tasks are genuinely independent; the aggregator is what turns them back into one decision.</div>
+      <div class="outcome" id="parallel-same" aria-live="polite"><strong>Not required.</strong> The sub-tasks don’t need to be identical. You could evaluate cost in one branch and thermal tolerance in another. What matters is that they are independent and that something aggregates them.</div>
+      <div class="lesson"><p><strong>Parallelization:</strong> independent sub-tasks run simultaneously, then aggregated. Signature words in a scenario: “break this decision into separate evaluations and compare.”</p></div>
+    </section>
+
+    <section class="scene" id="scene5">
+      <p class="time">11:08 a.m. · Pattern three — Routing</p>
+      <h2>One inbox, three very different jobs</h2>
+      <p>Ines’s queue contains billing disputes, outage reports, and how-do-I questions. A single prompt tuned to be gentle with billing disputes is the wrong voice for an outage, and a prompt tuned for outages is useless on a how-to.</p>
+      <p><strong>Routing</strong> categorizes the input first — with its own Claude call — and then forwards it to <em>one</em> specialized pipeline built for that category.</p>
+      <pre><code>                          ┌─▶ [ billing pipeline ]
+input ──▶ [ categorize ] ─┼─▶ [ outage pipeline  ] ──▶ output
+                          └─▶ [ how-to pipeline  ]
+
+      the input travels down exactly ONE branch</code></pre>
+      <p>That “exactly one” is the whole point. Because nothing else flows through it, each pipeline can be deeply optimized for its case — its own prompt, its own tools, its own tone.</p>
+      <div class="blue-note"><p><strong>Routing has a second, cheaper payoff.</strong> The same shape lets a production application send each task type to the cheapest model that meets its quality bar — classify with Haiku, draft with Sonnet, escalate only the genuinely hard reasoning to Opus — inside one endpoint. Routing is a quality pattern and a cost pattern at the same time.</p></div>
+      <p class="choice">Rosa wants to know how routing differs from parallelization</p>
+      <div class="choices" role="group" aria-label="Routing versus parallelization">
+        <button type="button" onclick="choose('route','one', 38)">Routing sends the input down one branch; parallelization sends it down all of them</button>
+        <button type="button" onclick="choose('route','order', 38)">Routing runs its branches in order; parallelization runs them at once</button>
+        <button type="button" onclick="choose('route','tools', 38)">Routing uses tools; parallelization uses prompts</button>
+      </div>
+      <div class="outcome" id="route-one" aria-live="polite"><strong>That’s the distinction.</strong> Routing categorizes, then forwards to a single specialized pipeline. Parallelization deliberately runs several sub-tasks and aggregates them. One picks a lane; the other opens every lane and merges at the end.</div>
+      <div class="outcome" id="route-order" aria-live="polite"><strong>Not quite.</strong> Ordering is what separates chaining from parallelization. Routing’s defining move is the categorization step followed by forwarding to exactly one pipeline — the other branches never run at all.</div>
+      <div class="outcome" id="route-tools" aria-live="polite"><strong>No.</strong> Both patterns are made of Claude calls and can use tools or not. The difference is topological: routing narrows to one branch, parallelization fans out to many and aggregates.</div>
+      <div class="lesson"><p><strong>Routing:</strong> categorize, then forward to the one pipeline built for that category. Signature words: “different kinds of request need different handling.”</p></div>
+    </section>
+
+    <section class="scene" id="scene6">
+      <p class="time">11:52 a.m. · Pattern four — Evaluator-Optimizer</p>
+      <h2>The part that grades its own homework</h2>
+      <p>Northstar’s design team has a stranger job: a customer photographs a broken bracket and wants a replacement part modelled. The steps are fully known — describe the image in detail, model the object with a CAD library from that description, render the model, compare the render against the original photo, and if it is wrong, go back and fix it.</p>
+      <p>That final loop is the <strong>Evaluator-Optimizer</strong> pattern: a producer creates output, a grader evaluates it against criteria, and if the output is rejected, the feedback loops back to the producer for revision — repeating until it is accepted.</p>
+      <pre><code>input ──▶ [ producer ] ──▶ [ grader ] ──▶ accepted ──▶ output
+               ▲                │
+               └─── feedback ◀──┘  (rejected)</code></pre>
+      <p class="choice">Callum asks what this system <em>is</em>, architecturally</p>
+      <div class="choices" role="group" aria-label="Classify the CAD pipeline">
+        <button type="button" onclick="choose('evalopt','workflow', 46)">A workflow, using the Evaluator-Optimizer pattern</button>
+        <button type="button" onclick="choose('evalopt','agent', 46)">An agent, because it loops until it’s satisfied</button>
+        <button type="button" onclick="choose('evalopt','chain', 46)">A chain, because the steps are sequential</button>
+      </div>
+      <div class="outcome" id="evalopt-workflow" aria-live="polite"><strong>Right on both counts.</strong> The steps are fully known in advance, so it is a workflow; and its distinguishing feature is the producer → grader → feedback loop, so the pattern is Evaluator-Optimizer. A loop does not make something an agent.</div>
+      <div class="outcome" id="evalopt-agent" aria-live="polite"><strong>The loop is a red herring.</strong> What makes something an agent is that <em>Claude</em> chooses the path. Here you wrote the path — describe, model, render, grade, revise — and the loop is a fixed part of it. This is a workflow using Evaluator-Optimizer.</div>
+      <div class="outcome" id="evalopt-chain" aria-live="polite"><strong>Half right, and the half you missed is the point.</strong> Yes the steps are sequential, but chaining has no grader and no feedback edge. The named pattern for producer → grader → revise-until-accepted is Evaluator-Optimizer.</div>
+      <div class="lesson"><p><strong>Evaluator-Optimizer:</strong> producer, grader, feedback, repeat until accepted. Signature words: “check the output against criteria and try again if it doesn’t pass.”</p></div>
+    </section>
+
+    <section class="scene" id="scene7">
+      <p class="time">12:30 p.m. · The four patterns on one board</p>
+      <h2>Toby draws them side by side</h2>
+      <table class="mini-table"><thead><tr><th>Pattern</th><th>Shape</th><th>Use when</th></tr></thead><tbody>
+        <tr><td><strong>Parallelization</strong></td><td>Fan out to independent sub-tasks, then aggregate</td><td>A decision breaks into meaningfully independent evaluations</td></tr>
+        <tr><td><strong>Chaining</strong></td><td>Sequential subtasks that build on each other</td><td>One prompt carries too many constraints and drops some</td></tr>
+        <tr><td><strong>Routing</strong></td><td>Categorize, then forward to exactly one specialized pipeline</td><td>Different input categories need genuinely different handling</td></tr>
+        <tr><td><strong>Evaluator-Optimizer</strong></td><td>Producer → grader → feedback → repeat until accepted</td><td>Quality can be judged against criteria and revision is cheap</td></tr>
+      </tbody></table>
+      <p>Ines describes a new job to test the board: incoming supplier contracts must be scanned for risk. Each contract is checked for payment-terms risk, liability risk, and termination risk — three separate assessments, no one of which depends on the others — and then a final call weighs all three into a single go/no-go recommendation.</p>
+      <p class="choice">Which pattern is that?</p>
+      <div class="choices" role="group" aria-label="Identify the pattern for contract risk scanning">
+        <button type="button" onclick="choose('drill','parallel', 53)">Parallelization</button>
+        <button type="button" onclick="choose('drill','chain', 53)">Chaining</button>
+        <button type="button" onclick="choose('drill','route', 53)">Routing</button>
+        <button type="button" onclick="choose('drill','evalopt', 53)">Evaluator-Optimizer</button>
+      </div>
+      <div class="outcome" id="drill-parallel" aria-live="polite"><strong>Correct.</strong> Three independent assessments run simultaneously and a final step aggregates them into one decision. That is the parallelization signature: fan out, then aggregate.</div>
+      <div class="outcome" id="drill-chain" aria-live="polite"><strong>No — nothing here builds on anything.</strong> Chaining is for sequential subtasks where step two consumes step one’s output. The liability assessment does not need the payment-terms assessment. Fan out and aggregate: parallelization.</div>
+      <div class="outcome" id="drill-route" aria-live="polite"><strong>No categorization step, and no single lane.</strong> Routing would send each contract to <em>one</em> pipeline. Here all three assessments run on every contract, and their results are combined. That is parallelization.</div>
+      <div class="outcome" id="drill-evalopt" aria-live="polite"><strong>There is no grader and no revision loop.</strong> The final call aggregates three findings; it does not reject the output and send it back for another pass. That would be Evaluator-Optimizer. This is parallelization.</div>
+      <div class="lesson"><p><strong>Exam habit:</strong> read the scenario for topology, not vocabulary. Sequential-and-dependent = chaining. Fan-out-and-aggregate = parallelization. Categorize-then-one-lane = routing. Grade-and-revise = Evaluator-Optimizer.</p></div>
+    </section>
+
+    <section class="scene" id="scene8">
+      <p class="time">1:35 p.m. · Agents and tools</p>
+      <h2>What you actually hand an agent</h2>
+      <p>Rosa finally gets her agent — for the open-ended returns queue from this morning. An agent is <strong>a goal plus a tool set</strong>. Claude figures out the combination of tool calls itself, including recognising when it needs more information from the user and asking for it, the way it asks for a purchase date before it can compute a 90-day warranty expiry.</p>
+      <p>Toby’s instinct is to build one tool per scenario. You stop him. The design principle is to keep tools <strong>abstract and combinable</strong>, not hyper-specialized — Claude Code’s own toolset is generic (<code>bash</code>, <code>read</code>, <code>write</code>, <code>edit</code>, <code>glob</code>, <code>grep</code>), not <code>refactor_code</code> and <code>install_dependencies</code>. Generic primitives let Claude combine tools creatively to handle situations you never explicitly planned for.</p>
+      <p>Concretely: <code>get_current_datetime</code>, <code>add_duration_to_datetime</code> and <code>set_reminder</code> can be recombined into a dozen different time-related tasks. <code>calculate_90_day_warranty_expiry</code> can do exactly one.</p>
+      <p class="choice">Toby proposes a toolset. Which one do you approve?</p>
+      <div class="choices" role="group" aria-label="Choose a toolset design">
+        <button type="button" onclick="choose('agenttools','abstract', 60)">Four generic tools: look up policy, read order, compute a date, send a reply</button>
+        <button type="button" onclick="choose('agenttools','specific', 60)">Twenty named tools, one per known return scenario</button>
+        <button type="button" onclick="choose('agenttools','one', 60)">One tool: handle_return, which does everything internally</button>
+      </div>
+      <div class="outcome" id="agenttools-abstract" aria-live="polite"><strong>Approved.</strong> A small set of abstract, combinable tools is what makes an agent useful — Claude pieces them together for cases you never enumerated, which is the only reason you chose an agent over a workflow in the first place.</div>
+      <div class="outcome" id="agenttools-specific" aria-live="polite"><strong>You’ve rebuilt the workflow inside the agent.</strong> Twenty hyper-specialized tools means the agent can only handle the twenty situations you already thought of — you paid the agent’s reliability cost and got none of its flexibility.</div>
+      <div class="outcome" id="agenttools-one" aria-live="polite"><strong>Nothing left to orchestrate.</strong> A single do-everything tool gives Claude no combinations to discover and hides the failure inside opaque code. Agents work best with a small set of flexible primitives.</div>
+      <div class="lesson"><p><strong>Agent = goal + tools.</strong> Design the tools to be pieced together, and expect the agent to ask for missing input rather than guess.</p></div>
+    </section>
+
+    <section class="scene" id="scene9">
+      <p class="time">2:14 p.m. · Environment inspection</p>
+      <h2>The agent that thought it had saved the file</h2>
+      <p>Toby’s first agent run ends triumphantly and changes nothing. It “edited” a config file three times against content that had already moved, then reported success.</p>
+      <p>The missing discipline has a name: <strong>environment inspection</strong>. Before acting, look; after acting, look again. Claude can only perceive its environment through tool results, so the loop must explicitly feed it fresh state instead of assuming an action landed as expected.</p>
+      <ul>
+        <li>Read a file <em>before</em> editing it, so the edit targets current content rather than a stale assumption.</li>
+        <li>List a directory before deciding whether to create a file in it.</li>
+        <li>Take a fresh screenshot <em>after</em> a Computer Use click or keystroke to confirm the action actually worked.</li>
+      </ul>
+      <p>Skipping this step is a common source of agent failure. The agent flies blind and repeats or compounds an action that silently failed.</p>
+      <p class="choice">Ines’s video agent posts clips that are sometimes silent. What do you add?</p>
+      <div class="choices" role="group" aria-label="Fix the blind agent">
+        <button type="button" onclick="choose('inspect','verify', 66)">Tools that let it inspect the rendered file — extract frames, generate timestamped captions — before it posts</button>
+        <button type="button" onclick="choose('inspect','retry', 66)">A retry: if the post fails, run the whole pipeline again</button>
+        <button type="button" onclick="choose('inspect','prompt', 66)">A system-prompt line saying “make sure the audio is correct”</button>
+      </div>
+      <div class="outcome" id="inspect-verify" aria-live="polite"><strong>That’s environment inspection.</strong> Give the agent a way to observe the result of its own action — screenshots at intervals, timestamped captions to verify dialogue placement — so it can validate the render meets expectations <em>before</em> the irreversible step.</div>
+      <div class="outcome" id="inspect-retry" aria-live="polite"><strong>Retrying blindness produces more blindness.</strong> The agent never learned that the first attempt was wrong. Without a feedback mechanism that reveals the new environment state, a retry just repeats the same unverified action.</div>
+      <div class="outcome" id="inspect-prompt" aria-live="polite"><strong>An instruction is not a perception.</strong> Claude cannot check the audio by being told to care about it; it can only perceive through tool results. Give it a tool that returns the actual state of the rendered file.</div>
+      <div class="lesson"><p><strong>Environment inspection:</strong> look before you act, look again after. It is how an agent gauges progress, detects errors, and adapts instead of operating blindly.</p></div>
+    </section>
+
+    <div class="rule"><strong>Autonomy is a purchase, not a gift.</strong><span>You pay for it in predictability, testability, and success rate — so buy only as much as the problem requires.</span></div>
+
+    <section class="scene" id="scene10">
+      <p class="time">3:00 p.m. · [Bonus] Managed agents</p>
+      <h2>“Who runs the loop at three in the morning?”</h2>
+      <p>Callum’s question is operational. Toby’s agent loop lives in a Python process on one server. If that process dies eight minutes into a forty-minute job, the job is gone.</p>
+      <p><strong>Managed agents</strong> are a suite of APIs for building and deploying agents at scale, hosted on Anthropic’s infrastructure instead of your own server. You define an agent — tools, persona, capabilities — configure a sandbox environment, and fire off sessions from your app. Claude runs the agent loop inside an isolated container with file system access, bash execution and web search, and you stream events back out. It is <strong>enabled by default for every API account</strong> — nothing to request.</p>
+      <h3>The four primitives, in order</h3>
+      <table class="mini-table"><thead><tr><th>#</th><th>Primitive</th><th>What it is</th></tr></thead><tbody>
+        <tr><td>1</td><td><strong>Agent</strong></td><td>The persona: model, system prompt, toolset. Reusable across many runs.</td></tr>
+        <tr><td>2</td><td><strong>Environment</strong></td><td>Where the agent runs: cloud or local, plus networking config.</td></tr>
+        <tr><td>3</td><td><strong>Session</strong></td><td>A single run of an agent inside an environment. The unit of work.</td></tr>
+        <tr><td>4</td><td><strong>Events</strong></td><td>The messages flowing in and out: actions, tool calls, results, replies.</td></tr>
+      </tbody></table>
+      <p>Your app talks to a session, the session drives work inside the environment, and everything comes back out through the event stream. You send events in and read events out — <strong>not</strong> a manual while loop.</p>
+      <div class="lesson"><p><strong>Memory hook for the order:</strong> stage a play. Hire the <em>actor</em> (Agent), build the <em>set</em> (Environment), open a <em>performance</em> (Session), then watch the <em>cue stream</em> (Events).</p></div>
+    </section>
+
+    <section class="scene" id="scene11">
+      <p class="time">3:38 p.m. · The smallest managed agent</p>
+      <h2>Five steps, and one of them is an ordering trap</h2>
+      <p>Toby builds the minimum viable version while everyone watches.</p>
+      <ol>
+        <li><strong>Create the agent</strong> — name, model, system prompt, and tools; the bundled agent toolset supplies file, bash and web tools without you writing your own.</li>
+        <li><strong>Create the environment</strong> — a cloud environment with its networking configuration.</li>
+        <li><strong>Create the session</strong> — pointing at the agent id and the environment id.</li>
+        <li><strong>Open the event stream first, then send the kickoff message.</strong></li>
+        <li><strong>Consume the stream</strong>, watching for <code>agent.message</code> (Claude’s text), <code>agent.tool_use</code> (which tool it picked), and <code>session.status_idle</code> (the agent is done).</li>
+      </ol>
+      <pre><code>agent   = client.beta.agents.create(name=..., model=..., system=...,
+                                    tools=[{"type": "agent_toolset_..."}])
+
+env     = client.beta.environments.create(
+              name=..., config={"type": "cloud",
+                                "networking": {"type": "unrestricted"}})
+
+session = client.beta.sessions.create(agent=agent.id,
+                                      environment_id=env.id, title=...)
+
+# 4. open the stream BEFORE the kickoff message
+# 5. read events: agent.message / agent.tool_use / session.status_idle</code></pre>
+      <p class="choice">Toby sends the kickoff message and then opens the stream. What happens?</p>
+      <div class="choices" role="group" aria-label="Stream ordering consequence">
+        <button type="button" onclick="choose('stream','missed', 72)">He misses the events that already occurred</button>
+        <button type="button" onclick="choose('stream','replay', 72)">Nothing — the stream replays everything from the start of the session</button>
+        <button type="button" onclick="choose('stream','error', 72)">The session refuses to start without an open stream</button>
+      </div>
+      <div class="outcome" id="stream-missed" aria-live="polite"><strong>Correct, and this is a favourite exam detail.</strong> The stream only delivers events that occur <em>after</em> it opens. Open it first, then send the kickoff message, or the opening moves of the session vanish.</div>
+      <div class="outcome" id="stream-replay" aria-live="polite"><strong>No replay.</strong> Events that happened before the stream opened are not delivered to it. That is precisely why the documented order is: open the stream, then kick off the work.</div>
+      <div class="outcome" id="stream-error" aria-live="polite"><strong>It doesn’t protect you.</strong> The work proceeds; you simply don’t see the beginning of it. Turn the camera on before the race starts.</div>
+      <div class="lesson"><p><strong>The five steps:</strong> agent → environment → session → open stream, then kick off → consume events. The ordering inside step four is the one people get wrong.</p></div>
+    </section>
+
+    <section class="scene" id="scene12">
+      <p class="time">4:05 p.m. · The building blocks Callum cares about</p>
+      <h2>What turns a demo into an operation</h2>
+      <p>Managed agents ship with the pieces that make long-running work survivable:</p>
+      <ul>
+        <li><strong>Rubrics and graders</strong> — define success criteria; a separate grader, with its own context window, evaluates the output against the rubric, and Claude iterates until it passes.</li>
+        <li><strong>Memory</strong> — the agent reads a memory store before starting and writes to it when done, so runs build on each other instead of repeating themselves.</li>
+        <li><strong>Multi-agent coordination</strong> — a coordinator agent delegates to specialist agents, each running in its own context window on a shared file system, and then synthesizes their findings.</li>
+        <li><strong>Permissions policies</strong> — sensitive actions pause for human approval before executing.</li>
+        <li><strong>Parallel sessions</strong> — many tickets or tasks at once, each in its own container.</li>
+      </ul>
+      <p>Ines raises the one that scares her: the agent will eventually want to post a refund decision into the customer’s Slack channel.</p>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Handle the sensitive action">
+        <button type="button" onclick="choose('blocks','policy', 78)">A permissions policy that pauses the action for human approval</button>
+        <button type="button" onclick="choose('blocks','rubric', 78)">A rubric, so the grader can judge whether the message was appropriate</button>
+        <button type="button" onclick="choose('blocks','remove', 78)">Remove the Slack tool and have a human copy the text over manually</button>
+      </div>
+      <div class="outcome" id="blocks-policy" aria-live="polite"><strong>That’s the named mechanism.</strong> Permissions policies exist exactly for this: a sensitive action pauses for human approval before it executes, so the agent keeps its autonomy everywhere else.</div>
+      <div class="outcome" id="blocks-rubric" aria-live="polite"><strong>Grading is after the fact.</strong> A rubric and grader improve quality by making the agent revise, but they don’t stand between the agent and an irreversible side effect. For consequential actions you want an approval gate — a permissions policy.</div>
+      <div class="outcome" id="blocks-remove" aria-live="polite"><strong>Safe, but you threw away the automation.</strong> The building block for “powerful but supervised” already exists: a permissions policy pauses the sensitive action for approval instead of deleting the capability.</div>
+      <div class="lesson"><p><strong>Rubrics for quality, memory for continuity, coordination for scale, permissions for consequence.</strong> Those four are what separate a managed agent from a clever script.</p></div>
+    </section>
+
+    <section class="scene" id="scene13">
+      <p class="time">4:40 p.m. · Managed agents vs. a manual loop</p>
+      <h2>Callum wants a rule he can put in a doc</h2>
+      <table class="mini-table"><thead><tr><th>Reach for</th><th>When</th></tr></thead><tbody>
+        <tr><td><strong>Managed agents</strong></td><td>The loop would run too long (minutes to hours), touch too many files or tools, or needs to survive a network hiccup — that is, needs resumability. Caching and compaction ship on by default.</td></tr>
+        <tr><td><strong>A manual loop</strong></td><td>You want full control over the loop, the tools, and the message array.</td></tr>
+      </tbody></table>
+      <p>Two jobs land on the desk at once. Job A: classify 400 support emails into three buckets, one short call each. Job B: audit an entire supplier document archive overnight — hundreds of files, bash, web lookups, roughly two hours of work that must not be lost if the connection drops.</p>
+      <p class="choice">Which goes where?</p>
+      <div class="choices" role="group" aria-label="Managed agents or manual loop">
+        <button type="button" onclick="choose('versus','split', 84)">A: manual loop (or a plain workflow). B: managed agents.</button>
+        <button type="button" onclick="choose('versus','both', 84)">Both on managed agents — it’s hosted, so it’s always the safer default</button>
+        <button type="button" onclick="choose('versus','manual', 84)">Both on a manual loop — you keep full control</button>
+      </div>
+      <div class="outcome" id="versus-split" aria-live="polite"><strong>Correct.</strong> Job A is short, uniform and known — it doesn’t even need an agent, let alone hosting. Job B hits all three managed-agent criteria at once: long-running, many files and tools, and a hard requirement for resumability.</div>
+      <div class="outcome" id="versus-both" aria-live="polite"><strong>Over-applied.</strong> Managed agents earn their keep on long, tool-heavy, interruption-prone work. A 400-item classification is a quick walk around the block — running it as hosted sessions adds machinery without buying anything.</div>
+      <div class="outcome" id="versus-manual" aria-live="polite"><strong>You’ll lose job B.</strong> A two-hour, many-file run that must survive a network hiccup is precisely the case where a hand-written loop becomes a liability. Keep the manual loop for when you genuinely need full control.</div>
+      <div class="lesson"><p><strong>Memory hook:</strong> managed agents for the long expedition where the guide may be interrupted; a manual loop for the quick walk you want to steer yourself.</p></div>
+    </section>
+
+    <section class="scene" id="scene14">
+      <p class="time">5:15 p.m. · The price of autonomy</p>
+      <h2>What Northstar owes the system before it lets go of the wheel</h2>
+      <p>Rosa asks for one more increment of autonomy on the returns agent. You say yes — on conditions, and the conditions are the same for a workflow or an agent.</p>
+      <p>Before you widen the leash, the design must define:</p>
+      <ul>
+        <li><strong>Stop conditions</strong> — what “done” means, so the loop ends deliberately rather than by exhaustion.</li>
+        <li><strong>Timeouts</strong> — a bound on how long the system may run.</li>
+        <li><strong>Permissions</strong> — what it is allowed to touch.</li>
+        <li><strong>Observability</strong> — the ability to see what it did and why, which is exactly what an agent costs you by default, since the steps aren’t known ahead of time.</li>
+        <li><strong>A human approval path</strong> for consequential side effects.</li>
+      </ul>
+      <p>Then the trade-offs, stated plainly. More autonomy means <em>lower</em> success rates and less predictability; it means testing gets harder because you cannot enumerate the execution path; and it means cost and latency become variable, because you no longer control how many turns the system takes. A workflow’s bill is roughly knowable in advance. An agent’s is a distribution.</p>
+      <p class="choice">Callum will sign off on exactly one condition first. Which do you insist on?</p>
+      <div class="choices" role="group" aria-label="Prerequisite for more autonomy">
+        <button type="button" onclick="choose('autonomy','all', 96)">Stop conditions, timeouts, permissions, observability, and an approval path for consequential actions</button>
+        <button type="button" onclick="choose('autonomy','model', 96)">Upgrade to the most capable model available</button>
+        <button type="button" onclick="choose('autonomy','prompt', 96)">A longer system prompt telling it to be careful and efficient</button>
+        <button type="button" onclick="choose('autonomy','cache', 96)">Turn on prompt caching to keep the cost down</button>
+      </div>
+      <div class="outcome" id="autonomy-all" aria-live="polite"><strong>That’s the list.</strong> For either design — workflow or agent — define stop conditions, timeouts, permissions, observability, and a human approval path for consequential side effects. Autonomy without those is just an unbounded process with a good vocabulary.</div>
+      <div class="outcome" id="autonomy-model" aria-live="polite"><strong>Capability is not control.</strong> A stronger model may reason better, but it does not give you a stop condition, a timeout, a permission boundary, or a trace of what happened. It raises cost while leaving the governance gap exactly where it was.</div>
+      <div class="outcome" id="autonomy-prompt" aria-live="polite"><strong>Instructions are probabilistic.</strong> “Be careful” has a non-zero failure rate on every run. The guarantees you need — bounded runtime, scoped permissions, an approval gate — have to be enforced by the system around the loop, not requested inside it.</div>
+      <div class="outcome" id="autonomy-cache" aria-live="polite"><strong>Useful, but not the prerequisite.</strong> Caching reduces the cost of the tokens you send; it does nothing about how many turns an autonomous loop decides to take, what it is allowed to touch, or whether you can see what it did.</div>
+      <div class="lesson"><p><strong>The architect’s bargain:</strong> every step of autonomy you grant, you pay for in predictability and testability, and you must buy back in stop conditions, scope, and visibility.</p></div>
+    </section>
+
+    <section class="scene" id="scene15">
+      <p class="time">5:50 p.m. · The board at the end of the day</p>
+      <h2>What Toby finally drew</h2>
+      <p>Northstar’s returns system ends the day as a mixture, and that is the correct answer.</p>
+      <p>Inbound messages hit a <strong>routing</strong> step that sorts them into billing, outage, and how-to lanes. The billing lane is a <strong>chain</strong>: draft, then a focused revision pass against the tone rules. Contract review runs as <strong>parallelization</strong> with an aggregator. The replacement-part pipeline is an <strong>Evaluator-Optimizer</strong> loop. And the one genuinely open-ended lane — messages with missing information and unpredictable follow-ups — is an <strong>agent</strong> with four abstract tools, environment inspection built into every action, and a permissions policy on anything that touches a customer’s money.</p>
+      <p>The overnight archive audit runs on <strong>managed agents</strong>, because it is long, tool-heavy, and must survive an interruption.</p>
+      <p class="voice">Rosa: “So I got my agent.” Callum: “In one lane. With a leash.” Ines: “And the same customer gets the same answer twice.”</p>
+      <div class="lesson"><p><strong>Real systems are not one shape.</strong> The architect’s job is to spend autonomy where the problem is genuinely open and spend structure everywhere else.</p></div>
+    </section>
+
+    <section class="end">
+      <h2>The architect’s pocket card</h2>
+      <p><strong>Workflow</strong> = a predefined series of Claude calls for a known problem. <strong>Agent</strong> = a goal plus a tool set, path chosen at runtime. Prefer workflows; reach for agents only when truly required. Decision rule: steps knowable in advance → workflow; steps genuinely unknowable → agent.</p>
+      <p><strong>Four workflow patterns.</strong> Parallelization: independent sub-tasks run simultaneously, then aggregated. Chaining: sequential subtasks that build on each other, the fix for the long-prompt problem. Routing: categorize first, then forward to exactly one specialized pipeline. Evaluator-Optimizer: producer → grader → feedback → repeat until accepted.</p>
+      <p><strong>Agents.</strong> Give abstract, combinable tools, not hyper-specialized ones. Expect the agent to ask for missing input. Build in <strong>environment inspection</strong> — look before acting, look again after — because Claude perceives only through tool results.</p>
+      <p><strong>Managed agents.</strong> Hosted on Anthropic’s infrastructure, enabled by default for every API account. Primitives in order: Agent → Environment → Session → Events. Smallest build: create agent, create environment, create session, open the stream <em>then</em> send the kickoff, consume <code>agent.message</code> / <code>agent.tool_use</code> / <code>session.status_idle</code>. Building blocks: rubrics and graders, memory, multi-agent coordination, permissions policies, parallel sessions. Use them when the loop runs long, touches many tools or files, or needs resumability; use a manual loop when you want full control.</p>
+      <p><strong>Autonomy has a price.</strong> Lower success rates, harder testing, variable cost and latency. Pay it back with stop conditions, timeouts, permissions, observability, and a human approval path for consequential side effects.</p>
+    </section>
+
+    <p class="source">Primary source: <code>03-building-with-the-claude-api/notes.md</code> and <code>03-building-with-the-claude-api/anthropic-notes.md</code> in this study workspace, cross-checked against <code>03-building-with-the-claude-api/quiz.md</code>.</p>
+    <footer>Agentic Architecture &amp; Orchestration is the exam’s highest-weighted domain at 27% — more than any other, and the one most likely to show up inside the scenario-based question sets. If a pattern name still feels interchangeable with another, go back and re-read the topology, not the label. Ask your teacher to hand you scenarios one at a time and make you name the shape before you name the fix.</footer>
+  </main>
+  <script>
+    function choose(scene, answer, progress) {
+      document.querySelectorAll('[id^="' + scene + '-"]').forEach(function (el) { el.classList.remove('visible'); });
+      var selected = document.getElementById(scene + '-' + answer);
+      if (selected) selected.classList.add('visible');
+      var bar = document.getElementById('progressBar');
+      if (bar && progress) bar.style.width = progress + '%';
+    }
+  </script>
+</body>
+</html>

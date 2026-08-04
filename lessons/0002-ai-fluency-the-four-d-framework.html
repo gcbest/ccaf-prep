@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Fluency — The Week Northstar Decided How to Work</title>
+  <style>
+    :root {
+      --ink: #242321;
+      --muted: #706b63;
+      --paper: #f7f3ec;
+      --paper-deep: #ece4d7;
+      --rust: #4f6d5a;
+      --rust-dark: #35503f;
+      --sage: #dfe9df;
+      --blue: #dce8ee;
+      --line: #d6ccbd;
+      --white: #fffdfa;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.7 Georgia, 'Times New Roman', serif;
+    }
+    main { max-width: 780px; margin: 0 auto; padding: 44px 24px 80px; }
+    .masthead {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+      border-bottom: 1px solid var(--line); padding-bottom: 10px;
+      color: var(--muted); font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .13em; text-transform: uppercase;
+    }
+    h1 { max-width: 680px; margin: 28px 0 12px; font: 700 clamp(2.5rem, 8vw, 5.2rem)/.98 Georgia, serif; letter-spacing: -.04em; }
+    .dek { max-width: 670px; margin: 0 0 34px; color: var(--muted); font-size: 1.2rem; }
+    .progress { position: sticky; top: 0; z-index: 2; height: 4px; background: var(--paper-deep); }
+    .progress span { display: block; width: 0; height: 100%; background: var(--rust); transition: width .25s ease; }
+    .scene {
+      position: relative; margin: 34px 0 0; padding: 25px 28px 28px;
+      background: var(--white); border: 1px solid var(--line); border-radius: 3px;
+    }
+    .scene::before { content: ''; position: absolute; left: -1px; top: 0; bottom: 0; width: 4px; background: var(--rust); }
+    .opening { background: #fff8ed; }
+    .time { margin: 0 0 7px; color: var(--rust-dark); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    h2 { margin: 0 0 13px; font: 700 1.65rem/1.2 Georgia, serif; }
+    h3 { margin: 27px 0 7px; font: 700 1.1rem/1.3 Georgia, serif; }
+    p { max-width: 70ch; margin: 0 0 13px; }
+    ul, ol { max-width: 68ch; padding-left: 1.35em; }
+    li { margin: 5px 0; }
+    .voice { margin: 18px 0; padding-left: 19px; border-left: 2px solid var(--paper-deep); font-style: italic; }
+    .choice { margin: 20px 0 2px; color: var(--muted); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+    .choices { display: flex; flex-wrap: wrap; gap: 9px; margin: 10px 0 5px; }
+    button {
+      border: 1px solid var(--rust); border-radius: 3px; background: var(--white); color: var(--rust-dark);
+      padding: 9px 13px; font: 600 14px/1.2 system-ui, sans-serif; cursor: pointer;
+    }
+    button:hover, button:focus-visible { background: var(--rust); color: #fff; outline: none; }
+    button:focus-visible { box-shadow: 0 0 0 3px rgba(79, 109, 90, .22); }
+    .outcome { display: none; margin-top: 13px; padding: 14px 16px; border-left: 3px solid var(--sage); background: #f1f6ef; }
+    .outcome.visible { display: block; }
+    .outcome strong { color: var(--rust-dark); }
+    .lesson { margin: 25px 0 0; padding: 17px 18px; background: var(--paper-deep); }
+    .lesson p:last-child { margin-bottom: 0; }
+    .blue-note { margin: 18px 0; padding: 15px 17px; background: #f1f6f8; border-left: 3px solid #7b9cac; }
+    .blue-note p:last-child { margin-bottom: 0; }
+    .rule { margin: 38px 0; padding: 25px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); text-align: center; }
+    .rule strong { display: block; color: var(--rust-dark); font: 700 1.35rem/1.25 Georgia, serif; }
+    .prompt { margin: 15px 0; padding: 17px 18px; background: #fff4eb; border-left: 3px solid var(--rust); font-size: .98rem; }
+    .prompt strong { color: var(--rust-dark); }
+    .prompt code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em; }
+    .mini-table { width: 100%; margin: 17px 0; border-collapse: collapse; font-size: .95rem; }
+    .mini-table th, .mini-table td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    .mini-table th { background: var(--paper-deep); color: var(--rust-dark); font: 700 12px/1.25 system-ui, sans-serif; letter-spacing: .05em; text-transform: uppercase; }
+    .end { margin-top: 39px; padding: 27px 28px; background: var(--rust-dark); color: #fff8f1; }
+    .end h2 { color: #fff; }
+    .end p { color: #f6dfd1; }
+    .source, footer { color: var(--muted); font-size: .9rem; }
+    footer { margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--line); }
+    a { color: var(--rust-dark); }
+    code { background: var(--paper-deep); padding: .08em .28em; border-radius: 3px; }
+    @media (max-width: 560px) {
+      main { padding-top: 28px; }
+      .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
+      .scene { padding: 21px 19px 23px; }
+      .choices { display: grid; grid-template-columns: 1fr; }
+      button { text-align: left; }
+      .mini-table { font-size: .88rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+  <main>
+    <div class="masthead"><span>CCA-F · Section 1</span><span>Northstar Dispatch · The week before</span></div>
+    <h1>The week Northstar decided how to work</h1>
+    <p class="dek">You are the architect. Before anyone at Northstar picks a tool, the company has to answer a harder question: what work belongs to a person, what belongs to an AI, and how will anyone know the result is good?</p>
+
+    <section class="scene opening" id="scene0">
+      <p class="time">Monday, 8:04 a.m. · The memo nobody agreed on</p>
+      <h2>Three people, three assumptions</h2>
+      <p>This is months before the product launch. Northstar has just bought access to Claude, and the leadership memo says only: <em>“Use it.”</em> Three people arrive at your desk within an hour, and each of them means something different by those two words.</p>
+      <p><strong>Hollis Grieve</strong>, director of operations, is a skeptic. He has watched two automation programs fail and he wants to know what happens the first time the thing is confidently wrong. <strong>Nadia Okonjo</strong>, a junior analyst six months into the job, wants to hand over everything she finds tedious. <strong>Bram Ledger</strong>, compliance lead, wants to know who signs their name at the bottom of an AI-assisted document.</p>
+      <p class="voice">“We keep arguing about the tool,” Hollis says. “I don’t think the tool is the argument.”</p>
+      <p>He is right. Before Northstar chooses a surface, a prompt, or a workflow, it needs a shared vocabulary for <strong>how</strong> a person engages an AI at all. That vocabulary is this week’s work.</p>
+      <div class="lesson"><p><strong>First principle:</strong> AI fluency is not tool knowledge. It is knowing which mode of engagement a task calls for, how to describe the work, how to evaluate what comes back, and how to be accountable for it.</p></div>
+    </section>
+
+    <section class="scene" id="scene1">
+      <p class="time">Monday, 9:12 a.m. · The kickoff</p>
+      <h2>Three modes of engaging AI</h2>
+      <p>You put three words on the whiteboard. In this course’s framing, every way a person can work with AI falls into one of them.</p>
+      <table class="mini-table"><thead><tr><th>Mode</th><th>What it means</th><th>Best when</th></tr></thead><tbody>
+        <tr><td><strong>Automation</strong></td><td>You hand a task fully to AI, with little or no human involvement in execution.</td><td>Routine, well-defined work where the process is already trusted.</td></tr>
+        <tr><td><strong>Augmentation</strong></td><td>AI assists while you stay actively in the loop, reviewing and steering.</td><td>Judgment or context matters and you want to retain control over the outcome.</td></tr>
+        <tr><td><strong>Agency</strong></td><td>AI operates with a degree of independent initiative toward a goal, making its own choices about how to get there.</td><td>The mode most agentic systems—and Claude Code—operate in.</td></tr>
+      </tbody></table>
+      <p>Nadia has a task in hand: the weekly regional numbers arrive in the same spreadsheet format every Monday, and every Monday she reformats them into the same three tables. The process has not changed in two years and she can describe every step from memory.</p>
+      <p class="choice">Which mode fits Nadia’s Monday spreadsheet?</p>
+      <div class="choices" role="group" aria-label="Choose an engagement mode for the weekly reformat">
+        <button type="button" onclick="choose('modes','automation', 8)">Automation</button>
+        <button type="button" onclick="choose('modes','augmentation', 8)">Augmentation</button>
+        <button type="button" onclick="choose('modes','agency', 8)">Agency</button>
+      </div>
+      <div class="outcome" id="modes-automation" aria-live="polite"><strong>Yes.</strong> Automation is for routine, well-defined work where the process is already trusted—exactly this. The task is stable, the steps are known, and Nadia does not need to be present while it runs.</div>
+      <div class="outcome" id="modes-augmentation" aria-live="polite"><strong>More supervision than the task needs.</strong> Augmentation is the right call when judgment or context matters and you want to retain control over the outcome. A two-year-old, fully-specified reformat does not need Nadia in the loop for every step; this is Automation.</div>
+      <div class="outcome" id="modes-agency" aria-live="polite"><strong>More independence than the task needs.</strong> Agency is for an AI acting on its own initiative toward a goal, choosing how to get there. There is nothing to choose here—the route is fixed and known. This is Automation.</div>
+      <div class="lesson"><p><strong>Memory hook:</strong> a three-lane road—<strong>autopilot</strong> (Automation), <strong>co-pilot</strong> (Augmentation), and a self-driving taxi choosing its own route (Agency). Choosing the right lane for a given task is itself a skill.</p></div>
+    </section>
+
+    <section class="scene" id="scene2">
+      <p class="time">Monday, 10:30 a.m. · The framework arrives</p>
+      <h2>Four competencies, four drawers</h2>
+      <p>Hollis wants to know where the whiteboard word came from. It is the <strong>4D Framework for AI Fluency</strong>, developed by <strong>Prof. Rick Dakan</strong> of Ringling College of Art and Design and <strong>Prof. Joseph Feller</strong> of University College Cork, and licensed <strong>CC BY-NC-SA 4.0</strong>. Four core competencies:</p>
+      <table class="mini-table"><thead><tr><th>Competency</th><th>The question it answers</th></tr></thead><tbody>
+        <tr><td><strong>Delegation</strong></td><td>What work should go to a human and what should go to AI? Do I understand both the goal and what the AI is actually capable of?</td></tr>
+        <tr><td><strong>Description</strong></td><td>How do I communicate effectively with the AI—defining the output I want, guiding its process, specifying behavior and constraints?</td></tr>
+        <tr><td><strong>Discernment</strong></td><td>How do I critically evaluate the output for quality, accuracy, and appropriateness before I rely on it?</td></tr>
+        <tr><td><strong>Diligence</strong></td><td>How do I use AI responsibly and ethically, with transparency and accountability for what I ship?</td></tr>
+      </tbody></table>
+      <p>Choosing between Automation, Augmentation, and Agency is the practical expression of the first competency: it <em>is</em> Delegation.</p>
+      <div class="blue-note"><p><strong>Memory hook:</strong> four <strong>D-shaped drawers</strong> in your mental desk—<strong>Decide</strong>, <strong>Describe</strong>, <strong>Double-check</strong>, <strong>Do-right</strong>. This is the first of the seven official CCA-F prep courses, and it is foundational vocabulary: later courses and exam scenario questions assume you already know it.</p></div>
+      <p class="voice">“So the framework isn’t about the AI,” Bram says slowly. “It’s a list of things that stay ours.”</p>
+    </section>
+
+    <section class="scene" id="scene3">
+      <p class="time">Monday, 2:15 p.m. · Nadia’s vague ask</p>
+      <h2>Delegation, part one: Problem Awareness</h2>
+      <p>Nadia comes back with a second task and a hopeful expression. <em>“Can Claude help with the churn thing?”</em> You ask what the churn thing is. She is not sure. Somebody in sales mentioned that customers are leaving and she thought she would look into it.</p>
+      <p>Delegation is not simply “give the task to Claude.” Its first part is <strong>Problem Awareness</strong>: understand the goal, audience, success criteria, constraints, and nature of the work <em>before</em> involving AI.</p>
+      <p class="voice">If the problem is vague to you, Claude cannot reliably fix the ambiguity.</p>
+      <p>So you and Nadia spend twenty minutes not using AI at all. Who reads the answer? The regional directors. What decision does it inform? Whether to fund a retention pilot next quarter. What would make it a success? A defensible ranking of the top three churn drivers with the evidence attached. What are the constraints? Two days, and only first-party data.</p>
+      <div class="lesson"><p><strong>Delegation, part one:</strong> Problem Awareness. Goal, audience, success criteria, constraints, and the nature of the work—settled in your own head first. A delegated question is only as clear as the person delegating it.</p></div>
+    </section>
+
+    <section class="scene" id="scene4">
+      <p class="time">Tuesday, 9:00 a.m. · The skeptic’s list</p>
+      <h2>Delegation, part two: Platform Awareness</h2>
+      <p>Hollis arrives with the argument he has been sharpening overnight. <em>“It sounds confident when it’s wrong. Why would I trust it with anything?”</em> You tell him he has just described the second part of Delegation, and that it is a strength, not an objection.</p>
+      <p><strong>Platform Awareness</strong> means understanding the capabilities <em>and</em> limitations of the available AI system: context-window limits, knowledge cutoff, hallucination risk, tool access, file access, privacy boundaries, and whether the task needs a chat, coding, research, or agentic surface.</p>
+      <h3>What generative AI is, honestly</h3>
+      <p>Generative AI learns patterns from large datasets and generates likely continuations. It does not automatically possess grounded understanding or current knowledge. Claude is genuinely versatile at conversation, transformation, drafting, analysis, and tool-mediated tasks—and it can still:</p>
+      <ul>
+        <li>rely on a knowledge cutoff or incomplete context;</li>
+        <li>hallucinate plausible but unsupported facts;</li>
+        <li>lose important details when context is too large;</li>
+        <li>make mistakes in complex reasoning, calculations, or interpretation;</li>
+        <li>reflect limitations in its data, tools, or instructions.</li>
+      </ul>
+      <p>Hollis writes all five on a card and pins it above his monitor. That card is Platform Awareness in physical form.</p>
+      <div class="lesson"><p><strong>Pair capability with human judgment</strong>, creativity, ethical oversight, and verification. The right question is not “Can Claude produce something?” but “What role should Claude play, and what evidence will establish that the result is safe and good enough?”</p></div>
+    </section>
+
+    <section class="scene" id="scene5">
+      <p class="time">Tuesday, 11:20 a.m. · Splitting the churn project</p>
+      <h2>Delegation, part three: Task Delegation</h2>
+      <p>Now the churn project has a clear problem statement and an honest picture of the platform. The third part of Delegation is the actual split: <strong>Task Delegation</strong>—deliberately distributing work between human and AI.</p>
+      <p>Keep with the human what needs <strong>domain expertise, values, accountability, or high-stakes judgment</strong>. Delegate <strong>drafting, transformation, comparison, exploration, and repetitive analysis</strong> when AI is a good fit. And for each task, consider three options rather than two: <strong>human-led</strong>, <strong>AI-led</strong>, or <strong>collaborative</strong>.</p>
+      <p>You list the churn project’s four tasks on the board. Three are easy. The fourth is the one Nadia wants to hand over completely: <em>deciding which churn driver Northstar should actually fund a pilot against.</em></p>
+      <p class="choice">How should that fourth task be delegated?</p>
+      <div class="choices" role="group" aria-label="Choose a delegation for the funding recommendation">
+        <button type="button" onclick="choose('deleg','ai', 18)">AI-led — let Claude rank and recommend</button>
+        <button type="button" onclick="choose('deleg','human', 18)">Human-led — Nadia and the directors decide</button>
+        <button type="button" onclick="choose('deleg','collab', 18)">Collaborative — Claude structures the options, humans decide</button>
+        <button type="button" onclick="choose('deleg','auto', 18)">Automate it — it happens every quarter anyway</button>
+      </div>
+      <div class="outcome" id="deleg-ai" aria-live="polite"><strong>Wrong side of the line.</strong> This task carries accountability and high-stakes judgment—a funding decision the directors must own. Work requiring domain expertise, values, accountability, or high-stakes judgment stays with the human. Collaborative is the strongest answer here.</div>
+      <div class="outcome" id="deleg-human" aria-live="polite"><strong>Defensible, but you left value on the table.</strong> The decision must be human, yes—but comparison, exploration, and structuring the trade-offs are exactly what AI does well. Collaborative captures both: Claude builds the option set, the humans choose.</div>
+      <div class="outcome" id="deleg-collab" aria-live="polite"><strong>That’s the partnership.</strong> Claude handles the comparison and exploration; the judgment, the values, and the accountability stay with Nadia and the directors. Delegation offers three options for every task—human-led, AI-led, or collaborative—and this one lands squarely in the middle.</div>
+      <div class="outcome" id="deleg-auto" aria-live="polite"><strong>Frequency is not the test.</strong> Automation suits routine, well-defined work whose process is already trusted. A funding recommendation is a judgment call with consequences, however often it recurs. Make it collaborative.</div>
+      <div class="lesson"><p><strong>Memory hook for the three awareness checks:</strong> before handing over a map, ask—<strong>Where are we going?</strong> (Problem Awareness) <strong>What vehicle do we have?</strong> (Platform Awareness) <strong>Who drives which leg?</strong> (Task Delegation)</p></div>
+    </section>
+
+    <div class="rule"><strong>The objective is the best human–AI partnership, not maximum automation.</strong><span>Human-led · AI-led · Collaborative — three options, every task.</span></div>
+
+    <section class="scene" id="scene6">
+      <p class="time">Tuesday, 3:40 p.m. · The technically-plausible memo</p>
+      <h2>Description: three dimensions of a good request</h2>
+      <p>Nadia’s first delegated draft comes back and it is, in Bram’s phrase, <em>“correct and useless.”</em> The facts are fine. The memo is twelve pages, addressed to nobody in particular, and it asserts conclusions without showing how it got there.</p>
+      <p>She described the product she wanted and nothing else. <strong>Description</strong>—the second competency—establishes what Claude should produce <em>and how it should work with you</em>. It has three dimensions.</p>
+      <table class="mini-table"><thead><tr><th>Dimension</th><th>What you specify</th></tr></thead><tbody>
+        <tr><td><strong>Product Description</strong></td><td>The output: deliverable, audience, format, level of detail, tone, examples, and acceptance criteria.</td></tr>
+        <tr><td><strong>Process Description</strong></td><td>The method: steps, framework, evidence standard, tools, order of operations, and whether Claude should outline or verify before finalizing.</td></tr>
+        <tr><td><strong>Performance Description</strong></td><td>The collaboration behavior: concise or detailed, challenging or supportive, question-first or assumption-first, exploratory or decisive, and how it should respond to feedback.</td></tr>
+      </tbody></table>
+      <p>The more consequential or unfamiliar the work, the more useful it is to describe all three. A clear product request with no process or performance guidance may still produce an answer that is technically plausible but unusable—which is precisely what landed on Bram’s desk.</p>
+      <div class="blue-note"><p><strong>Memory hook:</strong> plan a trip with a <strong>destination postcard</strong> (product), a <strong>route map</strong> (process), and a <strong>travel companion brief</strong> (performance).</p></div>
+      <div class="lesson"><p><strong>Connective tissue:</strong> the “setting the stage / defining the task / specifying rules” prompt framework you will meet in Claude 101 is a Description skill in practice.</p></div>
+    </section>
+
+    <section class="scene" id="scene7">
+      <p class="time">Wednesday, 9:05 a.m. · Diagnosing the rewrite</p>
+      <h2>“Which dimension did I forget?”</h2>
+      <p>Nadia rewrites her request. She specifies the deliverable (a two-page memo), the audience (regional directors), the format (three ranked drivers, one paragraph each), the tone, and an example of a paragraph she likes. She also tells Claude to work from first-party data only, to outline before drafting, and to cite the table each figure came from.</p>
+      <p>The result is much better. But Claude states each conclusion as settled fact, never flags the two places where the data is thin, and when Nadia pushes back it simply agrees with her and rewrites.</p>
+      <p class="choice">Which Description dimension is still missing?</p>
+      <div class="choices" role="group" aria-label="Diagnose the missing description dimension">
+        <button type="button" onclick="choose('desc','product', 30)">Product Description</button>
+        <button type="button" onclick="choose('desc','process', 30)">Process Description</button>
+        <button type="button" onclick="choose('desc','performance', 30)">Performance Description</button>
+      </div>
+      <div class="outcome" id="desc-product" aria-live="polite"><strong>Already covered.</strong> Deliverable, audience, format, level of detail, tone, and an example are all Product Description—and Nadia supplied every one. The gap is in how Claude <em>collaborates</em>: that is Performance Description.</div>
+      <div class="outcome" id="desc-process" aria-live="polite"><strong>Already covered.</strong> First-party data only (evidence standard), outline before drafting (order of operations), cite the source table (method) are Process Description, and she gave all three. What is missing is the collaboration behavior—Performance Description.</div>
+      <div class="outcome" id="desc-performance" aria-live="polite"><strong>Exactly.</strong> Performance Description covers whether Claude should be challenging or supportive, question-first or assumption-first, exploratory or decisive, and how it should respond to feedback. Nadia wanted a colleague who flags weak evidence and defends a position under push-back. She never asked for one.</div>
+      <div class="prompt"><strong>The performance line she adds:</strong> “Be challenging rather than agreeable. Flag any conclusion where the underlying data is thin, ask me a clarifying question before assuming, and if I push back on something you believe is correct, tell me why instead of rewriting it.”</div>
+    </section>
+
+    <section class="scene" id="scene8">
+      <p class="time">Wednesday, 11:45 a.m. · The red pen</p>
+      <h2>Discernment: evaluate the same three dimensions</h2>
+      <p>Bram’s question is the one Hollis has been circling all week: <em>who checks this?</em> The answer is <strong>Discernment</strong>—the human responsibility to inspect and improve the collaboration continuously. Usefully, it maps onto the same three dimensions you just described.</p>
+      <table class="mini-table"><thead><tr><th>You described…</th><th>So you discern…</th><th>By checking</th></tr></thead><tbody>
+        <tr><td>Product</td><td><strong>Product Discernment</strong></td><td>Accuracy, appropriateness, coherence, relevance, completeness, format, and fit for the intended audience.</td></tr>
+        <tr><td>Process</td><td><strong>Process Discernment</strong></td><td>The approach and reasoning: are the steps logical, are assumptions visible, was important evidence ignored, is the method appropriate for the problem?</td></tr>
+        <tr><td>Performance</td><td><strong>Performance Discernment</strong></td><td>How Claude collaborates: does it use the requested terminology and tone, respond to corrections, ask useful questions, and respect the stated boundaries?</td></tr>
+      </tbody></table>
+      <p>Domain expertise makes discernment stronger. But there is a practice that works even when you are new to a subject, as Nadia is: ask Claude for <strong>multiple explanations</strong>, compare the strongest and weakest parts, and give <strong>specific corrective feedback</strong>.</p>
+      <p class="voice">Fluent wording is not evidence of correctness.</p>
+      <div class="blue-note"><p><strong>Memory hook:</strong> inspect the <strong>dish</strong>, the <strong>kitchen</strong>, and the <strong>waiter</strong>—is the food right, was it prepared sensibly, and did the service follow your instructions?</p></div>
+    </section>
+
+    <section class="scene" id="scene9">
+      <p class="time">Wednesday, 2:30 p.m. · A beautiful answer with a hole in it</p>
+      <h2>Hollis finds the flaw</h2>
+      <p>The memo now reads well. Every figure is cited, the tone is right, and Claude flags its own thin evidence. Hollis reads it twice and then says: <em>“It ranked the drivers by how many customers mentioned them. Nobody weighted them by account value. A hundred small accounts and four enterprise contracts are not the same problem.”</em></p>
+      <p>The output is accurate. The formatting is right. The reasoning is internally consistent. The <em>method</em> ignored something that mattered.</p>
+      <p class="choice">Which kind of discernment did Hollis just apply?</p>
+      <div class="choices" role="group" aria-label="Identify the discernment type">
+        <button type="button" onclick="choose('disc','product', 44)">Product Discernment</button>
+        <button type="button" onclick="choose('disc','process', 44)">Process Discernment</button>
+        <button type="button" onclick="choose('disc','performance', 44)">Performance Discernment</button>
+        <button type="button" onclick="choose('disc','none', 44)">Not discernment — that’s a Delegation failure</button>
+      </div>
+      <div class="outcome" id="disc-product" aria-live="polite"><strong>Close, but one layer off.</strong> Product Discernment asks whether the output is accurate, complete, well-formatted, and fits the audience—and by those tests the memo passes. Hollis inspected the <em>approach</em>: important evidence was ignored. That is Process Discernment.</div>
+      <div class="outcome" id="disc-process" aria-live="polite"><strong>Right.</strong> Process Discernment inspects the approach and reasoning: are the steps logical, are assumptions visible, was important evidence ignored, and is the method appropriate for the problem? An unweighted ranking is a method problem, not a wording problem—and only a domain expert like Hollis was likely to catch it.</div>
+      <div class="outcome" id="disc-performance" aria-live="polite"><strong>Wrong dimension.</strong> Performance Discernment is about how Claude collaborates—terminology, tone, responsiveness to correction, respect for stated boundaries. Claude behaved well here; its <em>method</em> was incomplete. That is Process Discernment.</div>
+      <div class="outcome" id="disc-none" aria-live="polite"><strong>Tempting, but no.</strong> Delegation happened correctly—this was a collaborative task with a human reviewer, and the human reviewer caught it. Catching it <em>is</em> the discernment step working, specifically Process Discernment: important evidence was ignored.</div>
+      <div class="lesson"><p><strong>Why the review has to be human:</strong> discernment is strongest where domain expertise lives. Hollis’s two decades of account knowledge were not in the prompt, the data, or the model. This is what “integrate domain knowledge” means in practice.</p></div>
+    </section>
+
+    <section class="scene" id="scene10">
+      <p class="time">Thursday, 9:00 a.m. · Not a prompt, a loop</p>
+      <h2>The Description–Discernment loop</h2>
+      <p>By Thursday the team has stopped talking about “the prompt” and started talking about the cycle. For a multi-step project, this course gives seven steps:</p>
+      <ol>
+        <li>Establish the <strong>vision, value, and definition of success</strong>.</li>
+        <li>Break the project into tasks and decide what is <strong>human-led, AI-led, or collaborative</strong>.</li>
+        <li>Set <strong>Product, Process, and Performance descriptions</strong> for the current task.</li>
+        <li><strong>Execute one task at a time.</strong></li>
+        <li>Apply <strong>Product, Process, and Performance discernment</strong> to the result <em>and</em> the method.</li>
+        <li><strong>Refine</strong> the description or the delegation plan based on what you learned.</li>
+        <li><strong>Integrate domain knowledge</strong> and make the final human decision.</li>
+      </ol>
+      <p>Note what step 6 permits. When discernment reveals a problem, you may change the description—<em>or</em> you may change the delegation. Hollis’s account-weighting catch did both: the process description gained an evidence rule, and the ranking task moved from AI-led toward collaborative.</p>
+      <p class="voice">This is a feedback loop, not a one-time prompt. Each iteration should reduce ambiguity or improve quality.</p>
+      <div class="blue-note"><p><strong>Memory hook:</strong> a potter’s wheel—shape the clay, inspect the bowl, press the rough spot, spin it again.</p></div>
+    </section>
+
+    <section class="scene" id="scene11">
+      <p class="time">Thursday, 1:15 p.m. · The toolbox</p>
+      <h2>Six techniques that make a description land</h2>
+      <p>Nadia asks for something more concrete than “describe the product, process, and performance.” The course gives six effective prompting techniques.</p>
+      <table class="mini-table"><thead><tr><th>Technique</th><th>What it does</th></tr></thead><tbody>
+        <tr><td><strong>1. Give context</strong></td><td>Explain the situation, audience, and constraints so the AI isn’t guessing.</td></tr>
+        <tr><td><strong>2. Show examples</strong></td><td>Demonstrate the pattern or format you want rather than only describing it.</td></tr>
+        <tr><td><strong>3. Specify constraints</strong></td><td>State length, tone, format, and any hard boundaries explicitly.</td></tr>
+        <tr><td><strong>4. Break into steps</strong></td><td>For multi-part or complex asks, decompose the task instead of one large ask.</td></tr>
+        <tr><td><strong>5. Ask the AI to think first</strong></td><td>Invite it to reason or outline before producing the final answer.</td></tr>
+        <tr><td><strong>6. Define role/tone</strong></td><td>Tell the AI who it should act as and how it should sound.</td></tr>
+      </tbody></table>
+      <p>Showing an example draws most directly on <strong>Description</strong>: it is about communicating effectively with the AI and defining the desired output, of which examples are one technique.</p>
+      <p class="voice">If you want a sandwich made your way, a photo of the perfect sandwich often beats a paragraph about “roughly this much lettuce.”</p>
+      <div class="blue-note"><p><strong>Memory hook for all six:</strong> pack a prompt toolbox with a <strong>map</strong> (context), a <strong>sample photo</strong> (examples), <strong>guardrails</strong> (constraints), a <strong>staircase</strong> (steps), a <strong>thinking pause</strong> (think first), and a <strong>costume badge</strong> (role and tone).</p></div>
+    </section>
+
+    <section class="scene" id="scene12">
+      <p class="time">Thursday, 2:40 p.m. · The move nobody expects</p>
+      <h2>The secret weapon</h2>
+      <p>Nadia is stuck on a request she cannot get right. She has been rewriting it herself for forty minutes. Hollis, of all people, suggests the thing that works.</p>
+      <p class="choice">What is the “secret weapon” beyond the six techniques?</p>
+      <div class="choices" role="group" aria-label="Identify the secret weapon technique">
+        <button type="button" onclick="choose('secret','improve', 58)">Ask the AI to improve your prompt before you use it</button>
+        <button type="button" onclick="choose('secret','longer', 58)">Make the prompt as long and detailed as possible</button>
+        <button type="button" onclick="choose('secret','regen', 58)">Send the same prompt several times and pick the best answer</button>
+        <button type="button" onclick="choose('secret','fresh', 58)">Start a fresh conversation whenever an answer disappoints</button>
+      </div>
+      <div class="outcome" id="secret-improve" aria-live="polite"><strong>That’s the one.</strong> Ask the AI to improve your own prompt before you use it—it is often better at prompt-engineering its own instructions than you are on the first pass. Memory hook: before ordering dinner, ask the chef to rewrite your messy order into a recipe the kitchen cannot misunderstand.</div>
+      <div class="outcome" id="secret-longer" aria-live="polite"><strong>Not the technique.</strong> Length is not the variable; clarity is. The six techniques ask for context, examples, and explicit constraints—not volume. The secret weapon is asking the AI to improve your prompt before you use it.</div>
+      <div class="outcome" id="secret-regen" aria-live="polite"><strong>No.</strong> Resampling the same unclear instruction gives you several answers to an unclear question. Fix the instruction instead: ask the AI to improve your prompt before you use it.</div>
+      <div class="outcome" id="secret-fresh" aria-live="polite"><strong>Sometimes practical, but not this course’s named technique.</strong> The secret weapon is asking the AI to improve your own prompt before you use it, because it is often better at refining prompt instructions than a first human draft.</div>
+      <div class="prompt"><strong>What Nadia actually sends:</strong> “Here is the request I plan to give you. Before answering it, rewrite it into a clearer instruction—tell me what context, examples, or constraints are missing, and what you would have had to assume.”</div>
+      <div class="lesson"><p><strong>Where this sits in the 4D map:</strong> troubleshooting a bad response draws on <strong>Discernment</strong> to spot the problem and <strong>Diligence</strong> to own the fix. Improving the prompt itself is <strong>Description</strong>.</p></div>
+    </section>
+
+    <section class="scene" id="scene13">
+      <p class="time">Thursday, 4:20 p.m. · Bram’s turn</p>
+      <h2>Diligence: responsible use and ownership</h2>
+      <p>The memo is nearly done, and Bram has been waiting all week for this part. <strong>Diligence</strong> covers the responsible conditions around creating and sharing AI-assisted work, and it has three parts.</p>
+      <table class="mini-table"><thead><tr><th>Form</th><th>The responsibility it emphasizes</th></tr></thead><tbody>
+        <tr><td><strong>Creation Diligence</strong></td><td>Choose systems, tools, data, and workflows thoughtfully. Consider privacy, security, bias, copyright, safety, and whether the platform is appropriate for the information.</td></tr>
+        <tr><td><strong>Transparency Diligence</strong></td><td>Disclose AI’s role when the audience or context expects it. Disclosure can differ in personal, academic, professional, and regulated settings.</td></tr>
+        <tr><td><strong>Deployment Diligence</strong></td><td>Verify the output before sharing or acting on it, and personally own and vouch for the result.</td></tr>
+      </tbody></table>
+      <p>Bram raises the case that will decide Northstar’s policy: the churn memo is going to the regional directors, it is built on customer records, and Nadia’s name will be on it.</p>
+      <p class="choice">Which form of Diligence is most at stake in “Nadia signs it”?</p>
+      <div class="choices" role="group" aria-label="Identify the diligence form">
+        <button type="button" onclick="choose('dil','creation', 76)">Creation Diligence</button>
+        <button type="button" onclick="choose('dil','transparency', 76)">Transparency Diligence</button>
+        <button type="button" onclick="choose('dil','deployment', 76)">Deployment Diligence</button>
+      </div>
+      <div class="outcome" id="dil-creation" aria-live="polite"><strong>It applies, but earlier.</strong> Creation Diligence governed the choice to put customer records into this platform in the first place—privacy, security, bias, copyright, safety, appropriateness. Signing the finished memo is Deployment Diligence.</div>
+      <div class="outcome" id="dil-transparency" aria-live="polite"><strong>Also in play, but a different question.</strong> Transparency Diligence asks whether to disclose AI’s role to the directors, and the expectation differs across personal, academic, professional, and regulated settings. Owning the result is Deployment Diligence.</div>
+      <div class="outcome" id="dil-deployment" aria-live="polite"><strong>Exactly.</strong> Deployment Diligence means verifying the output before sharing or acting on it and personally owning and vouching for the result. Human review is part of deployment, not an optional cleanup step.</div>
+      <p>Bram drafts Northstar’s house rule for AI-assisted deliverables. A practical diligence statement names <strong>the system used</strong>, <strong>what it contributed</strong>, <strong>what the human reviewed or changed</strong>, and <strong>who is responsible for the final work</strong>.</p>
+      <div class="prompt"><strong>The Northstar footer:</strong> “Claude was used to structure and draft the driver comparison from first-party account data. N. Okonjo verified all figures against the source tables, added account-value weighting, and rewrote the recommendation. N. Okonjo is responsible for this memo.”</div>
+      <div class="blue-note"><p><strong>Memory hook:</strong> three locks on a launch gate—<strong>choose a safe rocket</strong> (Creation), <strong>label the AI passenger</strong> (Transparency), <strong>inspect the payload before liftoff</strong> (Deployment).</p></div>
+    </section>
+
+    <div class="rule"><strong>Human review is part of deployment, not an optional cleanup step.</strong><span>Name the system · Name its contribution · Name what you changed · Name who is responsible.</span></div>
+
+    <section class="scene" id="scene14">
+      <p class="time">Friday, 10:00 a.m. · The exercise</p>
+      <h2>Planning the next project before touching it</h2>
+      <p>The churn memo shipped. Now there is a bigger, multi-step project on the table, and Hollis—the skeptic, five days ago—is the one who says: <em>“Let’s do the planning thing first.”</em></p>
+      <p>The course’s project-planning exercise runs like this. For a medium-sized, multi-step project, first ask Claude questions until the <strong>vision and success criteria are explicit</strong>. Then list the major tasks and discuss each one:</p>
+      <ul>
+        <li>what human knowledge, creativity, judgment, or accountability it requires;</li>
+        <li>what Claude can do well and what limitations matter;</li>
+        <li>whether the task should be human-led, AI-led, or collaborative;</li>
+        <li>what Product, Process, and Performance descriptions will guide it;</li>
+        <li>how the result will be checked and what diligence is required before deployment.</li>
+      </ul>
+      <p>Then <strong>save the plan and use it as the shared context</strong> for the Description–Discernment loop.</p>
+      <p class="choice">Nadia asks what the very first move is. Which is it?</p>
+      <div class="choices" role="group" aria-label="Choose the first step of the planning exercise">
+        <button type="button" onclick="choose('plan','tasks', 94)">List every task and assign each one</button>
+        <button type="button" onclick="choose('plan','vision', 94)">Have Claude question you until the vision and success criteria are explicit</button>
+        <button type="button" onclick="choose('plan','desc', 94)">Write the Product, Process, and Performance descriptions</button>
+        <button type="button" onclick="choose('plan','draft', 94)">Ask for a first draft and refine from there</button>
+      </div>
+      <div class="outcome" id="plan-tasks" aria-live="polite"><strong>Step two, not step one.</strong> Breaking the project into tasks and deciding human-led / AI-led / collaborative comes after the vision, value, and definition of success are established. You cannot sort tasks against a goal you have not stated.</div>
+      <div class="outcome" id="plan-vision" aria-live="polite"><strong>Right.</strong> First ask Claude questions until the vision and success criteria are explicit. This is step one of the Description–Discernment loop—establish the vision, value, and definition of success—and it is Problem Awareness doing its job at project scale.</div>
+      <div class="outcome" id="plan-desc" aria-live="polite"><strong>Too early.</strong> Product, Process, and Performance descriptions are set per task, at step three—after the vision is explicit and the tasks are delegated. Describing a task you have not yet defined or assigned just moves the ambiguity downstream.</div>
+      <div class="outcome" id="plan-draft" aria-live="polite"><strong>This is the habit the week was meant to break.</strong> Jumping to a draft skips Problem Awareness entirely, and a vague problem produces a fluent, unusable answer. Start by making the vision and success criteria explicit.</div>
+      <div class="lesson"><p><strong>The plan is context, not paperwork.</strong> Saved and shared, it becomes the standing description that every iteration of the loop refines.</p></div>
+    </section>
+
+    <section class="scene" id="scene15">
+      <p class="time">Friday, 4:45 p.m. · The one-page policy</p>
+      <h2>What Northstar actually wrote down</h2>
+      <p>The memo leadership should have sent on Monday takes four lines, and by Friday the team can write it themselves.</p>
+      <p><strong>Decide the mode.</strong> Automation for routine, trusted processes; Augmentation when you stay in the loop; Agency when the AI needs initiative toward a goal. <strong>Delegate with awareness.</strong> Understand the problem, understand the platform, then split the work three ways. <strong>Describe and discern in a loop.</strong> Product, Process, Performance—stated up front, inspected afterward, refined each pass. <strong>Be diligent.</strong> Choose the platform responsibly, disclose where it is expected, verify before you ship, and sign your own name.</p>
+      <p class="voice">“It’s a checklist for staying responsible,” Bram says, “that happens to make the work better.”</p>
+      <p>Hollis pins the four lines next to his card of five limitations. Between them, they are the whole course: what the AI can do, and what remains yours.</p>
+      <div class="lesson"><p><strong>Why this section anchors the exam:</strong> Delegation / Description / Discernment / Diligence and Automation / Augmentation / Agency are the foundational vocabulary that later courses and exam scenario questions assume you already know. In the CCA-F domain weighting, this course sits under <strong>Prompt Engineering &amp; Structured Output</strong> (20%), alongside Claude 101 and the prompt-engineering material in Building with the Claude API.</p></div>
+    </section>
+
+    <section class="end">
+      <h2>The architect’s pocket card</h2>
+      <p>A month later someone asks how Northstar settled the argument in a week. You answer:</p>
+      <p><strong>Pick the lane first.</strong> Automation, Augmentation, or Agency. Then run the four D’s: <strong>Delegation</strong> (Problem Awareness, Platform Awareness, Task Delegation — human-led, AI-led, or collaborative), <strong>Description</strong> (Product, Process, Performance), <strong>Discernment</strong> (the same three, inspected), and <strong>Diligence</strong> (Creation, Transparency, Deployment). Loop the middle two: describe, execute one task, discern the result and the method, refine, integrate what only you know, decide. Give context, show examples, specify constraints, break into steps, ask it to think first, define role and tone—and when you are stuck, ask it to improve your prompt before you use it. Remember it can hallucinate, forget, miscalculate, and go stale. Sign your own name.</p>
+      <p>That is AI fluency: not “what can it do?” but “what role should it play, and what evidence will show the result is safe and good enough?”</p>
+    </section>
+
+    <p class="source">Primary source: <code>01-ai-fluency-framework-foundations/notes.md</code> and <code>01-ai-fluency-framework-foundations/quiz.md</code> in this study workspace. The 4D Framework for AI Fluency was developed by Prof. Rick Dakan and Prof. Joseph Feller and is licensed CC BY-NC-SA 4.0.</p>
+    <footer>When you are ready, ask your teacher to quiz you one competency at a time — name the three parts before you name the label. If a scene feels fuzzy, ask a follow-up; the point is durable understanding, not speed.</footer>
+  </main>
+  <script>
+    function choose(scene, answer, progress) {
+      document.querySelectorAll('[id^="' + scene + '-"]').forEach(function (el) { el.classList.remove('visible'); });
+      var selected = document.getElementById(scene + '-' + answer);
+      if (selected) selected.classList.add('visible');
+      var bar = document.getElementById('progressBar');
+      if (bar && progress) bar.style.width = progress + '%';
+    }
+  </script>
+</body>
+</html>

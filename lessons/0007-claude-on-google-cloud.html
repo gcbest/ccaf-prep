@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Claude on Google Cloud — The Meridian Port</title>
+  <style>
+    :root {
+      --ink: #242321;
+      --muted: #706b63;
+      --paper: #f7f3ec;
+      --paper-deep: #ece4d7;
+      --rust: #55578f;
+      --rust-dark: #3b3d68;
+      --sage: #dfe9df;
+      --blue: #dce8ee;
+      --line: #d6ccbd;
+      --white: #fffdfa;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.7 Georgia, 'Times New Roman', serif;
+    }
+    main { max-width: 780px; margin: 0 auto; padding: 44px 24px 80px; }
+    .masthead {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+      border-bottom: 1px solid var(--line); padding-bottom: 10px;
+      color: var(--muted); font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .13em; text-transform: uppercase;
+    }
+    h1 { max-width: 680px; margin: 28px 0 12px; font: 700 clamp(2.5rem, 8vw, 5.2rem)/.98 Georgia, serif; letter-spacing: -.04em; }
+    .dek { max-width: 670px; margin: 0 0 34px; color: var(--muted); font-size: 1.2rem; }
+    .progress { position: sticky; top: 0; z-index: 2; height: 4px; background: var(--paper-deep); }
+    .progress span { display: block; width: 0; height: 100%; background: var(--rust); transition: width .25s ease; }
+    .scene {
+      position: relative; margin: 34px 0 0; padding: 25px 28px 28px;
+      background: var(--white); border: 1px solid var(--line); border-radius: 3px;
+    }
+    .scene::before { content: ''; position: absolute; left: -1px; top: 0; bottom: 0; width: 4px; background: var(--rust); }
+    .opening { background: #fff8ed; }
+    .time { margin: 0 0 7px; color: var(--rust-dark); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    h2 { margin: 0 0 13px; font: 700 1.65rem/1.2 Georgia, serif; }
+    h3 { margin: 27px 0 7px; font: 700 1.1rem/1.3 Georgia, serif; }
+    p { max-width: 70ch; margin: 0 0 13px; }
+    ul, ol { max-width: 68ch; padding-left: 1.35em; }
+    li { margin: 5px 0; }
+    .voice { margin: 18px 0; padding-left: 19px; border-left: 2px solid var(--paper-deep); font-style: italic; }
+    .choice { margin: 20px 0 2px; color: var(--muted); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+    .choices { display: flex; flex-wrap: wrap; gap: 9px; margin: 10px 0 5px; }
+    button {
+      border: 1px solid var(--rust); border-radius: 3px; background: var(--white); color: var(--rust-dark);
+      padding: 9px 13px; font: 600 14px/1.2 system-ui, sans-serif; cursor: pointer;
+    }
+    button:hover, button:focus-visible { background: var(--rust); color: #fff; outline: none; }
+    button:focus-visible { box-shadow: 0 0 0 3px rgba(85, 87, 143, .22); }
+    .outcome { display: none; margin-top: 13px; padding: 14px 16px; border-left: 3px solid var(--sage); background: #f1f6ef; }
+    .outcome.visible { display: block; }
+    .outcome strong { color: var(--rust-dark); }
+    .lesson { margin: 25px 0 0; padding: 17px 18px; background: var(--paper-deep); }
+    .lesson p:last-child { margin-bottom: 0; }
+    .blue-note { margin: 18px 0; padding: 15px 17px; background: #f1f6f8; border-left: 3px solid #7b9cac; }
+    .blue-note p:last-child { margin-bottom: 0; }
+    .rule { margin: 38px 0; padding: 25px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); text-align: center; }
+    .rule strong { display: block; color: var(--rust-dark); font: 700 1.35rem/1.25 Georgia, serif; }
+    .prompt { margin: 15px 0; padding: 17px 18px; background: #fff4eb; border-left: 3px solid var(--rust); font-size: .98rem; }
+    .prompt strong { color: var(--rust-dark); }
+    .prompt code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em; }
+    .mini-table { width: 100%; margin: 17px 0; border-collapse: collapse; font-size: .95rem; }
+    .mini-table th, .mini-table td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    .mini-table th { background: var(--paper-deep); color: var(--rust-dark); font: 700 12px/1.25 system-ui, sans-serif; letter-spacing: .05em; text-transform: uppercase; }
+    .end { margin-top: 39px; padding: 27px 28px; background: var(--rust-dark); color: #fff8f1; }
+    .end h2 { color: #fff; }
+    .end p { color: #f6dfd1; }
+    .source, footer { color: var(--muted); font-size: .9rem; }
+    footer { margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--line); }
+    a { color: var(--rust-dark); }
+    code { background: var(--paper-deep); padding: .08em .28em; border-radius: 3px; }
+    pre { max-width: 70ch; margin: 15px 0; padding: 14px 16px; background: var(--paper-deep); border-left: 3px solid var(--rust); overflow-x: auto; font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    pre code { background: none; padding: 0; }
+    @media (max-width: 560px) {
+      main { padding-top: 28px; }
+      .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
+      .scene { padding: 21px 19px 23px; }
+      .choices { display: grid; grid-template-columns: 1fr; }
+      button { text-align: left; }
+      .mini-table { font-size: .88rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+  <main>
+    <div class="masthead"><span>CCA-F · Section 5</span><span>Northstar Dispatch · Tuesday</span></div>
+    <h1>The Meridian port</h1>
+    <p class="dek">Northstar’s second big customer runs on Google Cloud. Same product, same prompts, same agent loop—and a completely different front door. You are the architect who has to know exactly which pieces move.</p>
+
+    <section class="scene opening" id="scene0">
+      <p class="time">6:40 a.m. · The contract clause</p>
+      <h2>“It has to run in our project.”</h2>
+      <p>Meridian Freight signed last night. They are a logistics company, and they are a Google Cloud shop from the load balancer down. Their procurement addendum contains one sentence that reshapes your week: <em>model inference must run inside a Meridian-owned Google Cloud project.</em></p>
+      <p>Three people are on the call. <strong>Aster Vogel</strong>, Northstar’s platform engineer, wrote the service that currently calls the Anthropic API directly. <strong>Kwame Boateng</strong> is Meridian’s cloud governance lead, and he owns the project, the billing account, and the permissions. <strong>Lena Halvorsen</strong> runs Northstar’s on-call rotation and wants to know what new failure modes she is inheriting.</p>
+      <p class="voice">Aster: “How much of the service do I actually have to rewrite?”</p>
+      <p>The honest answer—and the answer the exam wants—is: <strong>the plumbing, and only the plumbing.</strong> Deployment choice changes authentication, project and region configuration, the client class, and model-ID syntax. It does not create a separate prompting theory, a separate tool-design theory, or a separate agent theory.</p>
+      <div class="blue-note">
+        <p><strong>Framing for the whole lesson:</strong> Vertex AI is Google Cloud’s surface for Claude. Everything above the client/auth/call layer—prompt engineering, tool schema design, RAG strategy, evaluation methodology, orchestration patterns—is identical to the direct Anthropic API and to Bedrock. That equivalence <em>is</em> the recurring exam theme across the three deployment-option courses.</p>
+      </div>
+      <div class="lesson"><p><strong>First principle:</strong> when a scenario question names Vertex, look for the Vertex-specific detail (auth mechanism, model-ID format, project/region configuration) layered on top of a domain-general architecture question. The architecture part usually has the same right answer it would have anywhere.</p></div>
+    </section>
+
+    <section class="scene" id="scene1">
+      <p class="time">7:05 a.m. · The first fork</p>
+      <h2>Which surface satisfies the clause?</h2>
+      <p>Aster’s prototype uses <code>anthropic.Anthropic()</code> and an <code>ANTHROPIC_API_KEY</code>. It works beautifully. But Kwame’s clause is not about quality—it is about where the request lands and who owns the project it lands in.</p>
+      <p class="voice">Kwame: “I need the inference call to be an API call inside my project, under my credentials, on my bill.”</p>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Choose a deployment surface for Meridian">
+        <button type="button" onclick="choose('surface','vertex', 7)">Vertex AI on Google Cloud</button>
+        <button type="button" onclick="choose('surface','direct', 7)">Keep the direct Anthropic API</button>
+        <button type="button" onclick="choose('surface','bedrock', 7)">Amazon Bedrock</button>
+        <button type="button" onclick="choose('surface','both', 7)">Direct API, but proxy it through their project</button>
+      </div>
+      <div class="outcome" id="surface-vertex" aria-live="polite"><strong>Correct.</strong> Vertex AI is the Google Cloud deployment option for Claude. The request is authenticated with Google Cloud credentials tied to a specific GCP project, which is precisely the constraint Meridian wrote down.</div>
+      <div class="outcome" id="surface-direct" aria-live="polite"><strong>Fails the stated constraint.</strong> The direct API authenticates with an Anthropic API key and has no notion of a customer’s GCP project. Nothing is wrong with it technically—the customer’s deployment requirement is what rules it out. Choose Vertex.</div>
+      <div class="outcome" id="surface-bedrock" aria-live="polite"><strong>Right idea, wrong cloud.</strong> Bedrock is the AWS deployment option, authenticated with AWS IAM credentials through a boto3 client. Meridian is a Google Cloud shop, so the Google Cloud option—Vertex AI—is the one that matches.</div>
+      <div class="outcome" id="surface-both" aria-live="polite"><strong>A proxy does not change who serves the model.</strong> Routing an Anthropic-API call through a GCP-hosted proxy still terminates at the direct API under an Anthropic key. If the requirement is that inference runs through their project’s credentials, you need Vertex.</div>
+      <div class="lesson"><p><strong>Deployment choice is a constraint-matching exercise.</strong> Cloud commitment, credential model, and billing relationship decide it—not model quality, which is the same Claude either way.</p></div>
+    </section>
+
+    <section class="scene" id="scene2">
+      <p class="time">7:35 a.m. · The whiteboard</p>
+      <h2>The five-step lifecycle—and the one line you never cross</h2>
+      <p>Before anyone touches code, you draw the request lifecycle in the Vertex framing:</p>
+      <ol>
+        <li><strong>Request to Server</strong> — the client sends the user’s text to your server.</li>
+        <li><strong>Request to Vertex</strong> — your server calls Vertex AI with an identifying credential, the <strong>model</strong> name, <strong>messages</strong>, and <strong>max_tokens</strong>.</li>
+        <li><strong>Model Processing</strong> — Vertex routes the request to the selected Claude model.</li>
+        <li><strong>Response to Server</strong> — the response comes back with content, usage, and a stop reason.</li>
+        <li><strong>Response to Client</strong> — your server forwards the result for display.</li>
+      </ol>
+      <p>Lena asks the question every on-call engineer asks: can the browser just call Vertex itself and save a hop?</p>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Choose where credentials live">
+        <button type="button" onclick="choose('creds','server', 14)">Server-side only, always</button>
+        <button type="button" onclick="choose('creds','browser', 14)">Ship a short-lived credential to the browser</button>
+        <button type="button" onclick="choose('creds','obfuscate', 14)">Call from the browser, obfuscate the credential</button>
+      </div>
+      <div class="outcome" id="creds-server" aria-live="polite"><strong>Yes.</strong> Never call Vertex directly from client-side code. Credentials must stay server-side and secret; anything shipped to a client is visible to anyone who looks. Your server is the secure intermediary, and that is exactly why step 1 of the lifecycle exists.</div>
+      <div class="outcome" id="creds-browser" aria-live="polite"><strong>Still the wrong side of the line.</strong> The rule in these notes is unconditional: route through your own server. A credential in client code is exposed regardless of how you dress it up, and you also lose the server-side place to enforce validation, allowlists, and logging.</div>
+      <div class="outcome" id="creds-obfuscate" aria-live="polite"><strong>Obfuscation is not secrecy.</strong> Anything the browser can use, a reader of the bundle can extract. Keep credentials and privileged actions on the server.</div>
+      <div class="lesson"><p><strong>Memory hook:</strong> never tape the vault key to the storefront window. The server is the locked back office—on Vertex, on Bedrock, and on the direct API alike.</p></div>
+    </section>
+
+    <section class="scene" id="scene3">
+      <p class="time">8:10 a.m. · The Console</p>
+      <h2>Step zero: the model has to be turned on</h2>
+      <p>Kwame shares his screen. Before a single line of Python runs, someone with access to the project has to enable the model:</p>
+      <p><strong>Google Cloud Console → Vertex AI → Model Garden → search “Anthropic” → select the model → click Enable</strong> (if it is not already enabled).</p>
+      <p>This is a genuinely different mental model from the direct Anthropic API, where a valid key gives you the catalog. On Vertex, model access is a per-project act of enablement performed by someone with the right permissions in the Console. Aster, on a laptop with no Console access, cannot unblock herself.</p>
+      <p class="voice">Kwame: “So the first ticket isn’t code. It’s me clicking Enable in the project you’re going to use.”</p>
+      <p>The full setup sequence the course teaches is four steps: (1) enable the Anthropic model in Model Garden, (2) install the gcloud CLI, (3) authenticate with gcloud, (4) set the project and create application-default credentials.</p>
+      <div class="lesson"><p><strong>Exam-shaped detail:</strong> “model not enabled in Model Garden” and “wrong project” are Vertex-native failure causes with no equivalent on the direct API. When a Vertex scenario says a request fails to find the model, enablement and project are the first two things to check.</p></div>
+    </section>
+
+    <section class="scene" id="scene4">
+      <p class="time">8:40 a.m. · The laptop</p>
+      <h2>How the SDK learns who you are</h2>
+      <p>Aster has the gcloud CLI installed. Now she needs credentials that the Anthropic SDK will actually pick up.</p>
+      <pre><code>gcloud init
+gcloud auth login
+gcloud config set project YOUR_PROJECT_ID
+gcloud auth application-default login</code></pre>
+      <p>The last command is the one that matters for the SDK. It establishes <strong>application-default credentials</strong>, and the Anthropic SDK picks them up automatically—no manual API-key wiring at all.</p>
+      <p class="choice">Aster asks how to give the SDK its credential. Your call</p>
+      <div class="choices" role="group" aria-label="Choose an authentication path">
+        <button type="button" onclick="choose('auth','adc', 22)">gcloud auth application-default login</button>
+        <button type="button" onclick="choose('auth','apikey', 22)">Set ANTHROPIC_API_KEY</button>
+        <button type="button" onclick="choose('auth','login', 22)">gcloud auth login is enough</button>
+        <button type="button" onclick="choose('auth','paste', 22)">Paste a credential into the client constructor</button>
+      </div>
+      <div class="outcome" id="auth-adc" aria-live="polite"><strong>Exactly.</strong> <code>gcloud auth application-default login</code> creates the application-default credentials that the Anthropic Vertex client reads automatically. That is the whole auth story on a developer machine: stamp the Google Cloud passport once, and the SDK finds it in your pocket.</div>
+      <div class="outcome" id="auth-apikey" aria-live="polite"><strong>Wrong credential system entirely.</strong> An Anthropic API key authenticates the direct API. Vertex uses Google Cloud application-default credentials tied to a GCP project. Replacing API-key auth with ADC plus a project is the single most-tested substitution when porting an example to Vertex.</div>
+      <div class="outcome" id="auth-login" aria-live="polite"><strong>Close, but incomplete.</strong> <code>gcloud auth login</code> signs <em>you</em> in to the CLI. Application code needs <em>application-default</em> credentials, which is a separate command. The course lists both, in that order, plus <code>gcloud config set project</code> in between.</div>
+      <div class="outcome" id="auth-paste" aria-live="polite"><strong>Unnecessary and unsafe.</strong> The point of ADC is that you do not hand a secret to the client constructor at all—the SDK resolves the credential from the environment. Hard-coded secrets are exactly what the “credentials stay server-side and secret” rule is protecting you from.</div>
+      <div class="lesson"><p><strong>Contrast to hold:</strong> direct API → <code>ANTHROPIC_API_KEY</code>. Bedrock → AWS IAM credentials via boto3. Vertex → gcloud application-default credentials tied to a GCP project.</p></div>
+    </section>
+
+    <section class="scene" id="scene5">
+      <p class="time">9:15 a.m. · The first green cell</p>
+      <h2>The client: two coordinates on a map</h2>
+      <p>Aster installs the Vertex extra and builds the client. This is the entire diff at the transport layer:</p>
+      <pre><code>%pip install "anthropic[vertex]"
+
+from anthropic import AnthropicVertex
+client = AnthropicVertex(region="global", project_id="your-project-id")
+model = "claude-sonnet-4@20250514"
+
+message = client.messages.create(
+    model=model,
+    max_tokens=1000,
+    messages=[{"role": "user", "content": "What is quantum computing? Answer in one sentence"}]
+)
+message.content[0].text</code></pre>
+      <p>Read that carefully, because nearly every Vertex exam question lives inside those eight lines.</p>
+      <ul>
+        <li><strong><code>AnthropicVertex</code></strong> takes two coordinates: <strong>region</strong> and <strong>project_id</strong>. The project ID is the unique identifier from the Google Cloud Console—Kwame’s project, not yours.</li>
+        <li>The course example uses <strong><code>region="global"</code></strong>. Region and project are constructor arguments on Vertex, not an afterthought.</li>
+        <li><strong><code>.messages.create(model, max_tokens, messages)</code></strong> is the same call shape as the direct Anthropic API. Same required arguments, same message dictionaries, same <code>message.content[0].text</code> extraction.</li>
+        <li>Roles are unchanged: <strong>user</strong> for human-authored text, <strong>assistant</strong> for Claude-authored text.</li>
+      </ul>
+      <p class="voice">Aster: “So the client construction changed and the model string changed. The call itself didn’t.”</p>
+      <div class="blue-note"><p><strong>Where the notes are quiet, stay quiet.</strong> The course names the global region in its example and treats project and region as configuration you must get right for your deployment. It does not publish a per-region model-availability matrix for Vertex, nor quota or provisioned-throughput numbers. Do not invent them. What it <em>does</em> say is that Vertex project, region, model, and permission limits are part of the architect’s <strong>Platform Awareness</strong>—know your own deployment’s limits rather than assuming a general rule.</p></div>
+    </section>
+
+    <section class="scene" id="scene6">
+      <p class="time">9:50 a.m. · The string that breaks builds</p>
+      <h2>The model identifier</h2>
+      <p>Lena is writing the config schema and wants to know what a valid model value looks like, so she can validate it before a deploy rather than after.</p>
+      <p class="choice">Which identifier is a Vertex model name?</p>
+      <div class="choices" role="group" aria-label="Choose the Vertex model identifier format">
+        <button type="button" onclick="choose('modelid','at', 31)">claude-sonnet-4@20250514</button>
+        <button type="button" onclick="choose('modelid','plain', 31)">A plain model name string</button>
+        <button type="button" onclick="choose('modelid','prefix', 31)">anthropic.&lt;model-name&gt;</button>
+        <button type="button" onclick="choose('modelid','profile', 31)">An inference-profile ID</button>
+      </div>
+      <div class="outcome" id="modelid-at" aria-live="polite"><strong>That’s the one.</strong> Vertex model IDs use the <code>model-name@version-date</code> form—<code>claude-sonnet-4@20250514</code>. The <code>@</code> version suffix is the visual tell that you are looking at a Vertex identifier.</div>
+      <div class="outcome" id="modelid-plain" aria-live="polite"><strong>That’s the direct Anthropic API.</strong> The direct API takes a plain model name string with no version suffix and no vendor prefix. On Vertex you must add the <code>@version-date</code> suffix.</div>
+      <div class="outcome" id="modelid-prefix" aria-live="polite"><strong>That’s Bedrock.</strong> Bedrock model IDs take the <code>anthropic.model-name</code> form. Substituting a Bedrock model ID into a Vertex call is a classic distractor—and vice versa.</div>
+      <div class="outcome" id="modelid-profile" aria-live="polite"><strong>Also Bedrock.</strong> An inference-profile ID is the other Bedrock identifier shape. Vertex does not use it; Vertex uses <code>model-name@version-date</code> together with the project and region you configured on the client.</div>
+      <div class="lesson"><p><strong>Three formats, three surfaces:</strong> plain name (direct API) · <code>anthropic.model-name</code> or an inference-profile ID (Bedrock) · <code>model-name@version-date</code> (Vertex). Memory hook: Vertex gives the model a dated passport stamp after the <code>@</code>.</p></div>
+    </section>
+
+    <div class="rule"><strong>Vertex changes the front door, not the building.</strong><span>Auth · project/region · client class · model-ID syntax — everything else is the architecture you already know.</span></div>
+
+    <section class="scene" id="scene7">
+      <p class="time">10:30 a.m. · The migration memo</p>
+      <h2>The table Aster tapes above her desk</h2>
+      <p>You write the side-by-side that the whole port depends on. If you keep only one object from this lesson, keep this one.</p>
+      <h3>What changes</h3>
+      <table class="mini-table"><thead><tr><th>Axis</th><th>Direct Anthropic API</th><th>Vertex AI</th></tr></thead><tbody>
+        <tr><td>Authentication</td><td><code>ANTHROPIC_API_KEY</code></td><td>Google Cloud application-default credentials from <code>gcloud auth application-default login</code>, picked up automatically by the SDK</td></tr>
+        <tr><td>Account scope</td><td>Anthropic account</td><td>A specific GCP <strong>project</strong>, passed as <code>project_id</code></td></tr>
+        <tr><td>Endpoint / location</td><td>Anthropic’s endpoint</td><td>A <strong>region</strong> passed to the client (the course example uses <code>"global"</code>)</td></tr>
+        <tr><td>Client class</td><td><code>Anthropic()</code></td><td><code>AnthropicVertex(region=..., project_id=...)</code></td></tr>
+        <tr><td>Model enablement</td><td>Available with a valid key</td><td>Enabled per project in <strong>Model Garden</strong> in the Console</td></tr>
+        <tr><td>Model ID format</td><td>Plain model name</td><td><code>model-name@version-date</code></td></tr>
+        <tr><td>SDK install</td><td><code>anthropic</code></td><td><code>anthropic[vertex]</code>, or one of Google’s official Vertex SDKs</td></tr>
+        <tr><td>Billing &amp; governance</td><td>Anthropic billing</td><td>The customer’s Google Cloud project, permissions, and bill</td></tr>
+      </tbody></table>
+      <h3>What does not change</h3>
+      <table class="mini-table"><thead><tr><th>Layer</th><th>On Vertex</th></tr></thead><tbody>
+        <tr><td>Call shape</td><td><code>.messages.create(model, max_tokens, messages)</code> — identical to the direct API</td></tr>
+        <tr><td>Message roles</td><td><code>user</code> and <code>assistant</code>, same alternating list</td></tr>
+        <tr><td>Statelessness</td><td>No stored history; your application resends the full conversation every call</td></tr>
+        <tr><td>Prompt engineering</td><td>Clear-and-direct first line, Type A/Type B guidelines, XML tags, one-shot and multi-shot examples</td></tr>
+        <tr><td>Output control</td><td>System prompts, temperature, streaming, prefill, stop sequences</td></tr>
+        <tr><td>Tool design</td><td>Same schema fields, same <code>tool_use</code> / <code>tool_result</code> loop, same <code>tool_use_id</code> matching</td></tr>
+        <tr><td>Context management</td><td>Prompt caching rules, extended thinking budgets, images, PDFs, citations</td></tr>
+        <tr><td>RAG strategy</td><td>Chunking, embeddings, hybrid search, fusion, reranking, contextual retrieval</td></tr>
+        <tr><td>Evaluation</td><td>Dataset, run, grade, iterate—code graders, model graders, human graders</td></tr>
+        <tr><td>Orchestration</td><td>Chaining, routing, parallelization, evaluator–optimizer; workflows vs. agents</td></tr>
+        <tr><td>Human responsibility</td><td>The same 4D responsibilities</td></tr>
+      </tbody></table>
+      <p class="voice">Memory hook: change the airport, the passport, and the boarding gate—the pilot’s checklist and navigation principles stay the same.</p>
+    </section>
+
+    <section class="scene" id="scene8">
+      <p class="time">11:10 a.m. · The other cloud in the room</p>
+      <h2>Vertex or Bedrock: the call-shape tell</h2>
+      <p>Northstar’s other enterprise customer runs on AWS, and Lena keeps mixing up the two runbooks. You give her the discriminator that the exam leans on hardest.</p>
+      <p>Vertex is the <strong>more API-similar</strong> of the two cloud options. <code>AnthropicVertex</code> uses <code>.messages.create()</code>, exactly like <code>Anthropic()</code>. Bedrock instead uses a differently-shaped <code>converse()</code> call, reached through a boto3 client with AWS IAM credentials.</p>
+      <p class="choice">A team has a working direct-API prototype and asks which cloud port requires the smallest change to the call itself. Your answer</p>
+      <div class="choices" role="group" aria-label="Compare Vertex and Bedrock call shapes">
+        <button type="button" onclick="choose('shape','vertex', 40)">Vertex — same messages.create shape</button>
+        <button type="button" onclick="choose('shape','bedrock', 40)">Bedrock — converse is a drop-in</button>
+        <button type="button" onclick="choose('shape','same', 40)">Identical effort either way</button>
+      </div>
+      <div class="outcome" id="shape-vertex" aria-live="polite"><strong>Right.</strong> On Vertex you swap the client class, the credential source, and the model string—but <code>.messages.create(model, max_tokens, messages)</code> survives intact. That is why the notes call Vertex the closest of the three in call shape.</div>
+      <div class="outcome" id="shape-bedrock" aria-live="polite"><strong>No—<code>converse()</code> is the differently-shaped one.</strong> Bedrock’s unified <code>converse</code> method is the standard entry point across Bedrock-hosted providers rather than an Anthropic-specific call, so its arguments differ from <code>messages.create</code>. Vertex is the smaller diff.</div>
+      <div class="outcome" id="shape-same" aria-live="polite"><strong>Not quite.</strong> Both change auth and model ID, but only Bedrock also changes the method and its argument shape. Vertex keeps <code>messages.create</code>; that asymmetry is the point of the comparison.</div>
+      <div class="blue-note"><p><strong>Careful with the corollary:</strong> “smaller diff” is a porting-effort argument, not a reason to override a customer’s cloud commitment. Meridian is on Google Cloud, so Vertex wins on the constraint first and the convenience second.</p></div>
+    </section>
+
+    <section class="scene" id="scene9">
+      <p class="time">11:45 a.m. · The truncated answer</p>
+      <h2>Reading the response like a flight board</h2>
+      <p>The first real Meridian request returns a shipment summary that stops mid-sentence. Aster wants to raise <code>max_tokens</code> everywhere and move on. You slow her down, because the response object already contains the diagnosis.</p>
+      <p>Every Vertex response carries three things worth inspecting: the generated <strong>message</strong>, <strong>usage</strong> (input and output token counts), and a <strong>stop reason</strong>. And generation stops for exactly three reasons: <strong>max tokens reached</strong>, a <strong>natural end-of-sequence token</strong>, or a <strong>predefined stop sequence</strong>.</p>
+      <p class="choice">The summary is cut off. What do you do first?</p>
+      <div class="choices" role="group" aria-label="Diagnose a truncated response">
+        <button type="button" onclick="choose('stop','inspect', 49)">Read the stop reason</button>
+        <button type="button" onclick="choose('stop','raise', 49)">Raise max_tokens globally</button>
+        <button type="button" onclick="choose('stop','temp', 49)">Lower the temperature</button>
+        <button type="button" onclick="choose('stop','retry', 49)">Retry the request</button>
+      </div>
+      <div class="outcome" id="stop-inspect" aria-live="polite"><strong>Yes.</strong> The stop reason distinguishes a natural completion from hitting the token budget from tripping a configured stop sequence—and those three should be logged and retried differently. Only one of them is fixed by a bigger budget.</div>
+      <div class="outcome" id="stop-raise" aria-live="polite"><strong>Premature.</strong> If a stop sequence fired, a bigger budget changes nothing and you have spent headroom for no reason. Remember that <code>max_tokens</code> is a ceiling, not a target: Claude stops when it judges the response complete and never exceeds the limit. Check the stop reason first.</div>
+      <div class="outcome" id="stop-temp" aria-live="polite"><strong>Wrong knob.</strong> Temperature controls randomness in token selection—low near 0 for extraction and factual consistency, high near 1 for creative work. It has nothing to do with why generation halted.</div>
+      <div class="outcome" id="stop-retry" aria-live="polite"><strong>Retrying blind is how you pay twice for the same bug.</strong> Retry policy should be driven <em>by</em> the stop reason, not instead of it. Inspect first, then decide.</div>
+      <div class="lesson"><p><strong>Memory hook:</strong> read the response like a flight board—<em>what arrived</em> (content), <em>how much fuel it used</em> (usage), and <em>why it landed</em> (stop reason).</p></div>
+    </section>
+
+    <section class="scene" id="scene10">
+      <p class="time">12:40 p.m. · The manifest parser</p>
+      <h2>Getting machine-readable output out of a Vertex call</h2>
+      <p>Meridian wants shipment manifests turned into structured records that flow into their warehouse system. Aster has two techniques available, and they are the same two she would use on the direct API.</p>
+      <ul>
+        <li><strong>Assistant prefill plus a stop sequence</strong> — prefill the opening delimiter, stop at the closing one, and Claude emits only the delimited payload with no commentary. Good for small, delimited outputs like JSON or CSV. The matched stop-sequence text is excluded from the returned output.</li>
+        <li><strong>A dedicated tool schema</strong> — define a tool whose <em>inputs</em> match the structure you want, then force it with <code>tool_choice</code>. More setup, more reliable, and the right choice when a production workflow needs a strict output contract.</li>
+      </ul>
+      <p>The <code>tool_choice</code> options are worth memorizing as a trio: <strong>automatic</strong> when Claude may answer normally, <strong>any</strong> when one of the available tools must be used, and a <strong>specific tool</strong> when a particular schema is mandatory.</p>
+      <p class="choice">Manifests feed a downstream system that rejects malformed records. Your call</p>
+      <div class="choices" role="group" aria-label="Choose a structured-output technique">
+        <button type="button" onclick="choose('struct','tool', 58)">Dedicated tool schema, forced</button>
+        <button type="button" onclick="choose('struct','prefill', 58)">Prefill plus stop sequence</button>
+        <button type="button" onclick="choose('struct','ask', 58)">Ask firmly for JSON in the prompt</button>
+        <button type="button" onclick="choose('struct','trust', 58)">Tool schema, and skip validation since the schema guarantees it</button>
+      </div>
+      <div class="outcome" id="struct-tool" aria-live="polite"><strong>Right for production.</strong> When the output contract is strict, prefer a dedicated tool schema and force it with <code>tool_choice</code> naming that specific tool. Then still parse and validate in application code.</div>
+      <div class="outcome" id="struct-prefill" aria-live="polite"><strong>Workable, but the weaker guarantee here.</strong> Prefill plus stop sequence is the right reach for small, delimited outputs and quick extraction. For a production workflow that needs reliable structured data, the tool schema is the recommended path.</div>
+      <div class="outcome" id="struct-ask" aria-live="polite"><strong>Not a contract.</strong> Claude naturally adds headers, footers, and explanation around structured data. That is exactly the problem prefill/stop sequences and tool schemas exist to solve.</div>
+      <div class="outcome" id="struct-trust" aria-live="polite"><strong>Half right, and the dangerous half is missing.</strong> The schema shapes the output; it does not make the values correct. Valid JSON can still contain invalid dates, unauthorized identifiers, or values that violate domain rules. Parse and validate in application code regardless of technique.</div>
+      <div class="lesson"><p><strong>Also carried over unchanged:</strong> keep system instructions separate from user data, and place stable instructions before volatile context. When a prompt is reused across calls, consider caching or reusing the stable prefix—but measure the token savings and the invalidation behavior rather than assuming a win.</p></div>
+    </section>
+
+    <section class="scene" id="scene11">
+      <p class="time">1:30 p.m. · The tracking agent</p>
+      <h2>The tool loop, and the temptation to batch</h2>
+      <p>Meridian’s support agent needs to look things up: shipment status, terminal hours, customs codes. The Vertex tool loop has the same non-negotiables as everywhere else, and Aster’s first implementation drops two of them.</p>
+      <p>On the follow-up call your application must: <strong>preserve the complete assistant content</strong>, <strong>execute each requested tool</strong>, <strong>send matching tool results with their IDs</strong>, and <strong>retain the original tool definitions</strong>. Alongside that: validate tool inputs, enforce permissions, and make side effects idempotent where possible.</p>
+      <p class="voice">Lena: “Three separate round-trips just to answer one question. Can we make it do them all at once?”</p>
+      <p>That is the <strong>batch-tool pattern</strong>: group independent sub-invocations so the application can run them in parallel. It is appropriate for independent lookups or transformations—and inappropriate for a sequence where the second call depends on the first, or where concurrent execution could duplicate an unsafe action.</p>
+      <p class="choice">Which of Lena’s requests is a good batch candidate?</p>
+      <div class="choices" role="group" aria-label="Choose a batch-tool candidate">
+        <button type="button" onclick="choose('batch','lookups', 67)">Status for six unrelated shipment IDs</button>
+        <button type="button" onclick="choose('batch','chain', 67)">Get current time, then compute an ETA from it</button>
+        <button type="button" onclick="choose('batch','refund', 67)">Issue six shipping-credit refunds</button>
+      </div>
+      <div class="outcome" id="batch-lookups" aria-live="polite"><strong>Ideal.</strong> Six independent read-only lookups with no ordering dependency is precisely what the batch tool is for—group the invocations, run them in parallel, return one combined result, and collapse the round-trips.</div>
+      <div class="outcome" id="batch-chain" aria-live="polite"><strong>Not batchable.</strong> The second call consumes the first call’s output, so this is a dependent sequence. Batching is for independent sub-invocations only; let the loop run these in order.</div>
+      <div class="outcome" id="batch-refund" aria-live="polite"><strong>Dangerous.</strong> These are side-effecting actions where concurrent execution could duplicate something unsafe. Keep them sequential, make them idempotent, and route consequential actions through a human approval path.</div>
+      <div class="lesson"><p><strong>Memory hook:</strong> keep the full order ticket, cook the requested dish, return it with the matching table number, and leave the menu on the table—assistant content, tool execution, <code>tool_use_id</code>, tool definitions.</p></div>
+    </section>
+
+    <section class="scene" id="scene12">
+      <p class="time">2:20 p.m. · The tariff handbook</p>
+      <h2>RAG on Vertex</h2>
+      <p>Meridian has a nine-hundred-page customs and tariff handbook. Nobody is pasting that into a prompt. You sketch the production retrieval path, and it is the same architecture you would build anywhere—with one Google-flavored ingredient.</p>
+      <ol>
+        <li>Chunk documents while retaining source and chunk metadata.</li>
+        <li>Generate semantic embeddings and search a vector index. On Vertex AI, the course names Google’s <strong><code>text-embedding-005</code></strong> as the embedding model available for this, used through the Google GenAI SDK.</li>
+        <li>Search a lexical index such as <strong>BM25</strong> for exact terms, identifiers, and names.</li>
+        <li>Fuse the ranked results with <strong>reciprocal rank fusion</strong>.</li>
+        <li><strong>Rerank</strong> the short list against the query when better relevance is worth the added latency.</li>
+        <li>Give Claude only the best labeled chunks and require source-aware answers.</li>
+      </ol>
+      <p>Two implementation details that reliably show up as questions: reranking should return document or chunk <strong>IDs</strong> so the application can fetch the original text, rather than paying to repeat full chunks in the reranker’s response. And <strong>contextual retrieval</strong> enriches a chunk with enough document-level context to stand on its own <em>before</em> it is embedded and indexed.</p>
+      <p class="voice">Kwame: “It quoted a tariff rule that contradicts page 412. Is Claude wrong, or is the pipeline wrong?”</p>
+      <p class="choice">How do you find out?</p>
+      <div class="choices" role="group" aria-label="Diagnose a wrong RAG answer">
+        <button type="button" onclick="choose('rag','split', 76)">Evaluate retrieval separately from generation</button>
+        <button type="button" onclick="choose('rag','model', 76)">Switch to a larger model</button>
+        <button type="button" onclick="choose('rag','chunk', 76)">Shrink the chunk size and re-index</button>
+        <button type="button" onclick="choose('rag','prompt', 76)">Add “be accurate” to the system prompt</button>
+      </div>
+      <div class="outcome" id="rag-split" aria-live="polite"><strong>The only diagnostic that works.</strong> An answer can be wrong because the needed chunk was never retrieved, because the supplied context was misread, or because the model synthesized it incorrectly. Test retrieval separately from generation and you learn which of the three doors is broken.</div>
+      <div class="outcome" id="rag-model" aria-live="polite"><strong>Guessing.</strong> If the correct chunk never made it into the prompt, no model can recover it. Establish whether retrieval succeeded before you touch the generation side.</div>
+      <div class="outcome" id="rag-chunk" aria-live="polite"><strong>A plausible fix applied blindly.</strong> Re-chunking may help—if retrieval is the failing stage. You do not know that yet. Measure retrieval first; contextual retrieval and hybrid search are the tuned responses once you have confirmed the problem lives there.</div>
+      <div class="outcome" id="rag-prompt" aria-live="polite"><strong>Exhortation is not evaluation.</strong> Requiring source-aware answers over labeled chunks is good design, but it does not tell you which stage failed. Split retrieval from generation and measure.</div>
+      <div class="lesson"><p><strong>Memory hook:</strong> three doors—did the librarian fetch the right page, did Claude read it right, did it tell the story right?</p></div>
+    </section>
+
+    <section class="scene" id="scene13">
+      <p class="time">3:10 p.m. · The scoping meeting</p>
+      <h2>Workflow or agent—and what you owe either one</h2>
+      <p>Meridian wants two things. First, a nightly exception report: fixed steps, known order. Second, a support assistant that answers whatever a dispatcher throws at it.</p>
+      <p>Use a <strong>known workflow</strong> for fixed steps—chaining, routing, parallelization, or evaluator–optimizer review. Use an <strong>agent</strong> only when Claude needs to choose an unknown sequence of tools. The nightly report is a workflow. The dispatcher assistant is the case for an agent.</p>
+      <p>In both cases the operational contract is the same, and it is what Lena actually cares about: define <strong>budgets, timeouts, stop conditions, retries, state, observability, and a human approval path for actions that change external systems</strong>.</p>
+      <div class="blue-note"><p><strong>Shared capabilities are not controls.</strong> Tools, web search, computer-use-style features, MCP integrations, prompt caching, and file or image inputs are architectural capabilities—not replacements for application controls. Keep credentials and privileged actions on the server, allowlist tools and destinations, validate files and arguments, limit time and tokens, log decisions and failures, and require human review for consequential side effects.</p></div>
+      <p>None of this is Vertex-specific, which is exactly why it is worth saying out loud in a Vertex lesson: an exam scenario set on Google Cloud will still ask domain-general orchestration questions, and the Google Cloud framing is not a hint that the answer changes.</p>
+    </section>
+
+    <section class="scene" id="scene14">
+      <p class="time">3:50 p.m. · The governance review</p>
+      <h2>Kwame’s questions, and the four D’s</h2>
+      <p>Meridian’s review board wants to know who is accountable for what. You answer with the same 4D responsibilities that apply to every Claude deployment—with one of them carrying explicitly Vertex-shaped content.</p>
+      <table class="mini-table"><thead><tr><th>Responsibility</th><th>What it covers here</th></tr></thead><tbody>
+        <tr><td>Problem Awareness</td><td>What the system is meant to accomplish for Meridian</td></tr>
+        <tr><td><strong>Platform Awareness</strong></td><td><strong>Vertex project, region, model, and permission limits</strong>—the deployment facts you must actually know rather than assume</td></tr>
+        <tr><td>Task Delegation</td><td>How work is assigned between people and Claude</td></tr>
+        <tr><td>Diligence</td><td>Data handling, disclosure, verification, and accountability</td></tr>
+      </tbody></table>
+      <p>Platform Awareness is where the deployment decision cashes out into governance. On Vertex, the project is the unit of ownership: it holds the enabled models, the credentials, the permissions, and the bill. Kwame controls all four, and that is the point of his contract clause.</p>
+      <div class="blue-note"><p><strong>An honest boundary.</strong> The course material is specific about auth commands, the client constructor, and the model-ID format. It is <em>not</em> specific about region lists, data-residency rules, quota tiers, or provisioned-throughput numbers, so do not carry invented specifics into an exam answer. The one throughput-adjacent operational note it does give is practical: when running evaluations concurrently, start concurrency low—around three—and reduce to one if you hit rate limits.</p></div>
+      <div class="lesson"><p><strong>Architect’s move:</strong> when a Vertex question asks about limits, the defensible answer is “confirm it for this project, region, and model,” not a memorized number.</p></div>
+    </section>
+
+    <section class="scene" id="scene15">
+      <p class="time">4:30 p.m. · The runbook</p>
+      <h2>Porting any direct-API example to Vertex</h2>
+      <p>Aster asks for the checklist she can run against every remaining file. You give her six lines.</p>
+      <ol>
+        <li>Replace API-key authentication with Google Cloud <strong>application-default credentials</strong> and a project.</li>
+        <li>Use <strong><code>AnthropicVertex</code></strong> with the correct <strong>region</strong> and <strong>project ID</strong>.</li>
+        <li>Use the Vertex <strong><code>model-name@version-date</code></strong> identifier.</li>
+        <li>Keep the Messages API call and message roles, while checking Vertex-specific support and limits.</li>
+        <li>Inspect <strong>content</strong>, <strong>usage</strong>, and <strong>stop reason</strong> in the response.</li>
+        <li>Preserve the same prompt, tool, RAG, eval, and orchestration design principles you used on the direct API and on Bedrock.</li>
+      </ol>
+      <p class="voice">Lena: “And when a call fails at 3 a.m., where do I start?”</p>
+      <p class="choice">A Vertex request fails with the model not found. Your first three checks, in order</p>
+      <div class="choices" role="group" aria-label="Diagnose a Vertex model-not-found failure">
+        <button type="button" onclick="choose('debug','vertex', 95)">Model Garden enablement → project ID → model string format</button>
+        <button type="button" onclick="choose('debug','key', 95)">Rotate the Anthropic API key</button>
+        <button type="button" onclick="choose('debug','profile', 95)">Switch to a cross-region inference profile</button>
+        <button type="button" onclick="choose('debug','tokens', 95)">Raise max_tokens and retry</button>
+      </div>
+      <div class="outcome" id="debug-vertex" aria-live="polite"><strong>That’s the Vertex triage order.</strong> Was the Anthropic model enabled in Model Garden for <em>this</em> project? Is the client pointed at the right <code>project_id</code> and region? And is the model string in <code>model-name@version-date</code> form rather than a plain name or a Bedrock-style ID? Those three cover the Vertex-native causes.</div>
+      <div class="outcome" id="debug-key" aria-live="polite"><strong>There is no Anthropic API key in this deployment.</strong> Vertex authenticates with Google Cloud application-default credentials tied to a project. If you suspect auth, re-run <code>gcloud auth application-default login</code> and confirm the configured project—do not go looking for a key that was never there.</div>
+      <div class="outcome" id="debug-profile" aria-live="polite"><strong>Wrong cloud’s remedy.</strong> Inference profiles are a Bedrock mechanism for cross-region routing. Vertex is configured with a project and a region on the client, so reaching for a profile ID here means you have mixed up the two runbooks.</div>
+      <div class="outcome" id="debug-tokens" aria-live="polite"><strong>Unrelated.</strong> <code>max_tokens</code> is a ceiling on generation length; it cannot cause a model-not-found failure. Check enablement, project, and model-ID format.</div>
+      <div class="lesson"><p><strong>The distinction the exam is testing:</strong> not “can you architect this?”—you already could—but “do you know which cloud’s vocabulary applies?” Model Garden, ADC, project ID, and <code>@version-date</code> are Vertex. Boto3, IAM, <code>converse</code>, and inference profiles are Bedrock.</p></div>
+    </section>
+
+    <section class="end">
+      <h2>The architect’s pocket card</h2>
+      <p>Meridian’s first production request lands at 5:12 p.m. Kwame asks what actually changed. You answer:</p>
+      <p><strong>Auth, project, region, client, model ID.</strong> Enable the model in <strong>Model Garden</strong>. Authenticate with <code>gcloud init</code>, <code>gcloud auth login</code>, <code>gcloud config set project</code>, and <code>gcloud auth application-default login</code>—the SDK picks those application-default credentials up automatically, because there is no API key here. Install <code>anthropic[vertex]</code> and build <code>AnthropicVertex(region=..., project_id=...)</code>. Use <code>model-name@version-date</code>, never a plain name and never a Bedrock-style ID. Never call Vertex from client-side code. Then call <code>.messages.create(model, max_tokens, messages)</code> exactly as before, and read content, usage, and stop reason on the way back.</p>
+      <p><strong>And nothing else changed.</strong> Prompting, structured output, the tool loop, batching rules, hybrid RAG with <code>text-embedding-005</code> and reciprocal rank fusion, evaluation, workflows versus agents, and the 4D responsibilities are the architecture you already knew. Vertex changes the deployment plumbing. It does not create a separate prompting or agent theory.</p>
+    </section>
+
+    <p class="source">Primary source: <code>05-claude-on-google-cloud/notes.md</code> and <code>05-claude-on-google-cloud/anthropic-notes.md</code> in this study workspace, cross-checked against <code>05-claude-on-google-cloud/quiz.md</code>. Bedrock contrasts are drawn from the comparison passages in those same notes—see the sibling lesson on Amazon Bedrock for the AWS side in full.</p>
+    <footer>When you are ready, ask your teacher to quiz you on one line of the porting checklist at a time—especially the auth command and the model-ID format, which are the two details a Vertex scenario question is most likely to hinge on. If a scene feels fuzzy, ask a follow-up; the point is durable understanding, not speed.</footer>
+  </main>
+  <script>
+    function choose(scene, answer, progress) {
+      document.querySelectorAll('[id^="' + scene + '-"]').forEach(function (el) { el.classList.remove('visible'); });
+      var selected = document.getElementById(scene + '-' + answer);
+      if (selected) selected.classList.add('visible');
+      var bar = document.getElementById('progressBar');
+      if (bar && progress) bar.style.width = progress + '%';
+    }
+  </script>
+</body>
+</html>

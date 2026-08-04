@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tools, Retrieval &amp; Context — The Day Northstar Grew Hands</title>
+  <style>
+    :root {
+      --ink: #242321;
+      --muted: #706b63;
+      --paper: #f7f3ec;
+      --paper-deep: #ece4d7;
+      --rust: #7b4a6e;
+      --rust-dark: #573349;
+      --sage: #dfe9df;
+      --blue: #dce8ee;
+      --line: #d6ccbd;
+      --white: #fffdfa;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.7 Georgia, 'Times New Roman', serif;
+    }
+    main { max-width: 780px; margin: 0 auto; padding: 44px 24px 80px; }
+    .masthead {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+      border-bottom: 1px solid var(--line); padding-bottom: 10px;
+      color: var(--muted); font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .13em; text-transform: uppercase;
+    }
+    h1 { max-width: 680px; margin: 28px 0 12px; font: 700 clamp(2.5rem, 8vw, 5.2rem)/.98 Georgia, serif; letter-spacing: -.04em; }
+    .dek { max-width: 670px; margin: 0 0 34px; color: var(--muted); font-size: 1.2rem; }
+    .progress { position: sticky; top: 0; z-index: 2; height: 4px; background: var(--paper-deep); }
+    .progress span { display: block; width: 0; height: 100%; background: var(--rust); transition: width .25s ease; }
+    .scene {
+      position: relative; margin: 34px 0 0; padding: 25px 28px 28px;
+      background: var(--white); border: 1px solid var(--line); border-radius: 3px;
+    }
+    .scene::before { content: ''; position: absolute; left: -1px; top: 0; bottom: 0; width: 4px; background: var(--rust); }
+    .opening { background: #fff8ed; }
+    .time { margin: 0 0 7px; color: var(--rust-dark); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    h2 { margin: 0 0 13px; font: 700 1.65rem/1.2 Georgia, serif; }
+    h3 { margin: 27px 0 7px; font: 700 1.1rem/1.3 Georgia, serif; }
+    p { max-width: 70ch; margin: 0 0 13px; }
+    ul, ol { max-width: 68ch; padding-left: 1.35em; }
+    li { margin: 5px 0; }
+    .voice { margin: 18px 0; padding-left: 19px; border-left: 2px solid var(--paper-deep); font-style: italic; }
+    .choice { margin: 20px 0 2px; color: var(--muted); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+    .choices { display: flex; flex-wrap: wrap; gap: 9px; margin: 10px 0 5px; }
+    button {
+      border: 1px solid var(--rust); border-radius: 3px; background: var(--white); color: var(--rust-dark);
+      padding: 9px 13px; font: 600 14px/1.2 system-ui, sans-serif; cursor: pointer;
+    }
+    button:hover, button:focus-visible { background: var(--rust); color: #fff; outline: none; }
+    button:focus-visible { box-shadow: 0 0 0 3px rgba(123, 74, 110, .22); }
+    .outcome { display: none; margin-top: 13px; padding: 14px 16px; border-left: 3px solid var(--sage); background: #f1f6ef; }
+    .outcome.visible { display: block; }
+    .outcome strong { color: var(--rust-dark); }
+    .lesson { margin: 25px 0 0; padding: 17px 18px; background: var(--paper-deep); }
+    .lesson p:last-child { margin-bottom: 0; }
+    .blue-note { margin: 18px 0; padding: 15px 17px; background: #f1f6f8; border-left: 3px solid #7b9cac; }
+    .blue-note p:last-child { margin-bottom: 0; }
+    .rule { margin: 38px 0; padding: 25px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); text-align: center; }
+    .rule strong { display: block; color: var(--rust-dark); font: 700 1.35rem/1.25 Georgia, serif; }
+    .prompt { margin: 15px 0; padding: 17px 18px; background: #fff4eb; border-left: 3px solid var(--rust); font-size: .98rem; }
+    .prompt strong { color: var(--rust-dark); }
+    .prompt code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em; }
+    .mini-table { width: 100%; margin: 17px 0; border-collapse: collapse; font-size: .95rem; }
+    .mini-table th, .mini-table td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    .mini-table th { background: var(--paper-deep); color: var(--rust-dark); font: 700 12px/1.25 system-ui, sans-serif; letter-spacing: .05em; text-transform: uppercase; }
+    .end { margin-top: 39px; padding: 27px 28px; background: var(--rust-dark); color: #fff8f1; }
+    .end h2 { color: #fff; }
+    .end p { color: #f6dfd1; }
+    .source, footer { color: var(--muted); font-size: .9rem; }
+    footer { margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--line); }
+    a { color: var(--rust-dark); }
+    code { background: var(--paper-deep); padding: .08em .28em; border-radius: 3px; }
+    pre { max-width: 70ch; margin: 15px 0; padding: 14px 16px; background: var(--paper-deep); border-left: 3px solid var(--rust); overflow-x: auto; font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    pre code { background: none; padding: 0; }
+    @media (max-width: 560px) {
+      main { padding-top: 28px; }
+      .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
+      .scene { padding: 21px 19px 23px; }
+      .choices { display: grid; grid-template-columns: 1fr; }
+      button { text-align: left; }
+      .mini-table { font-size: .88rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+  <main>
+    <div class="masthead"><span>CCA-F · Section 3 · Part 2 of 3</span><span>Northstar Dispatch · Tuesday</span></div>
+    <h1>The day Northstar grew hands</h1>
+    <p class="dek">You are the architect. Northstar Assist can already write beautifully and knows nothing that happened after training. Today it learns to <em>do</em> things, to <em>look things up</em>, and to stop drowning in its own context.</p>
+
+    <section class="scene opening" id="scene0">
+      <p class="time">8:05 a.m. · The demo that went nowhere</p>
+      <h2>“It writes lovely paragraphs about a database it cannot see”</h2>
+      <p>Northstar Assist shipped last month on the Claude API. Overnight, three tickets arrive with the same shape. A customer asks about <em>their</em> order. A rep asks what time it is in the Lisbon office. The ops team asks Assist to actually set a reminder, and Assist replies, warmly, that it would be happy to — and then does nothing at all.</p>
+      <p><strong>Dara Osei</strong>, the backend engineer who built the endpoint, puts it plainly at standup.</p>
+      <p class="voice">“By default, Claude only knows what was in its training data. No live data, no current time, no side effects. Everything we shipped is a very articulate closed room.”</p>
+      <p><strong>Tool use</strong> is the door. The flow has five beats, and once you see them you will see them everywhere for the rest of this lesson:</p>
+      <ol>
+        <li>Send a message to Claude with <code>tools</code> available.</li>
+        <li>Claude responds with either a final answer <em>or</em> a tool-use request.</li>
+        <li>Your code executes that tool.</li>
+        <li>You send the result back to Claude as a <code>tool_result</code> block.</li>
+        <li>Repeat until <code>stop_reason</code> is <code>end_turn</code>.</li>
+      </ol>
+      <p>Run that loop autonomously — Claude receiving a goal, picking tools, and continuing until it decides the task is finished — and you no longer have a chatbot. You have an <strong>agent</strong>: an autonomous version of Claude running both sides of the messaging loop without a human in the middle.</p>
+      <div class="blue-note"><p><strong>Division of labour, stated once and never renegotiated:</strong> you own the loop and the tools; Claude owns the reasoning. Claude never touches your database. It writes a request; your code decides whether and how to honour it.</p></div>
+      <div class="lesson"><p><strong>First principle:</strong> a tool does not give Claude new abilities so much as it gives Claude a way to <em>ask</em> for something. Every capability you add is a request you have agreed in advance to fulfil.</p></div>
+    </section>
+
+    <section class="scene" id="scene1">
+      <p class="time">8:40 a.m. · Three ordinary functions</p>
+      <h2>The tool nobody called</h2>
+      <p>Dara starts with the reminder feature, and finds it needs three tools, not one. Claude knows roughly what today's date is but not the exact time; it sometimes miscalculates date arithmetic across long spans; and it has no mechanism at all for storing a reminder. So: <code>get_current_datetime</code>, <code>add_duration_to_datetime</code>, <code>set_reminder</code>.</p>
+      <p>The functions themselves are plain Python. What makes them <em>tools</em> is three habits: descriptive function and argument names, immediate input validation, and error messages that mean something — because <strong>the error text goes back to Claude</strong>, which can read it and retry with corrected parameters.</p>
+      <p>Then each function needs a <strong>tool schema</strong>: a JSON Schema description with exactly three parts.</p>
+<pre><code>{
+  "name": "get_current_datetime",
+  "description": "Returns the current date and time. Use this
+    whenever a request depends on 'now' — scheduling, elapsed
+    time, or relative dates. Returns a formatted string in the
+    requested strftime format.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "date_format": {"type": "string",
+        "description": "strftime format, e.g. %Y-%m-%d %H:%M:%S"}
+    }
+  }
+}</code></pre>
+      <p><code>input_schema</code> is ordinary JSON Schema — a general data-validation spec, not an AI invention, borrowed by the ML community for tool calling. The convention is to name each schema <code>&lt;function_name&gt;_schema</code> so it pairs obviously with its function, and you can hand your function to Claude and ask it to draft the schema for you.</p>
+      <p>By ten past nine, Assist has the tools and still answers date questions from thin air.</p>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Diagnose the unused tool">
+        <button type="button" onclick="choose('one','desc', 8)">Rewrite the description</button>
+        <button type="button" onclick="choose('one','temp', 8)">Lower the temperature</button>
+        <button type="button" onclick="choose('one','model', 8)">Upgrade to a bigger model</button>
+        <button type="button" onclick="choose('one','tokens', 8)">Raise max_tokens</button>
+      </div>
+      <div class="outcome" id="one-desc" aria-live="polite"><strong>That's the fix.</strong> The <code>description</code> is the field Claude reads to decide whether and when to call a tool, and a vague description is the number-one cause of agents misfiring or ignoring tools they have. Aim for three or four sentences: what it does, when to use it, what it returns.</div>
+      <div class="outcome" id="one-temp" aria-live="polite"><strong>Wrong dial.</strong> Temperature shapes sampling randomness; it does not tell Claude what a tool is for. Claude decides to call a tool by reading its <code>description</code> — that's where a vague one-liner costs you.</div>
+      <div class="outcome" id="one-model" aria-live="polite"><strong>Expensive guess.</strong> A stronger model may paper over a bad schema, but you'd be paying every request to compensate for four missing sentences. Fix the <code>description</code> first — it's the single highest-leverage field in a tool definition.</div>
+      <div class="outcome" id="one-tokens" aria-live="polite"><strong>Unrelated.</strong> <code>max_tokens</code> is a ceiling on generation length; it has nothing to do with tool selection. Claude picks tools by reading their descriptions, so that is what needs rewriting.</div>
+      <div class="lesson"><p><strong>The description is the interface.</strong> Name, description, <code>input_schema</code> — and the description is the only one Claude reasons over when choosing. Write it for a competent stranger who has never seen your codebase.</p></div>
+    </section>
+
+    <section class="scene" id="scene2">
+      <p class="time">9:30 a.m. · The carousel</p>
+      <h2>One response, several blocks</h2>
+      <p>With tools attached, Claude's reply stops being a paragraph and becomes a <em>list</em>. A single assistant message can carry a text block — the user-facing explanation — alongside one or more <code>tool_use</code> blocks, each with its own id, tool name, and arguments. <code>stop_reason</code> comes back as <code>tool_use</code> rather than <code>end_turn</code>.</p>
+      <p>Dara runs the tool and packages the answer as a <code>tool_result</code> block with three fields:</p>
+<pre><code>{
+  "type": "tool_result",
+  "tool_use_id": "toolu_01A...",   # matches the tool_use block
+  "content": "2026-08-04 09:31:12", # stringified output
+  "is_error": false                 # true if execution failed
+}</code></pre>
+      <p>The <code>tool_use_id</code> is what pairs a result with its request — essential the moment Claude issues several tool calls at once. And the tool result travels in a <strong>user</strong> message, not an assistant one.</p>
+      <p>The follow-up request 400s. Ines Vidal, the support-ops lead watching over Dara's shoulder, asks what changed.</p>
+      <p class="choice">What went wrong?</p>
+      <div class="choices" role="group" aria-label="Diagnose the broken follow-up">
+        <button type="button" onclick="choose('two','textonly', 15)">Only the text block was appended</button>
+        <button type="button" onclick="choose('two','assistant', 15)">Result sent as an assistant message</button>
+        <button type="button" onclick="choose('two','noschema', 15)">Tool schemas dropped from the follow-up</button>
+        <button type="button" onclick="choose('two','all', 15)">All three are real failure modes</button>
+      </div>
+      <div class="outcome" id="two-textonly" aria-live="polite"><strong>A real failure — but not the only one.</strong> You must append the <em>entire</em> <code>response.content</code> array, every block, not just the visible text; drop the <code>tool_use</code> block and the id your result references no longer exists. The other two options break it as well.</div>
+      <div class="outcome" id="two-assistant" aria-live="polite"><strong>A real failure — but not the only one.</strong> <code>tool_result</code> blocks belong in a user message. Still, the other two options are equally fatal, so the complete answer is “all three.”</div>
+      <div class="outcome" id="two-noschema" aria-live="polite"><strong>A real failure — but not the only one.</strong> The original tool schemas must remain on the follow-up request even when you don't expect more tool calls. The other two options break it too.</div>
+      <div class="outcome" id="two-all" aria-live="polite"><strong>Correct — these are the tool-loop invariants.</strong> Preserve the complete assistant content array; every result references its matching tool-use id; results ride in a user message; the tool schemas stay on every request in the loop. Break any one and the conversation stops making sense to Claude.</div>
+      <div class="lesson"><p><strong>Treat <code>response.content</code> as a baggage carousel, never a string.</strong> Loop it, switch on <code>block.type</code>, and store the whole array in your history — the API is stateless, so your message list is the only memory the conversation has.</p></div>
+    </section>
+
+    <section class="scene" id="scene3">
+      <p class="time">10:00 a.m. · The loop, written down</p>
+      <h2>“What day is 103 days from today?”</h2>
+      <p>One question, two tools, in order: Claude calls <code>get_current_datetime</code>, reads the result, then calls <code>add_duration_to_datetime</code>, then answers. Nobody told it that sequence. It worked it out.</p>
+      <p>You cannot predict how many tools a query will need, so the loop has to handle chains of arbitrary length. Dara's three functions do exactly that:</p>
+      <ul>
+        <li><strong><code>run_conversation</code></strong> — calls Claude with the messages plus the tools, appends the assistant response to history, checks <code>stop_reason</code>; if it isn't <code>tool_use</code>, break; otherwise run the tools, append the results as a user message, and loop.</li>
+        <li><strong><code>run_tools</code></strong> — filters the content array for blocks of type <code>tool_use</code>, executes each one, and builds a <code>tool_result</code> block per request, wrapping execution in try/except so a failure comes back as <code>is_error: true</code> with the error message as content rather than crashing the loop.</li>
+        <li><strong><code>run_tool</code></strong> — a plain dispatcher matching tool name to function.</li>
+      </ul>
+      <p>Adding the third tool takes three edits and nothing else: put the schema in the <code>tools</code> list, add a case to the dispatcher, write the function. That is the whole extension story.</p>
+      <p>The helpers need one refactor first. <code>add_user_message</code> and <code>add_assistant_message</code> must accept multiple blocks instead of plain strings, <code>chat</code> must accept a <code>tools</code> argument and return the entire message rather than the first text block, and a small <code>text_from_message</code> helper pulls out every text block for display.</p>
+      <div class="lesson"><p><strong>The loop is boring on purpose.</strong> Call → check <code>stop_reason</code> → dispatch → return results → repeat. Everything clever in an agent lives in the tools and their descriptions, not in the while loop.</p></div>
+    </section>
+
+    <div class="rule"><strong>You own the loop. Claude owns the reasoning.</strong><span>Ask → choose → run → report → repeat, until <code>end_turn</code>.</span></div>
+
+    <section class="scene" id="scene4">
+      <p class="time">10:35 a.m. · Five cities, five round trips</p>
+      <h2>The latency nobody could explain</h2>
+      <p>Ines has a new feature: a rep types “what's the weather at our five distribution hubs?” and Assist answers. It works. It takes eleven seconds.</p>
+      <p>Dara traces it. Claude <em>can</em> emit several <code>tool_use</code> blocks in one assistant message — but in practice it usually plays it safe and calls one tool per turn, so five independent lookups become five full request/response cycles.</p>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Choose a fix for serial tool calls">
+        <button type="button" onclick="choose('four','batch', 23)">Add a batch tool</button>
+        <button type="button" onclick="choose('four','five', 23)">Write one tool per city</button>
+        <button type="button" onclick="choose('four','stream', 23)">Turn on fine-grained streaming</button>
+        <button type="button" onclick="choose('four','cache', 23)">Enable prompt caching</button>
+      </div>
+      <div class="outcome" id="four-batch" aria-live="polite"><strong>Right trick.</strong> Give Claude a single <code>batch_tool</code> whose input schema takes an array of invocations, each with its own tool name and arguments. Claude packs the independent calls into one request; your <code>run_batch</code> unpacks the array, executes each sub-call through the same dispatcher, and returns all results together. Five round trips collapse to one.</div>
+      <div class="outcome" id="four-five" aria-live="polite"><strong>Backwards.</strong> Hyper-specialised tools multiply the surface Claude must reason over and still don't parallelise anything. The batch tool is the intended fix: one schema that accepts an array of sub-tool invocations.</div>
+      <div class="outcome" id="four-stream" aria-live="polite"><strong>Different problem.</strong> Fine-grained tool calling changes how tool <em>arguments</em> stream back to your UI; it doesn't reduce the number of round trips. Use the batch tool to collapse independent calls into a single turn.</div>
+      <div class="outcome" id="four-cache" aria-live="polite"><strong>Helps the bill, not the trip count.</strong> Caching cuts the cost of reprocessing identical prefixes; you'd still make five sequential calls. The batch tool is what collapses independent calls into one turn.</div>
+      <div class="lesson"><p><strong>The batch tool is a higher-level abstraction, not a new API feature.</strong> It hand-rolls what parallel <code>tool_use</code> blocks would do automatically — and only pays off when the calls are genuinely independent.</p></div>
+    </section>
+
+    <section class="scene" id="scene5">
+      <p class="time">11:05 a.m. · The extraction that kept drifting</p>
+      <h2>Tools as an output contract</h2>
+      <p>Ines needs every inbound email turned into a strict record: customer id, order id, sentiment, requested action. Assist keeps returning good JSON <em>and</em> a friendly sentence explaining the JSON, which the parser hates.</p>
+      <p>Dara's answer is to stop asking for structured text and start defining structured <em>input</em>. Define a tool whose <code>input_schema</code> <em>is</em> the output contract, then force Claude to call it:</p>
+<pre><code>tool_choice = {"type": "tool", "name": "save_ticket_record"}
+# ...
+record = response.content[0].input   # the structured data</code></pre>
+      <p>Because the data lives in the <code>tool_use</code> block's <code>input</code> field, you read it straight off the response — <strong>no tool execution and no <code>tool_result</code> required</strong>. The tool exists purely to shape the output.</p>
+      <p class="choice">When is this worth the extra setup?</p>
+      <div class="choices" role="group" aria-label="Choose when to use a tool for structured data">
+        <button type="button" onclick="choose('five','prod', 30)">Reliable production extraction</button>
+        <button type="button" onclick="choose('five','quick', 30)">Any time you want JSON</button>
+        <button type="button" onclick="choose('five','never', 30)">Never — it wastes a tool slot</button>
+      </div>
+      <div class="outcome" id="five-prod" aria-live="polite"><strong>Yes.</strong> The trade is more reliable output for a more complex setup: you must write the JSON schema and set <code>tool_choice</code>. That's the right trade for complex, high-accuracy production extraction. Note the schema validates <em>shape</em>, not business truth — validate values in application code.</div>
+      <div class="outcome" id="five-quick" aria-live="polite"><strong>Over-engineered for the small cases.</strong> For a quick or simple extraction the lighter prompt-side technique (covered in this section's part 1) is fine. Reach for a dedicated tool schema when reliability matters more than simplicity.</div>
+      <div class="outcome" id="five-never" aria-live="polite"><strong>No — this is a first-class pattern.</strong> A tool schema is usually more reliable than hoping free-form text parses. Force it with <code>tool_choice: {"type": "tool", "name": ...}</code> when structured output is mandatory, and use <code>auto</code> when Claude may decide.</div>
+      <div class="lesson"><p><strong>A tool doesn't have to <em>do</em> anything.</strong> Sometimes its only job is to make the shape of Claude's answer non-negotiable.</p></div>
+    </section>
+
+    <section class="scene" id="scene6">
+      <p class="time">11:40 a.m. · Whose machine runs it?</p>
+      <h2>Kwame asks the security question</h2>
+      <p><strong>Kwame Boateng</strong> from platform security has been quiet all morning. Now he wants the inventory: which of these tools execute inside Northstar's network?</p>
+      <table class="mini-table"><thead><tr><th></th><th>Built-in / server tools</th><th>Client tools</th></tr></thead><tbody>
+        <tr><td>Who runs it</td><td>Declared by you, executed by Anthropic server-side</td><td>Runs where your code runs</td></tr>
+        <tr><td>Agent loop</td><td>None needed — the result comes back in the same response</td><td>You run the loop and return <code>tool_result</code></td></tr>
+        <tr><td>Examples</td><td><code>web_search</code>, <code>code_execution</code>, <code>web_fetch</code></td><td>memory, bash</td></tr>
+        <tr><td>What to look for</td><td><code>server_tool_use</code> blocks plus matching tool-result blocks alongside text</td><td>Ordinary <code>tool_use</code> / <code>tool_result</code> pairs</td></tr>
+      </tbody></table>
+      <p>Web search is the one Ines wants today. It needs no implementation from Dara at all — Claude runs the searches itself:</p>
+<pre><code>{
+  "type": "web_search_20250305",
+  "name": "web_search",
+  "max_uses": 5,
+  "allowed_domains": ["nih.gov"]
+}</code></pre>
+      <p>The response comes back as a mixture: Claude's text blocks, the tool-use blocks showing the queries it ran, web-search result blocks with page titles and URLs, and citation blocks tying specific sentences to specific sources. A good UI renders all four differently.</p>
+      <p>Northstar's wellness product answers exercise questions, and Kwame does not want generic web content behind medical claims.</p>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Constrain the web search tool">
+        <button type="button" onclick="choose('six','domains', 37)">Set allowed_domains to nih.gov</button>
+        <button type="button" onclick="choose('six','maxuses', 37)">Set max_uses to 1</button>
+        <button type="button" onclick="choose('six','prompt', 37)">Tell Claude in the system prompt</button>
+        <button type="button" onclick="choose('six','wrap', 37)">Write your own search client tool</button>
+      </div>
+      <div class="outcome" id="six-domains" aria-live="polite"><strong>Exactly.</strong> <code>allowed_domains</code> restricts the search itself to trusted sources — a schema-level guarantee, not a request. Then inspect the returned citations so you can tell sourced claims apart from Claude's own synthesis.</div>
+      <div class="outcome" id="six-maxuses" aria-live="polite"><strong>Wrong knob.</strong> <code>max_uses</code> caps how many searches run (it defaults to 5); it says nothing about <em>where</em> they search. Use <code>allowed_domains</code> to restrict sources.</div>
+      <div class="outcome" id="six-prompt" aria-live="polite"><strong>A request, not a control.</strong> Prompt instructions are steering, not enforcement. The web search schema has a purpose-built field: <code>allowed_domains</code>.</div>
+      <div class="outcome" id="six-wrap" aria-live="polite"><strong>All that work for a field you already have.</strong> Rebuilding search as a client tool means you now own the code, the maintenance, and the citations. The built-in tool takes an <code>allowed_domains</code> list.</div>
+      <div class="lesson"><p><strong>Ask “whose machine runs this?” before “what does it do?”</strong> Server tools need no loop and no implementation but hand execution to Anthropic; client tools keep execution local and keep the loop your responsibility.</p></div>
+    </section>
+
+    <section class="scene" id="scene7">
+      <p class="time">12:15 p.m. · Half a tool</p>
+      <h2>The text editor tool arrives pre-assembled and unbuilt</h2>
+      <p>Northstar's docs team wants Assist to edit runbook files directly. There is a built-in tool for that — and it is built-in in an unusual way.</p>
+      <p>You send a minimal <strong>schema stub</strong>: a name plus a version-dated type string (for example <code>text_editor_20250124</code> for Claude 3.7 Sonnet — the stub varies by model). Claude expands it internally into the full schema and starts issuing file operations: view a file or directory, view a line range, replace a string, create a file, insert at a line, undo an edit.</p>
+      <p class="voice">“Anthropic gives us the menu,” Dara says. “We still have to hire the cook.”</p>
+      <p>That is the whole catch. <strong>The schema is built into Claude; the implementation is yours.</strong> Your code writes the class that actually opens, reads, replaces, and creates files — and, since these are file-system side effects driven by model output, it should constrain which paths and operations are permitted. Treat tool inputs as untrusted data: validate authorisation, arguments, timeouts, and side effects before executing.</p>
+      <div class="lesson"><p><strong>“Built-in” is not one thing.</strong> Web search is built-in <em>and</em> executed for you. The text editor is built-in only in the sense that Claude already knows how to ask. Read the fine print on every tool before you assume it's free.</p></div>
+    </section>
+
+    <section class="scene" id="scene8">
+      <p class="time">12:50 p.m. · The stuttering cursor</p>
+      <h2>“Why does the argument panel freeze and then explode?”</h2>
+      <p>Ines is testing a UI that shows tool arguments live as Claude composes them. Text streams smoothly; tool inputs arrive in lurches — long pause, then a burst.</p>
+      <p>Streaming a tool call adds <code>input_json_delta</code> events carrying a <code>partial_json</code> chunk and a cumulative <code>snapshot</code>. But by default the API <strong>buffers and validates</strong> that JSON, releasing only complete top-level key/value pairs at a time. Hence pause, burst, pause, burst.</p>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Choose a streaming fix">
+        <button type="button" onclick="choose('eight','fine', 44)">Enable fine-grained tool calling</button>
+        <button type="button" onclick="choose('eight','batch', 44)">Use the batch tool</button>
+        <button type="button" onclick="choose('eight','nothing', 44)">Accept it — validation is worth it</button>
+      </div>
+      <div class="outcome" id="eight-fine" aria-live="polite"><strong>Right feature, and know what you're buying.</strong> <code>fine_grained=True</code> disables the API's server-side JSON validation so chunks stream immediately as generated. The cost: your code must now handle partial or invalid JSON — Claude may emit malformed values such as <code>undefined</code> — so you buffer, validate, and recover deliberately on your side.</div>
+      <div class="outcome" id="eight-batch" aria-live="polite"><strong>Wrong layer.</strong> The batch tool reduces round trips between turns; it doesn't change how a single tool call's JSON arrives over the stream. That's <code>fine_grained</code>.</div>
+      <div class="outcome" id="eight-nothing" aria-live="polite"><strong>Defensible — and worth naming as a choice.</strong> Default mode is slower but validated. If your UI doesn't need argument-level immediacy, keeping the safety net is the reasonable call; reach for <code>fine_grained</code> only when the latency actually hurts.</div>
+      <div class="lesson"><p><strong>Fine-grained tool calling trades a safety net for speed.</strong> Faster, more granular UX; you inherit the job of handling invalid JSON.</p></div>
+    </section>
+
+    <section class="scene" id="scene9">
+      <p class="time">1:20 p.m. · Fourteen tools and none of them fit</p>
+      <h2>The toolbox that kept growing</h2>
+      <p>Someone on Dara's team has been busy. The tools array now holds <code>refresh_order_status</code>, <code>resend_shipping_email</code>, <code>escalate_to_tier_two</code>, <code>apply_goodwill_credit</code>, and ten more. Every new ticket shape produces a new tool. Assist still fails on anything nobody anticipated.</p>
+      <p>Dara pulls up Claude Code's own toolset as the counterexample: <code>bash</code>, <code>read</code>, <code>write</code>, <code>edit</code>, <code>glob</code>, <code>grep</code>. Not <code>refactor_code</code>. Not <code>install_dependencies</code>.</p>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Choose a tool design direction">
+        <button type="button" onclick="choose('nine','abstract', 51)">Collapse to a few abstract tools</button>
+        <button type="button" onclick="choose('nine','more', 51)">Keep adding one tool per scenario</button>
+        <button type="button" onclick="choose('nine','router', 51)">Add a tool that picks tools</button>
+      </div>
+      <div class="outcome" id="nine-abstract" aria-live="polite"><strong>Yes.</strong> Give Claude abstract, combinable tools rather than hyper-specialised ones, so it can piece primitives together for scenarios you never explicitly planned. Northstar's three datetime tools already show it: current time + duration + reminder covers a whole family of requests through different combinations.</div>
+      <div class="outcome" id="nine-more" aria-live="polite"><strong>The treadmill you're already on.</strong> One tool per scenario means every unanticipated request is a gap, and the description list Claude must reason over keeps growing. Abstract, combinable primitives generalise; specialised tools don't.</div>
+      <div class="outcome" id="nine-router" aria-live="polite"><strong>Adds a layer without removing the problem.</strong> A meta-tool over fourteen brittle tools is still fourteen brittle tools. Collapse them into a small set of abstract primitives Claude can combine.</div>
+      <div class="lesson"><p><strong>Design for the request you didn't imagine.</strong> A small set of flexible tools beats a drawer of single-use gadgets — and it is what lets an agent surprise you usefully rather than fail politely.</p></div>
+    </section>
+
+    <section class="scene" id="scene10">
+      <p class="time">1:55 p.m. · The vendor portal with no API</p>
+      <h2>Computer Use: the loop, wearing a camera</h2>
+      <p>Northstar's freight vendor has a web portal, no API, and no plans to build one. Ines has two staff who spend an hour a day clicking through it.</p>
+      <p><strong>Computer Use</strong> lets Claude operate a computer the way a person does: view the screen, move the mouse, click, type, scroll, run shell commands. It is aimed exactly at software with no API — legacy applications, consumer GUIs — and at UI-level testing.</p>
+      <p>The loop is the one you already know, with a screenshot standing in for a JSON result:</p>
+      <ol>
+        <li>Your code sends Claude a screenshot of the current screen state, plus the task.</li>
+        <li>Claude responds with a tool-use request for a computer action — <code>screenshot</code>, <code>left_click</code>, <code>type</code>, <code>key</code>.</li>
+        <li>Your code executes that action against the sandboxed environment.</li>
+        <li>Your code takes a <strong>new screenshot</strong> and returns it as the tool result.</li>
+        <li>Repeat until Claude decides the task is complete.</li>
+      </ol>
+      <p>Step 4 is not optional and not decorative: a fresh screenshot is Claude's <em>only</em> way to perceive whether the click landed. (Part 3 of this section names that habit — look before acting, look again after — and generalises it.)</p>
+      <p>As with the text editor, Claude does not touch a computer directly. A special tool schema expands into the full action set behind the scenes; a computing environment you provide — typically a Docker container, and Anthropic ships a reference implementation — performs the actual key presses and mouse movements.</p>
+      <div class="blue-note"><p><strong>Kwame's condition, and it's the right one:</strong> because Claude can take arbitrary UI actions, Computer Use runs against a <strong>sandboxed VM or container</strong>, never a production desktop. Arbitrary actions demand containment.</p></div>
+      <div class="lesson"><p><strong>Computer Use is not a new paradigm.</strong> It is the agent loop with a visual environment: screenshot in, action out, screenshot in again.</p></div>
+    </section>
+
+    <div class="rule"><strong>Every capability so far is the same five steps.</strong><span>Only the environment changes: a database, a file system, a browser, a screen.</span></div>
+
+    <section class="scene" id="scene11">
+      <p class="time">2:30 p.m. · Three requests, one whiteboard</p>
+      <h2>Tool, Skill, or MCP server?</h2>
+      <p>Three asks land in the same hour. Ines wants Assist to look up an order in Northstar's own Postgres. The docs team wants every incident write-up to follow Northstar's exact post-mortem template. Kwame wants Assist to search Slack.</p>
+      <table class="mini-table"><thead><tr><th></th><th>What it connects</th><th>Who maintains it</th></tr></thead><tbody>
+        <tr><td><strong>Tools</strong></td><td>Claude to <em>your</em> systems — your database, your APIs</td><td>You own the code and the maintenance</td></tr>
+        <tr><td><strong>Skills</strong></td><td>Claude to a <em>procedure</em> — your report template, your checklist</td><td>You, but as instructions rather than integrations</td></tr>
+        <tr><td><strong>MCP</strong></td><td>Claude to <em>third-party</em> services</td><td>The provider maintains the integration</td></tr>
+      </tbody></table>
+      <p class="voice">Tools are for your stuff. Skills are for your processes. MCP is for everyone else's stuff.</p>
+      <p class="choice">Match the three asks</p>
+      <div class="choices" role="group" aria-label="Assign tool, skill, or MCP">
+        <button type="button" onclick="choose('eleven','right', 58)">Tool · Skill · MCP</button>
+        <button type="button" onclick="choose('eleven','allmcp', 58)">MCP for all three</button>
+        <button type="button" onclick="choose('eleven','swap', 58)">Skill · Tool · MCP</button>
+        <button type="button" onclick="choose('eleven','alltools', 58)">Write custom tools for all three</button>
+      </div>
+      <div class="outcome" id="eleven-right" aria-live="polite"><strong>Correct.</strong> Postgres is your system, so a tool. The post-mortem template is a procedure, so a Skill — instructions, not an integration. Slack is somebody else's service with a maintained integration, so MCP.</div>
+      <div class="outcome" id="eleven-allmcp" aria-live="polite"><strong>Only one of the three fits.</strong> MCP shines for third-party services (Slack). Your own Postgres is a tool you own; a report template is a procedure, which is what Skills are for.</div>
+      <div class="outcome" id="eleven-swap" aria-live="polite"><strong>First two are reversed.</strong> A database lookup is an integration with your own system — a tool. A document template is a procedure — a Skill. Slack is correctly MCP.</div>
+      <div class="outcome" id="eleven-alltools" aria-live="polite"><strong>You just volunteered for maintenance you don't need.</strong> Hand-writing Slack tools means owning schemas and functions the provider already maintains — that's the burden MCP removes. And a template is instructions, not an integration.</div>
+      <div class="lesson"><p><strong>Ask who should be on the hook for the integration.</strong> If the answer is “the service's own maintainers,” you are looking at MCP, not a tool you have to keep alive.</p></div>
+    </section>
+
+    <section class="scene" id="scene12">
+      <p class="time">3:00 p.m. · Two lines and a locked door</p>
+      <h2>Connecting the Slack server — carefully</h2>
+      <p>Wiring an MCP server into a Claude API request takes two pieces. <code>mcp_servers</code> declares the connection — type, URL, name, and an optional <code>authorization_token</code>. Then a tools entry grants access to it:</p>
+<pre><code>"mcp_servers": [
+  {"type": "url", "url": "https://...", "name": "slack",
+   "authorization_token": "..."}
+],
+"tools": [
+  {"type": "mcp_toolset", "mcp_server_name": "slack"}
+]</code></pre>
+      <p>Claude introspects the server itself and discovers the available tools and their schemas, so <strong>you never hand-write a schema for an MCP-provided tool</strong>. (At the time of the course, the MCP connector required a beta header.)</p>
+      <p>There is a catch Kwame spots immediately: the default for an <code>mcp_toolset</code> entry is <em>all</em> tools on that server — including posting and deleting messages.</p>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Scope down MCP access">
+        <button type="button" onclick="choose('twelve','deny', 65)">Disable all, enable named tools</button>
+        <button type="button" onclick="choose('twelve','block', 65)">List the dangerous tools as disabled</button>
+        <button type="button" onclick="choose('twelve','prompt', 65)">Instruct Claude not to post</button>
+        <button type="button" onclick="choose('twelve','fork', 65)">Fork the server and delete the write tools</button>
+      </div>
+      <div class="outcome" id="twelve-deny" aria-live="polite"><strong>Deny by default.</strong> Set <code>"default_config": {"enabled": False}</code>, then enable only what you want in <code>"configs"</code> — for example <code>search_messages</code> and <code>list_channels</code>. The server stays effectively read-only, and a tool added upstream tomorrow is off by default.</div>
+      <div class="outcome" id="twelve-block" aria-live="polite"><strong>A blocklist ages badly.</strong> Anything the provider adds later arrives enabled, because your default is still “on.” Flip it: disable everything via <code>default_config</code>, then enable named tools in <code>configs</code>.</div>
+      <div class="outcome" id="twelve-prompt" aria-live="polite"><strong>Steering, not scoping.</strong> A system-prompt request is not an access control. The toolset config is: <code>default_config</code> disabled, specific tools enabled in <code>configs</code>.</div>
+      <div class="outcome" id="twelve-fork" aria-live="polite"><strong>You just took on the maintenance MCP was removing.</strong> Forking means you own updates forever. Scope access declaratively instead — deny by default, enable the read tools you need.</div>
+      <div class="lesson"><p><strong>MCP hands you someone else's toolbox, fully stocked.</strong> Granting access is one line; deciding which drawers open is the architect's job.</p></div>
+    </section>
+
+    <section class="scene" id="scene13">
+      <p class="time">3:35 p.m. · Nine hundred pages of policy</p>
+      <h2>“Just put the manual in the prompt”</h2>
+      <p><strong>Lila Novak</strong>, who owns Northstar's knowledge base, has 900 pages of support policy and a simple proposal: paste it into the system prompt. Dara lists what goes wrong — hard length limits, degraded effectiveness on very long prompts, higher cost, slower processing.</p>
+      <p><strong>RAG</strong> — Retrieval Augmented Generation — is the alternative: break documents into chunks up front, and at query time include only the chunks most relevant to the question. The benefits are focus on relevant content, scale across very large or numerous documents, and lower cost and latency. The costs are real too: a preprocessing step, a search mechanism that must define “relevant,” chunks that may lack the context they need, and a menu of chunking approaches to choose between.</p>
+      <table class="mini-table"><thead><tr><th>Chunking strategy</th><th>How</th><th>Trade-off</th></tr></thead><tbody>
+        <tr><td><strong>Size-based</strong></td><td>Fixed-length character or token chunks, with overlap</td><td>Simplest and most reliable fallback, works with any content including code; can still fragment meaning</td></tr>
+        <tr><td><strong>Structure-based</strong></td><td>Split on document structure — headers such as <code>\n## </code></td><td>Cleanest chunks when formatting is guaranteed; fails on unstructured text</td></tr>
+        <tr><td><strong>Sentence-based</strong></td><td>Split into sentences, group N per chunk with overlap</td><td>Practical middle ground for general prose</td></tr>
+        <tr><td><strong>Semantic-based</strong></td><td>NLP measures how related consecutive sentences are, groups by relatedness</td><td>Most relevant chunks; computationally expensive and complex</td></tr>
+      </tbody></table>
+      <p>Lila's corpus is mixed: some clean Markdown, plenty of pasted email, a few code appendices. No formatting guarantee.</p>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Pick a chunking strategy">
+        <button type="button" onclick="choose('thirteen','size', 71)">Size-based with overlap</button>
+        <button type="button" onclick="choose('thirteen','struct', 71)">Structure-based on headers</button>
+        <button type="button" onclick="choose('thirteen','semantic', 71)">Semantic-based</button>
+      </div>
+      <div class="outcome" id="thirteen-size" aria-live="polite"><strong>The production default.</strong> Size-based chunking with overlap is simple, reliable, and works with any document type — the overlap carries characters from neighbouring chunks so meaning doesn't fall into the crack between two cuts. It duplicates a little text; that's the price.</div>
+      <div class="outcome" id="thirteen-struct" aria-live="polite"><strong>Only if the formatting is guaranteed.</strong> Structure-based splitting gives the cleanest chunks on reliable Markdown or HTML, but Lila's corpus includes pasted email with no headers. Fall back to size-based with overlap.</div>
+      <div class="outcome" id="thirteen-semantic" aria-live="polite"><strong>Strongest chunks, heaviest bill.</strong> Semantic chunking groups sentences by relatedness and is the most advanced option, but it's computationally expensive and complex. Start with size-based plus overlap; there is no universal best method.</div>
+      <div class="lesson"><p><strong>Chunking quality sets the ceiling on retrieval quality.</strong> Bad chunks retrieve the wrong “bug” — the insect one, for a software question — and no amount of clever search downstream recovers from that.</p></div>
+    </section>
+
+    <section class="scene" id="scene14">
+      <p class="time">4:00 p.m. · Coordinates for meaning</p>
+      <h2>Embeddings, and the flow end to end</h2>
+      <p>A <strong>text embedding</strong> is a numerical vector representing a text's meaning; each dimension is a value between roughly -1 and +1, and no individual dimension is human-interpretable. <strong>Semantic search</strong> uses those vectors to find chunks related in <em>meaning</em> rather than by exact words.</p>
+      <p>One planning fact: <strong>Anthropic does not provide embeddings.</strong> The recommended provider is <strong>VoyageAI</strong> — a separate account and API key (<code>VOYAGE_API_KEY</code>), with models such as <code>voyage-3-large</code>.</p>
+      <p>Lila's pipeline, in seven steps — the first four run once, ahead of time; the last three run per query:</p>
+      <ol>
+        <li>Chunk the source documents.</li>
+        <li>Generate an embedding for each chunk.</li>
+        <li>Normalise the vectors to magnitude 1.0 (embedding APIs generally handle this).</li>
+        <li>Store the embeddings in a vector database.</li>
+        <li>Embed the user's question with the <em>same</em> model.</li>
+        <li>Find the nearest stored embeddings by cosine similarity.</li>
+        <li>Assemble the prompt: the question plus the retrieved chunks, sent to Claude.</li>
+      </ol>
+      <p><strong>Cosine similarity</strong> is the cosine of the angle between two vectors, from -1 to 1, where closer to 1 means more similar. <strong>Cosine distance</strong> is 1 minus that, so closer to 0 means more similar — which is what a vector search typically hands back.</p>
+      <div class="blue-note"><p><strong>Store the text with the vector.</strong> Lila's index keeps each embedding alongside metadata holding the original chunk. A bare vector is unreadable; retrieval is only useful if you can hand the actual passage to Claude.</p></div>
+      <div class="lesson"><p><strong>Preprocessing is where RAG is won.</strong> Steps 1–4 happen long before a user asks anything, and they determine what step 6 can possibly find.</p></div>
+    </section>
+
+    <section class="scene" id="scene15">
+      <p class="time">4:25 p.m. · INC-2023-Q4-011</p>
+      <h2>The search that understood everything except the answer</h2>
+      <p>A rep asks Assist about incident <code>INC-2023-Q4-011</code>. Semantic search returns three thoughtful chunks about incident handling in general and misses the one chunk that literally contains the ID — because embeddings optimise for conceptual similarity, not literal string matches.</p>
+      <p><strong>BM25</strong> (Best Match 25) is the lexical counterweight, in four steps: tokenise the query; count term frequency across the chunks; weight rarer terms more heavily than common ones like “a”; return the chunks containing the most instances of the highest-weighted terms. A rare identifier is exactly the kind of term BM25 spotlights.</p>
+      <table class="mini-table"><thead><tr><th></th><th>Embeddings / semantic</th><th>BM25 / lexical</th></tr></thead><tbody>
+        <tr><td>Matches on</td><td>Meaning</td><td>Literal terms</td></tr>
+        <tr><td>Strong at</td><td>Paraphrase, related concepts</td><td>IDs, codes, rare or specific words</td></tr>
+        <tr><td>Blind spot</td><td>Exact term matches</td><td>Wording it has never seen</td></tr>
+      </tbody></table>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Choose a retrieval strategy">
+        <button type="button" onclick="choose('fifteen','hybrid', 78)">Run both and merge</button>
+        <button type="button" onclick="choose('fifteen','bm25', 78)">Replace semantic with BM25</button>
+        <button type="button" onclick="choose('fifteen','rechunk', 78)">Re-chunk more finely</button>
+      </div>
+      <div class="outcome" id="fifteen-hybrid" aria-live="polite"><strong>Hybrid search — the standard production pattern.</strong> Run semantic and BM25 in parallel and merge the results, so you get conceptual relevance <em>and</em> exact-term precision. A retriever class forwards the query to both indexes; <strong>reciprocal rank fusion</strong> merges them, summing 1/(rank + 1) across methods so documents ranked highly by both rise to the top.</div>
+      <div class="outcome" id="fifteen-bm25" aria-live="polite"><strong>Trading one blind spot for another.</strong> BM25 alone loses the paraphrase and related-concept matching that made semantic search worth having. Run both in parallel and merge — that's hybrid search.</div>
+      <div class="outcome" id="fifteen-rechunk" aria-live="polite"><strong>Doesn't address the cause.</strong> Smaller chunks don't teach an embedding model to care about a literal ID string. Add a lexical index alongside the vector index and merge the results.</div>
+      <div class="lesson"><p><strong>Both indexes expose the same tiny API</strong> — <code>add_document</code> and <code>search</code> — which is exactly why they compose. Keep each index isolated and put the merging in a retriever wrapper you can extend later.</p></div>
+    </section>
+
+    <section class="scene" id="scene16">
+      <p class="time">4:50 p.m. · Two different diseases</p>
+      <h2>“Revenue grew 3%.” Whose revenue? Which quarter?</h2>
+      <p>Lila brings two failures that look alike and aren't.</p>
+      <p><strong>Failure one:</strong> a rep asks what the ENG team did about the 2023 incident. Hybrid search returns a cybersecurity section above the software-engineering section that actually answers it. The right chunk <em>was</em> retrieved — just ranked badly.</p>
+      <p><strong>Failure two:</strong> a chunk reading “revenue grew 3%” is never retrieved at all, because in isolation it says nothing about which company, division, or quarter it belongs to.</p>
+      <table class="mini-table"><thead><tr><th></th><th>Reranking</th><th>Contextual retrieval</th></tr></thead><tbody>
+        <tr><td>When it runs</td><td>Query time, after initial retrieval</td><td>Preprocessing time, before embedding/indexing</td></tr>
+        <tr><td>What it does</td><td>Pull a wider candidate set (say top 20–50) for recall, then reorder for precision — often an LLM call scoring each candidate against the query</td><td>An LLM reads each chunk alongside the full document and writes a short situating sentence, prepended to the chunk</td></tr>
+        <tr><td>Fixes</td><td>The right chunk retrieved but ranked too low</td><td>The right chunk never findable because it lost its context</td></tr>
+        <tr><td>Cost</td><td>Extra latency per query — applied to the shortlist, not the corpus</td><td>One-time indexing cost; helps both the embedding and BM25 keywords</td></tr>
+      </tbody></table>
+      <p>For reranking, pass document IDs rather than full text to keep the call cheap, and only the reordered top-K goes to Claude. When a source document is too large to fit in the context-generation prompt, use a selective strategy: include the first one to three chunks for the document's summary or abstract, plus the chunks immediately before the target for local context, and skip the middle.</p>
+      <p class="choice">Match the fix to failure two</p>
+      <div class="choices" role="group" aria-label="Choose a RAG refinement">
+        <button type="button" onclick="choose('sixteen','ctx', 84)">Contextual retrieval</button>
+        <button type="button" onclick="choose('sixteen','rerank', 84)">Reranking</button>
+        <button type="button" onclick="choose('sixteen','topk', 84)">Retrieve more chunks per query</button>
+      </div>
+      <div class="outcome" id="sixteen-ctx" aria-live="polite"><strong>Right.</strong> Before indexing, run each chunk through Claude with the source document and generate a situating sentence — “This chunk is from Acme Corp's Q4 2023 earnings report, discussing automotive-division revenue” — then prepend it. The contextualised chunk gets a richer embedding <em>and</em> gains indexable keywords BM25 can find.</div>
+      <div class="outcome" id="sixteen-rerank" aria-live="polite"><strong>That's the fix for failure one.</strong> Reranking reorders candidates that retrieval already surfaced. Here the chunk is never surfaced at all, because it lost its context — that's a preprocessing problem, solved by contextual retrieval.</div>
+      <div class="outcome" id="sixteen-topk" aria-live="polite"><strong>Brute force with a cost.</strong> A wider top-K dilutes the context you send Claude and still may not surface a chunk with no findable terms. Fix it at indexing time with contextual retrieval.</div>
+      <div class="lesson"><p><strong>Reranking is a query-time fix; contextual retrieval is a preprocessing-time fix.</strong> Diagnose which one you have by asking a single question: was the right chunk in the candidate set at all?</p></div>
+    </section>
+
+    <div class="rule"><strong>Retrieval is not a feature. It is a pipeline.</strong><span>Chunk → contextualise → index twice → merge → rerank → assemble.</span></div>
+
+    <section class="scene" id="scene17">
+      <p class="time">5:15 p.m. · The request that failed at 3,000 turns</p>
+      <h2>What actually counts as context</h2>
+      <p>A long-running support session dies. Dara reads the payload and finds nothing surprising, just <em>everything</em>: the system prompt, the whole message history, every tool definition, every tool result, attached files and Skills, and thinking blocks. All of it is context. You pay for it going in and coming out, and once the window is full the request fails.</p>
+      <p class="voice">“The goal is not to fit everything in,” Dara says. “The goal is to fit the right things in.”</p>
+      <table class="mini-table"><thead><tr><th>Pattern</th><th>What it is</th><th>Reach for it when</th></tr></thead><tbody>
+        <tr><td><strong>Just-in-time context</strong></td><td>A design pattern, not an API feature: don't preload everything; let the agent pull more via tools when it asks</td><td>You're tempted to paste a reference manual into the system prompt — give it a lookup tool instead</td></tr>
+        <tr><td><strong>Server-side compaction</strong></td><td><code>context_management: {"edits": [{"type": "compact"}]}</code> — the API summarises old turns once input crosses a trigger threshold</td><td>Conversations run long and you don't want to track length yourself</td></tr>
+        <tr><td><strong>Prompt caching</strong></td><td>Mark stable parts of a request for reuse across calls at a fraction of the cost</td><td>The same system prompt, tool defs, or long document is resent repeatedly</td></tr>
+        <tr><td><strong>The memory tool</strong></td><td>Claude reads/writes a memory directory via tool calls; <strong>you implement the storage backend</strong></td><td>Context must survive <em>across sessions</em> — preferences, running notes</td></tr>
+      </tbody></table>
+      <p>Anthropic auto-injects an instruction telling Claude to check memory before starting work — but the file system or database behind it is yours to build and secure.</p>
+      <p class="choice">Ines wants Assist to remember a customer's preferences next week. Which pattern?</p>
+      <div class="choices" role="group" aria-label="Choose a context-management pattern">
+        <button type="button" onclick="choose('seventeen','memory', 91)">The memory tool</button>
+        <button type="button" onclick="choose('seventeen','compact', 91)">Server-side compaction</button>
+        <button type="button" onclick="choose('seventeen','cache', 91)">Prompt caching</button>
+        <button type="button" onclick="choose('seventeen','jit', 91)">Just-in-time context</button>
+      </div>
+      <div class="outcome" id="seventeen-memory" aria-live="polite"><strong>Correct — cross-session is the memory tool's defining case.</strong> Claude reads and writes a memory directory through tool calls, and Northstar owns the storage backend. Note who's responsible: Anthropic supplies the pattern and the check-memory instruction; you supply the filing cabinet and its locks.</div>
+      <div class="outcome" id="seventeen-compact" aria-live="polite"><strong>Wrong timescale.</strong> Compaction summarises old turns <em>within</em> a long conversation. Nothing survives to next week. Cross-session persistence is the memory tool.</div>
+      <div class="outcome" id="seventeen-cache" aria-live="polite"><strong>Wrong mechanism.</strong> Caching reuses computation on identical content for up to an hour; it is not durable storage of facts about a customer. Use the memory tool.</div>
+      <div class="outcome" id="seventeen-jit" aria-live="polite"><strong>Close, but incomplete.</strong> Just-in-time context is about <em>when</em> you load data, not about persisting new facts a session produced. Something must store the preference across sessions: the memory tool.</div>
+      <div class="lesson"><p><strong>In production you layer all four</strong> — cache the system prompt and tools, pull data just-in-time through tools, compact the long tail, persist across sessions with memory. Managed agents (part 3 of this section) ship with caching and compaction on by default.</p></div>
+    </section>
+
+    <section class="scene" id="scene18">
+      <p class="time">5:40 p.m. · One word, one invalidated cache</p>
+      <h2>The rules Dara pins above the desk</h2>
+      <p>Northstar Assist resends the same 4,000-token system prompt and the same tool schemas on every request. Caching is the obvious win — and it is full of small, exam-shaped rules.</p>
+      <table class="mini-table"><thead><tr><th>Rule</th><th>Detail</th></tr></thead><tbody>
+        <tr><td>Lifetime</td><td>One hour — only useful if you resend the same content within that window</td></tr>
+        <tr><td>Not automatic</td><td>You add a <strong>cache breakpoint</strong> manually, using the longhand block form with <code>cache_control: {"type": "ephemeral"}</code></td></tr>
+        <tr><td>Scope</td><td>Everything <em>before and including</em> the breakpoint is cached; content after is processed normally</td></tr>
+        <tr><td>Invalidation</td><td>A hit requires the content up to the breakpoint to be <strong>identical</strong> — even adding “please” invalidates it</td></tr>
+        <tr><td>Where breakpoints go</td><td>Tool definitions, system prompts, and message blocks: text, images, tool use, tool results</td></tr>
+        <tr><td>Order &amp; limit</td><td>Processing order is <strong>tools → system prompt → messages</strong>; up to <strong>4 breakpoints</strong> per request</td></tr>
+        <tr><td>Minimum size</td><td><strong>1024 tokens</strong> summed across everything up to the breakpoint</td></tr>
+      </tbody></table>
+<pre><code>system = [
+  {"type": "text",
+   "text": NORTHSTAR_SUPPORT_PROMPT,
+   "cache_control": {"type": "ephemeral"}}
+]</code></pre>
+      <p>Check the result in <code>usage</code>: <code>cache_creation_input_tokens</code> counts what was written on the first request, <code>cache_read_input_tokens</code> what was reused on later matching ones. Partial hits are possible when only later content changed.</p>
+      <p class="choice">Which of these earns a breakpoint?</p>
+      <div class="choices" role="group" aria-label="Choose what to cache">
+        <button type="button" onclick="choose('eighteen','sys', 96)">System prompt + tool definitions</button>
+        <button type="button" onclick="choose('eighteen','user', 96)">The user's latest message</button>
+        <button type="button" onclick="choose('eighteen','greet', 96)">A 40-token greeting preamble</button>
+        <button type="button" onclick="choose('eighteen','ts', 96)">A system prompt with today's timestamp in it</button>
+      </div>
+      <div class="outcome" id="eighteen-sys" aria-live="polite"><strong>The two best candidates there are.</strong> System prompts and tool definitions rarely change between requests, and both sit early in the tools → system → messages processing order, so one breakpoint after each covers the stable prefix. Best practice with tools: copy the tools list, clone the last schema, add <code>cache_control</code> to the copy, so you never mutate the originals.</div>
+      <div class="outcome" id="eighteen-user" aria-live="polite"><strong>The one thing that always changes.</strong> Caching only pays when content is identical across requests. Put breakpoints on the stable prefix — system prompt and tool definitions.</div>
+      <div class="outcome" id="eighteen-greet" aria-live="polite"><strong>Below the floor.</strong> Minimum cacheable size is 1024 tokens summed up to the breakpoint, so a 40-token preamble never qualifies. Cache the system prompt and tool definitions instead.</div>
+      <div class="outcome" id="eighteen-ts" aria-live="polite"><strong>Self-defeating.</strong> A changing timestamp inside the cached prefix invalidates the cache on every single request. Keep volatile values out of the cached region — then the system prompt and tool definitions cache cleanly.</div>
+      <div class="lesson"><p><strong>Caching rewards stability, not size.</strong> Anything that varies belongs after the last breakpoint, or the cache never hits and you've paid the write cost for nothing.</p></div>
+    </section>
+
+    <section class="scene" id="scene19">
+      <p class="time">6:05 p.m. · The airlocked lab</p>
+      <h2>A CSV, a sandbox, and no network</h2>
+      <p>Last request of the day. Lila wants Assist to analyse a 40MB CSV of ticket volumes and hand back a chart.</p>
+      <p><strong>Code execution</strong> is a server tool: Claude writes and runs Python in an isolated Docker sandbox, multiple times per conversation if needed, and interprets its own results. You include the predefined tool schema and implement nothing. The sandbox has one hard constraint — <strong>no network access</strong>.</p>
+      <p>The <strong>Files API</strong> is the airlock. Upload a file once, get back a file ID, and reference that ID in later requests instead of re-encoding the data every time.</p>
+      <p class="choice">How does the CSV get in — and the chart get out?</p>
+      <div class="choices" role="group" aria-label="Get data into and out of the sandbox">
+        <button type="button" onclick="choose('nineteen','files', 100)">Files API in, file IDs out</button>
+        <button type="button" onclick="choose('nineteen','url', 100)">Have Claude fetch it from a URL</button>
+        <button type="button" onclick="choose('nineteen','base64', 100)">Base64 the CSV into every request</button>
+      </div>
+      <div class="outcome" id="nineteen-files" aria-live="polite"><strong>Exactly the pairing.</strong> Upload via the Files API, reference the file ID in a <code>container_upload</code> block, and Claude's code reads it inside the sandbox. Files the container generates come back out as file IDs in <code>code_execution_output</code> blocks, which you then download.</div>
+      <div class="outcome" id="nineteen-url" aria-live="polite"><strong>Impossible here.</strong> The code execution container has no network access — that's precisely why the Files API exists as the way in and out.</div>
+      <div class="outcome" id="nineteen-base64" aria-live="polite"><strong>Works once, then hurts.</strong> Re-encoding the same 40MB on every request wastes context and money. Upload it once through the Files API and reference the ID from then on.</div>
+      <div class="lesson"><p><strong>Constraint first, then pattern.</strong> “No network” is not a limitation to route around; it is the reason the Files API is the loading hatch for both samples and finished specimens.</p></div>
+    </section>
+
+    <section class="end">
+      <h2>The architect's pocket card</h2>
+      <p>At the retro, Kwame asks how Assist went from a text generator to a system in one day. You answer:</p>
+      <p><strong>Everything is the same five-step loop.</strong> Send tools, get a final answer or a <code>tool_use</code>, execute, return a <code>tool_result</code>, repeat until <code>end_turn</code>. A tool is name, description, and <code>input_schema</code> — and the description is what Claude actually reads. Preserve the whole content array, match every <code>tool_use_id</code>, keep the schemas on every request, and put results in a user message. Batch independent calls. Force a tool with <code>tool_choice</code> when the output shape is non-negotiable. Ask whose machine runs each tool. Keep tools abstract and combinable. Computer Use is the loop with screenshots as results, sandboxed. Your stuff is a tool, your process is a Skill, everyone else's stuff is MCP — connected with <code>mcp_servers</code> plus an <code>mcp_toolset</code>, and scoped by disabling everything then enabling what you need. Chunk with overlap, index semantically <em>and</em> lexically, merge, rerank the shortlist, and contextualise chunks before they're indexed. Then manage what Claude holds: just-in-time, compaction, caching, memory — and remember the cache lasts an hour, needs 1024 tokens, allows four breakpoints, and dies if one word changes.</p>
+      <p>That is the difference between a model that talks and a system that works: not more intelligence, but better-designed hands and a well-packed suitcase.</p>
+    </section>
+
+    <p class="source">Primary source: <code>03-building-with-the-claude-api/notes.md</code> and <code>03-building-with-the-claude-api/anthropic-notes.md</code> in this study workspace, cross-checked against <code>03-building-with-the-claude-api/quiz.md</code>.</p>
+    <footer>This is part 2 of 3 for Section 3. Part 1 covers models, API mechanics, prompt engineering, evals, and multimodal input; part 3 covers workflows versus agents, the four workflow patterns, environment inspection, and managed agents. Ask your teacher to quiz you on one Northstar decision at a time — the point is durable understanding, not speed.</footer>
+  </main>
+  <script>
+    function choose(scene, answer, progress) {
+      document.querySelectorAll('[id^="' + scene + '-"]').forEach(function (el) { el.classList.remove('visible'); });
+      var selected = document.getElementById(scene + '-' + answer);
+      if (selected) selected.classList.add('visible');
+      var bar = document.getElementById('progressBar');
+      if (bar && progress) bar.style.width = progress + '%';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Claude on Amazon Bedrock — The Cascade Mutual Migration</title>
+  <style>
+    :root {
+      --ink: #242321;
+      --muted: #706b63;
+      --paper: #f7f3ec;
+      --paper-deep: #ece4d7;
+      --rust: #3f6b86;
+      --rust-dark: #2a4d63;
+      --sage: #dfe9df;
+      --blue: #dce8ee;
+      --line: #d6ccbd;
+      --white: #fffdfa;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.7 Georgia, 'Times New Roman', serif;
+    }
+    main { max-width: 780px; margin: 0 auto; padding: 44px 24px 80px; }
+    .masthead {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+      border-bottom: 1px solid var(--line); padding-bottom: 10px;
+      color: var(--muted); font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .13em; text-transform: uppercase;
+    }
+    h1 { max-width: 680px; margin: 28px 0 12px; font: 700 clamp(2.5rem, 8vw, 5.2rem)/.98 Georgia, serif; letter-spacing: -.04em; }
+    .dek { max-width: 670px; margin: 0 0 34px; color: var(--muted); font-size: 1.2rem; }
+    .progress { position: sticky; top: 0; z-index: 2; height: 4px; background: var(--paper-deep); }
+    .progress span { display: block; width: 0; height: 100%; background: var(--rust); transition: width .25s ease; }
+    .scene {
+      position: relative; margin: 34px 0 0; padding: 25px 28px 28px;
+      background: var(--white); border: 1px solid var(--line); border-radius: 3px;
+    }
+    .scene::before { content: ''; position: absolute; left: -1px; top: 0; bottom: 0; width: 4px; background: var(--rust); }
+    .opening { background: #fff8ed; }
+    .time { margin: 0 0 7px; color: var(--rust-dark); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    h2 { margin: 0 0 13px; font: 700 1.65rem/1.2 Georgia, serif; }
+    h3 { margin: 27px 0 7px; font: 700 1.1rem/1.3 Georgia, serif; }
+    p { max-width: 70ch; margin: 0 0 13px; }
+    ul, ol { max-width: 68ch; padding-left: 1.35em; }
+    li { margin: 5px 0; }
+    .voice { margin: 18px 0; padding-left: 19px; border-left: 2px solid var(--paper-deep); font-style: italic; }
+    .choice { margin: 20px 0 2px; color: var(--muted); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+    .choices { display: flex; flex-wrap: wrap; gap: 9px; margin: 10px 0 5px; }
+    button {
+      border: 1px solid var(--rust); border-radius: 3px; background: var(--white); color: var(--rust-dark);
+      padding: 9px 13px; font: 600 14px/1.2 system-ui, sans-serif; cursor: pointer;
+    }
+    button:hover, button:focus-visible { background: var(--rust); color: #fff; outline: none; }
+    button:focus-visible { box-shadow: 0 0 0 3px rgba(63, 107, 134, .22); }
+    .outcome { display: none; margin-top: 13px; padding: 14px 16px; border-left: 3px solid var(--sage); background: #f1f6ef; }
+    .outcome.visible { display: block; }
+    .outcome strong { color: var(--rust-dark); }
+    .lesson { margin: 25px 0 0; padding: 17px 18px; background: var(--paper-deep); }
+    .lesson p:last-child { margin-bottom: 0; }
+    .blue-note { margin: 18px 0; padding: 15px 17px; background: #f1f6f8; border-left: 3px solid #7b9cac; }
+    .blue-note p:last-child { margin-bottom: 0; }
+    .rule { margin: 38px 0; padding: 25px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); text-align: center; }
+    .rule strong { display: block; color: var(--rust-dark); font: 700 1.35rem/1.25 Georgia, serif; }
+    .prompt { margin: 15px 0; padding: 17px 18px; background: #fff4eb; border-left: 3px solid var(--rust); font-size: .98rem; }
+    .prompt strong { color: var(--rust-dark); }
+    .prompt code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em; }
+    .mini-table { width: 100%; margin: 17px 0; border-collapse: collapse; font-size: .95rem; }
+    .mini-table th, .mini-table td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    .mini-table th { background: var(--paper-deep); color: var(--rust-dark); font: 700 12px/1.25 system-ui, sans-serif; letter-spacing: .05em; text-transform: uppercase; }
+    .end { margin-top: 39px; padding: 27px 28px; background: var(--rust-dark); color: #fff8f1; }
+    .end h2 { color: #fff; }
+    .end p { color: #f6dfd1; }
+    .source, footer { color: var(--muted); font-size: .9rem; }
+    footer { margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--line); }
+    a { color: var(--rust-dark); }
+    code { background: var(--paper-deep); padding: .08em .28em; border-radius: 3px; }
+    pre { max-width: 70ch; margin: 15px 0; padding: 14px 16px; background: var(--paper-deep); border-left: 3px solid var(--rust); overflow-x: auto; font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    pre code { background: none; padding: 0; }
+    @media (max-width: 560px) {
+      main { padding-top: 28px; }
+      .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
+      .scene { padding: 21px 19px 23px; }
+      .choices { display: grid; grid-template-columns: 1fr; }
+      button { text-align: left; }
+      .mini-table { font-size: .88rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+  <main>
+    <div class="masthead"><span>CCA-F · Section 4</span><span>Northstar Dispatch · Thursday</span></div>
+    <h1>The Cascade Mutual migration</h1>
+    <p class="dek">You are the architect. Your biggest customer runs entirely on AWS and will not accept a second vendor path. The product has to move to Bedrock this quarter—without rewriting the product.</p>
+
+    <section class="scene opening" id="scene0">
+      <p class="time">7:40 a.m. · The mandate</p>
+      <h2>“Same Claude. Different door.”</h2>
+      <p>Cascade Mutual, an insurer, has agreed to buy Northstar’s claims-triage product on one condition: it runs inside their AWS account. Three people are waiting in the room.</p>
+      <ul>
+        <li><strong>Rosa Ibarra</strong>, Northstar’s staff cloud platform engineer. She owns the runtime.</li>
+        <li><strong>Kenji Watanabe</strong>, Cascade Mutual’s security and compliance officer. He wants to know exactly which region a request lands in, and who is accountable for side effects.</li>
+        <li><strong>Fadumo Warsame</strong>, Northstar’s procurement and FinOps lead. She signs the bill and wants to know what it will be.</li>
+      </ul>
+      <p>Your engineering lead, <strong>Ana Sokolova</strong>, joins on video with the question the whole quarter turns on:</p>
+      <p class="voice">“Are we porting an application, or rebuilding one?”</p>
+      <p>The honest answer is the spine of this entire lesson. Amazon Bedrock hosts the same Claude models. What changes is the <strong>access layer</strong>: credentials, client construction, the call method, the model identifier, regional availability, and a handful of parameter names. What does <em>not</em> change is everything above it—prompt engineering, tool schema design, RAG, evaluation, orchestration, and verification.</p>
+      <div class="blue-note">
+        <p><strong>Why this section exists on the exam:</strong> deployment option is not its own domain. It is layered on top of domain-general architecture. A scenario question will describe an ordinary agent or extraction problem and then test whether you know <em>which Bedrock-specific detail</em> applies—the auth mechanism, the model ID format, the regional behaviour. Get the access layer right; keep the architecture answer the same.</p>
+      </div>
+      <p>One warning before anyone opens a browser tab. The AWS Bedrock API is <strong>not</strong> the Anthropic API. Same Claude models, different service, different SDK, different documentation. When Rosa searches for an answer, she must land in Bedrock-specific resources, or she will spend an afternoon fixing code that was never broken.</p>
+      <div class="lesson"><p><strong>First principle:</strong> Bedrock is a deployment and access choice, not a different way of thinking about Claude.</p></div>
+    </section>
+
+    <section class="scene" id="scene1">
+      <p class="time">8:15 a.m. · The first blocker</p>
+      <h2>“Where does the key go?”</h2>
+      <p>Rosa has the existing service running on a laptop. It reads an <code>ANTHROPIC_API_KEY</code> from the environment. Kenji has already said, politely, that Cascade Mutual will not be storing a third-party API key for a workload running in their own account.</p>
+      <p class="voice">“If it’s in my account, it should authenticate like everything else in my account.”</p>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Choose an authentication mechanism">
+        <button type="button" onclick="choose('auth','iam', 7)">Standard AWS credentials (IAM)</button>
+        <button type="button" onclick="choose('auth','secret', 7)">Anthropic API key in Secrets Manager</button>
+        <button type="button" onclick="choose('auth','both', 7)">Both, and fail over between them</button>
+      </div>
+      <div class="outcome" id="auth-iam" aria-live="polite"><strong>Correct.</strong> Access to Claude through Bedrock is authenticated with standard AWS credentials—the ordinary IAM/boto3 credential chain—not an Anthropic API key. Kenji gets the answer he wanted: the workload authenticates the same way every other service in his account does.</div>
+      <div class="outcome" id="auth-secret" aria-live="polite"><strong>Wrong door.</strong> An Anthropic API key authenticates the direct Anthropic API. Bedrock does not use it at all, so storing it securely solves nothing here. Bedrock checks your AWS credentials.</div>
+      <div class="outcome" id="auth-both" aria-live="polite"><strong>Two doors, twice the surface.</strong> Nothing about Bedrock requires an Anthropic key, and Cascade Mutual’s whole condition was a single access path inside their account. Use AWS IAM credentials via boto3.</div>
+      <div class="lesson"><p><strong>Memory hook:</strong> Bedrock checks your <strong>AWS employee badge</strong>, not an Anthropic concert ticket.</p></div>
+    </section>
+
+    <section class="scene" id="scene2">
+      <p class="time">8:50 a.m. · The first request</p>
+      <h2>Three things in the envelope</h2>
+      <p>Rosa deletes the Anthropic client and writes the Bedrock one. Every Bedrock request needs exactly three ingredients: a <strong>Bedrock Runtime client</strong> (the connection, bound to a region), a <strong>model ID</strong> (which model to run), and a <strong>user message</strong> (the input).</p>
+<pre><code>import boto3
+client = boto3.client("bedrock-runtime", region_name="us-west-2")</code></pre>
+      <p>Then the call itself. Bedrock’s unified entry point is <code>converse</code>—the standard method across Bedrock-hosted model providers, not an Anthropic-specific <code>messages.create</code>.</p>
+<pre><code>user_message = {
+  "role": "user",
+  "content": [{"text": "What's 1+1?"}]
+}
+response = client.converse(modelId=model_id, messages=[user_message])
+response["output"]["message"]["content"][0]["text"]</code></pre>
+      <p>Two details Ana flags in review. First, <code>content</code> is a <strong>list</strong>, not a bare string—because one message can carry several parts: text, images, other media. That list is what makes multimodal requests possible at all. Second, there are only two roles and they share the same structure: <code>role: "user"</code> for input, <code>role: "assistant"</code> for the model’s reply. That symmetry is what makes multi-turn chaining trivial.</p>
+      <p>The request path itself is unremarkable, and that is the point: user submits a message → your server receives it → your server’s Bedrock client calls AWS Bedrock with the message plus a model ID → the model generates text → Bedrock returns an assistant message → your server forwards it to the user.</p>
+      <div class="lesson"><p><strong>Memory hook for the response shape:</strong> follow the nesting dolls—<code>response → output → message → content → first block → text</code>.</p></div>
+    </section>
+
+    <section class="scene" id="scene3">
+      <p class="time">9:20 a.m. · The cryptic error</p>
+      <h2>“It says the model doesn’t exist.”</h2>
+      <p>Rosa copies a model ID out of the Bedrock console’s model catalog, points the client at Cascade Mutual’s preferred region, and runs it. The call fails with a terse complaint that the model doesn’t exist. She checks the spelling three times. It is spelled correctly.</p>
+      <p class="voice">“The model obviously exists. I’m looking at it in the console.”</p>
+      <p class="choice">What is actually wrong?</p>
+      <div class="choices" role="group" aria-label="Diagnose the model-not-found failure">
+        <button type="button" onclick="choose('region','notregion', 16)">The model isn’t hosted in that region</button>
+        <button type="button" onclick="choose('region','retired', 16)">The model has been retired</button>
+        <button type="button" onclick="choose('region','iam', 16)">Her IAM credentials lack permission</button>
+        <button type="button" onclick="choose('region','converse', 16)">She should be calling <code>messages.create</code></button>
+      </div>
+      <div class="outcome" id="region-notregion" aria-live="polite"><strong>That’s it.</strong> Not every model is hosted in every AWS region. Request one that isn’t present in your client’s configured region and you get a cryptic “model doesn’t exist” error—even though the model plainly exists elsewhere. Regional availability is a real, first-class constraint on Bedrock.</div>
+      <div class="outcome" id="region-retired" aria-live="polite"><strong>Not the likely cause.</strong> The catalog she copied it from lists it as current. The far more common cause of this exact error is that the model is not hosted in the region her client was constructed with.</div>
+      <div class="outcome" id="region-iam" aria-live="polite"><strong>Plausible, but not what this error means.</strong> A missing-model message points at regional availability, not credentials. Fix the region problem first—an inference profile is the durable answer.</div>
+      <div class="outcome" id="region-converse" aria-live="polite"><strong>Backwards.</strong> <code>messages.create</code> is the direct Anthropic API. On Bedrock, <code>converse</code> is correct. The failure here is about <em>where</em> the model lives, not <em>how</em> she called it.</div>
+      <div class="lesson"><p><strong>Memory hook:</strong> you arrive at a hotel in the wrong city and the desk says “no such room.” The room exists. You are standing in the wrong lobby.</p></div>
+    </section>
+
+    <section class="scene" id="scene4">
+      <p class="time">9:45 a.m. · The durable fix</p>
+      <h2>Inference profiles</h2>
+      <p>You could solve this by memorising which region hosts which model and hard-coding accordingly. That is a maintenance debt that comes due every time AWS changes something. The intended solution is a <strong>cross-region inference profile</strong>: instead of naming one region’s copy of the model, you name a profile that automatically routes your request to a region where the model actually is—transparently spanning, for example, <code>us-west-2</code> and <code>us-east-2</code>.</p>
+      <p>Rosa needs the profile ID. Kenji leans in, because “routes across regions” is exactly the sentence a compliance officer notices.</p>
+      <p class="choice">Where does she find it?</p>
+      <div class="choices" role="group" aria-label="Find the inference profile ID">
+        <button type="button" onclick="choose('profile','xregion', 24)">Console → “Cross-region inference”</button>
+        <button type="button" onclick="choose('profile','catalog', 24)">Console → model catalog page</button>
+        <button type="button" onclick="choose('profile','prefix', 24)">Prefix the model ID with the region herself</button>
+      </div>
+      <div class="outcome" id="profile-xregion" aria-live="polite"><strong>Right shelf.</strong> Inference profile IDs live in the AWS Bedrock console’s <strong>“Cross-region inference”</strong> section. That is a specific, testable fact—the exam likes it precisely because the obvious guess is wrong.</div>
+      <div class="outcome" id="profile-catalog" aria-live="polite"><strong>The obvious guess, and the wrong one.</strong> The main model catalog page gives you plain model IDs. Profile IDs are in the console’s “Cross-region inference” section instead.</div>
+      <div class="outcome" id="profile-prefix" aria-live="polite"><strong>Don’t guess identifiers.</strong> Inventing an ID by pattern-matching is how you end up back at “model doesn’t exist.” Take the profile ID from the console’s cross-region inference area.</div>
+      <p>The exam-relevant distinction, stated as plainly as it can be stated: <strong>a plain model ID is region-locked; an inference profile ID is not.</strong> Rosa swaps the identifier and the call succeeds. Nothing else in the code changes—<code>modelId</code> happily accepts the profile ID.</p>
+      <div class="blue-note"><p><strong>For Kenji:</strong> the trade is explicit. A profile buys you availability by allowing the request to be served from another supported region. If a workload must be pinned to one region for a data-residency reason, that is a deliberate decision to accept a region-locked model ID and manage availability yourself. The architecture question is which constraint wins—not which identifier is “better.”</p></div>
+    </section>
+
+    <section class="scene" id="scene5">
+      <p class="time">10:15 a.m. · The whiteboard</p>
+      <h2>What changes, and what does not</h2>
+      <p>Ana asks you to put it on one board so the team stops re-litigating it in every stand-up. This table is the single most useful object in the migration—and the single most exam-useful object in this lesson.</p>
+      <table class="mini-table">
+        <thead><tr><th>Layer</th><th>Direct Anthropic API</th><th>Amazon Bedrock</th></tr></thead>
+        <tbody>
+          <tr><td>Credentials</td><td><code>ANTHROPIC_API_KEY</code></td><td>AWS IAM credentials via boto3 configuration</td></tr>
+          <tr><td>Client construction</td><td><code>anthropic.Anthropic()</code></td><td><code>boto3.client("bedrock-runtime", region_name=…)</code></td></tr>
+          <tr><td>Call shape</td><td><code>client.messages.create(model=…, max_tokens=…, messages=[…])</code></td><td><code>client.converse(modelId=…, messages=[…])</code>, plus <code>inferenceConfig</code> / <code>toolConfig</code> / <code>system</code></td></tr>
+          <tr><td>Model identifier</td><td>Anthropic model name</td><td>Bedrock model ID, or a cross-region inference profile ID</td></tr>
+          <tr><td>Regional availability</td><td>Not a modelling concern for the caller</td><td>A real constraint—models are not in every region</td></tr>
+          <tr><td>Docs &amp; SDK</td><td>Anthropic SDK and docs</td><td>AWS Bedrock SDK and docs — <em>must</em> use Bedrock-specific resources</td></tr>
+          <tr><td>Governance surface</td><td>Anthropic account controls</td><td>Your AWS account: the workload sits inside the customer’s own cloud governance</td></tr>
+          <tr><td>Prompt engineering</td><td colspan="2">Identical — clear-and-direct first line, specificity, XML structure, examples</td></tr>
+          <tr><td>Tool schema design</td><td colspan="2">Identical — name, description, input schema; descriptions carry the weight</td></tr>
+          <tr><td>Context management</td><td colspan="2">Identical — both are stateless; you resend history either way</td></tr>
+          <tr><td>RAG design</td><td colspan="2">Identical — chunking, embeddings, hybrid retrieval, reranking</td></tr>
+          <tr><td>Evaluation</td><td colspan="2">Identical — dataset, run, grade, average, iterate</td></tr>
+          <tr><td>Agent orchestration</td><td colspan="2">Identical — workflow vs. agent, bounded context, stop conditions, verification</td></tr>
+        </tbody>
+      </table>
+      <p class="voice">“So it’s a plumbing job,” says Fadumo. “Not a rebuild.”</p>
+      <p>Exactly. The deployment choice changes credentials, client shape, model identifier, regional availability, and some parameter names. It does not change the human–AI responsibilities or the architecture of a reliable tool loop.</p>
+    </section>
+
+    <div class="rule"><strong>Change the access layer. Preserve the reasoning.</strong><span>Credentials · client · model ID · region · parameter names — everything else ports unchanged</span></div>
+
+    <section class="scene" id="scene6">
+      <p class="time">10:40 a.m. · The model mix</p>
+      <h2>Four tiers, one application</h2>
+      <p>Fadumo wants to know what she is buying. You lay out the families as this course teaches them:</p>
+      <ul>
+        <li><strong>Opus</strong> — most capable of the three core families. Sophisticated reasoning and planning, works independently on complex multi-step projects, supports adaptive reasoning. Moderate latency, higher cost.</li>
+        <li><strong>Sonnet</strong> — the sweet spot. Balanced intelligence, speed, and cost; strong at coding and at making precise edits to complex codebases without breaking them. Most production applications land here.</li>
+        <li><strong>Haiku</strong> — fastest and cheapest, optimised for speed over intelligence. It does <strong>not</strong> support reasoning/extended-thinking capabilities. Best for real-time, user-facing interaction.</li>
+        <li><strong>Fable 5</strong> — a newer tier that sits <em>above</em> Opus, for tasks that push past what Opus can handle, at higher cost than Opus. On Bedrock its model ID is <code>anthropic.claude-fable-5</code>.</li>
+      </ul>
+      <p>Cascade Mutual’s claims console has three workloads: a live “where is my claim?” widget in the customer portal, the main triage logic, and a small number of genuinely contested claims that need deep multi-step reasoning.</p>
+      <p class="choice">Which model runs the portal widget?</p>
+      <div class="choices" role="group" aria-label="Choose a model for the real-time widget">
+        <button type="button" onclick="choose('tier','haiku', 33)">Haiku</button>
+        <button type="button" onclick="choose('tier','sonnet', 33)">Sonnet</button>
+        <button type="button" onclick="choose('tier','opus', 33)">Opus</button>
+        <button type="button" onclick="choose('tier','fable', 33)">Fable 5 everywhere</button>
+      </div>
+      <div class="outcome" id="tier-haiku" aria-live="polite"><strong>Yes.</strong> Haiku is optimised for speed and cost and is the right tier for real-time, user-facing interaction. Accept the trade knowingly: it does not support extended thinking, so it is not where the contested-claims reasoning goes.</div>
+      <div class="outcome" id="tier-sonnet" aria-live="polite"><strong>Defensible, but not the best fit here.</strong> Sonnet is the sweet spot for main business logic—your triage layer. A latency-sensitive status widget is exactly what Haiku exists for.</div>
+      <div class="outcome" id="tier-opus" aria-live="polite"><strong>Over-specified.</strong> Opus brings sophisticated multi-step reasoning at moderate latency and higher cost. A status widget needs neither. Put Opus where deep reasoning earns its price.</div>
+      <div class="outcome" id="tier-fable" aria-live="polite"><strong>Expensive by default.</strong> Fable 5 sits above Opus at higher cost and is reserved for the toughest challenges where the outcome justifies it. Applying it everywhere is how a pilot becomes a budget review.</div>
+      <div class="lesson"><p><strong>The common production pattern is a mix, not a winner:</strong> Haiku for user-facing speed, Sonnet for main business logic, Opus for deep reasoning, and Fable 5 selectively for the hardest problems. Each is just a different <code>modelId</code> on the same client.</p></div>
+    </section>
+
+    <section class="scene" id="scene7">
+      <p class="time">11:10 a.m. · The amnesiac</p>
+      <h2>“The second question gets a nonsense answer.”</h2>
+      <p>Rosa wires up multi-turn. She asks “what’s 1+1?”, gets “2”, then asks “and three more”—and gets something unrelated.</p>
+      <p class="choice">What did she forget?</p>
+      <div class="choices" role="group" aria-label="Diagnose the multi-turn failure">
+        <button type="button" onclick="choose('state','history', 41)">Bedrock is stateless — she must resend the full history</button>
+        <button type="button" onclick="choose('state','temp', 41)">Temperature is too high</button>
+        <button type="button" onclick="choose('state','profile', 41)">She needs an inference profile</button>
+        <button type="button" onclick="choose('state','system', 41)">She needs a system prompt</button>
+      </div>
+      <div class="outcome" id="state-history" aria-live="polite"><strong>Correct.</strong> The Bedrock and Claude APIs are stateless: they store no messages and no responses between calls. Your application maintains the complete message list itself and sends the entire history with every follow-up request. Without it, follow-ups are answered with no context at all.</div>
+      <div class="outcome" id="state-temp" aria-live="polite"><strong>Not the cause.</strong> Temperature changes how varied the sampling is; it cannot invent context that was never sent. The model received a bare “and three more” with no prior turn.</div>
+      <div class="outcome" id="state-profile" aria-live="polite"><strong>Different problem.</strong> Inference profiles solve regional availability. They have nothing to do with conversation memory—your application owns that.</div>
+      <div class="outcome" id="state-system" aria-live="polite"><strong>Useful, but not the fix.</strong> A system prompt assigns a role; it does not carry the previous exchange. Resend the full message history.</div>
+      <p>There is a hard structural rule that goes with statelessness: the message list must <strong>strictly alternate roles</strong>—user → assistant → user → assistant. You can never have two consecutive messages with the same role. In practice you write small helpers that append user and assistant messages to a single growing list.</p>
+      <h3>Two parameters that trip people on the way in</h3>
+      <p>The <strong>system prompt</strong> is passed to <code>converse</code> through the <code>system</code> keyword parameter—as a <em>list</em> containing a dictionary with a <code>text</code> field, not a bare string. It must contain at least one character; an empty string throws an error, which is why well-designed chat helpers make the parameter optional and default it to <code>None</code> rather than <code>""</code>.</p>
+<pre><code>system=[{"text": "You are an AWS cloud support specialist"}]</code></pre>
+      <p>A role-based system prompt enforces constraints more naturally than a list of do’s and don’ts: told it is a cloud support specialist, the model automatically avoids competitor mentions and declines off-topic questions, without you enumerating either rule.</p>
+      <p><strong>Temperature</strong> is a decimal from 0 to 1 controlling randomness during token sampling, and it is set inside <code>inferenceConfig</code>. The default is <strong>1.0</strong>—maximum creativity. Rosa’s extraction jobs were inheriting that default. Near 0 for data extraction and factual consistency; near 1 for brainstorming and marketing copy.</p>
+      <div class="lesson"><p><strong>Memory hook:</strong> it’s a conversation, not a monologue—you can’t speak twice in a row, and Bedrock forgets the whole chat the second it hangs up. And the creativity dial ships turned all the way up.</p></div>
+    </section>
+
+    <section class="scene" id="scene8">
+      <p class="time">11:40 a.m. · The waiting bar</p>
+      <h2>Streaming, so the portal doesn’t look broken</h2>
+      <p>Responses take three to thirty seconds. In a customer-facing claims portal that reads as a hang. The fix is <code>converse_stream</code>, which emits generated text as it is produced instead of holding it until the end.</p>
+      <p>The response carries a <code>'stream'</code> key holding an iterable of events. There are five event types—message start, content block delta, content block stop, message stop, and metadata—and only one of them carries text.</p>
+<pre><code>for event in response['stream']:
+    if 'content_block_delta' in event:
+        chunk = event['content_block_delta']['delta']['text']
+        # send chunk to the browser
+        total_text += chunk</code></pre>
+      <div class="lesson"><p><strong>Memory hook:</strong> the stream is a parade of five float types, but only the <em>content block delta</em> float throws candy. Grab <code>delta.text</code> and ignore the rest of the procession.</p></div>
+    </section>
+
+    <section class="scene" id="scene9">
+      <p class="time">12:30 p.m. · The half-eaten JSON</p>
+      <h2>“The output is missing its first line.”</h2>
+      <p>The triage service must emit clean JSON for the downstream claims system. Claude keeps wrapping it in friendly headers and footers. You show Rosa the two output-control levers Bedrock gives you without touching the prompt text.</p>
+      <p><strong>Pre-filling</strong> means appending a partial <em>assistant</em>-role message to the end of the message list. Claude treats it as already authored and continues from that exact point. <strong>Stop sequences</strong> are strings passed through <code>inferenceConfig</code> that halt generation the instant they are produced. Together they extract clean structured data: prefill the opening delimiter, stop at the closing one.</p>
+<pre><code># last message in the list
+{"role": "assistant", "content": [{"text": "```json"}]}
+
+# and in inferenceConfig
+{"stopSequences": ["```"]}</code></pre>
+      <p>Rosa ships it. The parser then complains that the payload starts mid-object.</p>
+      <p class="choice">Why?</p>
+      <div class="choices" role="group" aria-label="Diagnose the prefill output">
+        <button type="button" onclick="choose('prefill','concat', 50)">The prefill text isn’t in the response — concatenate it back on</button>
+        <button type="button" onclick="choose('prefill','stopincl', 50)">The stop sequence ate the opening delimiter</button>
+        <button type="button" onclick="choose('prefill','temp', 50)">Temperature is truncating the output</button>
+      </div>
+      <div class="outcome" id="prefill-concat" aria-live="polite"><strong>Right.</strong> Claude continues from where the prefilled text ends, so the returned text is only the continuation. The prefill is genuinely part of the intended output, so your application must concatenate the prefill with Claude’s returned text to reconstruct the whole thing.</div>
+      <div class="outcome" id="prefill-stopincl" aria-live="polite"><strong>Half a truth, wrong half.</strong> The matched stop sequence <em>is</em> excluded from the returned text—but that is the closing delimiter, at the end. The missing opening is the prefill, which you have to glue back on yourself.</div>
+      <div class="outcome" id="prefill-temp" aria-live="polite"><strong>No.</strong> Temperature affects token selection, not where the response begins. The response begins after the prefill because Claude was continuing from it.</div>
+      <div class="lesson"><p><strong>The asymmetry is the exam point:</strong> pre-filling hands Claude a sentence to finish, and you glue your half back on. A stop sequence is a tripwire that ends the sentence and then gets swept off the floor before you see the room.</p></div>
+    </section>
+
+    <section class="scene" id="scene10">
+      <p class="time">1:15 p.m. · The tool loop</p>
+      <h2>“It called the tool, then forgot it had.”</h2>
+      <p>Claims triage needs live data: policy lookups, current date arithmetic, reminder creation. On Bedrock a tool specification carries a <strong>name</strong>, a <strong>description</strong>, and an <strong>inputSchema</strong>—and the description is doing most of the work. Write three or four sentences explaining what the tool does, when to use it, and what it returns; describe every argument.</p>
+<pre><code>tool_spec = {
+    "name": "get_current_datetime",
+    "description": "3-4 sentences: what it does, when to use it, what it returns.",
+    "inputSchema": { }   # JSON Schema describing the arguments
+}</code></pre>
+      <p>The sequence is the same five steps you already know from the direct API:</p>
+      <ol>
+        <li>Send the user message and the tool specifications.</li>
+        <li>Inspect the assistant content for <code>toolUse</code> blocks.</li>
+        <li>Execute and validate each requested tool in the application.</li>
+        <li>Send the complete assistant message plus matching <code>toolResult</code> content.</li>
+        <li>Request the final response <em>with the original tool definitions still available</em>.</li>
+      </ol>
+      <p>Rosa’s loop returns garbage on the second turn. She had grabbed the visible text from the first response and appended it as a plain assistant message.</p>
+      <p class="choice">What must the follow-up request contain?</p>
+      <div class="choices" role="group" aria-label="Choose what to send on the follow-up request">
+        <button type="button" onclick="choose('tools','blocks', 59)">Full assistant content blocks + matching toolResult IDs + the original schemas</button>
+        <button type="button" onclick="choose('tools','textonly', 59)">Just the assistant’s text and the tool output</button>
+        <button type="button" onclick="choose('tools','noschema', 59)">The blocks and results, but drop the schemas to save tokens</button>
+      </div>
+      <div class="outcome" id="tools-blocks" aria-live="polite"><strong>All three, every time.</strong> Preserve the complete assistant content blocks including each <code>toolUse</code>; send <code>toolResult</code> blocks whose IDs match the requests they answer; and keep the original tool definitions on the follow-up call. Drop any one and the model loses the thread.</div>
+      <div class="outcome" id="tools-textonly" aria-live="polite"><strong>This is the bug.</strong> Sending only the visible sentence is like returning a package with no tracking label. The <code>toolUse</code> blocks and their IDs are what tie a result to the request that asked for it—especially when several tools run in parallel.</div>
+      <div class="outcome" id="tools-noschema" aria-live="polite"><strong>A false economy.</strong> The tool schemas must be included in follow-up calls or Claude gets confused about the tool definitions and cannot process the results. If schema tokens are the concern, cache them—see the caching scene.</div>
+      <h3>Three more mechanics worth knowing</h3>
+      <p><strong>Stop reason.</strong> The response carries a stop reason; <code>tool_use</code> signals the model wants a tool run. That is the loop condition: keep going while the stop reason is tool use, break when it is not. It also stops you appending empty tool-result messages when no tool was requested.</p>
+      <p><strong>Errors are data.</strong> Wrap execution in try/except and return a tool result with an error status and the message in its content rather than crashing. Claude can read the error and retry with corrected arguments.</p>
+      <p><strong>The batch tool.</strong> Claude can request several tools at once but often runs them sequentially. Exposing a <code>batch_tool</code> whose input is a list of invocations—each naming a tool and its JSON-encoded arguments—lets Claude group independent operations into one request, and your wrapper can run them concurrently. Use it for genuinely independent calls; do not use it when calls depend on one another or could duplicate unsafe side effects.</p>
+      <div class="lesson"><p><strong>Memory hook:</strong> three independent pizza orders can go to three ovens at once—but never bake the frosting before the cake exists.</p></div>
+    </section>
+
+    <section class="scene" id="scene11">
+      <p class="time">1:50 p.m. · The extraction contract</p>
+      <h2>Flexible bucket or custom mould?</h2>
+      <p>Two extraction jobs land on the same afternoon. One pulls a fixed, validated record out of every claim document and feeds the system of record. The other is an exploratory dashboard whose fields Ana changes twice a week while the team figures out what matters.</p>
+      <p>Both can be done by defining a tool whose input schema <em>is</em> the desired output structure, then forcing Claude to call it. <code>toolChoice</code> has three settings: <code>auto</code> (Claude decides whether to use a tool at all—the default), <code>any</code> (it must call some tool, its pick), and a specific named tool (it must call that one). Naming the tool is how you guarantee structured data and no natural-language answer.</p>
+      <p>The <strong>flexible</strong> variant defines a single generic tool—commonly named <code>toJSON</code>—whose input is an open-ended object accepting whatever properties Claude adds, with the desired fields and types described in the <em>prompt text</em> instead of the schema. Change the structure by editing prose; no schema rewrite.</p>
+      <p class="choice">Which job gets which technique?</p>
+      <div class="choices" role="group" aria-label="Choose an extraction technique">
+        <button type="button" onclick="choose('extract','split', 66)">Dedicated schema for the system of record, toJSON for the dashboard</button>
+        <button type="button" onclick="choose('extract','tojson', 66)">toJSON for both — one tool to maintain</button>
+        <button type="button" onclick="choose('extract','schema', 66)">Dedicated schemas for both — accuracy always wins</button>
+        <button type="button" onclick="choose('extract','prompt', 66)">Prefill + stop sequences for both</button>
+      </div>
+      <div class="outcome" id="extract-split" aria-live="polite"><strong>Exactly the intended split.</strong> A dedicated, tightly-typed schema is the right call for complex fields, high accuracy, and production validation. The flexible <code>toJSON</code> approach is for general or rapidly-iterating extraction where changing the shape cheaply matters more than the last few points of reliability.</div>
+      <div class="outcome" id="extract-tojson" aria-live="polite"><strong>Cheap now, expensive later.</strong> <code>toJSON</code> trades a little reliability for iteration speed. That is a fine trade for the dashboard and a poor one for the record that feeds the system of record.</div>
+      <div class="outcome" id="extract-schema" aria-live="polite"><strong>Rigorous but slow.</strong> For a structure Ana rewrites twice a week you would be rewriting schemas twice a week. Reserve dedicated schemas for the output contract that actually has to hold.</div>
+      <div class="outcome" id="extract-prompt" aria-live="polite"><strong>The older technique.</strong> Prefill-plus-stop-sequence works and is genuinely useful, but for reliable structured extraction a tool schema is more reliable than prompt-based extraction. Use the tool mechanism when the output contract matters.</div>
+      <div class="lesson"><p><strong>Either way, parse and validate.</strong> A tool call that returns something JSON-shaped is not proof the data is correct. The application still checks it before anything downstream trusts it.</p></div>
+    </section>
+
+    <section class="scene" id="scene12">
+      <p class="time">2:20 p.m. · The satellite photos</p>
+      <h2>Fire risk from an aerial image</h2>
+      <p>Cascade Mutual’s underwriting team wants property fire-risk scoring from satellite imagery: identify the residence, assess tree density, judge fire-service access, check roof overhang, then produce a structured score with a summary.</p>
+      <p>Images are message parts in a user message—one part per image, several parts for several images—which is exactly why <code>content</code> was a list in the very first request Rosa wrote. Two limits matter: a maximum of <strong>20 images across all messages in one request</strong>, and token cost that scales with the image’s pixel dimensions, height × width. Bigger prints cost more to study.</p>
+      <p>The first attempt scores badly. A simple prompt with an image produces poor results—the course’s canonical demonstration is asking “how many marbles?” and getting 13 instead of 12.</p>
+      <div class="prompt"><strong>What fixes it is prompt engineering, not better pixels.</strong> Break the analysis into sequential steps. Build in a verification pass—count, then recount, then compare. And use one-shot or multi-shot prompting by alternating image parts with text parts: example image → correct analysis in text → target image → the question.</div>
+      <p>Kenji adds a condition you should have volunteered: treat uploaded files and images as <strong>untrusted input</strong>. Check size, type, and sensitive content, and think about the downstream action, before passing any of it to a tool.</p>
+      <div class="lesson"><p><strong>Memory hook:</strong> Claude will look at up to 20 photos in one sitting, but the bigger the print, the more it costs to study—and the accuracy comes from the instructions, not the camera.</p></div>
+    </section>
+
+    <section class="scene" id="scene13">
+      <p class="time">2:55 p.m. · Fadumo’s spreadsheet</p>
+      <h2>“Every request pays for the same 8,000 tokens.”</h2>
+      <p>Fadumo has been reading the usage numbers. The system prompt and tool schemas are identical on every single call, and Northstar is paying to process them every time.</p>
+      <p><strong>Prompt caching</strong> is the lever. Normally Claude does its internal work on the input, generates, responds, and discards everything. Caching stores that work instead, so a follow-up request with identical leading content reuses it—faster responses and lower generation cost.</p>
+      <p>The mechanism is a <strong>cache point</strong>: a special message part that marks where caching occurs. Everything <em>before</em> the cache point is cached; everything after it never is.</p>
+<pre><code>system = [
+    {"text": LONG_STABLE_INSTRUCTIONS},
+    {"cache_point": {"type": "default"}}
+]
+tools = tool_specs + [{"cache_point": {"type": "default"}}]</code></pre>
+      <p>The rules are strict and testable. A minimum of <strong>1024 tokens</strong> of content before the cache point is required. The content before the cache point must be <em>exactly</em> identical between requests—any difference invalidates the cache. The cache expires after five minutes of inactivity. And you can verify it is working: the response’s usage field reports <code>cache_write_input_tokens</code> on the first request and <code>cache_read_input_tokens</code> on the hits.</p>
+      <p class="choice">Where does the cache point go?</p>
+      <div class="choices" role="group" aria-label="Place the cache point">
+        <button type="button" onclick="choose('cache','stable', 75)">After the system prompt and tool schemas, before the user turn</button>
+        <button type="button" onclick="choose('cache','end', 75)">At the very end of the message list</button>
+        <button type="button" onclick="choose('cache','userfirst', 75)">Before the system prompt, with the claim text first</button>
+      </div>
+      <div class="outcome" id="cache-stable" aria-live="polite"><strong>Correct.</strong> Cache the large, stable prefix—system prompts that rarely change and tool schemas that are static and often exceed 1024 tokens on their own. Keep volatile per-claim data <em>after</em> the cache point, where it belongs.</div>
+      <div class="outcome" id="cache-end" aria-live="polite"><strong>Caches the wrong thing.</strong> That puts the changing claim text before the cache point, so every request differs and every request misses. The cached prefix must be byte-identical across calls.</div>
+      <div class="outcome" id="cache-userfirst" aria-live="polite"><strong>Backwards.</strong> Volatile user data belongs after the cached prefix, not before it. Put stable content first, then the cache point, then whatever changes per request.</div>
+      <h3>The other two cost dials</h3>
+      <p><strong>Extended thinking</strong> buys accuracy on complex tasks and costs both money—you are charged for thinking tokens—and latency. It is configured with a boolean <code>thinking</code> parameter plus a <code>thinking_budget</code>, the maximum tokens Claude may spend reasoning, with a hard minimum of <strong>1024</strong>. There is no universal right budget; the decision to enable it at all should be eval-driven. Run prompt evals first, and turn it on only if accuracy is still insufficient after prompt optimisation.</p>
+      <p>Two details for the application layer: the thinking output carries a <strong>cryptographic signature</strong> proving the reasoning text was not tampered with when you pass it back on a later turn, and some content may come back <strong>redacted</strong>—encrypted because Anthropic’s safety systems flagged it. You cannot read redacted content, but you must still pass it back unmodified as part of the history. A magic test string exists purely to force a redacted response so you can test that path.</p>
+      <p><strong>Model choice.</strong> The cheapest optimisation is often the tier. The course generates its own evaluation datasets with Haiku precisely because it is faster and cheaper for that job.</p>
+      <div class="blue-note"><p><strong>Be honest about the edges of this course.</strong> These notes teach cost control through model tiering, prompt caching, thinking budgets, and image sizing. They do not cover Bedrock Guardrails, provisioned throughput, or account quota mechanics. If an exam scenario turns on those, reason from what you actually know—and do not invent an identifier, a quota number, or an IAM action name you have not seen.</p></div>
+      <div class="lesson"><p><strong>Memory hook:</strong> cache the wallpaper, not the conversation. Extended thinking runs on a token allowance, and the smallest allowance the bank will issue is 1024.</p></div>
+    </section>
+
+    <section class="scene" id="scene14">
+      <p class="time">3:30 p.m. · The policy that vanished</p>
+      <h2>“It can’t find incident 2023.”</h2>
+      <p>The claims knowledge base is a few thousand pages of policy documents. Stuffing all of it into a prompt hits token limits, degrades quality on long prompts, costs more, and runs slower—so the team builds a retrieval pipeline instead.</p>
+      <p>The Bedrock-flavoured version of the pipeline you already know:</p>
+      <ol>
+        <li><strong>Chunk</strong> the source documents, preserving document and chunk IDs. Character/size-based chunking with overlap is the reliable default; structure-based splitting (on headers) is better when the documents genuinely have structure; semantic chunking groups related sentences.</li>
+        <li><strong>Embed</strong> the chunks. This course uses <strong>Amazon Titan Embed Text V2</strong>, which returns roughly 1024 floating-point numbers, each typically between −1 and +1. No single dimension means anything readable; the vector as a whole is a fingerprint of meaning.</li>
+        <li><strong>Index</strong> them in a vector store and search by similarity. Cosine similarity ranges from −1 to 1 and closer to 1 means more similar; cosine distance is 1 minus that, so closer to 0 means more similar. Vector databases typically report <em>distance</em>—the lowest-distance chunks are the best matches.</li>
+      </ol>
+      <p>Rosa builds exactly that, and the query “what did the engineering team do about incident 2023?” returns semantically adjacent but useless chunks.</p>
+      <p class="choice">What do you add?</p>
+      <div class="choices" role="group" aria-label="Fix the retrieval miss">
+        <button type="button" onclick="choose('rag','bm25', 84)">BM25 lexical search alongside the vectors, fused with RRF</button>
+        <button type="button" onclick="choose('rag','more', 84)">Retrieve more chunks</button>
+        <button type="button" onclick="choose('rag','embed', 84)">Switch embedding models</button>
+        <button type="button" onclick="choose('rag','opus', 84)">Move the generation call to Opus</button>
+      </div>
+      <div class="outcome" id="rag-bm25" aria-live="polite"><strong>Right diagnosis.</strong> Pure semantic search can miss exact keyword matches—specific identifiers, codes, rare technical terms. BM25 tokenises the query, weights rare terms higher than common ones, and surfaces chunks containing those terms. Run both searches and fuse the ranked lists.</div>
+      <div class="outcome" id="rag-more" aria-live="polite"><strong>More is not better.</strong> Widening the net dilutes the context without fixing the reason the right chunk ranked low. Evaluate recall and answer quality on representative queries rather than assuming the largest number of retrieved chunks wins.</div>
+      <div class="outcome" id="rag-embed" aria-live="polite"><strong>Treating the symptom.</strong> This is a lexical-matching failure on a rare identifier, which is a structural weakness of semantic search in general. Add a lexical ranker instead of shopping for embeddings.</div>
+      <div class="outcome" id="rag-opus" aria-live="polite"><strong>Wrong stage.</strong> The generation model cannot cite a chunk that retrieval never returned. Fix retrieval first.</div>
+      <h3>Fusing, reranking, contextualising</h3>
+      <p><strong>Reciprocal Rank Fusion</strong> merges the ranked lists. Each method votes with <code>1/(1 + rank)</code> and the scores are summed per document; a document ranked 1st by vector search and 2nd by BM25 scores <code>1/(1+1) + 1/(1+2) = 0.5 + 0.33 = 0.83</code>. Documents are re-sorted by the combined score, so appearing near the top of <em>either</em> list earns real points. More generally: RRF rewards documents that appear near the top across methods.</p>
+      <p><strong>Reranking</strong> is an optional pass where Claude reorders the top candidates for relevance to the query. Give the candidates temporary IDs and ask for ordered IDs back rather than repeated full chunks—it is cheaper and faster. It improves relevance and it adds latency and token cost; that is a deliberate trade.</p>
+      <p><strong>Contextual retrieval</strong> attacks the root problem: a chunk torn out of a document loses the context that made it meaningful. Before indexing, send each chunk plus its source document to Claude and ask it to situate the chunk within the larger document; prepend that description to the chunk. If the source document is too large for one prompt, use a subset—chunks from the start (summary or abstract) plus the chunks immediately preceding the target.</p>
+      <p>One design note that keeps the system portable: a single retriever interface can hide whether the underlying index is semantic, lexical, or hybrid. Give every component <code>add_document</code> and <code>search</code> and you can add methods later without touching callers.</p>
+      <div class="lesson"><p><strong>None of this is Bedrock-specific.</strong> The embedding model is an AWS one and the calls go through your Bedrock client, but the chunking strategy, the fusion maths, and the evaluation discipline are identical to the direct-API design. This is the “what stays the same” column doing its work.</p></div>
+    </section>
+
+    <section class="scene" id="scene15">
+      <p class="time">4:10 p.m. · The engineering room</p>
+      <h2>MCP, Claude Code, and the bug that found itself</h2>
+      <p>Ana’s team wants the same developer tooling they had before the migration. Almost all of it ports, with one seam worth knowing.</p>
+      <p><strong>MCP.</strong> The Model Context Protocol gives Claude tools and context without you authoring every schema by hand. An MCP server wraps an outside service into pre-built tools; an MCP client is the communication layer between your server and it, and it is transport-agnostic—stdio, HTTP, WebSockets. The message vocabulary is small: list tools request/result, call tool request/result. The three server primitives divide by <em>who controls them</em>: <strong>tools</strong> are model-controlled (Claude decides when to run them), <strong>resources</strong> are app-controlled (your code decides when to fetch data, exposed by URI, static or templated), and <strong>prompts</strong> are user-controlled (a person triggers a predefined workflow). Tools serve the model, resources serve the app, prompts serve users.</p>
+      <div class="blue-note"><p><strong>The Bedrock seam:</strong> MCP tool definitions do not match what Bedrock expects. The client needs a conversion step—the course writes a <code>to_bedrock_tools()</code> function—to translate MCP’s tool list into Bedrock tool specifications before they go into a Converse request. That is the one genuinely Bedrock-specific detail in an otherwise portable MCP integration.</p></div>
+      <p><strong>Claude Code.</strong> It behaves the same on a Bedrock-backed project; the MCP starter project simply reads the Bedrock region and model ID from environment variables, exactly like the notebooks. Run <code>claude</code>, run <code>init</code> to have it scan the codebase and write a <code>claude.md</code> that is included as context in later requests, append notes to it with <code>#</code>, reset with <code>/clear</code>, and attach servers with <code>claude mcp add [server-name] [startup-command]</code>. For parallel work, give each Claude instance its own git worktree so instances cannot collide on the same files, then merge the branches back.</p>
+      <p><strong>Computer use</strong> is a special case of tool use: a minimal schema expands into a large structure describing actions—mouse move, left click, screenshot. Claude never touches the machine directly; a Docker container simulates the environment and executes the key presses and mouse movements it requests. Setup is Docker plus a local AWS profile plus a single Docker command, using Anthropic’s reference implementation.</p>
+      <h3>The bug that found itself</h3>
+      <p>Ana demonstrates the automated-debugging pipeline she built: a GitHub Action runs daily, pulls CloudWatch logs, filters and deduplicates the errors, has Claude analyse each one, generate a fix, commit it, and open a pull request for human review.</p>
+      <p>The example it caught this month is almost too on-the-nose. A production application was failing silently while working perfectly on developer laptops. The logs contained an <em>invalid model identifier</em> error. Claude traced it to a typo in the model ID and submitted the correction as a PR.</p>
+      <p class="voice">“The model identifier,” Kenji says drily, “is apparently the most dangerous string in the system.”</p>
+      <div class="lesson"><p><strong>Note the limitation, because it is the whole point:</strong> the pipeline still requires human review before merging. Automation moved the work, not the accountability.</p></div>
+    </section>
+
+    <section class="scene" id="scene16">
+      <p class="time">4:45 p.m. · The sign-off</p>
+      <h2>“So it’s safe now?”</h2>
+      <p>The migration works. Kenji has one more question, and it is the right one: the claims agent can now look things up, write records, and take actions inside Cascade Mutual’s account. Whose problem is it when it does the wrong one?</p>
+      <p class="choice">Your answer</p>
+      <div class="choices" role="group" aria-label="Assign responsibility for side effects">
+        <button type="button" onclick="choose('gov','app', 96)">The application still owns authn/authz, validation, limits, logging, and approvals</button>
+        <button type="button" onclick="choose('gov','bedrock', 96)">Bedrock’s managed service handles safety at the platform layer</button>
+        <button type="button" onclick="choose('gov','prompt', 96)">A strict system prompt covers it</button>
+        <button type="button" onclick="choose('gov','iamonly', 96)">IAM policy is the control — scope the role tightly and you’re done</button>
+      </div>
+      <div class="outcome" id="gov-app" aria-live="polite"><strong>The only defensible answer.</strong> Tools, web search, computer-use interactions, and MCP integrations extend what Claude can do, but Bedrock does not make side effects safe by itself. The application remains responsible for authentication, authorization, path and argument validation, rate limits, retries, timeouts, audit logging, and human approval for consequential actions.</div>
+      <div class="outcome" id="gov-bedrock" aria-live="polite"><strong>Comforting and wrong.</strong> Bedrock is an engine, not a force field. Running inside a managed AWS service does not validate a tool argument or approve a payout. Your application still needs brakes, locks, logs, and a human at the emergency stop.</div>
+      <div class="outcome" id="gov-prompt" aria-live="polite"><strong>Necessary, nowhere near sufficient.</strong> A system prompt shapes behaviour; it does not enforce authorization or validate a file path. Controls have to live in the code that actually executes the side effect.</div>
+      <div class="outcome" id="gov-iamonly" aria-live="polite"><strong>One layer of several.</strong> IAM scoping is genuinely valuable, but it does not cover argument validation, rate limits, retries, timeouts, audit logging, or approval for consequential actions. Those stay with the application.</div>
+      <h3>The last two architecture calls</h3>
+      <p><strong>Workflow or agent?</strong> Prefer a deterministic workflow when the steps are known. Use an agent when Claude genuinely needs to choose the next tool or route through an unknown path. For either, set a bounded context, a stop condition, a budget, and a recovery strategy.</p>
+      <p><strong>Verify the outcome, not the call.</strong> A successful tool call is not proof that the desired business outcome occurred. Check the resulting state. And know what agents are actually good at: a focused toolset, mostly information-gathering calls, running in a loop until goal or error, on high-value tasks where a mistake does not cause major economic or safety damage. Context is king—the model has no inherent knowledge of Cascade Mutual’s environment beyond what tools tell it.</p>
+      <p class="voice">Kenji signs. Fadumo asks for the caching numbers in writing. Rosa deletes the last <code>ANTHROPIC_API_KEY</code> reference from the repository.</p>
+    </section>
+
+    <section class="end">
+      <h2>The architect’s pocket card</h2>
+      <p>When you translate a direct-API design to Bedrock, change the access layer and preserve the reasoning:</p>
+      <p><strong>Credentials come from AWS IAM/boto3 configuration, not an Anthropic API key.</strong> Create a <code>bedrock-runtime</code> client in a region where the model is available. Use Converse with <code>modelId</code>, <code>messages</code>, <code>inferenceConfig</code>, and <code>toolConfig</code> as appropriate. Use a cross-region inference profile when the model is routed across supported regions, and take the profile ID from the console’s cross-region inference area rather than guessing from the main model catalog. Read the returned output message and content blocks, then handle stop reasons and usage.</p>
+      <p><strong>Remember the small facts the exam likes:</strong> a plain model ID is region-locked and a profile ID is not; <code>content</code> is a list; <code>system</code> is a list of dicts with at least one character; temperature is 0–1 and defaults to 1.0; only <code>content_block_delta</code> events carry streamed text; the prefill is yours to concatenate and the stop sequence is excluded; caching needs 1024 tokens before the cache point and lasts five minutes; the thinking budget minimum is 1024; twenty images maximum per request; MCP tools need converting to Bedrock tool specs.</p>
+      <p><strong>And keep the rest identical.</strong> Prompts, schemas, RAG, evals, orchestration, and verification carry over unchanged. The deployment choice changes credentials, client shape, model identifier, regional availability, and some parameter names. It does not change the human–AI responsibilities or the architecture of a reliable tool loop.</p>
+    </section>
+
+    <p class="source">Primary source: <code>04-claude-with-amazon-bedrock/notes.md</code>, <code>04-claude-with-amazon-bedrock/anthropic-notes.md</code>, and <code>04-claude-with-amazon-bedrock/quiz.md</code> in this study workspace. Shared conceptual material—prompt engineering, evals, tool design, RAG, orchestration—lives in <code>03-building-with-the-claude-api</code> and applies identically on Bedrock.</p>
+    <footer>When you are ready, ask your teacher to quiz you on one Cascade Mutual decision at a time—especially the identifier-and-region scenes, which is where the exam concentrates its Bedrock-specific questions. If a scene feels fuzzy, ask a follow-up; the point is durable understanding, not speed.</footer>
+  </main>
+  <script>
+    function choose(scene, answer, progress) {
+      document.querySelectorAll('[id^="' + scene + '-"]').forEach(function (el) { el.classList.remove('visible'); });
+      var selected = document.getElementById(scene + '-' + answer);
+      if (selected) selected.classList.add('visible');
+      var bar = document.getElementById('progressBar');
+      if (bar && progress) bar.style.width = progress + '%';
+    }
+  </script>
+</body>
+</html>

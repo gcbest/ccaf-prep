@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Model Context Protocol — The Northstar Adapter</title>
+  <style>
+    :root {
+      --ink: #242321;
+      --muted: #706b63;
+      --paper: #f7f3ec;
+      --paper-deep: #ece4d7;
+      --rust: #5f6b3a;
+      --rust-dark: #434b26;
+      --sage: #dfe9df;
+      --blue: #dce8ee;
+      --line: #d6ccbd;
+      --white: #fffdfa;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.7 Georgia, 'Times New Roman', serif;
+    }
+    main { max-width: 780px; margin: 0 auto; padding: 44px 24px 80px; }
+    .masthead {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+      border-bottom: 1px solid var(--line); padding-bottom: 10px;
+      color: var(--muted); font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .13em; text-transform: uppercase;
+    }
+    h1 { max-width: 680px; margin: 28px 0 12px; font: 700 clamp(2.5rem, 8vw, 5.2rem)/.98 Georgia, serif; letter-spacing: -.04em; }
+    .dek { max-width: 670px; margin: 0 0 34px; color: var(--muted); font-size: 1.2rem; }
+    .progress { position: sticky; top: 0; z-index: 2; height: 4px; background: var(--paper-deep); }
+    .progress span { display: block; width: 0; height: 100%; background: var(--rust); transition: width .25s ease; }
+    .scene {
+      position: relative; margin: 34px 0 0; padding: 25px 28px 28px;
+      background: var(--white); border: 1px solid var(--line); border-radius: 3px;
+    }
+    .scene::before { content: ''; position: absolute; left: -1px; top: 0; bottom: 0; width: 4px; background: var(--rust); }
+    .opening { background: #fff8ed; }
+    .time { margin: 0 0 7px; color: var(--rust-dark); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    h2 { margin: 0 0 13px; font: 700 1.65rem/1.2 Georgia, serif; }
+    h3 { margin: 27px 0 7px; font: 700 1.1rem/1.3 Georgia, serif; }
+    p { max-width: 70ch; margin: 0 0 13px; }
+    ul, ol { max-width: 68ch; padding-left: 1.35em; }
+    li { margin: 5px 0; }
+    .voice { margin: 18px 0; padding-left: 19px; border-left: 2px solid var(--paper-deep); font-style: italic; }
+    .choice { margin: 20px 0 2px; color: var(--muted); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+    .choices { display: flex; flex-wrap: wrap; gap: 9px; margin: 10px 0 5px; }
+    button {
+      border: 1px solid var(--rust); border-radius: 3px; background: var(--white); color: var(--rust-dark);
+      padding: 9px 13px; font: 600 14px/1.2 system-ui, sans-serif; cursor: pointer;
+    }
+    button:hover, button:focus-visible { background: var(--rust); color: #fff; outline: none; }
+    button:focus-visible { box-shadow: 0 0 0 3px rgba(95, 107, 58, .22); }
+    .outcome { display: none; margin-top: 13px; padding: 14px 16px; border-left: 3px solid var(--sage); background: #f1f6ef; }
+    .outcome.visible { display: block; }
+    .outcome strong { color: var(--rust-dark); }
+    .lesson { margin: 25px 0 0; padding: 17px 18px; background: var(--paper-deep); }
+    .lesson p:last-child { margin-bottom: 0; }
+    .blue-note { margin: 18px 0; padding: 15px 17px; background: #f1f6f8; border-left: 3px solid #7b9cac; }
+    .blue-note p:last-child { margin-bottom: 0; }
+    .rule { margin: 38px 0; padding: 25px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); text-align: center; }
+    .rule strong { display: block; color: var(--rust-dark); font: 700 1.35rem/1.25 Georgia, serif; }
+    .prompt { margin: 15px 0; padding: 17px 18px; background: #fff4eb; border-left: 3px solid var(--rust); font-size: .98rem; }
+    .prompt strong { color: var(--rust-dark); }
+    .prompt code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em; }
+    .mini-table { width: 100%; margin: 17px 0; border-collapse: collapse; font-size: .95rem; }
+    .mini-table th, .mini-table td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    .mini-table th { background: var(--paper-deep); color: var(--rust-dark); font: 700 12px/1.25 system-ui, sans-serif; letter-spacing: .05em; text-transform: uppercase; }
+    .end { margin-top: 39px; padding: 27px 28px; background: var(--rust-dark); color: #fff8f1; }
+    .end h2 { color: #fff; }
+    .end p { color: #f6dfd1; }
+    .source, footer { color: var(--muted); font-size: .9rem; }
+    footer { margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--line); }
+    a { color: var(--rust-dark); }
+    code { background: var(--paper-deep); padding: .08em .28em; border-radius: 3px; }
+    pre { max-width: 70ch; margin: 15px 0; padding: 14px 16px; background: var(--paper-deep); border-left: 3px solid var(--rust); overflow-x: auto; font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    pre code { background: none; padding: 0; }
+    @media (max-width: 560px) {
+      main { padding-top: 28px; }
+      .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
+      .scene { padding: 21px 19px 23px; }
+      .choices { display: grid; grid-template-columns: 1fr; }
+      button { text-align: left; }
+      .mini-table { font-size: .88rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+  <main>
+    <div class="masthead"><span>CCA-F · Section 6</span><span>Northstar Dispatch · Tuesday</span></div>
+    <h1>The Northstar adapter</h1>
+    <p class="dek">You are the architect. Northstar has been hand-building a connector for every service it touches. Today you stop, and build one thing that every surface can plug into.</p>
+
+    <section class="scene opening" id="scene0">
+      <p class="time">8:05 a.m. · The wall of adapters</p>
+      <h2>“I maintain seventeen integrations and I am one person.”</h2>
+      <p>Tomás Reyes, Northstar’s integrations engineer, has pinned a printout to the wall behind his desk. It is a list of every tool schema he has hand-authored this year: GitHub repositories, pull requests, issues, projects. Then Slack. Then the document store. Each one is a JSON schema he wrote, a function he implemented, and a contract he has to keep working when the upstream API changes.</p>
+      <p class="voice">“GitHub alone has repos, PRs, issues, and projects. If I want Claude to answer questions about our GitHub data, I have to write, test, and maintain a tool for every one of those. That’s not a feature. That’s a second job.”</p>
+      <p>This is the exact problem the <strong>Model Context Protocol</strong> was designed to solve. MCP is a communication layer that provides Claude with context and tools <em>without requiring developers to write tedious integration code</em>. It does that by shifting tool definition and execution away from your server and onto dedicated <strong>MCP servers</strong>.</p>
+      <p>An MCP server is an interface to an outside service. It wraps that service’s functionality into ready-to-use tools and exposes them in a standardized way. Your application connects to the server instead of implementing everything from scratch.</p>
+      <div class="blue-note"><p><strong>Who writes these servers?</strong> Anyone can. In practice the service provider often ships an official implementation — AWS publishing an official MCP server for its own services is the course’s example. The core value is that <em>someone else</em> did the integration work, and it is their job to keep it current.</p></div>
+      <div class="lesson"><p><strong>First principle:</strong> MCP does not change what tools are. It changes <em>who does the work of creating them</em>, and moves the maintenance burden from application developers to MCP server maintainers.</p></div>
+    </section>
+
+    <section class="scene" id="scene1">
+      <p class="time">8:40 a.m. · The first fork in the road</p>
+      <h2>Three ways to give Claude a capability</h2>
+      <p>Renata Cho, the product lead, wants Claude in the Northstar app to answer questions about the team’s GitHub activity. Tomás has three sketches on the whiteboard and wants your call before he writes a line.</p>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Choose how to give Claude GitHub access">
+        <button type="button" onclick="choose('one','mcp', 8)">Connect an MCP server</button>
+        <button type="button" onclick="choose('one','api', 8)">Hand-write tools against the GitHub API</button>
+        <button type="button" onclick="choose('one','skill', 8)">Write a Skill</button>
+      </div>
+      <div class="outcome" id="one-mcp" aria-live="polite"><strong>Right call.</strong> GitHub is a third-party service with enormous surface area. An MCP server ships the tool schemas and functions already defined; you connect to it rather than authoring the integration. That is precisely the trade MCP exists to make.</div>
+      <div class="outcome" id="one-api" aria-live="polite"><strong>This is the burden you are trying to shed.</strong> Calling the API directly is legitimate — but it means <em>you</em> author every tool schema and every function, and you maintain them forever. MCP’s whole pitch is that those definitions already exist on a dedicated server.</div>
+      <div class="outcome" id="one-skill" aria-live="polite"><strong>Wrong layer.</strong> A Skill teaches Claude a <em>procedure</em> — your report template, your checklist. It is instructions, not necessarily an integration. Connecting to somebody else’s service is MCP’s job.</div>
+      <div class="lesson"><p><strong>Shorthand you will want on exam day:</strong> tools are for <em>your</em> stuff, Skills are for <em>your processes</em>, MCP is for <em>everyone else’s</em> stuff.</p></div>
+    </section>
+
+    <section class="scene" id="scene2">
+      <p class="time">9:05 a.m. · Drawing the boxes</p>
+      <h2>Client, server, and the thing in between</h2>
+      <p>You draw the architecture for Tomás. It is two boxes and one arrow, and almost every MCP question reduces to knowing which box does what.</p>
+      <ul>
+        <li>An <strong>MCP server</strong> publishes capabilities. Internally it contains three kinds of component: <strong>tools, resources, and prompts</strong>.</li>
+        <li>An <strong>MCP client</strong> is the communication interface between <em>your</em> server and the MCP server. It is your access point to the MCP server’s capabilities, and it handles the message exchange and protocol details.</li>
+      </ul>
+      <p>The critical thing about the client: <strong>it never executes anything itself.</strong> It is a messenger. Two message-type pairs carry almost all the traffic:</p>
+      <ul>
+        <li><code>ListToolsRequest</code> / <code>ListToolsResult</code> — “what tools do you have?”</li>
+        <li><code>CallToolRequest</code> / <code>CallToolResult</code> — “run this tool with these arguments, give me the result.”</li>
+      </ul>
+      <h3>The full request flow</h3>
+      <p>A user asks, “What repositories do I have?” Here is every hop:</p>
+      <ol>
+        <li>User query arrives at your server.</li>
+        <li>Your server asks its MCP client for the available tools.</li>
+        <li>The client sends a <code>ListToolsRequest</code>; the MCP server replies with a <code>ListToolsResult</code>.</li>
+        <li>Your server sends the query <em>plus</em> the tool list to Claude.</li>
+        <li>Claude decides to call a tool.</li>
+        <li>Your server asks the client to run it; the client sends a <code>CallToolRequest</code>.</li>
+        <li>The MCP server executes the tool — it makes the real GitHub API call.</li>
+        <li>The result flows back as a <code>CallToolResult</code>, through the client, to your server, to Claude.</li>
+        <li>Claude formulates the final answer; the user gets it.</li>
+      </ol>
+      <p>Many steps, but each component has exactly one responsibility, and the client abstracts away all the server-communication complexity.</p>
+      <div class="lesson"><p><strong>Memory hook:</strong> the MCP client is a hotel concierge. It phones the kitchen for you and carries the tray back. It never once cooks the meal.</p></div>
+    </section>
+
+    <section class="scene" id="scene3">
+      <p class="time">9:30 a.m. · The wire</p>
+      <h2>“How do the two actually talk?”</h2>
+      <p>Ade Balogun, who is building the Northstar CLI, wants to know what protocol sits between client and server. The honest answer is: whichever one you need. MCP is <strong>transport agnostic</strong> — client and server can communicate over standard input/output (stdio), HTTP, WebSockets, or other network protocols.</p>
+      <p>Ade’s first build is a CLI chatbot. The client and the server both run on his laptop, launched by the same command.</p>
+      <p class="choice">Which transport fits Ade’s deployment?</p>
+      <div class="choices" role="group" aria-label="Choose a transport">
+        <button type="button" onclick="choose('two','stdio', 18)">stdio</button>
+        <button type="button" onclick="choose('two','http', 18)">HTTP</button>
+        <button type="button" onclick="choose('two','ws', 18)">WebSockets</button>
+        <button type="button" onclick="choose('two','none', 18)">MCP fixes one transport; there is no choice</button>
+      </div>
+      <div class="outcome" id="two-stdio" aria-live="polite"><strong>Correct, and it is the common case.</strong> The most common MCP setup is client and server running on the <em>same machine</em>, communicating over standard input/output. Nothing needs to cross a network, so nothing should.</div>
+      <div class="outcome" id="two-http" aria-live="polite"><strong>Legal, but unnecessary here.</strong> HTTP is a supported transport and is the right shape for a remote server you connect to over a network. For two processes on one laptop, stdio is the common and simpler setup.</div>
+      <div class="outcome" id="two-ws" aria-live="polite"><strong>Also supported, also overkill.</strong> WebSockets are one of the protocols MCP can run over, but Ade’s client and server share a machine. The standard local arrangement is stdio.</div>
+      <div class="outcome" id="two-none" aria-live="polite"><strong>That is the misconception to unlearn.</strong> “Transport agnostic” means precisely that the pairing is <em>not</em> fixed: stdio, HTTP, WebSockets, and others all work. For Ade’s same-machine CLI, choose stdio.</div>
+      <div class="lesson"><p><strong>Transport is a deployment decision, not a protocol decision.</strong> The same <code>ListTools</code>/<code>CallTool</code> conversation travels over any of them.</p></div>
+    </section>
+
+    <div class="rule"><strong>MCP standardizes discovery and invocation.</strong><span>The model still decides how to use a tool once the client hands over its schema.</span></div>
+
+    <section class="scene" id="scene4">
+      <p class="time">9:55 a.m. · Scaffolding</p>
+      <h2>Northstar builds its own server</h2>
+      <p>Northstar has an internal document store nobody else will ever write a server for. So Tomás builds one. He starts a CLI-based chatbot project that contains <em>both</em> a custom MCP client and a custom MCP server, with a small collection of fake documents held in an in-memory dictionary — no database, no files.</p>
+      <pre><code>from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("DocumentMCP", log_level="ERROR")
+
+docs = {
+    "deposition.md": "...",
+    "report.pdf": "...",
+}</code></pre>
+      <p>He runs it with <code>uv run main.py</code> (or plain <code>python main.py</code> without uv), after putting an API key in <code>.env</code> and installing dependencies. A chat prompt appears and answers “what’s one plus one.” The skeleton works.</p>
+      <div class="blue-note"><p><strong>An architectural caveat the course is explicit about:</strong> a real project normally implements <em>either</em> a client <em>or</em> a server, not both. The course builds both so the end-to-end protocol is visible. In production, start by identifying which side your application owns.</p></div>
+      <div class="blue-note"><p><strong>And a sandbox caveat:</strong> those documents live only in memory. Every edit is gone the moment the process restarts. It is a whiteboard in a room that gets wiped when you shut the door — a teaching store, not a persistence layer.</p></div>
+    </section>
+
+    <section class="scene" id="scene5">
+      <p class="time">10:20 a.m. · The first two tools</p>
+      <h2>No JSON schemas were harmed</h2>
+      <p>Tomás defines two tools on the document server: one that reads a document’s contents, one that edits it. What surprises him is how little he writes.</p>
+      <pre><code>@mcp.tool(
+    name="read_doc_contents",
+    description="Read the contents of a document and return it as a string.",
+)
+def read_document(doc_id: str = Field(description="Id of the document to read")):
+    if doc_id not in docs:
+        raise ValueError(f"Doc with id {doc_id} not found")
+    return docs[doc_id]</code></pre>
+      <p>The second tool, <code>edit_document</code>, takes <code>doc_id</code>, <code>old_string</code>, and <code>new_string</code>, validates the document exists the same way, and performs a find-and-replace on its content. Both raise a <code>ValueError</code> when the id is not in the dictionary.</p>
+      <h3>What the SDK gave him for free</h3>
+      <ul>
+        <li><strong>No manual JSON schema writing</strong> — the decorator plus Python type hints plus Pydantic <code>Field()</code> descriptions auto-generate the schema Claude sees.</li>
+        <li><strong>Automatic validation</strong> derived from the type hints.</li>
+        <li><strong>Clear parameter descriptions</strong> carried straight into the model-facing interface.</li>
+        <li><strong>Natural error handling</strong> — Python exceptions integrate directly.</li>
+        <li><strong>Automatic registration</strong> — the decorator registers the tool; there is no separate manifest.</li>
+      </ul>
+      <div class="lesson"><p><strong>The pattern is always the same:</strong> decorator → function definition → parameter typing → validation → core logic. And remember the description is not documentation for humans; it is part of the interface Claude reads. It should say <em>when</em> the tool is appropriate and <em>what</em> its errors mean.</p></div>
+    </section>
+
+    <section class="scene" id="scene6">
+      <p class="time">10:45 a.m. · The wind tunnel</p>
+      <h2>Testing a server before there is anything to test it with</h2>
+      <p>Ade’s client is not finished. Tomás still wants to know whether <code>edit_document</code> actually works. He runs the <strong>MCP Inspector</strong> — an in-browser debugger for MCP servers that needs no application attached.</p>
+      <pre><code>$ mcp dev mcp_server.py
+# opens a local address, e.g. http://127.0.0.1:6274</code></pre>
+      <p>He clicks <strong>Connect</strong> in the left sidebar. The top navigation shows <strong>Resources</strong>, <strong>Prompts</strong>, and <strong>Tools</strong>. Under Tools he chooses “List Tools,” picks <code>edit_document</code>, fills in the inputs, and clicks <strong>Run Tool</strong>. A success status and the returned data come back.</p>
+      <p>Then he does the trick that makes the Inspector genuinely useful: he immediately runs <code>read_doc_contents</code> on the same document. <strong>State persists between calls within the Inspector session</strong>, so the edit is visible. He has just tested a multi-tool interaction without writing a single line of client code.</p>
+      <p class="voice">“It remembers the room after I move the furniture. So I can walk back in and check whether the picture is straight.”</p>
+      <div class="blue-note"><p><strong>Boundary of the tool:</strong> treat the Inspector as a protocol and debugging tool. It proves your server speaks MCP correctly and that a tool returns what you expect. It does <em>not</em> prove that the surrounding application’s permissions and business rules are correct.</p></div>
+      <div class="lesson"><p><strong>Inspector dev-loop value:</strong> iterate on implementations, test edge cases and errors, verify multi-tool interactions, and debug in real time — all before a full client exists.</p></div>
+    </section>
+
+    <section class="scene" id="scene7">
+      <p class="time">11:10 a.m. · The other side of the wire</p>
+      <h2>Ade builds the client</h2>
+      <p>A client implementation has two components. The SDK provides a <strong>Client Session</strong> — the actual connection to the MCP server, which requires careful resource cleanup when it closes. Ade wraps it in a custom <strong>MCP Client</strong> class that owns connect, cleanup, and the async enter/exit lifecycle, and exposes the server’s functionality to the rest of the codebase.</p>
+      <pre><code>async def list_tools(self) -> list[types.Tool]:
+    result = await self.session().list_tools()
+    return result.tools
+
+async def call_tool(self, tool_name: str, tool_input: dict) -> types.CallToolResult | None:
+    return await self.session().call_tool(tool_name, tool_input)</code></pre>
+      <p>That is the entire discovery-plus-execution surface the rest of the application needs. The flow through it: the app requests a tool list for Claude → <code>list_tools()</code> returns the server’s tools → Claude selects one and supplies parameters → <code>call_tool()</code> executes it on the server → the result goes back to Claude.</p>
+      <p>Ade tests it by running the client file directly with a small harness to confirm the connection opens and the tools list. Then he runs the CLI and asks, “what is the contents of the report.pdf document.” Claude calls the tool. It works.</p>
+      <div class="lesson"><p><strong>Why wrap the session:</strong> the Session is the live electrical wire. The wrapper is the electrician who insulates it and remembers to turn it off. Wrapping the session in a larger class is the common practice, not a stylistic flourish.</p></div>
+    </section>
+
+    <section class="scene" id="scene8">
+      <p class="time">11:40 a.m. · The most important table in the room</p>
+      <h2>Three primitives, three owners</h2>
+      <p>An MCP server exposes exactly three kinds of primitive. The thing that distinguishes them is not what they can do — it is <strong>who decides when they run</strong>.</p>
+      <table class="mini-table">
+        <thead><tr><th>Primitive</th><th>What it is</th><th>Controlled by</th><th>Use it when</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Tools</strong></td>
+            <td>An action Claude can invoke, with a schema and arguments</td>
+            <td>The <strong>model</strong> — Claude decides when to call it</td>
+            <td>You need to give Claude a new capability it uses autonomously (e.g. “calculate the square root of 3” → Claude reaches for a code-execution tool). <em>Tools serve the model.</em></td>
+          </tr>
+          <tr>
+            <td><strong>Resources</strong></td>
+            <td>Read-only data behind a URI, returned with a MIME type</td>
+            <td>Your <strong>app</strong> — application code decides when to fetch</td>
+            <td>You need data inside your application, to populate UI (autocomplete lists, document listings) or to inject context into a prompt — the model of Claude’s own “Add from Google Drive.” <em>Resources serve the app.</em></td>
+          </tr>
+          <tr>
+            <td><strong>Prompts</strong></td>
+            <td>A tested instruction template that resolves to messages</td>
+            <td>The <strong>user</strong> — triggered by an explicit action</td>
+            <td>You want a predefined, optimized workflow a user starts on demand — a slash command, a menu item, a chat-starter button. <em>Prompts serve your users.</em></td>
+          </tr>
+        </tbody>
+      </table>
+      <p>Now the first drill. Ade wants an <code>@</code>-mention menu in the CLI: type <code>@</code>, see the list of available documents, pick one, and have its content go into the prompt.</p>
+      <p class="choice">Which primitive?</p>
+      <div class="choices" role="group" aria-label="Choose a primitive for the mention menu">
+        <button type="button" onclick="choose('three','resource', 30)">Resource</button>
+        <button type="button" onclick="choose('three','tool', 30)">Tool</button>
+        <button type="button" onclick="choose('three','prompt', 30)">Prompt</button>
+      </div>
+      <div class="outcome" id="three-resource" aria-live="polite"><strong>Exactly right.</strong> The <em>application</em> decides when to fetch the list and when to fetch the chosen document — the model is not involved in that decision. That is the defining trait of a resource. And because the app injects the content directly, Claude never has to make a tool call and wait for the round trip.</div>
+      <div class="outcome" id="three-tool" aria-live="polite"><strong>It would work, and it would be slower and clumsier.</strong> Making this a tool hands the decision to Claude and costs an extra round trip: Claude must decide to fetch, call, and wait. The app already knows which document the user picked. Use a resource and put the document on Claude’s desk before the meeting.</div>
+      <div class="outcome" id="three-prompt" aria-live="polite"><strong>Wrong primitive for the job.</strong> Prompts are user-triggered instruction templates — they produce <em>messages</em>, not data for your UI. Populating an autocomplete list and injecting the selected content is app-controlled data retrieval, which is a resource.</div>
+      <div class="lesson"><p><strong>Say it as a chant:</strong> the model pulls the lever, the app sets the table, the user presses the button — tool, resource, prompt.</p></div>
+    </section>
+
+    <section class="scene" id="scene9">
+      <p class="time">12:15 p.m. · Two mailboxes</p>
+      <h2>Defining resources</h2>
+      <p>Resources expose read-only data; tools perform actions. A resource follows a plain request/response pattern: the client sends a <code>ReadResourceRequest</code> with a URI, and the server returns a <code>ReadResourceResult</code>. There are two shapes.</p>
+      <pre><code># Direct — static URI, no parameters
+@mcp.resource("docs://documents", mime_type="application/json")
+def list_docs() -> list[str]:
+    return list(docs.keys())
+
+# Templated — parameterized URI, params become kwargs
+@mcp.resource("docs://documents/{doc_id}", mime_type="text/plain")
+def fetch_doc(doc_id: str) -> str:
+    if doc_id not in docs:
+        raise ValueError(f"Doc with id {doc_id} not found")
+    return docs[doc_id]</code></pre>
+      <p>The <code>mime_type</code> is a hint telling the client how to parse or display the response — <code>application/json</code>, <code>text/plain</code>, <code>application/pdf</code>, and so on. The SDK auto-serializes the return value, so nothing needs manual JSON-stringifying. Both shapes are testable in the Inspector, which lists <strong>Resources</strong> and <strong>Resource Templates</strong> separately.</p>
+      <p>Tomás asks whether he could collapse both into one URI that returns the list when called bare and a document when given an id.</p>
+      <p class="choice">Should he?</p>
+      <div class="choices" role="group" aria-label="Choose a resource layout">
+        <button type="button" onclick="choose('four','two', 42)">Keep two resources, one per read operation</button>
+        <button type="button" onclick="choose('four','one', 42)">Collapse into one clever URI</button>
+        <button type="button" onclick="choose('four','tool', 42)">Drop resources; expose one read tool instead</button>
+      </div>
+      <div class="outcome" id="four-two" aria-live="polite"><strong>Yes.</strong> The recommended pattern is one resource per distinct read operation — “list all documents” at <code>docs://documents</code>, “fetch one document” at <code>docs://documents/{doc_id}</code>. Each URI keeps a single-purpose, predictable contract.</div>
+      <div class="outcome" id="four-one" aria-live="polite"><strong>Clever, and wrong.</strong> Overloading one URI with two behaviors makes its contract ambiguous for every client that consumes it. One key per lock: the lobby key that lists the mailboxes should not also open apartment 4B.</div>
+      <div class="outcome" id="four-tool" aria-live="polite"><strong>That gives away the advantage.</strong> A tool hands the fetch decision to the model and adds a round trip. The whole point of using resources here is that the application already knows what it wants and can inject it directly. Keep two resources.</div>
+      <div class="lesson"><p><strong>Design note:</strong> keep resources least-privilege. They are a read surface, so expose the narrowest read that satisfies the use case.</p></div>
+    </section>
+
+    <section class="scene" id="scene10">
+      <p class="time">1:00 p.m. · Reading from the other side</p>
+      <h2>The client fetches a resource</h2>
+      <p>Ade adds the mirror-image method to his client wrapper.</p>
+      <pre><code>async def read_resource(self, uri: str) -> Any:
+    result = await self.session().read_resource(AnyUrl(uri))
+    resource = result.contents[0]
+    if isinstance(resource, types.TextResourceContents):
+        if resource.mimeType == "application/json":
+            return json.loads(resource.text)
+    return resource.text</code></pre>
+      <p>Two details carry all the weight. The result’s <code>contents</code> is a <em>list</em>, and you typically use only the first element. And the <code>mimeType</code> on that element is what tells you how to parse it: <code>application/json</code> goes through <code>json.loads()</code>; anything else is returned as raw text. The MIME label is the package’s handling sticker.</p>
+      <p>In the CLI, typing <code>@</code> now triggers an autocomplete list of resources. Ade’s document picker uses arrow keys to navigate and the space bar to select. The moment a document is chosen, its contents are pulled in and included in the prompt sent to Claude — <strong>no tool call, no extra round trip</strong>. Claude never has to leave the room to fetch the file.</p>
+      <div class="lesson"><p><strong>This is the real-world parallel worth remembering:</strong> Claude’s own “Add from Google Drive” works this way. Application code — not the model — decides which documents to show and injects the content. App-controlled context is a resource.</p></div>
+    </section>
+
+    <section class="scene" id="scene11">
+      <p class="time">1:35 p.m. · The tested instruction</p>
+      <h2>“Users can already just ask. Why write a prompt?”</h2>
+      <p>Renata pushes back. A user can type “reformat report.pdf in markdown” today. Why would the server author bother shipping a prompt for it?</p>
+      <p>Because a thoroughly tested, specialized prompt written by the people who built the server gets more consistent, higher-quality results than every user inventing their own instruction. The prompt is where domain expertise gets encoded once.</p>
+      <pre><code>@mcp.prompt(
+    name="format",
+    description="Rewrites the contents of the document in Markdown format.",
+)
+def format_document(
+    doc_id: str = Field(description="Id of the document to format"),
+) -> list[base.Message]:
+    prompt = f"""Your goal is to reformat a document to be written with
+markdown syntax. The id of the document you need to reformat is:
+&lt;document_id&gt;{doc_id}&lt;/document_id&gt;
+Add in headers, bullet points, tables, etc as necessary."""
+    return [base.UserMessage(prompt)]</code></pre>
+      <p>The function returns a <strong>list of messages</strong> sent directly to Claude — it can contain multiple user and assistant messages for more complex flows. It is not a suggestion; it is a pre-written boarding pass that Claude reads and acts on.</p>
+      <p>Users trigger prompts through explicit UI actions: <code>/</code> slash commands, menu selections, button clicks. Never automatically.</p>
+      <p>Renata now wants a one-click control under the chat input labelled “Reformat this document,” which runs Northstar’s tested markdown workflow.</p>
+      <p class="choice">Which primitive?</p>
+      <div class="choices" role="group" aria-label="Choose a primitive for the reformat button">
+        <button type="button" onclick="choose('five','prompt', 54)">Prompt</button>
+        <button type="button" onclick="choose('five','tool', 54)">Tool</button>
+        <button type="button" onclick="choose('five','resource', 54)">Resource</button>
+      </div>
+      <div class="outcome" id="five-prompt" aria-live="polite"><strong>Correct.</strong> A predefined workflow that a user starts by an explicit action is the definition of an MCP prompt. Claude’s own chat-starter buttons are the canonical example. The button is a vending-machine button: the user pushes it and gets the prepacked workflow.</div>
+      <div class="outcome" id="five-tool" aria-live="polite"><strong>Wrong controller.</strong> Tools are model-controlled — Claude decides when to call them. Renata is describing something the <em>user</em> deliberately fires. That is a prompt. (Note the prompt will likely cause Claude to <em>use</em> the read and edit tools; the two cooperate.)</div>
+      <div class="outcome" id="five-resource" aria-live="polite"><strong>Wrong layer.</strong> Resources return read-only data for your app; they do not carry instructions. A tested set of instructions, fired by a user action, is a prompt.</div>
+      <div class="lesson"><p><strong>Four benefits of server-authored prompts:</strong> consistency (same reliable results every time), encoded expertise (domain knowledge baked in once), reusability (every client of the server inherits them), and single-point maintenance (improve once, all clients improve).</p></div>
+    </section>
+
+    <section class="scene" id="scene12">
+      <p class="time">2:10 p.m. · Wiring the slash command</p>
+      <h2>Prompts in the client</h2>
+      <p>The client side is the same discovery-then-invoke gesture as tools, just aimed at a different drawer.</p>
+      <pre><code>async def list_prompts(self) -> list[types.Prompt]:
+    result = await self.session().list_prompts()
+    return result.prompts
+
+async def get_prompt(self, prompt_name, args: dict[str, str]):
+    result = await self.session().get_prompt(prompt_name, args)
+    return result.messages</code></pre>
+      <p>The arguments the client supplies — say <code>{"doc_id": "plan.md"}</code> — become keyword arguments on the server’s prompt function and get interpolated into the template text. What comes back is a messages array that forms the conversation input for the model.</p>
+      <p>End to end in Ade’s CLI: the user types <code>/format</code> → picks a document → the client calls <code>get_prompt("format", {"doc_id": ...})</code> → the server returns the resolved messages → the client sends them to Claude → Claude uses the <code>read_doc_contents</code> and <code>edit_document</code> tools to fetch, reformat, and save the document.</p>
+      <p class="voice">“Same doorbell, different room. Press it for the tools closet or the prompts drawer — it is the identical ‘what have you got’ gesture either way.”</p>
+    </section>
+
+    <section class="scene" id="scene13">
+      <p class="time">2:45 p.m. · The drill, one more time</p>
+      <h2>Three capabilities, three answers</h2>
+      <p>Hannah Whitlock, Northstar’s security reviewer, joins the room and does what security reviewers do: she asks you to classify things before she signs anything off. Northstar’s analytics team wants Claude to be able to run arbitrary arithmetic — square roots, regressions — by executing code in a sandbox, entirely on its own initiative, whenever a question needs it.</p>
+      <p class="choice">Which primitive?</p>
+      <div class="choices" role="group" aria-label="Choose a primitive for sandboxed calculation">
+        <button type="button" onclick="choose('six','tool', 66)">Tool</button>
+        <button type="button" onclick="choose('six','resource', 66)">Resource</button>
+        <button type="button" onclick="choose('six','prompt', 66)">Prompt</button>
+      </div>
+      <div class="outcome" id="six-tool" aria-live="polite"><strong>Yes — and note <em>why</em>.</strong> Not because it executes code, but because the decision to invoke belongs to the model. Claude spontaneously reaching for the calculator is the defining trait of a tool. This is the course’s own example: code execution for calculations is model-controlled.</div>
+      <div class="outcome" id="six-resource" aria-live="polite"><strong>No — resources are read-only data.</strong> They do not perform actions, and the fetch decision belongs to your app, not to Claude. Autonomous execution by the model is a tool.</div>
+      <div class="outcome" id="six-prompt" aria-live="polite"><strong>No — prompts are user-triggered.</strong> Nobody is pressing a button here; Claude decides on its own, mid-answer, that it needs to compute something. Model-decided invocation means tool.</div>
+      <div class="lesson"><p><strong>The decision guide, compressed:</strong> need to give Claude a new capability → tool. Need data into your app for UI or prompt context → resource. Want a predefined, user-triggered workflow → prompt. Each primitive serves a different layer of your stack.</p></div>
+    </section>
+
+    <section class="scene" id="scene14">
+      <p class="time">3:20 p.m. · Forty tools and one worried reviewer</p>
+      <h2>Connecting a server from the Claude API</h2>
+      <p>Northstar also wants Claude to reach the company Slack. There is an existing MCP server for it, and connecting from the Claude API takes two pieces in the request:</p>
+      <ul>
+        <li><code>mcp_servers</code> — declares the connection: type, URL, name, and an optional <code>authorization_token</code>.</li>
+        <li>A tool entry with <code>"type": "mcp_toolset"</code> and <code>"mcp_server_name": "..."</code> — this grants access. <strong>The default is all tools on that server.</strong></li>
+      </ul>
+      <p>Claude introspects the server itself and discovers the available tools and schemas, so you never write a tool schema by hand for an MCP-provided tool. (As of the course, the MCP connector required a beta header.)</p>
+      <p>Hannah has counted. The Slack server exposes about forty tools, and some of them post messages and delete things.</p>
+      <p class="voice">“I am not signing off on a configuration where the blast radius is ‘whatever the vendor decided to ship this quarter.’”</p>
+      <p class="choice">How do you limit the blast radius?</p>
+      <div class="choices" role="group" aria-label="Choose how to scope MCP tool access">
+        <button type="button" onclick="choose('seven','deny', 80)">Disable everything by default, then enable named tools</button>
+        <button type="button" onclick="choose('seven','allow', 80)">Leave the default and disable the dangerous ones by name</button>
+        <button type="button" onclick="choose('seven','prompt', 80)">Tell Claude in the system prompt not to post or delete</button>
+        <button type="button" onclick="choose('seven','fork', 80)">Fork the server and delete the tools you dislike</button>
+      </div>
+      <div class="outcome" id="seven-deny" aria-live="polite"><strong>Right shape.</strong> Set <code>"default_config": {"enabled": False}</code>, then turn on only what you need in <code>configs</code> — e.g. <code>search_messages</code> and <code>list_channels</code>. That keeps the server effectively read-only: search and list allowed, post and delete blocked. Deny-by-default means next quarter’s new tool arrives disabled.</div>
+      <div class="outcome" id="seven-allow" aria-live="polite"><strong>Fails on the next release.</strong> An allow-everything-minus-a-blocklist config silently admits every tool the vendor adds later. Disable everything by default and enable specific tools instead.</div>
+      <div class="outcome" id="seven-prompt" aria-live="polite"><strong>Instructions are not a permission boundary.</strong> If a destructive tool is exposed, it is callable. Scope it out in the configuration — <code>default_config</code> disabled, named tools enabled — rather than asking politely in the system prompt.</div>
+      <div class="outcome" id="seven-fork" aria-live="polite"><strong>You just re-created the problem MCP solved.</strong> Forking means you now maintain the integration you connected to a server to avoid. The connector supports per-tool enablement; use it and let the provider keep maintaining the server.</div>
+      <div class="lesson"><p><strong>Same idea, one layer up:</strong> Claude Code has an embedded MCP client, and servers are added with <code>claude mcp add [server-name] [startup-command]</code>. Restart, and the new capabilities are live — Sentry, Jira, Slack, or your own. Every server you add widens the surface, so add deliberately.</p></div>
+    </section>
+
+    <section class="scene" id="scene15">
+      <p class="time">3:55 p.m. · Sorting the backlog</p>
+      <h2>Tools vs. Skills vs. MCP</h2>
+      <p>Renata reads out three items from the backlog and you sort them live. First, the reference table.</p>
+      <table class="mini-table">
+        <thead><tr><th>Approach</th><th>What it does</th><th>Who maintains it</th><th>Reach for it when</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Tools</strong></td><td>Connects Claude to <em>your</em> systems — your database, your APIs</td><td>You own the code and the maintenance</td><td>The capability is specific to your own infrastructure</td></tr>
+          <tr><td><strong>Skills</strong></td><td>Teaches Claude a <em>procedure</em> — your report template, your checklist</td><td>You, but as instructions rather than an integration</td><td>The need is a repeatable process, not a connection</td></tr>
+          <tr><td><strong>MCP</strong></td><td>Connects Claude to <em>third-party</em> services</td><td>The provider maintains the integration</td><td>Somebody else’s service already has a server, or should</td></tr>
+        </tbody>
+      </table>
+      <p>The backlog item: “Claude should produce Northstar’s quarterly incident report in our house format — the standard sections, the standard tone, the standard severity rubric — every time, without anyone re-explaining it.”</p>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Choose between tool, Skill, and MCP for the report format">
+        <button type="button" onclick="choose('eight','skill', 90)">A Skill</button>
+        <button type="button" onclick="choose('eight','mcp', 90)">An MCP server</button>
+        <button type="button" onclick="choose('eight','tool', 90)">A custom tool</button>
+      </div>
+      <div class="outcome" id="eight-skill" aria-live="polite"><strong>Correct.</strong> Nothing here is an integration. It is a procedure — a template, a rubric, a house style. Skills teach Claude <em>how you do things</em>. Tools are for your stuff, Skills are for your processes, MCP is for everyone else’s stuff.</div>
+      <div class="outcome" id="eight-mcp" aria-live="polite"><strong>Overbuilt.</strong> MCP’s value is that a third party maintains an integration to <em>their</em> service. There is no external service here, and no schema work to outsource — just a procedure to encode. That is a Skill.</div>
+      <div class="outcome" id="eight-tool" aria-live="polite"><strong>Close, but no connection is required.</strong> A custom tool is right when Claude must reach into your own systems. This requirement is about consistent structure and tone, not data access. Use a Skill.</div>
+      <div class="blue-note"><p><strong>Do not let the exam trip you on this:</strong> MCP and tool use are <em>complementary, not identical</em>. MCP supplies tool schemas and functions that somebody else implemented; tool use is the mechanism by which Claude actually calls them. The difference is who did the implementation work. MCP also does something tool use alone does not: it standardizes <em>discovery</em>, and it exposes resources and prompts as well as tools.</p></div>
+    </section>
+
+    <section class="scene" id="scene16">
+      <p class="time">4:30 p.m. · Sign-off</p>
+      <h2>Hannah’s conditions</h2>
+      <p>Hannah will approve the document server, on conditions. They read like a design checklist, because that is what good MCP server design is.</p>
+      <ul>
+        <li><strong>Keep tools narrow.</strong> One clear job each, with a predictable return value.</li>
+        <li><strong>Make descriptions specific.</strong> The description is a model-facing interface: say when the tool applies, what it returns, and what its errors mean.</li>
+        <li><strong>Validate inputs.</strong> Type hints and <code>Field()</code> give you validation for free; existence checks and <code>ValueError</code> give the model a meaningful failure instead of a crash.</li>
+        <li><strong>Keep resources least-privilege.</strong> Expose the narrowest read that satisfies the use case.</li>
+        <li><strong>Make prompts explicit about the expected output.</strong> A tested prompt that does not state its output shape is only half-tested.</li>
+        <li><strong>Version or deprecate; never silently redefine.</strong> If a capability’s meaning changes, ship a new one and retire the old one deliberately, so clients can adapt.</li>
+      </ul>
+      <p>Then the permission point, which is the one people get wrong. Connecting a server does not dissolve the underlying system’s access control, and exposing a server’s tools to Claude is a decision you make per tool. A connector is an office badge, not a skeleton key — and the badge you issue should open the fewest doors that let the job get done.</p>
+      <div class="blue-note"><p><strong>And the boundary on your own confidence:</strong> a green run in the Inspector proves the protocol works. It does not prove the application’s permissions and business rules are correct. Those are verified where they live — in the application.</p></div>
+      <p class="voice">Hannah signs. Tomás takes the printout of seventeen hand-written integrations off the wall.</p>
+    </section>
+
+    <section class="end">
+      <h2>The architect’s pocket card</h2>
+      <p><strong>MCP moves integration work off your plate.</strong> A server wraps an outside service and exposes ready-made tools, resources, and prompts; a client is the messenger that lists and invokes them and never executes anything itself. The traffic is <code>ListToolsRequest</code>/<code>ListToolsResult</code> then <code>CallToolRequest</code>/<code>CallToolResult</code>, over any transport — stdio for the common same-machine case, HTTP or WebSockets otherwise.</p>
+      <p><strong>Three primitives, three owners.</strong> Tools are model-controlled and serve the model. Resources are app-controlled, read-only, URI-addressed, MIME-typed, and serve your app. Prompts are user-controlled instruction templates that resolve to messages and serve your users. New capability → tool. Data for UI or prompt context → resource. User-triggered workflow → prompt.</p>
+      <p><strong>Build it with FastMCP.</strong> Decorators plus type hints plus <code>Field()</code> descriptions replace hand-written JSON schemas. Test with <code>mcp dev</code> in the Inspector, where state persists between calls — but treat that as a protocol check, not proof of your permissions. Implement the side you own; the course builds both only to show the whole loop.</p>
+      <p><strong>Connect it carefully.</strong> From the API, <code>mcp_servers</code> plus an <code>mcp_toolset</code> entry grants access to <em>all</em> tools by default; disable everything and enable named tools to keep a server read-only. Tools are for your stuff, Skills are for your processes, MCP is for everyone else’s.</p>
+    </section>
+
+    <p class="source">Primary source: <code>06-introduction-to-mcp/notes.md</code>, <code>06-introduction-to-mcp/anthropic-notes.md</code>, and <code>06-introduction-to-mcp/quiz.md</code> in this study workspace, with the API-side connector material from <code>03-building-with-the-claude-api/notes.md</code>. Tool Design &amp; MCP Integration is 18% of the CCA-F exam.</p>
+    <footer>When you are ready, ask your teacher to quiz you on one primitive at a time — and insist on the <em>why</em>, not just the label. If you can name who controls each primitive without pausing, this section is done.</footer>
+  </main>
+  <script>
+    function choose(scene, answer, progress) {
+      document.querySelectorAll('[id^="' + scene + '-"]').forEach(function (el) { el.classList.remove('visible'); });
+      var selected = document.getElementById(scene + '-' + answer);
+      if (selected) selected.classList.add('visible');
+      var bar = document.getElementById('progressBar');
+      if (bar && progress) bar.style.width = progress + '%';
+    }
+  </script>
+</body>
+</html>

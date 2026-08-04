@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Building with the Claude API — The First Integration</title>
+  <style>
+    :root {
+      --ink: #242321;
+      --muted: #706b63;
+      --paper: #f7f3ec;
+      --paper-deep: #ece4d7;
+      --rust: #96652a;
+      --rust-dark: #6b4718;
+      --sage: #dfe9df;
+      --blue: #dce8ee;
+      --line: #d6ccbd;
+      --white: #fffdfa;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.7 Georgia, 'Times New Roman', serif;
+    }
+    main { max-width: 780px; margin: 0 auto; padding: 44px 24px 80px; }
+    .masthead {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+      border-bottom: 1px solid var(--line); padding-bottom: 10px;
+      color: var(--muted); font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .13em; text-transform: uppercase;
+    }
+    h1 { max-width: 680px; margin: 28px 0 12px; font: 700 clamp(2.5rem, 8vw, 5.2rem)/.98 Georgia, serif; letter-spacing: -.04em; }
+    .dek { max-width: 670px; margin: 0 0 34px; color: var(--muted); font-size: 1.2rem; }
+    .progress { position: sticky; top: 0; z-index: 2; height: 4px; background: var(--paper-deep); }
+    .progress span { display: block; width: 0; height: 100%; background: var(--rust); transition: width .25s ease; }
+    .scene {
+      position: relative; margin: 34px 0 0; padding: 25px 28px 28px;
+      background: var(--white); border: 1px solid var(--line); border-radius: 3px;
+    }
+    .scene::before { content: ''; position: absolute; left: -1px; top: 0; bottom: 0; width: 4px; background: var(--rust); }
+    .opening { background: #fff8ed; }
+    .time { margin: 0 0 7px; color: var(--rust-dark); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    h2 { margin: 0 0 13px; font: 700 1.65rem/1.2 Georgia, serif; }
+    h3 { margin: 27px 0 7px; font: 700 1.1rem/1.3 Georgia, serif; }
+    p { max-width: 70ch; margin: 0 0 13px; }
+    ul, ol { max-width: 68ch; padding-left: 1.35em; }
+    li { margin: 5px 0; }
+    .voice { margin: 18px 0; padding-left: 19px; border-left: 2px solid var(--paper-deep); font-style: italic; }
+    .choice { margin: 20px 0 2px; color: var(--muted); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+    .choices { display: flex; flex-wrap: wrap; gap: 9px; margin: 10px 0 5px; }
+    button {
+      border: 1px solid var(--rust); border-radius: 3px; background: var(--white); color: var(--rust-dark);
+      padding: 9px 13px; font: 600 14px/1.2 system-ui, sans-serif; cursor: pointer;
+    }
+    button:hover, button:focus-visible { background: var(--rust); color: #fff; outline: none; }
+    button:focus-visible { box-shadow: 0 0 0 3px rgba(150, 101, 42, .22); }
+    .outcome { display: none; margin-top: 13px; padding: 14px 16px; border-left: 3px solid var(--sage); background: #f1f6ef; }
+    .outcome.visible { display: block; }
+    .outcome strong { color: var(--rust-dark); }
+    .lesson { margin: 25px 0 0; padding: 17px 18px; background: var(--paper-deep); }
+    .lesson p:last-child { margin-bottom: 0; }
+    .blue-note { margin: 18px 0; padding: 15px 17px; background: #f1f6f8; border-left: 3px solid #7b9cac; }
+    .blue-note p:last-child { margin-bottom: 0; }
+    .rule { margin: 38px 0; padding: 25px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); text-align: center; }
+    .rule strong { display: block; color: var(--rust-dark); font: 700 1.35rem/1.25 Georgia, serif; }
+    .prompt { margin: 15px 0; padding: 17px 18px; background: #fff4eb; border-left: 3px solid var(--rust); font-size: .98rem; }
+    .prompt strong { color: var(--rust-dark); }
+    .prompt code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em; }
+    .mini-table { width: 100%; margin: 17px 0; border-collapse: collapse; font-size: .95rem; }
+    .mini-table th, .mini-table td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    .mini-table th { background: var(--paper-deep); color: var(--rust-dark); font: 700 12px/1.25 system-ui, sans-serif; letter-spacing: .05em; text-transform: uppercase; }
+    .end { margin-top: 39px; padding: 27px 28px; background: var(--rust-dark); color: #fff8f1; }
+    .end h2 { color: #fff; }
+    .end p { color: #f6dfd1; }
+    .source, footer { color: var(--muted); font-size: .9rem; }
+    footer { margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--line); }
+    a { color: var(--rust-dark); }
+    code { background: var(--paper-deep); padding: .08em .28em; border-radius: 3px; }
+    pre { max-width: 70ch; margin: 15px 0; padding: 14px 16px; background: var(--paper-deep); border-left: 3px solid var(--rust); overflow-x: auto; font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    pre code { background: none; padding: 0; }
+    @media (max-width: 560px) {
+      main { padding-top: 28px; }
+      .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
+      .scene { padding: 21px 19px 23px; }
+      .choices { display: grid; grid-template-columns: 1fr; }
+      button { text-align: left; }
+      .mini-table { font-size: .88rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+  <main>
+    <div class="masthead"><span>CCA-F · Section 3 · Part 1 of 3</span><span>Northstar Dispatch · Tuesday</span></div>
+    <h1>The first integration</h1>
+    <p class="dek">Northstar leaves the Claude apps behind and builds a product on the Claude API. You are the architect. One day, one request path, and every parameter that decides whether the thing works.</p>
+
+    <section class="scene opening" id="scene0">
+      <p class="time">7:40 a.m. · Before the standup</p>
+      <h2>Out of the chat window, into the codebase</h2>
+      <p>Last quarter Northstar learned Claude by using it: Chat, Cowork, Code, Projects, Skills. This quarter the company is shipping <strong>Rooftop</strong>—a property-inspection intake service. A field surveyor uploads photos and a policy PDF; Rooftop returns a structured risk record and a drafted note to the homeowner. No human sitting in a chat window. Just a server, a request, and a response.</p>
+      <p>That means the <strong>Claude Platform</strong>: Anthropic's infrastructure for building with Claude <strong>programmatically</strong>. A REST API, SDKs in several languages, CLIs, and a Console for API keys, usage, managed agents, and prompt testing.</p>
+      <p>Your tech lead, <strong>Rafael Ortiz</strong>, draws three boxes on the whiteboard before anyone opens an editor.</p>
+      <table class="mini-table"><thead><tr><th>Layer</th><th>What lives there</th></tr></thead><tbody>
+        <tr><td><strong>Primitives</strong></td><td>The API building blocks: Messages API, tool use, files, web search, code execution, MCP servers, skills.</td></tr>
+        <tr><td><strong>Infrastructure</strong></td><td>What you need to scale an agentic system past a prototype: managed agents, retries, queues, observability.</td></tr>
+        <tr><td><strong>Controls</strong></td><td>What you need to run it in production: dashboards, evals.</td></tr>
+      </tbody></table>
+      <p class="voice">“Build with primitives. Scale on infrastructure. Run with control.”</p>
+      <p>Today is entirely a primitives day. Rooftop needs one request to work, correctly, before anything else matters.</p>
+      <div class="lesson"><p><strong>First principle:</strong> the platform is three layers deep, and the order is not decorative. You cannot observe, retry, or evaluate a request path you have not built yet.</p></div>
+    </section>
+
+    <section class="scene" id="scene1">
+      <p class="time">8:15 a.m. · The first budget question</p>
+      <h2>“Which Claude does Rooftop actually run on?”</h2>
+      <p>Rooftop has three distinct jobs inside one pipeline. Rafael lists them: classify each inbound photo set by property type (thousands per day, trivially easy), draft the homeowner note (the bulk of the product), and reason through the handful of complex multi-peril claims that decide whether Northstar pays out.</p>
+      <p>Claude comes in three model families, each optimized for a different priority. They all share the same core capabilities—text generation, coding, image analysis. The difference is what they optimize <em>for</em>.</p>
+      <table class="mini-table"><thead><tr><th>Family</th><th>Optimized for</th><th>Best fit</th></tr></thead><tbody>
+        <tr><td><strong>Opus</strong></td><td>Highest intelligence: complex, multi-step tasks needing deep reasoning and planning</td><td>Hard analysis and planning — at higher cost and latency</td></tr>
+        <tr><td><strong>Sonnet</strong></td><td>Balance of intelligence, speed, and cost; strong coding and precise code editing</td><td>Most practical production work</td></tr>
+        <tr><td><strong>Haiku</strong></td><td>Speed and cost efficiency; no reasoning capabilities like Opus and Sonnet</td><td>Real-time user interaction and high-volume processing</td></tr>
+      </tbody></table>
+      <p>The selection framework is three words long: <strong>intelligence priority → Opus. Speed priority → Haiku. Balanced requirements → Sonnet.</strong></p>
+      <p class="choice">Your call on the photo-type classifier</p>
+      <div class="choices" role="group" aria-label="Choose a model for the classifier">
+        <button type="button" onclick="choose('model','haiku', 6)">Haiku</button>
+        <button type="button" onclick="choose('model','sonnet', 6)">Sonnet</button>
+        <button type="button" onclick="choose('model','opus', 6)">Opus</button>
+        <button type="button" onclick="choose('model','one', 6)">One model for all three jobs</button>
+      </div>
+      <div class="outcome" id="model-haiku" aria-live="polite"><strong>Right.</strong> High-volume, low-complexity classification is exactly the speed-priority case. Haiku is the fastest and most cost-efficient family; you are not paying for reasoning depth the task never uses.</div>
+      <div class="outcome" id="model-sonnet" aria-live="polite"><strong>Defensible, but you are overpaying.</strong> Sonnet is the balanced choice for most production work, which is why it should draft the homeowner note. For thousands of trivial classifications a day, speed priority points at Haiku.</div>
+      <div class="outcome" id="model-opus" aria-live="polite"><strong>Wrong end of the scale.</strong> Opus is the intelligence-priority family for complex multi-step reasoning — reserve it for the multi-peril claims. Using it to label photo types buys latency and cost, not accuracy.</div>
+      <div class="outcome" id="model-one" aria-live="polite"><strong>The common instinct, and the one to resist.</strong> The recommended approach is to use <em>multiple models in the same application</em>, chosen per task requirement: Haiku classifies, Sonnet drafts, Opus handles the hard claims. One endpoint, three routes.</div>
+      <div class="blue-note"><p><strong>The audition method:</strong> before writing production code, build a simple eval of 20–30 representative examples and score each model against them. Run them through Haiku first — if quality holds, stop. Otherwise step up to Sonnet, and reach for Opus only when the task truly needs it. The right model is the cheapest one whose output you would actually ship. (Northstar's own notes also record a fourth tier, <strong>Fable</strong>, sitting above Opus at the highest cost — reserved for work where the extra capability is genuinely worth paying for.)</p></div>
+      <div class="lesson"><p><strong>Model selection is per-task, not per-application.</strong> Route the cheap work to the cheap model and escalate only what earns it.</p></div>
+    </section>
+
+    <section class="scene" id="scene2">
+      <p class="time">8:50 a.m. · The shortcut</p>
+      <h2>Theo wants to call Anthropic from the phone app</h2>
+      <p><strong>Theo Brandt</strong> is building Rooftop's field app. He has a working prototype on his desk: the surveyor takes a photo, the app calls the Anthropic API directly, the result comes back in under two seconds. No backend hop. He is proud of it.</p>
+      <p class="voice">“It's one less service to run. The key's in the app bundle — nobody's going to dig it out.”</p>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Choose a request path">
+        <button type="button" onclick="choose('path','direct', 12)">Ship it — fewer moving parts</button>
+        <button type="button" onclick="choose('path','obfuscate', 12)">Ship it, but obfuscate the key</button>
+        <button type="button" onclick="choose('path','server', 12)">Route every call through Northstar's server</button>
+      </div>
+      <div class="outcome" id="path-direct" aria-live="polite"><strong>No.</strong> A client app is inspectable — browser devtools, a decompiled bundle, a proxy. Shipping the key ships your billing account to anyone who looks. Clients never access the Anthropic API directly.</div>
+      <div class="outcome" id="path-obfuscate" aria-live="polite"><strong>Still no.</strong> Obfuscation delays discovery; it does not prevent it. The key must live somewhere the user cannot reach, which means your own server.</div>
+      <div class="outcome" id="path-server" aria-live="polite"><strong>Correct.</strong> The client sends the user's text to the developer's server; only the server holds the API key and talks to Anthropic. That is step one of the access flow for a reason.</div>
+      <h3>The API access flow, in five steps</h3>
+      <ol>
+        <li><strong>Client → your server.</strong> The client sends the user's text to the developer's server. Never access the Anthropic API directly from a client app — that is how the API key stays secret.</li>
+        <li><strong>Your server → Anthropic.</strong> The server makes the request using an SDK (Python, TypeScript, JavaScript, Go, Ruby) or plain HTTP. Required parameters: <strong>API key + model name + messages list + max_tokens limit</strong>.</li>
+        <li><strong>Text generation</strong> runs inside the model (four stages — next scene).</li>
+        <li><strong>The model stops</strong> when <code>max_tokens</code> is reached or a special end-of-sequence token is generated.</li>
+        <li><strong>Anthropic → your server → the client.</strong> The response carries the generated text plus usage counts plus a <code>stop_reason</code>; the server passes what the user needs on to the client.</li>
+      </ol>
+      <div class="lesson"><p><strong>Security memory hook:</strong> the client whispers the request to your server; only your server is allowed to flash the API key at the door. Store the key in an environment file that is excluded from version control — hardcoding it in source is the classic way keys leak on GitHub.</p></div>
+    </section>
+
+    <section class="scene" id="scene3">
+      <p class="time">9:20 a.m. · Step three, opened up</p>
+      <h2>What happens between “send” and “text”</h2>
+      <p>Theo asks the honest beginner question: what is the model actually <em>doing</em> in those two seconds? Rafael takes it in four stages.</p>
+      <ul>
+        <li><strong>Tokenization</strong> — the input is broken into tokens: words, parts of words, symbols, spaces.</li>
+        <li><strong>Embedding</strong> — each token is converted into a list of numbers representing all the possible meanings that word could carry.</li>
+        <li><strong>Contextualization</strong> — those embeddings are adjusted based on neighbouring tokens, pinning down the precise meaning in <em>this</em> sentence.</li>
+        <li><strong>Generation</strong> — the output layer produces probabilities for the next word; the model selects one using probability plus randomness, appends it, and repeats the whole process.</li>
+      </ul>
+      <p>Four terms worth keeping crisp: a <strong>token</strong> is a chunk of text; an <strong>embedding</strong> is a numerical representation of word meanings; <strong>contextualization</strong> is meaning refinement using neighbouring words; <strong>max_tokens</strong> is the generation length limit; <strong>stop_reason</strong> is why the model stopped generating.</p>
+      <p>One more field matters to Rafael by lunchtime: <code>response.usage</code> reports input and output token counts. That is what the bill is calculated on.</p>
+      <div class="lesson"><p><strong>Chopper, labeller, seasoner, plater.</strong> Tokenize, embed, contextualize, generate — and notice that “probability plus randomness” in the last stage is exactly the dial temperature turns.</p></div>
+    </section>
+
+    <section class="scene" id="scene4">
+      <p class="time">9:55 a.m. · The first green light</p>
+      <h2>Four setup steps and three required arguments</h2>
+      <p>Rafael sets Rooftop's spike up in a notebook. Install the packages (<code>anthropic</code> and <code>python-dotenv</code>). Create the environment file with <code>ANTHROPIC_API_KEY</code> and add it to version-control ignores. Load it with python-dotenv. Create the client and define a model variable.</p>
+      <p>Then the core function — <code>client.messages.create()</code> — with its three required arguments: <strong>model</strong>, <strong>max_tokens</strong>, and <strong>messages</strong>.</p>
+<pre><code>message = client.messages.create(
+    model=MODEL,
+    max_tokens=1000,
+    messages=[
+        {"role": "user", "content": "Summarize this roof inspection."}
+    ],
+)
+print(message.content[0].text)</code></pre>
+      <p><code>messages</code> is a list of conversation exchanges. A <strong>user message</strong> is <code>{"role": "user", "content": "..."}</code> — human-authored content. An <strong>assistant message</strong> holds model-generated content. The full response object carries metadata and a nested structure; <code>message.content[0].text</code> pulls out just the generated text.</p>
+      <div class="blue-note"><p><strong>The most commonly misread parameter:</strong> <code>max_tokens</code> is a <em>safety limit</em> on generation length, not a target length. Setting it to 1000 does not ask Claude for a thousand tokens; it forbids more than a thousand. If you want a specific length, say so in the prompt.</p></div>
+      <div class="lesson"><p><strong>Every request needs a brain, a ceiling, and a conversation envelope</strong> — model, max_tokens, messages — plus the API key the client carries for you.</p></div>
+    </section>
+
+    <section class="scene" id="scene5">
+      <p class="time">10:30 a.m. · The amnesia bug</p>
+      <h2>“It answered the first question and forgot it existed”</h2>
+      <p>Theo wires the field app to Rafael's endpoint. The surveyor asks about a cracked flashing detail; Claude answers well. The surveyor follows up with “and how much would that cost to fix?”—and Claude replies as though the question arrived from a stranger.</p>
+      <p class="choice">Diagnose it</p>
+      <div class="choices" role="group" aria-label="Diagnose the lost context">
+        <button type="button" onclick="choose('turns','maxtok', 20)">Raise max_tokens</button>
+        <button type="button" onclick="choose('turns','temp', 20)">Lower the temperature</button>
+        <button type="button" onclick="choose('turns','history', 20)">Resend the whole conversation every time</button>
+        <button type="button" onclick="choose('turns','system', 20)">Add a system prompt</button>
+      </div>
+      <div class="outcome" id="turns-maxtok" aria-live="polite"><strong>Unrelated.</strong> max_tokens caps the length of the <em>output</em>. It has nothing to do with whether Claude can see earlier turns.</div>
+      <div class="outcome" id="turns-temp" aria-live="polite"><strong>Unrelated.</strong> Temperature changes randomness in token selection, not memory. A perfectly deterministic model with no history is still a model with no history.</div>
+      <div class="outcome" id="turns-history" aria-live="polite"><strong>That's it.</strong> The Anthropic API stores no messages. Every request is independent with no memory of previous exchanges. You maintain the message list in your code and send the entire conversation history with every follow-up.</div>
+      <div class="outcome" id="turns-system" aria-live="polite"><strong>Useful, but not the fix.</strong> A system prompt sets stable role and behaviour; it does not carry the previous turns. Statelessness is solved by resending history.</div>
+      <p>The flow: send the initial user message → receive the assistant response → append that response to the history → add the new user message → send the complete history back. Three small helpers make it bearable.</p>
+<pre><code>def add_user_message(messages, text):
+    messages.append({"role": "user", "content": text})
+
+def add_assistant_message(messages, text):
+    messages.append({"role": "assistant", "content": text})
+
+def chat(messages):
+    return client.messages.create(
+        model=MODEL, max_tokens=1000, messages=messages
+    )</code></pre>
+      <div class="lesson"><p><strong>Claude has amnesia between every phone call.</strong> Statelessness is not a bug to work around later — it is the shape of the API, and it means conversation length is a cost you own and control.</p></div>
+    </section>
+
+    <section class="scene" id="scene6">
+      <p class="time">11:05 a.m. · The tone problem</p>
+      <h2>Ines wants a different kind of answer, not a different answer</h2>
+      <p><strong>Ines Duarte</strong> runs Northstar's claims desk. Rooftop's drafts are factually right and read like a legal notice. She does not want different facts. She wants a different <em>posture</em>.</p>
+      <p>That is the <strong>system prompt</strong>: passed as a plain string to the create function via the <code>system</code> keyword argument. Its job is to control <em>how</em> Claude responds, not <em>what</em> it responds. The canonical example from the course is a patient math tutor who gives hints instead of answers—same question, entirely different treatment.</p>
+      <p>The structure is conventional: the first line assigns the role, and behavioural instructions follow.</p>
+      <div class="prompt"><strong>System prompt:</strong> “You are a Northstar claims correspondent writing to homeowners. Explain findings in plain language. Never quote policy clause numbers without also saying what they mean. Close with the single next action the homeowner must take.”</div>
+      <p>Implementation detail worth remembering: build a params dictionary, add the <code>system</code> key only if a prompt was provided, and unpack it into the create call. When there is no system instruction, exclude the parameter entirely rather than passing <code>None</code>.</p>
+      <div class="lesson"><p><strong>The system prompt is the director's note pinned backstage.</strong> Role and behaviour go there; the actual request stays in the user message.</p></div>
+    </section>
+
+    <section class="scene" id="scene7">
+      <p class="time">11:40 a.m. · The dial</p>
+      <h2>Two features, two very different needs</h2>
+      <p>Rooftop has a field extractor that pulls measurements and defect codes out of surveyor notes into a fixed record. It also has a marketing endpoint that generates campaign taglines for Northstar's renewal mailers. Nadia asks what temperature each should run at.</p>
+      <p><strong>Temperature</strong> is a parameter from 0 to 1 that controls randomness in generation by influencing token-selection probabilities. At <strong>0</strong>, output is deterministic—the highest-probability token is always selected. Higher values increase the chance of selecting lower-probability tokens, producing more creative and unexpected output.</p>
+      <p class="choice">Your call on the field extractor</p>
+      <div class="choices" role="group" aria-label="Choose a temperature for the extractor">
+        <button type="button" onclick="choose('temp','zero', 27)">Near 0</button>
+        <button type="button" onclick="choose('temp','mid', 27)">Middle of the range</button>
+        <button type="button" onclick="choose('temp','one', 27)">Near 1</button>
+      </div>
+      <div class="outcome" id="temp-zero" aria-live="polite"><strong>Right.</strong> Low temperature suits data extraction and factual tasks that require consistency. The same note should yield the same record every time.</div>
+      <div class="outcome" id="temp-mid" aria-live="polite"><strong>Hedging.</strong> Middle values suit explanation and constrained creativity. An extractor filling a fixed schema wants consistency, so run it near 0 and save the middle of the dial for prose that must vary a little.</div>
+      <div class="outcome" id="temp-one" aria-live="polite"><strong>Backwards.</strong> High temperature is for brainstorming, writing, jokes, and marketing — that is the <em>tagline</em> endpoint. Applied to extraction it just makes your records inconsistent.</div>
+      <div class="blue-note"><p><strong>The honest caveat:</strong> a higher temperature does not <em>guarantee</em> a different output, and a lower one does not guarantee a correct one. Temperature reshapes the probability distribution over next tokens. It is a variability knob, not a quality knob.</p></div>
+      <div class="lesson"><p><strong>Temperature is a spice dial.</strong> Zero for the dish you need identical every service; crank it up when surprise is the product.</p></div>
+    </section>
+
+    <section class="scene" id="scene8">
+      <p class="time">1:05 p.m. · The spinner</p>
+      <h2>Thirty seconds of nothing</h2>
+      <p>The multi-peril claim summary takes a while. Theo's app shows a spinner for the entire generation, and the field testers assume it has hung.</p>
+      <p><strong>Response streaming</strong> displays the response chunk by chunk as it is generated instead of waiting for the complete message. Claude sends an immediate acknowledgement, then a stream of events each carrying a piece of text, which your server forwards to the frontend in real time.</p>
+      <table class="mini-table"><thead><tr><th>Event</th><th>Meaning</th></tr></thead><tbody>
+        <tr><td><code>message_start</code></td><td>Initial acknowledgement — no text yet</td></tr>
+        <tr><td><code>content_block_start</code></td><td>Text generation begins</td></tr>
+        <tr><td><code>content_block_delta</code></td><td>Contains the actual text chunks — the one that matters most</td></tr>
+        <tr><td><code>content_block_stop</code> / <code>message_stop</code></td><td>Generation complete</td></tr>
+      </tbody></table>
+      <p>Three levels of convenience in the Python SDK: <code>client.messages.create(stream=True)</code> returns a raw event iterator; <code>client.messages.stream()</code> with its <code>text_stream</code> property hands you just the text; and <code>stream.get_final_message()</code> reassembles every chunk into the complete message so you can store it.</p>
+<pre><code>with client.messages.stream(
+    model=MODEL, max_tokens=1000, messages=messages
+) as stream:
+    for text in stream.text_stream:
+        print(text, end="")
+    final = stream.get_final_message()</code></pre>
+      <div class="lesson"><p><strong>Streaming buys time-to-first-token, not quality.</strong> It improves the experience and lets you capture the assembled message for storage. It does not change what Claude produces, and it does not remove the need to handle errors and incomplete output.</p></div>
+    </section>
+
+    <section class="scene" id="scene9">
+      <p class="time">1:40 p.m. · The half-finished letter</p>
+      <h2>“Why does the draft stop mid-sentence?”</h2>
+      <p>Ines forwards a homeowner note that ends, without ceremony, in the middle of the word “inspec”. Rafael checks the response object rather than guessing.</p>
+      <table class="mini-table"><thead><tr><th><code>stop_reason</code></th><th>What happened</th><th>What you do</th></tr></thead><tbody>
+        <tr><td><code>end_turn</code></td><td>Claude finished — the end-of-sequence token was generated</td><td>Nothing. The response is complete.</td></tr>
+        <tr><td><code>max_tokens</code></td><td>Generation hit the safety ceiling and was cut off</td><td>Raise <code>max_tokens</code>, or ask for a shorter output</td></tr>
+        <tr><td><code>tool_use</code></td><td>Claude wants to call a tool rather than finish the turn</td><td>Execute the tool and feed the result back (that is Part 2)</td></tr>
+      </tbody></table>
+      <p class="choice">The response came back truncated. Your first move?</p>
+      <div class="choices" role="group" aria-label="Diagnose a truncated response">
+        <button type="button" onclick="choose('stop','reason', 36)">Read stop_reason before changing anything</button>
+        <button type="button" onclick="choose('stop','retry', 36)">Retry the request and hope</button>
+        <button type="button" onclick="choose('stop','model', 36)">Switch to a more capable model</button>
+        <button type="button" onclick="choose('stop','temp', 36)">Drop the temperature to 0</button>
+      </div>
+      <div class="outcome" id="stop-reason" aria-live="polite"><strong>Exactly.</strong> <code>stop_reason</code> exists to tell you why generation ended. Truncation mid-word points at the token ceiling; a clean ending with <code>end_turn</code> would point at the prompt instead.</div>
+      <div class="outcome" id="stop-retry" aria-live="polite"><strong>Guessing.</strong> If the ceiling is the cause, every retry truncates in the same place. Read <code>stop_reason</code> first — the response object already contains the diagnosis.</div>
+      <div class="outcome" id="stop-model" aria-live="polite"><strong>Expensive and irrelevant.</strong> A more capable model hits the same <code>max_tokens</code> ceiling at the same place. Model choice is a quality decision, not a length decision.</div>
+      <div class="outcome" id="stop-temp" aria-live="polite"><strong>Wrong dial.</strong> Temperature governs randomness in token selection. It cannot extend a response that ran out of budget.</div>
+      <h3>Two ways to steer output without touching the prompt</h3>
+      <p><strong>Pre-filling assistant messages.</strong> Manually add an assistant message at the end of the conversation. Claude treats it as content it already authored and continues from the exact end of the pre-filled text—not from a fresh sentence. Pre-fill “Coffee is better because” and you get a justification for coffee. You must stitch the pre-fill and the generated continuation together yourself.</p>
+      <p><strong>Stop sequences.</strong> Supply an exact string; the moment Claude generates it, the response halts immediately, and the stop-sequence text is <em>not</em> included in the output. Prompt “count 1 to 10” with a stop sequence of <code>five</code> and you get “one, two, three, four, ” — refine the stop sequence to <code>, five</code> and you get the clean “one, two, three, four”.</p>
+      <div class="lesson"><p><strong>Precise control without prompt surgery.</strong> Pre-fill steers direction; stop sequences control where it ends; <code>stop_reason</code> tells you which one actually fired.</p></div>
+    </section>
+
+    <section class="scene" id="scene10">
+      <p class="time">2:15 p.m. · The parse failure</p>
+      <h2>Claude keeps wrapping the JSON in an explanation</h2>
+      <p>Rooftop's extractor needs a JSON record it can write straight into the claims database. Claude keeps returning a helpful markdown header, the JSON, and a friendly closing paragraph. The parser chokes on every one.</p>
+      <p>This is normal behaviour: Claude adds formatting, headers, and commentary when producing structured content, because that is what a helpful assistant does. There are two ways to stop it.</p>
+      <table class="mini-table"><thead><tr><th>Technique</th><th>How</th><th>Trade-off</th></tr></thead><tbody>
+        <tr><td><strong>Prefill + stop sequence</strong></td><td>User message asks for the data; assistant message is pre-filled with the opening delimiter (<code>```json</code>); stop sequence is the closing delimiter (<code>```</code>)</td><td>Simple, fast to set up, works for any structured type — JSON, Python, lists, CSV. Less reliable than a schema.</td></tr>
+        <tr><td><strong>Tool schema + forced tool choice</strong></td><td>Define a tool whose <code>input_schema</code> <em>is</em> the output contract; force it with <code>tool_choice</code>; read the structured data from the tool-use block's <code>input</code></td><td>More reliable output, more complex setup, requires a JSON schema. No tool result needed — you never execute anything.</td></tr>
+      </tbody></table>
+<pre><code>messages = [
+    {"role": "user", "content": "Extract the roof findings as JSON."},
+    {"role": "assistant", "content": "```json"},
+]
+message = client.messages.create(
+    model=MODEL, max_tokens=1000,
+    messages=messages, stop_sequences=["```"],
+)
+record = json.loads(message.content[0].text)</code></pre>
+      <p class="choice">Rooftop writes these records straight to the claims database. Which technique ships?</p>
+      <div class="choices" role="group" aria-label="Choose a structured output technique">
+        <button type="button" onclick="choose('struct','prefill', 44)">Prefill + stop sequence</button>
+        <button type="button" onclick="choose('struct','tool', 44)">Dedicated tool schema, forced</button>
+        <button type="button" onclick="choose('struct','ask', 44)">Just ask firmly for JSON only</button>
+        <button type="button" onclick="choose('struct','regex', 44)">Regex the JSON out of the prose</button>
+      </div>
+      <div class="outcome" id="struct-prefill" aria-live="polite"><strong>Great for the prototype, thin for production.</strong> Prompt-based extraction is the right choice for quick, simple extractions. When the record lands in a database and reliability outranks simplicity, a tool schema is the stronger contract.</div>
+      <div class="outcome" id="struct-tool" aria-live="polite"><strong>Yes.</strong> Define the extraction tool's input schema as the exact output contract and force it with <code>tool_choice: {"type": "tool", "name": "..."}</code>. Claude returns arguments matching the schema in the tool-use block's <code>input</code> — more reliable than hoping free-form text parses.</div>
+      <div class="outcome" id="struct-ask" aria-live="polite"><strong>The thing that already failed.</strong> Claude's instinct to add commentary is what broke the parser. Prefilling removes the opening; a forced tool schema removes the question entirely.</div>
+      <div class="outcome" id="struct-regex" aria-live="polite"><strong>Patching downstream of the problem.</strong> You would be writing a parser for output you could have constrained at the source. Use prefill for quick work, a forced tool schema when the shape must hold.</div>
+      <div class="blue-note"><p><strong>Two more production habits:</strong> use a generic “to JSON”-style tool for rapid prototypes or changing requirements, but prefer a dedicated schema for complex, high-accuracy work. And always validate returned values in application code — <em>a schema validates shape, not business truth.</em> The full mechanics of tool definitions and the agent loop come in Part 2.</p></div>
+    </section>
+
+    <section class="scene" id="scene11">
+      <p class="time">2:50 p.m. · The stubborn 6/10</p>
+      <h2>“Should we just turn on thinking?”</h2>
+      <p>The multi-peril claims path keeps making small reasoning errors. Nadia's first instinct is <strong>extended thinking</strong>: Claude reasons step by step before generating its final response, producing a separate, visible thinking process alongside the answer.</p>
+      <p>The mechanics matter for the exam. The <strong>thinking budget has a minimum of 1024 tokens</strong>, and <code>max_tokens</code> must exceed the budget so there is room left for the actual answer (budget 1024 means <code>max_tokens</code> of at least 1025). The response then contains a <strong>thinking block</strong>—reasoning text plus a cryptographic signature that prevents tampering—and a text block with the final response. Reasoning that Anthropic's safety systems flag comes back as a <strong>redacted thinking block</strong>: encrypted, unreadable, but still returned so the conversation keeps its continuity.</p>
+      <p class="choice">Where does thinking earn its cost at Northstar?</p>
+      <div class="choices" role="group" aria-label="Choose where to enable extended thinking">
+        <button type="button" onclick="choose('think','everywhere', 52)">Enable it across the whole pipeline</button>
+        <button type="button" onclick="choose('think','classifier', 52)">On the photo classifier</button>
+        <button type="button" onclick="choose('think','claims', 52)">On the multi-peril claims path, after prompt work stalls</button>
+      </div>
+      <div class="outcome" id="think-everywhere" aria-live="polite"><strong>Costly reflex.</strong> Thinking increases accuracy on complex tasks but you are charged for thinking tokens and you pay in latency. Turning it on everywhere taxes the simple paths for no gain.</div>
+      <div class="outcome" id="think-classifier" aria-live="polite"><strong>The clearest waste.</strong> Simple classification and extraction gain nothing from step-by-step reasoning — it only adds latency and cost. Do not summon a philosopher to sort photographs.</div>
+      <div class="outcome" id="think-claims" aria-live="polite"><strong>Right, and right in that order.</strong> Enable extended thinking <em>after</em> prompt optimization has failed to reach the accuracy you need — and use prompt evals to decide whether it is genuinely necessary rather than guessing.</div>
+      <div class="blue-note"><p><strong>Newer models, simpler switch:</strong> Northstar's notes record that with Opus 4.7 thinking is <strong>adaptive</strong> — there is no token budget to set; you enable it with <code>thinking: {"type": "adaptive"}</code>. Depth is then controlled by the <code>effort</code> parameter, which lives <em>inside</em> <code>output_config</code> rather than next to the thinking block, with five levels: <code>low</code>, <code>medium</code>, <code>high</code> (default), <code>xhigh</code>, <code>max</code>.</p></div>
+      <div class="lesson"><p><strong>Thinking is a remedy, not a default.</strong> Reach for it when the task is genuinely hard and the prompt work has run out of road — and let an eval, not a hunch, tell you it helped.</p></div>
+    </section>
+
+    <section class="scene" id="scene12">
+      <p class="time">3:30 p.m. · The photographs and the policy</p>
+      <h2>Rooftop finally sees what the surveyor saw</h2>
+      <p>Every claim arrives as a bundle: a set of roof photographs and the homeowner's policy PDF. Both go into the same <code>messages</code> array.</p>
+      <h3>Images</h3>
+      <p>Claude accepts image content blocks in user messages, holding either base64-encoded data or a URL to an online image. Multiple image blocks are allowed per message, up to <strong>100 images per request</strong>, and images consume tokens calculated from pixel height and width—so downscale when full resolution is not needed. Supported formats are JPEG, PNG, GIF, and WebP.</p>
+      <p>Two ordering habits: when an image and its description share a message, <strong>put the image block before the text</strong>, and give multiple images clear labels or captions so Claude can refer to “the second image” unambiguously. Claude can also reference images from earlier turns still in context.</p>
+      <div class="blue-note"><p><strong>The counter-intuitive part:</strong> image accuracy depends on prompt sophistication, not image quality. Simple prompts often fail. The course's worked example — automated fire-risk assessment from satellite imagery, scoring tree density, property access, and roof overhang — only works with step-by-step analysis instructions, one-shot or multi-shot examples alternating image and text, explicit guidelines, and verification steps.</p></div>
+      <h3>PDFs</h3>
+      <p>A PDF goes in as a <code>document</code> block with media type <code>application/pdf</code>—nearly the same code as an image, with the type and media type swapped. Claude reads the extracted text <em>and</em> the visual layout: tables, charts, embedded images, mixed content. That is why it is preferable to pre-extracting text yourself whenever the document's visual structure carries meaning. Page-count and file-size limits apply, and each page bills roughly like an image plus its text.</p>
+      <h3>Citations</h3>
+      <p>Ines's requirement: every claim in a homeowner note must be traceable to the policy. That is <strong>citations</strong>, opted into per document block.</p>
+<pre><code>{
+  "type": "document",
+  "source": {"type": "base64",
+             "media_type": "application/pdf",
+             "data": pdf_b64},
+  "title": "Northstar HO-3 Policy (2024)",
+  "citations": {"enabled": True}
+}</code></pre>
+      <p>The response content then becomes a list of text blocks, some carrying citation arrays with location data. Two location types: <strong><code>citation_page_location</code></strong> for PDFs (document index, title, start page, end page, cited text) and <strong><code>citation_char_location</code></strong> for plain text (character position in the text block). A UI can turn those into hover popups that show the source document, page number, and exact quoted passage.</p>
+      <div class="lesson"><p><strong>Citations turn assertion into evidence.</strong> They let a user investigate how Claude built a response from source material, instead of it appearing to speak from memory alone.</p></div>
+    </section>
+
+    <div class="rule"><strong>Everything so far was plumbing. The prompt is the product.</strong><span>Parameters decide what is possible. The prompt decides what is good.</span></div>
+
+    <section class="scene" id="scene13">
+      <p class="time">4:10 p.m. · The 2.32</p>
+      <h2>Nadia scores the first prompt and nobody enjoys it</h2>
+      <p>Nadia Kwan runs Rooftop's draft prompt through a scoring pipeline. It comes back <strong>2.32 out of 10</strong>. Rafael's face falls; Nadia is delighted, because now there is a number to move.</p>
+      <p>The improvement cycle is five steps: <strong>set a goal → write an initial prompt → evaluate it → apply a technique → re-evaluate</strong>, repeating the last two. Each technique should be measurable — track the score before and after.</p>
+      <h3>Technique 1 — being clear and direct</h3>
+      <p>The <strong>first line is the most important part of the prompt</strong>. <em>Clear</em> means simple language stating exactly what you want, with no ambiguity. <em>Direct</em> means an instruction rather than a question, starting with an action verb: Write, Create, Generate, Identify.</p>
+      <div class="prompt"><strong>Before:</strong> “I was reading about renewable energy… what countries use it?”<br><strong>After:</strong> “<code>Identify</code> three countries that use geothermal energy. Include generation stats for each.”</div>
+      <h3>Technique 2 — being specific</h3>
+      <p>Two kinds of specificity, often combined:</p>
+      <ul>
+        <li><strong>Output quality guidelines</strong> — list the qualities the output must have: length, structure, tone, elements to include. These control the characteristics of the finished thing.</li>
+        <li><strong>Process steps</strong> — explicit steps for Claude to follow. These control how Claude arrives at the answer.</li>
+      </ul>
+      <p class="choice">Rooftop's homeowner note has a fixed shape but no tricky reasoning. What do you add?</p>
+      <div class="choices" role="group" aria-label="Choose a specificity type">
+        <button type="button" onclick="choose('spec','guidelines', 66)">Output quality guidelines</button>
+        <button type="button" onclick="choose('spec','steps', 66)">Process steps</button>
+        <button type="button" onclick="choose('spec','both', 66)">Both, always</button>
+      </div>
+      <div class="outcome" id="spec-guidelines" aria-live="polite"><strong>Correct.</strong> Output quality guidelines are recommended for almost every prompt — they are your safety net. A note with a known shape needs its qualities named, not its reasoning route prescribed.</div>
+      <div class="outcome" id="spec-steps" aria-live="polite"><strong>Over-engineering.</strong> Process steps earn their place on complex, critical-thinking work — troubleshooting, decision-making, multi-angle analysis — where you want Claude to consider perspectives it might not reach naturally. A straightforward drafting task does not need them.</div>
+      <div class="outcome" id="spec-both" aria-live="polite"><strong>Half right.</strong> Professional prompts do often combine them, but the rule is asymmetric: guidelines in almost every prompt, steps only when the route matters as much as the answer. The multi-peril claims path is where steps belong.</div>
+      <table class="mini-table"><thead><tr><th>Version of the meal-plan prompt</th><th>Score</th></tr></thead><tbody>
+        <tr><td>Naive request</td><td>2.32</td></tr>
+        <tr><td>+ clear and direct</td><td>3.92</td></tr>
+        <tr><td>+ specific output guidelines</td><td>7.86</td></tr>
+      </tbody></table>
+      <div class="lesson"><p><strong>Two techniques, more than triple the score.</strong> The gains are not mystical — they come from removing ambiguity about the task and about what a good answer looks like.</p></div>
+    </section>
+
+    <section class="scene" id="scene14">
+      <p class="time">4:35 p.m. · The blurred boundary</p>
+      <h2>Claude starts treating the data as instructions</h2>
+      <p>Rooftop's prompt now interpolates three things at once: the surveyor's notes, the policy excerpt, and the drafting instructions. Claude begins answering questions that were only ever <em>quoted</em> inside the surveyor's notes.</p>
+      <h3>Technique 3 — structure with XML tags</h3>
+      <p>Wrap each content section in a descriptive, custom XML tag. Not <code>data</code> — <code>sales_records</code>. Not <code>stuff</code> — <code>my_code</code> and <code>docs</code>. Descriptive names give Claude context about the nature of the content, not just its boundary.</p>
+      <div class="prompt"><strong>Draft a homeowner note.</strong><br>&lt;surveyor_notes&gt;…&lt;/surveyor_notes&gt;<br>&lt;policy_excerpt&gt;…&lt;/policy_excerpt&gt;<br>&lt;output_guidelines&gt;…&lt;/output_guidelines&gt;</div>
+      <p>XML tags are most valuable when you are including large amounts of context or data, mixing content types (code plus documentation), or interpolating multiple variables. They stop Claude confusing your instructions with your data, or one data source with another—and they help even for short blocks, because a tag like <code>&lt;athlete_information&gt;</code> signals “this is external input to consider”.</p>
+      <h3>Technique 4 — providing examples</h3>
+      <p>Give Claude sample input/output pairs wrapped in XML tags such as <code>&lt;sample_input&gt;</code> and <code>&lt;ideal_output&gt;</code>. <strong>One-shot</strong> is a single example establishing a pattern; <strong>multi-shot</strong> is several, typically covering different scenarios and edge cases.</p>
+      <p>Examples are strongest for corner cases (sarcasm in sentiment analysis), complex output formats (a specific JSON structure), and exact style or tone. Place them <em>after</em> the main instructions and guidelines. Two refinements do most of the work:</p>
+      <ul>
+        <li><strong>Add context explaining why</strong> the example output is ideal, not just the pair — this helps Claude generalize the reasoning rather than copying the shape.</li>
+        <li><strong>Mine your highest-scoring eval outputs</strong> for examples. Real 10/10 input/output pairs beat invented ones.</li>
+      </ul>
+      <div class="lesson"><p><strong>A professional prompt is a stack, not a sentence:</strong> a clear, direct opening line, then specific guidelines (and steps where warranted), then XML-tagged structure, then one or more high-quality examples with a note on why they are good.</p></div>
+    </section>
+
+    <section class="scene" id="scene15">
+      <p class="time">4:55 p.m. · The ship-it meeting</p>
+      <h2>“It works on the three cases I tried”</h2>
+      <p>Rafael has tested the prompt on three real claims and they all read well. He wants to ship. Nadia draws the distinction that runs the rest of the afternoon.</p>
+      <p><strong>Prompt engineering</strong> is the set of techniques for writing and editing prompts so Claude understands the request. <strong>Prompt evaluation</strong> is automated testing that measures how well a prompt actually performs, using objective metrics — testing against expected answers, comparing versions, reviewing for errors.</p>
+      <p class="choice">Three paths lead out of a first-draft prompt. Which one is Northstar taking?</p>
+      <div class="choices" role="group" aria-label="Choose a path after writing a prompt">
+        <button type="button" onclick="choose('paths','once', 80)">Test once or twice, deploy</button>
+        <button type="button" onclick="choose('paths','corner', 80)">Test custom inputs, patch corner cases, deploy</button>
+        <button type="button" onclick="choose('paths','pipeline', 80)">Run it through an evaluation pipeline and score it</button>
+      </div>
+      <div class="outcome" id="paths-once" aria-live="polite"><strong>Path 1 — a trap.</strong> It feels like validation and gives no objective measure of performance across the input space. High risk of breaking on unexpected real-world input.</div>
+      <div class="outcome" id="paths-corner" aria-live="polite"><strong>Path 2 — also a trap.</strong> Better than path 1, and still the place most engineers stop. Users will keep surprising you, because a handful of hand-picked inputs is not the input space.</div>
+      <div class="outcome" id="paths-pipeline" aria-live="polite"><strong>Path 3 — the recommended one.</strong> More upfront work and cost, much higher confidence. Objective scoring is what lets you A/B two prompt versions and know which is actually better.</div>
+      <h3>The five-step eval workflow</h3>
+      <ol>
+        <li><strong>Draft a prompt</strong> — your baseline to optimize.</li>
+        <li><strong>Create an eval dataset</strong> — sample inputs representative of production traffic. Hand-written or Claude-generated; three examples or thousands.</li>
+        <li><strong>Feed through Claude</strong> — interpolate each dataset input into the prompt template, send it, collect the outputs.</li>
+        <li><strong>Feed through a grader</strong> — score each output, typically on a 1–10 scale, and average for overall prompt performance.</li>
+        <li><strong>Change the prompt and repeat</strong> — re-run and compare average scores across versions.</li>
+      </ol>
+      <h3>Generating the dataset</h3>
+      <p>Use a <strong>faster, cheaper model such as Haiku</strong> to generate the dataset — dataset generation is not the task being tested. Get clean JSON out with the technique from earlier today: prefill the assistant turn with <code>```json</code>, set <code>stop_sequences</code> to <code>["```"]</code>, then parse the result and save it to a dataset file.</p>
+      <p>Keep the dataset small — two or three cases — while you are actively iterating, so each loop is fast; scale up to tens or hundreds for final validation. Include a <code>format</code> field on each test case (<code>"python"</code>, <code>"json"</code>, <code>"regex"</code>) so a code grader knows which validator to apply.</p>
+      <div class="lesson"><p><strong>Engineering designs the bridge; evaluation drives test trucks over it.</strong> Both are required, and only one of them produces a number.</p></div>
+    </section>
+
+    <section class="scene" id="scene16">
+      <p class="time">5:30 p.m. · The grader question</p>
+      <h2>Who decides whether an output is any good?</h2>
+      <p>The eval loop has four moving parts: a dataset, a prompt, an LLM, and a grader. Three small functions hold it together — <code>run_prompt</code> merges a test case into the prompt and sends it; <code>run_test_case</code> calls <code>run_prompt</code>, grades the result, and returns a summary; <code>run_eval</code> loops the dataset and assembles everything. The grader is the part everyone underestimates.</p>
+      <table class="mini-table"><thead><tr><th>Grader</th><th>How it works</th><th>Good for</th></tr></thead><tbody>
+        <tr><td><strong>Code</strong></td><td>Programmatic checks</td><td>Length, keyword presence or absence, syntax validity (JSON / Python / regex), readability scores</td></tr>
+        <tr><td><strong>Model</strong></td><td>Another Claude call evaluates the output</td><td>Response quality, instruction-following, completeness, helpfulness, safety</td></tr>
+        <tr><td><strong>Human</strong></td><td>Manual review</td><td>Nuanced quality, comprehensiveness, depth, relevance — most flexible, slowest and most tedious</td></tr>
+      </tbody></table>
+      <p class="choice">Rooftop's extractor must emit valid JSON <em>and</em> a note that follows Ines's tone rules. How do you grade it?</p>
+      <div class="choices" role="group" aria-label="Choose a grading approach">
+        <button type="button" onclick="choose('grade','code', 92)">Code grader only</button>
+        <button type="button" onclick="choose('grade','model', 92)">Model grader only</button>
+        <button type="button" onclick="choose('grade','both', 92)">Both, averaged</button>
+        <button type="button" onclick="choose('grade','human', 92)">Human review only</button>
+      </div>
+      <div class="outcome" id="grade-code" aria-live="polite"><strong>Catches half the failures.</strong> A code grader will confirm the JSON parses, and cheerfully pass a perfectly-formed record with a cold, wrong-toned note attached. Syntax validity is not instruction-following.</div>
+      <div class="outcome" id="grade-model" aria-live="polite"><strong>The other half.</strong> A model grader judges tone and completeness well, but it is an inconsistent syntax checker. You want a parser deciding whether JSON parses.</div>
+      <div class="outcome" id="grade-both" aria-live="polite"><strong>Right.</strong> Combine them — the course's formula is <code>(model_score + syntax_score) / 2</code>, pairing semantic evaluation with syntax validation so you measure correctness and technical validity at once.</div>
+      <div class="outcome" id="grade-human" aria-live="polite"><strong>Most flexible, least scalable.</strong> Human graders are best for nuanced depth and relevance, but they are slow and tedious, and they cannot run on every commit. Use them to spot-check, not to gate.</div>
+      <h3>Code-based grading</h3>
+      <p>Three validators, each wrapped in try/except, each returning 10 on success and 0 on failure: <code>json.loads</code> for JSON, <code>ast.parse</code> for Python, <code>re.compile</code> for regular expressions. Improve format compliance first by instructing the model to reply with raw code only — no comments, no commentary — and pre-filling the assistant message with a code-block opener plus a stop sequence.</p>
+<pre><code>def validate_json(text):
+    try:
+        json.loads(text)
+        return 10
+    except Exception:
+        return 0</code></pre>
+      <p>The limitation is built in: a code grader needs to know the expected format, which is exactly why each test case carries a <code>format</code> field.</p>
+      <h3>Model-based grading</h3>
+      <p>Write the grading prompt to request <strong>strengths, weaknesses, reasoning, <em>and</em> a score</strong> — never a bare number. Without that context, models default to middling scores around 6 regardless of actual quality. Ask for the result as JSON (prefill plus stop sequence again), store <code>score</code> and <code>reasoning</code> per test case, and average across the dataset.</p>
+      <div class="lesson"><p><strong>A grader must return an objective signal,</strong> and the evaluation criteria are defined upfront, not negotiated after you see the results.</p></div>
+    </section>
+
+    <section class="scene" id="scene17">
+      <p class="time">6:10 p.m. · The trend line</p>
+      <h2>2.32 was never the point</h2>
+      <p>Nadia wires the loose functions into a reusable <code>PromptEvaluator</code>. Four things about it are worth carrying into the exam:</p>
+      <ul>
+        <li><strong><code>max_concurrent_tasks</code></strong> controls parallelism. Start low — around 3 — to avoid rate limits, and raise it once you know the ceiling.</li>
+        <li><strong><code>generate_dataset(task_description, prompt_inputs_spec, output_file, num_cases)</code></strong> auto-generates a small test set from a description of the task and a spec of the prompt's required inputs.</li>
+        <li><strong><code>run_evaluation(run_prompt_function, dataset_file, extra_criteria)</code></strong> runs the loop and lets you inject additional grading criteria for this particular prompt.</li>
+        <li>The output is both a numeric score <em>and</em> a formatted <strong>HTML report</strong> showing per-test-case results — use it to see exactly where and why a prompt is failing, not just that it is.</li>
+      </ul>
+      <p>Rooftop's homeowner-note prompt started at 2.32. Clear and direct instructions moved it. Output guidelines moved it further. XML tags stopped the data bleeding into the instructions. Two examples mined from the highest-scoring runs pinned the tone Ines wanted.</p>
+      <p class="voice">“A low first score is evidence, not failure. The number you report is the improvement, not the baseline.”</p>
+      <p>Rafael commits the eval dataset alongside the prompt. It is now a regression suite: the next person who edits that prompt will find out immediately whether they made it worse.</p>
+      <div class="lesson"><p><strong>Keep the dataset.</strong> A prompt without an eval is an opinion. A prompt with a retained dataset is a component you can change safely.</p></div>
+    </section>
+
+    <div class="rule"><strong>Tomorrow: Claude stops answering and starts acting.</strong><span>Tool use, the agent loop, and everything Rooftop cannot do from a single request — Part 2.</span></div>
+
+    <section class="end">
+      <h2>The architect's pocket card</h2>
+      <p>Ines asks how you knew which knob to turn each time. You answer:</p>
+      <p><strong>Build with primitives, scale on infrastructure, run with control.</strong> Pick the model per task — Haiku for speed, Opus for intelligence, Sonnet for balance — and audition the cheapest first against 20–30 examples. Keep the API key on your server, never in a client. Every request needs model, max_tokens, and messages; the API is stateless, so you resend the history yourself. The system prompt governs <em>how</em>, not <em>what</em>. Temperature near 0 for extraction, near 1 for creative work. Stream long responses for time-to-first-token. Read <code>stop_reason</code> before you change anything; steer with prefills and stop sequences; force a tool schema when the output shape must hold. Put the image before the text, the PDF in a document block, and turn citations on when claims must be traceable. Then write the prompt properly: a clear, direct first line, output guidelines in almost every prompt, process steps only for hard reasoning, XML tags around interpolated content, and examples mined from your best real outputs.</p>
+      <p>And do not ship on three good cases. Build the dataset, run the graders, keep the score, and change the prompt on evidence.</p>
+    </section>
+
+    <p class="source">Primary source: <code>03-building-with-the-claude-api/notes.md</code> and <code>03-building-with-the-claude-api/anthropic-notes.md</code> in this study workspace, cross-checked against <code>03-building-with-the-claude-api/quiz.md</code>.</p>
+    <footer>This is Part 1 of 3 for Section 3. Part 2 covers tool use, the agent loop, RAG, context management, and prompt caching; Part 3 covers workflows versus agents and the four workflow patterns. When you are ready, ask your teacher to quiz you on one Rooftop decision at a time — the parameters are easy to recognize and hard to recall cold, which is exactly what the exam checks.</footer>
+  </main>
+  <script>
+    function choose(scene, answer, progress) {
+      document.querySelectorAll('[id^="' + scene + '-"]').forEach(function (el) { el.classList.remove('visible'); });
+      var selected = document.getElementById(scene + '-' + answer);
+      if (selected) selected.classList.add('visible');
+      var bar = document.getElementById('progressBar');
+      if (bar && progress) bar.style.width = progress + '%';
+    }
+  </script>
+</body>
+</html>
