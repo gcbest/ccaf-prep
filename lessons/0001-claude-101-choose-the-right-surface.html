@@ -183,7 +183,7 @@
       <h2>“Don’t start over. Coach it.”</h2>
       <p>Claude’s second answer has the right structure, but the conclusion is too soft. You say, “Cut the first two paragraphs and make the conclusion more action-oriented.” That specific feedback is much more useful than “make it better.”</p>
       <p>The first prompt is the start of a conversation, not a one-shot test. Redirect within the same chat when the context is still useful; restart in a new chat when the conversation has accumulated the wrong assumptions or needs a clean frame. If you made the original instruction unclear, edit it with the <strong>pencil icon</strong> and resubmit rather than building a chain of corrections downstream.</p>
-      <div class="lesson"><p><strong>Iteration is part of the method.</strong> Give concrete feedback, observe the next output, and decide whether to redirect or restart.</p></div>
+      <div class="lesson"><p><strong>Iteration is part of the method.</strong> Give concrete feedback, observe the next output, and decide whether to redirect or restart. And once a prompt is actually earning its keep on recurring work, don't leave it to memory — save it as Project instructions or turn it into a Skill, so the next person doesn't have to reconstruct it from scratch.</p></div>
     </section>
 
     <section class="scene" id="scene6">
@@ -191,7 +191,7 @@
       <h2>“Where should this knowledge live?”</h2>
       <p>Northstar has a permanent support playbook: policies, product history, team decisions, and the preferred way answers should be written. It belongs in a <strong>Project</strong>—a self-contained workspace with its own memory, chat history, knowledge base, custom instructions, and ongoing context.</p>
       <p>A Project is useful for a domain, client, course, or recurring workflow. It answers: <em>what should Claude know, and what should stay consistent?</em> Team and Enterprise sharing can distinguish <strong>Can view</strong>, <strong>Can edit</strong>, and <strong>Owner</strong>.</p>
-      <p>When the knowledge base approaches the context limit, Claude need not carry every page into every conversation. It can use <strong>RAG</strong>—Retrieval Augmented Generation—to search the knowledge base and retrieve the relevant pieces. The course describes this as expanding effective capacity by up to 10×.</p>
+      <p>When the knowledge base approaches the context limit, Claude need not carry every page into every conversation. It can use <strong>RAG</strong>—Retrieval Augmented Generation—to search the knowledge base and retrieve the relevant pieces. The course describes this as expanding effective capacity by up to 10×. That headroom is not a license to dump the playbook in unsorted, though—the source material still has to be organized and reviewed, or retrieval just finds the relevant mess faster.</p>
       <div class="lesson"><p><strong>Project = the knowledge home.</strong> It is persistent context for an ongoing area, not merely a folder of files.</p></div>
     </section>
 
@@ -199,15 +199,16 @@
       <p class="time">1:40 p.m. · The repeatable procedure</p>
       <h2>“Where should the launch kit instructions live?”</h2>
       <p>The team’s Friday launch kit is a repeatable procedure: inspect the folder, summarize changes, create three files, run a checklist, and save the results. That belongs in a <strong>Skill</strong>—a package of instructions, scripts, and resources that Claude loads dynamically for a specialized workflow.</p>
-      <p>Anthropic’s built-in Skills power specialized document, spreadsheet, presentation, and PDF creation. A custom Skill can be created for a team’s own procedure. It needs code execution and file creation enabled, and it runs in a sandboxed environment.</p>
-      <div class="blue-note"><p><strong>Keep the boundary clear:</strong> Projects store the <em>what</em>; Skills define the <em>how</em>. A Skill can reference knowledge stored in a Project. Project instructions say how Claude should work in that workspace; a Skill is a reusable procedure that can be invoked when relevant.</p></div>
+      <p>Anthropic’s built-in Skills power specialized document, spreadsheet, presentation, and PDF creation. A custom Skill can be created for a team’s own procedure—and not by hand-writing a file yourself: you build one through conversation, where Claude interviews you about the workflow and generates the skill file from what you describe. It needs code execution and file creation enabled, and it runs in a sandboxed environment.</p>
+      <div class="blue-note"><p><strong>Keep the boundary clear:</strong> Projects store the <em>what</em>; Skills define the <em>how</em>. A Skill can reference knowledge stored in a Project. Project instructions say how Claude should work in that workspace; a Skill is a reusable procedure that can be invoked when relevant. The project <em>description</em> is a different thing again—it's metadata for the humans browsing your Projects list, not instructions Claude reads and acts on.</p></div>
+      <div class="blue-note"><p><strong>One more habit before installing someone else's Skill:</strong> review externally sourced Skills before enabling them. A Skill can bundle executable code and file-changing steps, so accepting one sight-unseen is accepting code you haven't read running with Claude's permissions.</p></div>
       <p class="voice">The bookshelf stores the knowledge. The recipe card describes the process.</p>
     </section>
 
     <section class="scene" id="scene8">
       <p class="time">2:25 p.m. · Something worth keeping</p>
       <h2>“This should live beyond the chat.”</h2>
-      <p>Claude turns the launch kit into a standalone interactive HTML guide. It is substantial, self-contained, reusable, and easy to inspect on its own. That makes it an <strong>Artifact</strong>—an output in a dedicated window that can be previewed, edited, copied, downloaded, and versioned.</p>
+      <p>Claude turns the launch kit into a standalone interactive HTML guide. It is substantial, self-contained, reusable, and easy to inspect on its own. That makes it an <strong>Artifact</strong>—an output in a dedicated window that can be previewed, edited, copied, downloaded, and versioned. There's a rough rule of thumb for when Claude spins content out this way rather than leaving it in the chat: typically once it passes about 15 lines.</p>
       <p>Artifacts can be documents, code snippets, HTML pages, SVG images, Mermaid diagrams, or React components. Short prose can stay in the conversation; a reusable object deserves its own surface.</p>
       <p>Word documents, Excel spreadsheets, PowerPoint presentations, and PDFs are handled by a separate file-creation capability rather than being treated as ordinary Artifacts. In Northstar’s workflow, the relevant Skills create those files and return them as downloadable documents.</p>
       <h3>Publishing is a separate decision</h3>
@@ -223,7 +224,7 @@
         <li><strong>Web connectors:</strong> cloud services such as Google Drive, Notion, Slack, and Asana, typically connected through the Claude directory.</li>
         <li><strong>Desktop extensions:</strong> local tools and files reached through the Claude Desktop app.</li>
       </ul>
-      <p>But the connector is not a master key. Claude sees only what the user is already allowed to access. Individual permissions can be toggled, and the connection can be revoked.</p>
+      <p>But the connector is not a master key. Claude sees only what the user is already allowed to access. Individual permissions can be toggled, and the connection can be revoked. And for anything consequential the connector can actually do—not just read—Claude may still stop and ask for confirmation before a sensitive action goes through.</p>
       <div class="lesson"><p><strong>Security memory hook:</strong> a connector is an office badge, not a skeleton key. It grants scoped access; it does not erase the source system’s permissions.</p></div>
     </section>
 

@@ -187,7 +187,7 @@ docs = {
     "deposition.md": "...",
     "report.pdf": "...",
 }</code></pre>
-      <p>He runs it with <code>uv run main.py</code> (or plain <code>python main.py</code> without uv), after putting an API key in <code>.env</code> and installing dependencies. A chat prompt appears and answers “what’s one plus one.” The skeleton works.</p>
+      <p>Getting there starts before any of that: download the starter <code>CLI_project.zip</code>, extract it, and open the folder as the project root. From there it's the setup Tomás already knows — put an API key in <code>.env</code>, install dependencies, then run it with <code>uv run main.py</code> (or plain <code>python main.py</code> without uv). A chat prompt appears and answers “what’s one plus one.” The skeleton works.</p>
       <div class="blue-note"><p><strong>An architectural caveat the course is explicit about:</strong> a real project normally implements <em>either</em> a client <em>or</em> a server, not both. The course builds both so the end-to-end protocol is visible. In production, start by identifying which side your application owns.</p></div>
       <div class="blue-note"><p><strong>And a sandbox caveat:</strong> those documents live only in memory. Every edit is gone the moment the process restarts. It is a whiteboard in a room that gets wiped when you shut the door — a teaching store, not a persistence layer.</p></div>
     </section>
@@ -225,7 +225,7 @@ def read_document(doc_id: str = Field(description="Id of the document to read"))
       <p>He clicks <strong>Connect</strong> in the left sidebar. The top navigation shows <strong>Resources</strong>, <strong>Prompts</strong>, and <strong>Tools</strong>. Under Tools he chooses “List Tools,” picks <code>edit_document</code>, fills in the inputs, and clicks <strong>Run Tool</strong>. A success status and the returned data come back.</p>
       <p>Then he does the trick that makes the Inspector genuinely useful: he immediately runs <code>read_doc_contents</code> on the same document. <strong>State persists between calls within the Inspector session</strong>, so the edit is visible. He has just tested a multi-tool interaction without writing a single line of client code.</p>
       <p class="voice">“It remembers the room after I move the furniture. So I can walk back in and check whether the picture is straight.”</p>
-      <div class="blue-note"><p><strong>Boundary of the tool:</strong> treat the Inspector as a protocol and debugging tool. It proves your server speaks MCP correctly and that a tool returns what you expect. It does <em>not</em> prove that the surrounding application’s permissions and business rules are correct.</p></div>
+      <div class="blue-note"><p><strong>Boundary of the tool:</strong> treat the Inspector as a protocol and debugging tool. It proves your server speaks MCP correctly and that a tool returns what you expect. It does <em>not</em> prove that the surrounding application’s permissions and business rules are correct. And the screens themselves are a moving target — the Inspector is under active development, so don't be surprised if the exact layout drifts from what's shown here. The Connect → List Tools → Run Tool workflow is the part that holds.</p></div>
       <div class="lesson"><p><strong>Inspector dev-loop value:</strong> iterate on implementations, test edge cases and errors, verify multi-tool interactions, and debug in real time — all before a full client exists.</p></div>
     </section>
 

@@ -136,7 +136,7 @@
     }
   }
 }</code></pre>
-      <p><code>input_schema</code> is ordinary JSON Schema — a general data-validation spec, not an AI invention, borrowed by the ML community for tool calling. The convention is to name each schema <code>&lt;function_name&gt;_schema</code> so it pairs obviously with its function, and you can hand your function to Claude and ask it to draft the schema for you.</p>
+      <p><code>input_schema</code> is ordinary JSON Schema — a general data-validation spec, not an AI invention, borrowed by the ML community for tool calling. The convention is to name each schema <code>&lt;function_name&gt;_schema</code> so it pairs obviously with its function, and you can hand your function to Claude and ask it to draft the schema for you. One Python-SDK detail worth keeping: import <code>ToolParam</code> from <code>anthropic.types</code> and wrap each schema dict in <code>ToolParam(...)</code> before adding it to the <code>tools</code> list — skip that and you'll chase type errors that have nothing to do with the schema's actual content.</p>
       <p>By ten past nine, Assist has the tools and still answers date questions from thin air.</p>
       <p class="choice">Your call</p>
       <div class="choices" role="group" aria-label="Diagnose the unused tool">
@@ -290,7 +290,7 @@ record = response.content[0].input   # the structured data</code></pre>
         <button type="button" onclick="choose('eight','batch', 44)">Use the batch tool</button>
         <button type="button" onclick="choose('eight','nothing', 44)">Accept it — validation is worth it</button>
       </div>
-      <div class="outcome" id="eight-fine" aria-live="polite"><strong>Right feature, and know what you're buying.</strong> <code>fine_grained=True</code> disables the API's server-side JSON validation so chunks stream immediately as generated. The cost: your code must now handle partial or invalid JSON — Claude may emit malformed values such as <code>undefined</code> — so you buffer, validate, and recover deliberately on your side.</div>
+      <div class="outcome" id="eight-fine" aria-live="polite"><strong>Right feature, and know what you're buying.</strong> <code>fine_grained=True</code> disables the API's server-side JSON validation so chunks stream immediately as generated. The cost: your code must now handle partial or invalid JSON — Claude may emit malformed values such as <code>undefined</code> — so you buffer, validate, and recover deliberately on your side. (In default, validated mode, invalid JSON doesn't crash the parse either — it just gets wrapped and delivered as a plain string rather than the proper object structure, which is its own thing to watch for.)</div>
       <div class="outcome" id="eight-batch" aria-live="polite"><strong>Wrong layer.</strong> The batch tool reduces round trips between turns; it doesn't change how a single tool call's JSON arrives over the stream. That's <code>fine_grained</code>.</div>
       <div class="outcome" id="eight-nothing" aria-live="polite"><strong>Defensible — and worth naming as a choice.</strong> Default mode is slower but validated. If your UI doesn't need argument-level immediacy, keeping the safety net is the reasonable call; reach for <code>fine_grained</code> only when the latency actually hurts.</div>
       <div class="lesson"><p><strong>Fine-grained tool calling trades a safety net for speed.</strong> Faster, more granular UX; you inherit the job of handling invalid JSON.</p></div>
@@ -413,7 +413,7 @@ record = response.content[0].input   # the structured data</code></pre>
       <p class="time">4:00 p.m. · Coordinates for meaning</p>
       <h2>Embeddings, and the flow end to end</h2>
       <p>A <strong>text embedding</strong> is a numerical vector representing a text's meaning; each dimension is a value between roughly -1 and +1, and no individual dimension is human-interpretable. <strong>Semantic search</strong> uses those vectors to find chunks related in <em>meaning</em> rather than by exact words.</p>
-      <p>One planning fact: <strong>Anthropic does not provide embeddings.</strong> The recommended provider is <strong>VoyageAI</strong> — a separate account and API key (<code>VOYAGE_API_KEY</code>), with models such as <code>voyage-3-large</code>.</p>
+      <p>One planning fact: <strong>Anthropic does not provide embeddings.</strong> The recommended provider is <strong>VoyageAI</strong> — a separate account and API key (<code>VOYAGE_API_KEY</code>), with models such as <code>voyage-3-large</code>. It's free to start and integrates through a plain SDK call, so there's little setup cost to trying it before committing.</p>
       <p>Lila's pipeline, in seven steps — the first four run once, ahead of time; the last three run per query:</p>
       <ol>
         <li>Chunk the source documents.</li>
@@ -426,6 +426,7 @@ record = response.content[0].input   # the structured data</code></pre>
       </ol>
       <p><strong>Cosine similarity</strong> is the cosine of the angle between two vectors, from -1 to 1, where closer to 1 means more similar. <strong>Cosine distance</strong> is 1 minus that, so closer to 0 means more similar — which is what a vector search typically hands back.</p>
       <div class="blue-note"><p><strong>Store the text with the vector.</strong> Lila's index keeps each embedding alongside metadata holding the original chunk. A bare vector is unreadable; retrieval is only useful if you can hand the actual passage to Claude.</p></div>
+      <p>Running that pipeline on a real question — "what did the engineering department do last year?" — against a two-result search returns, say, the section-two chunk at cosine distance <strong>0.71</strong> and the methodology-section chunk at <strong>0.72</strong>. Both close to 0, both worth handing to Claude; the ranking between them is a rounding error, not a meaningful gap.</p>
       <div class="lesson"><p><strong>Preprocessing is where RAG is won.</strong> Steps 1–4 happen long before a user asks anything, and they determine what step 6 can possibly find.</p></div>
     </section>
 
@@ -445,7 +446,7 @@ record = response.content[0].input   # the structured data</code></pre>
         <button type="button" onclick="choose('fifteen','bm25', 78)">Replace semantic with BM25</button>
         <button type="button" onclick="choose('fifteen','rechunk', 78)">Re-chunk more finely</button>
       </div>
-      <div class="outcome" id="fifteen-hybrid" aria-live="polite"><strong>Hybrid search — the standard production pattern.</strong> Run semantic and BM25 in parallel and merge the results, so you get conceptual relevance <em>and</em> exact-term precision. A retriever class forwards the query to both indexes; <strong>reciprocal rank fusion</strong> merges them, summing 1/(rank + 1) across methods so documents ranked highly by both rise to the top.</div>
+      <div class="outcome" id="fifteen-hybrid" aria-live="polite"><strong>Hybrid search — the standard production pattern.</strong> Run semantic and BM25 in parallel and merge the results, so you get conceptual relevance <em>and</em> exact-term precision. A retriever class forwards the query to both indexes; <strong>reciprocal rank fusion</strong> merges them, summing 1/(rank + 1) across methods so documents ranked highly by both rise to the top. Concretely: if vector search ranks results <code>[doc2, doc7, doc6]</code> and BM25 ranks them <code>[doc6, doc2, doc7]</code>, doc2 collects a strong score from both lists and the fused order comes out <code>[doc2, doc6, doc7]</code> — the document nobody ranked dead last beats the one that was merely somebody's favorite.</div>
       <div class="outcome" id="fifteen-bm25" aria-live="polite"><strong>Trading one blind spot for another.</strong> BM25 alone loses the paraphrase and related-concept matching that made semantic search worth having. Run both in parallel and merge — that's hybrid search.</div>
       <div class="outcome" id="fifteen-rechunk" aria-live="polite"><strong>Doesn't address the cause.</strong> Smaller chunks don't teach an embedding model to care about a literal ID string. Add a lexical index alongside the vector index and merge the results.</div>
       <div class="lesson"><p><strong>Both indexes expose the same tiny API</strong> — <code>add_document</code> and <code>search</code> — which is exactly why they compose. Keep each index isolated and put the merging in a retriever wrapper you can extend later.</p></div>
