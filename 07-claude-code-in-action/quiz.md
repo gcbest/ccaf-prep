@@ -84,6 +84,11 @@
 **A:** A vague prompt forces Claude to explore the codebase more and do more of its own reasoning to fill in gaps, which consumes far more context than a detailed, specific prompt would have.
 *Memory hook:* “Fix the house” sends Claude on a citywide scavenger hunt; “replace the kitchen faucet” gives it a GPS pin.
 
+### Q55. What happens to a worktree automatically when its session ends, and under what condition?
+---
+**A:** Clean worktrees (no uncommitted changes) are automatically removed when the session exits.
+*Memory hook:* A clean hotel room checks itself out and vanishes from the register the moment the guest leaves; a messy one gets held for housekeeping.
+
 ## CLAUDE.md
 
 ### Q17. Is CLAUDE.md enforced configuration? What's the practical consequence for file length?
@@ -111,6 +116,16 @@
 **A:** Words like "IMPORTANT" or "YOU MUST" only stand out relative to quieter surrounding text — if every rule shouts, none of them do.
 *Memory hook:* If every speaker at the parade yells “emergency,” the real emergency has no louder signal.
 
+### Q56. Name the two phrasing rules (besides the emphasis budget) that make a CLAUDE.md rule more likely to be followed.
+---
+**A:** Be specific and checkable (e.g., "put new API routes in src/api/handlers, one per file" instead of "follow best practices"), and name the replacement (e.g., "use named exports, not default exports" instead of "don't use default exports").
+*Memory hook:* A vague coach yells "play better"; a good coach says "cover the left flank" and "pass instead of dribble."
+
+### Q57. What's the recommended workflow for keeping CLAUDE.md accurate over time, and what standard should each line meet?
+---
+**A:** Treat a wrong Claude action as a bug report against the file — tell Claude "add that to CLAUDE.md" and it writes the rule. Treat the file like production code: if you can't justify a line, delete it.
+*Memory hook:* CLAUDE.md gets the same code review as your app — every unjustified line is dead code waiting to be pruned.
+
 ## Skills
 
 ### Q22. What's the recommended first skill to build, and why?
@@ -128,6 +143,11 @@
 **A:** (a) CLAUDE.md. (b) A skill. (c) A hook.
 *Memory hook:* **House rules**, **recipe card**, **deadbolt**—convention, procedure, unskippable enforcement.
 
+### Q58. Inside a skill folder, what's the division of labor between skill.md, reference.md, and any scripts — and why does that division matter for context?
+---
+**A:** skill.md stays lean as the entry point; reference.md holds detailed material and is only read when depth is needed; scripts are executed rather than loaded into context, so a skill can carry its own tooling without bloating the conversation. Check skills into `.claude/skills` so the whole team inherits them.
+*Memory hook:* skill.md is the menu, reference.md is the recipe book in the back kept closed until asked for, and the scripts are the kitchen equipment — used, never read aloud.
+
 ## Permission modes
 
 ### Q25. List all six permission modes and one key fact about each.
@@ -144,6 +164,11 @@
 ---
 **A:** A Stop hook that runs your tests.
 *Memory hook:* Put a referee at the finish line who blows the whistle when the test suite still says “foul.”
+
+### Q59. How do you switch between permission modes during a session, and how do you tell which mode is active?
+---
+**A:** Shift-tab cycles through the everyday modes; the status bar shows the current mode.
+*Memory hook:* Shift-tab is the gear shifter, and the status bar is the dashboard gauge telling you which gear you're in.
 
 ## Hooks — deeper model
 
@@ -166,6 +191,21 @@
 ---
 **A:** Use SessionStart with the "compact" matcher. Do NOT use PostCompact — its output doesn't get fed back into the conversation.
 *Memory hook:* SessionStart is the coach who re-enters the huddle after halftime; PostCompact writes a note that never reaches the players.
+
+### Q60. Roughly how many hook events does Claude Code fire, and what does the InstructionsLoaded event let you do?
+---
+**A:** Around 30 hook events fire across the loop. InstructionsLoaded fires whenever a CLAUDE.md or rule file loads, letting you audit exactly what made it into context.
+*Memory hook:* Thirty tripwires ring the property, and InstructionsLoaded is the one at the library door that logs every book that entered the room.
+
+### Q61. For a SessionStart hook, what check ensures it only runs on brand-new sessions rather than every resume or compaction?
+---
+**A:** Check that `source=startup` — this scopes the hook to fresh starts only.
+*Memory hook:* `source=startup` is the "opening day" sign that keeps the welcome banner from firing every time a regular customer walks back in.
+
+### Q62. Which hook events ignore the normal blocking rules, and what happens on a non-zero exit for them?
+---
+**A:** Notification, SessionStart, and FileChange ignore blocking — a non-zero exit just shows stderr while execution carries on regardless.
+*Memory hook:* Three events are the security cameras that record and complain but never lock the door.
 
 ## MCP inside Claude Code
 
@@ -221,6 +261,21 @@
 **A:** A library (TypeScript/Python) that embeds Claude Code inside your own application. Reach for it when the automated work needs to live inside your own product, not run as an external job.
 *Memory hook:* Routines are an outside courier; the Agent SDK puts the engine inside your own car.
 
+### Q63. Where can you create a Routine?
+---
+**A:** From the web at claude.ai/code/routines, or inside Claude Code itself (e.g., `/schedule daily dependency audit at 9am`).
+*Memory hook:* Book the recurring appointment from the front-desk website or by asking the concierge in the lobby — same calendar either way.
+
+### Q64. How do you turn a single headless run into a multi-step automation?
+---
+**A:** Capture the session ID from the JSON output of a headless run, then resume that session later with full context.
+*Memory hook:* The session ID is a claim ticket — hand it back later and headless Claude picks up exactly where it left the coat check.
+
+### Q65. What does the Agent SDK's `query` function expose, and how do you consume its output?
+---
+**A:** The same primitives as the CLI — prompt plus options (allowed tools, system prompt, permission mode) — and you iterate the streamed messages it returns.
+*Memory hook:* `query` is the CLI's steering wheel bolted into your own dashboard — same controls, but you watch the road stream by message by message.
+
 ## GitHub integration
 
 ### Q42. What does the managed "Code Review" service do, and what does it explicitly NOT do?
@@ -233,6 +288,26 @@
 **A:** When the job is more than review — implementing changes from a comment, running scheduled reports, or any custom CI task where Claude needs to actually take action.
 *Memory hook:* Hire the DIY Action when the reviewer must leave the clipboard, pick up the wrench, and repair the machine.
 
+### Q66. Who enables managed Code Review, and what's a limit on its availability?
+---
+**A:** An org admin enables it from Claude Code admin settings, installs the GitHub app, and picks repos plus when it runs (PR open, every push, or "@claude review" comments). It's a research preview currently available on Team and Enterprise plans only.
+*Memory hook:* Only the building manager can install the elevator inspector, and right now it's only offered in the Team and Enterprise wings of the building.
+
+### Q67. What command walks you through installing the Claude Code GitHub Action, and what's the action's identifier in a workflow file?
+---
+**A:** `/install-github-app` (requires repo admin) sets it up, including the API key secret. The action itself is `anthropics/claude-code-action@v1`.
+*Memory hook:* `/install-github-app` is the installer wizard; `anthropics/claude-code-action@v1` is the part number you'd quote to reorder it.
+
+### Q68. Besides trigger_phrase, prompt, and claude_args, what other inputs does the Claude Code GitHub Action take for authentication and hosting provider?
+---
+**A:** `anthropic_api_key`, `github_token` (defaults to `secrets.GITHUB_TOKEN`), and provider switches for routing through Bedrock or Vertex instead of the direct API.
+*Memory hook:* Behind the doorbell phrase sits a keycard (api key), a badge that defaults to the building's own (github_token), and a choice of back-door delivery route (Bedrock/Vertex).
+
+### Q69. Besides an @claude mention in a PR/issue comment, what other ways can trigger the Claude Code GitHub Action?
+---
+**A:** A cron schedule (e.g., firing at 9am UTC for a rollup report) and `workflow_dispatch`, which allows manual runs triggered from the Actions tab.
+*Memory hook:* The action answers three doorbells: someone says the trigger phrase, the kitchen timer goes off, or someone just walks up and presses the manual button.
+
 ## Verifying unsupervised runs
 
 ### Q44. What does "verify in proportion to how little you watched" mean in practice?
@@ -244,6 +319,26 @@
 ---
 **A:** A tidy, well-written summary can still omit or gloss over an unexpectedly touched file — reading the actual diff is the only way to catch that.
 *Memory hook:* The manager's summary says “renovated the kitchen”; the receipts and floor plan reveal the robot also knocked a hole in the garage.
+
+### Q70. What permission mode should unattended/CI runs stay in, and why not bypass mode?
+---
+**A:** Auto mode — the classifier still reviews each action for danger even though nobody's watching. Bypass mode skips all checks, so it should only run inside an isolated container/VM, not as your default unattended setting.
+*Memory hook:* Even an empty house keeps the smoke detector armed; you don't rip the batteries out just because no one's home.
+
+### Q71. When making tests "the real gate" on an unsupervised run, what's the actual question you need answered — not just "did tests pass"?
+---
+**A:** Whether tests passed AND whether Claude actually ran them or only claimed to — don't leave that to trust. Wire it as a hook (a Stop hook running tests, or a PostToolUse hook linting/type-checking) so it fires on every run whether or not you remember to ask.
+*Memory hook:* Don't just ask the student "did you take the test" — check the proctor's sign-in sheet, because "yes" and "I said yes" are not the same sentence.
+
+### Q72. As part of verifying an unsupervised run, what is a "cold second opinion," and why is it valuable alongside reading the diff and running tests?
+---
+**A:** Opening a fresh session or subagent, with no memory of how the change was built, to review the changed code. It has no stake in the original approach and catches what the original run talked itself past.
+*Memory hook:* Bring in a doctor who never met the first doctor's diagnosis — a fresh set of eyes doesn't inherit the first one's blind spot.
+
+### Q73. How do you verify a headless run specifically?
+---
+**A:** By its JSON result and exit code.
+*Memory hook:* A headless run leaves no one to interview — you check the flight recorder's black box, not a pilot's story.
 
 ## Plugins
 
@@ -291,3 +386,18 @@
 ---
 **A:** `trigger_phrase` defines the phrase that starts the action, `prompt` supplies the task for Claude, and `claude_args` passes raw CLI arguments such as a turn limit.
 *Memory hook:* The Action needs a **doorbell phrase**, a **task card**, and a **tool belt of CLI settings**.
+
+### Q74. What are the commands to install a single plugin versus rolling out a shared marketplace for a whole team?
+---
+**A:** `/plugin install org-name@plugin-name` (then `/reload-plugins`) installs one plugin directly. `/plugin marketplace add your-org/claude-plugins` registers a private marketplace once, after which every install resolves through it for centralized discovery, version tracking, and updates.
+*Memory hook:* One command grabs a single tool off the shelf; the other bolts a whole company hardware store onto everyone's wall.
+
+### Q75. Which keys in a plugin's own settings.json actually get honored, and what does the `agent` key let a plugin do?
+---
+**A:** Only the `agent` and subagent status line keys are honored. The `agent` key promotes one of the plugin's subagents to the main thread — its system prompt, tool restrictions, and model — meaning simply enabling the plugin can change Claude Code's default behavior.
+*Memory hook:* A plugin can't rewrite your whole rulebook, but it does get one master key: the power to swap in its own agent as the one driving the car.
+
+### Q76. How does Claude Code discover a plugin's components on disk, and where do a plugin's hooks and MCP servers live?
+---
+**A:** By directory convention using the same `.claude` shape as a normal project — one folder per skill, one markdown file per subagent under `agents/`, and `hooks/hooks.json` plus `.mcp.json` at the plugin root.
+*Memory hook:* A plugin is your own `.claude` folder, just shrink-wrapped and shipped — same rooms, same floor plan, someone else built it first.

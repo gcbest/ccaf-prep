@@ -22,6 +22,11 @@
 **A:** In a `.env.local` file, kept out of version control — hardcoding keys in source files is a common way they leak on GitHub.
 *Memory hook:* Put the API key in a locked drawer, never on the billboard outside your GitHub house.
 
+### Q4b. Why should a client application never call the Anthropic API directly, and what's the correct request path instead?
+---
+**A:** Calling the API directly from a client app would expose your API key to anyone inspecting the client (browser devtools, decompiled app, etc.). Instead, the client sends the user's message to your own backend server, and only that server — which can keep the key secret — calls the Anthropic API.
+*Memory hook:* The client whispers the request to your bouncer (your server), and only the bouncer is allowed to flash the VIP card (the API key) at the door.
+
 ### Q5. Rank the four model tiers from fastest/cheapest to most capable/expensive, and give the one-line use case for each.
 ---
 **A:** Haiku (fastest/cheapest — high-volume, low-complexity: classification, extraction, routing) → Sonnet (balanced — most production work) → Opus (deep reasoning, complex analysis, multi-step coding) → Fable (most capable, reserved for the toughest problems, highest cost).
@@ -41,6 +46,21 @@
 ---
 **A:** That Claude wants to call a tool rather than finish its turn — your code should execute the requested tool and feed the result back (vs. `end_turn`, which means Claude is done).
 *Memory hook:* `tool_use` is the receptionist handing you a work order; `end_turn` is the “office closed” sign.
+
+### Q8c. What are the four internal stages Claude's text generation process goes through for each response, in order?
+---
+**A:** Tokenization (breaking input into tokens) → Embedding (converting tokens into numerical vectors representing possible meanings) → Contextualization (adjusting those vectors based on neighboring tokens to pin down precise meaning) → Generation (the output layer assigns probabilities to candidate next tokens, one is selected, and the process repeats).
+*Memory hook:* Four chefs in a line: the **chopper** (tokenize), the **labeler** (embed), the **seasoner** (contextualize), and the **plater** (generate) — each pass makes the dish more specific.
+
+### Q8d. What does the `temperature` parameter control, and when should you use a low value vs. a high value?
+---
+**A:** Temperature (0–1) controls randomness in token selection by reshaping the probability distribution over next tokens. At 0, Claude deterministically always picks the highest-probability token — good for factual/extraction tasks needing consistency. Near 1, lower-probability tokens get picked more often — good for creative tasks like brainstorming or marketing copy.
+*Memory hook:* Temperature is a spice dial: turn it to zero for a bland, predictable dish every time; crank it up for a wild, surprising flavor each time you cook.
+
+### Q8e. Why must you manually resend the entire conversation history with every follow-up request to Claude?
+---
+**A:** The Anthropic API is stateless — it stores no memory of previous messages. Each request is processed independently, so without re-sending the full message list (all prior user/assistant turns), Claude has no idea what was said before and can't maintain context.
+*Memory hook:* Claude has amnesia between every phone call; you must re-read the entire transcript back to it before it can pick up where you left off.
 
 ## Agent loop & tool use
 
@@ -74,6 +94,11 @@
 **A:** For simple classification, extraction, or boilerplate tasks — thinking just adds latency and cost there without improving results.
 *Memory hook:* Do not summon Einstein to alphabetize a grocery list; save the deep thinking for the hard puzzle.
 
+### Q14b. What's the minimum thinking budget for extended thinking, and what is a "redacted" thinking block?
+---
+**A:** The thinking budget must be at least 1024 tokens, and `max_tokens` must be set higher than the thinking budget to leave room for the final answer. A redacted thinking block is reasoning text that Anthropic's safety systems have flagged and encrypted — it's still returned (with a cryptographic signature) to preserve conversation continuity, but the actual reasoning content is hidden.
+*Memory hook:* The thinking budget is a 1,024-token minimum entry fee; a redacted block is the classified memo stamped and sealed but still filed for the record.
+
 ### Q15. What's the key difference between a "server tool" and a "client tool"?
 ---
 **A:** Server tools (web search, code execution, web fetch) are declared by you but run by Anthropic server-side — no agent loop needed, result comes back in the same response. Client tools (memory, bash) run where your own code runs.
@@ -104,6 +129,21 @@
 **A:** It collapses several independent tool calls into one round trip instead of Claude issuing them one at a time across multiple turns. You give Claude a single `batch_tool` whose input schema accepts an array of sub-tool invocations; Claude packs multiple calls into one request, and your code executes them all (optionally in parallel) and returns the combined results.
 *Memory hook:* Instead of five separate takeout orders, place one order with five items and have the kitchen fire them all at once.
 
+### Q18d. What are the three fields of a tool_result block, and what does each one do?
+---
+**A:** `tool_use_id` (matches the ID of the original tool_use block so Claude can pair the result with the right request), `content` (the tool function's output, usually stringified/JSON), and `is_error` (a boolean flag, default false, telling Claude whether the tool execution failed).
+*Memory hook:* A tool result is a reply envelope: the **claim ticket number** (tool_use_id), the **package inside** (content), and a **damaged-goods sticker** (is_error) if something broke.
+
+### Q18e. How do you force Claude to always call a specific tool instead of letting it decide, and why is this useful for structured data extraction?
+---
+**A:** Pass `tool_choice: {"type": "tool", "name": "your_tool_name"}` in the request. This guarantees Claude calls that tool and returns arguments matching its input_schema (readable from the tool_use block's `input` field) — more reliable than prefilling + stop sequences for getting structured JSON, at the cost of extra setup complexity.
+*Memory hook:* Prefilling politely nudges Claude toward the format; `tool_choice` grabs its hand and walks it straight into the one door you've unlocked.
+
+### Q18f. For Anthropic's built-in web search tool, what's the schema type, and what's the default cap on searches per request?
+---
+**A:** Schema type is `web_search_20250305`, tool name `web_search`, and `max_uses` defaults to 5 searches per request (configurable). An optional `allowed_domains` list can restrict results to trusted sources (e.g., NIH.gov for medical questions).
+*Memory hook:* The web search tool ships with a five-search library card by default — bring your own domain allow-list to restrict it to the reference section.
+
 ## Tool design & MCP integration (API side)
 
 ### Q19. Give the one-line distinction between Tools, Skills, and MCP.
@@ -130,6 +170,16 @@
 ---
 **A:** Give agents abstract, combinable tools rather than hyper-specialized ones — this lets Claude creatively combine primitives to handle situations the developer never explicitly anticipated, instead of being limited to a fixed menu of specific actions.
 *Memory hook:* A Swiss Army knife beats a drawer full of one-use gadgets when the problem surprises you.
+
+### Q23b. What's the difference between an MCP resource and an MCP tool?
+---
+**A:** Resources proactively expose data for read access (e.g., fetching document contents when referenced, like an @-mention) — the client fetches them directly via a URI without Claude deciding to call anything. Tools are invoked reactively — Claude decides when to call them to perform an action.
+*Memory hook:* A resource is a book already sitting open on the shelf for anyone to read; a tool is a librarian you have to actively ask to go fetch something.
+
+### Q23c. What are MCP prompts, and how do they typically appear to a user in a client application?
+---
+**A:** Pre-defined, pre-tested prompt templates that an MCP server exposes for its specific domain (e.g., a "reformat this document" prompt), so users don't have to write ad-hoc prompts themselves. In client applications they commonly appear as autocomplete/slash-command options that prompt the user for required arguments before running.
+*Memory hook:* MCP prompts are the restaurant's pre-set tasting menu — you just pick item #3 and fill in a couple of preferences, instead of writing your own recipe from scratch.
 
 ## Context management & reliability (API layer)
 
@@ -173,6 +223,11 @@
 **A:** Tools, then system prompt, then messages. Up to 4 cache breakpoints total.
 *Memory hook:* Claude stacks the **toolbox**, then the **director's script**, then the **actor's lines**—with four bookmarks allowed.
 
+### Q31b. In a response's usage field, what's the difference between cache_creation_input_tokens and cache_read_input_tokens?
+---
+**A:** cache_creation_input_tokens counts tokens written to the cache on the first request (the write cost). cache_read_input_tokens counts tokens retrieved from an existing cache on a later, matching request (the cheaper reuse). Partial cache reads are possible when only some of the cached content still matches.
+*Memory hook:* cache_creation is the cost of photocopying the guest list for the first time; cache_read is just handing out copies you already made.
+
 ### Q32. Why is the Files API paired with code execution, given the code execution sandbox has no network access?
 ---
 **A:** Since the Docker sandbox can't make external calls, the Files API is the only way to get data in (upload once, reference by file ID via a container_upload block) and get generated outputs back out.
@@ -204,6 +259,11 @@
 ---
 **A:** Because Claude can take arbitrary UI actions (clicks, keystrokes, shell commands) to accomplish a goal, and an unsandboxed environment gives no containment if it does something unintended.
 *Memory hook:* Let the new intern practice on the training server, not the live production keyboard.
+
+### Q32g. What's the maximum number of images allowed in a single Claude request, and how does Claude charge for image tokens?
+---
+**A:** Up to 100 images per request. Images consume tokens based on their pixel dimensions (height × width), so larger images cost more tokens regardless of file format.
+*Memory hook:* Claude's photo album caps out at 100 snapshots per request, and it bills you by the square inch of each photo, not by the file size.
 
 ## Prompt engineering techniques
 
@@ -242,6 +302,16 @@
 **A:** Being clear and direct got it to 3.92. Adding specific output guidelines (calorie totals, macros, meal timing, portion sizes, etc.) got it to 7.86.
 *Memory hook:* The meal plan evolved from “feed me” to “write the order” to a nutritionist's blueprint with calories, macros, timing, and portions.
 
+### Q39b. What is "assistant message prefilling," and how does Claude treat the pre-filled text?
+---
+**A:** You manually add an assistant-role message (e.g., "Coffee is better because") at the end of the conversation before sending the request. Claude treats it as text it has already written and continues generating from that exact endpoint — not from a fresh sentence — so you must concatenate the prefill with the generated continuation to get the full response.
+*Memory hook:* Prefilling is handing Claude a half-finished sentence and saying "keep going from right here," not "start a new paragraph."
+
+### Q39c. How do stop sequences work, and is the matched stop-sequence text included in the final output?
+---
+**A:** You supply one or more exact strings; the moment Claude generates that string, it halts immediately. The stop-sequence text itself is NOT included in the returned output — e.g., a stop sequence of "five" on a "count 1 to 10" prompt cuts the output off at "four, " with "five" excluded.
+*Memory hook:* A stop sequence is a tripwire: the second Claude's pen touches that word, generation freezes and the tripwire word itself never makes it onto the page.
+
 ## Prompt evaluation
 
 ### Q40. What's the difference between prompt engineering and prompt evaluation?
@@ -278,6 +348,11 @@
 ---
 **A:** Small (2–3 cases) during active development for fast iteration; scale up to tens/hundreds for final validation.
 *Memory hook:* Tune a guitar with a few test notes, then play the full concert before declaring the instrument ready.
+
+### Q46b. What are the three paths an engineer can take after writing a first draft of a prompt, and which two are considered traps?
+---
+**A:** 1) Test once or twice, then ship to production. 2) Test with a few custom inputs, tweak for corner cases, then ship. 3) Run the prompt through a proper evaluation pipeline for objective scoring. Paths 1 and 2 are traps — they feel like validation but give no objective measure of how the prompt performs across the input space; only path 3 is recommended.
+*Memory hook:* Tasting the soup twice and calling it done is a trap; sending it to a panel of blind tasters for a real score is the only path that proves it's ready to serve.
 
 ## RAG & agentic search
 
@@ -330,6 +405,11 @@
 ---
 **A:** It solves the problem of an isolated chunk losing the surrounding context that makes it findable (e.g. "revenue grew 3%" without saying which company/quarter). Before embedding/indexing, an LLM generates a short situating sentence for each chunk using the full document, which gets prepended to the chunk — a preprocessing-time fix, unlike reranking which happens at query time.
 *Memory hook:* Contextual retrieval staples a sticky note ("this is Acme's Q4 report") to each page before it ever goes in the filing cabinet.
+
+### Q54d. What's the difference between cosine similarity and cosine distance, and how do you read their values?
+---
+**A:** Cosine similarity is the cosine of the angle between two vectors, ranging from -1 to 1, where closer to 1 means more similar. Cosine distance = 1 − cosine similarity, so it ranges inversely — closer to 0 means more similar (the values a vector search typically returns).
+*Memory hook:* Similarity is a warmth gauge (hotter/closer-to-1 = more alike); distance is a golf score on the same course (lower/closer-to-0 = better match).
 
 ## Agentic orchestration patterns
 
@@ -429,3 +509,25 @@
 ---
 **A:** It combines the rank positions from different retrieval methods, such as semantic search and BM25, rewarding results that appear near the top across multiple ranked lists.
 *Memory hook:* RRF is the committee secretary who merges several judges' scoreboards and favors the candidate who keeps appearing near the top.
+
+## Claude Code as an agent
+
+### Q74. How does Claude Code avoid conflicts when you want to run multiple instances on the same project in parallel?
+---
+**A:** Each instance works inside its own Git work tree — a complete, isolated copy of the project on its own branch — so simultaneous edits from different Claude instances never collide on the same files. Instances commit their changes, then get merged back into the main branch.
+*Memory hook:* Give each contractor their own trailer and blueprint copy on a separate lot, not shared access to one house under renovation.
+
+### Q75. What does Claude Code's `init` command do, and what file does it produce?
+---
+**A:** It scans the codebase to learn its architecture and coding style, then generates a `CLAUDE.md` file summarizing that context. CLAUDE.md is automatically loaded as context for every future Claude Code request in that project (and can be manually edited or regenerated later).
+*Memory hook:* `init` is Claude taking a full tour of the building on day one and writing itself an onboarding memo it re-reads every morning.
+
+### Q76. Describe the automated production-debugging workflow that combines Claude Code, GitHub Actions, and CloudWatch.
+---
+**A:** A GitHub Action runs on a schedule (e.g., daily), pulls the last 24 hours of CloudWatch logs, and hands them to Claude Code. Claude identifies and deduplicates errors, analyzes root causes (often environment-specific issues like bad model IDs or misconfigured keys that only surface in production), generates fixes, and opens a pull request for human review.
+*Memory hook:* A night-shift detective reads yesterday's security footage (CloudWatch logs), writes up the case file, and leaves a proposed fix on your desk (a PR) before you arrive.
+
+### Q77. What are the two effective prompting workflows recommended for working with Claude Code on a new feature?
+---
+**A:** (1) Three-step workflow: have Claude analyze relevant files, then plan the solution without writing code yet, then implement the approved plan. (2) Test-driven workflow: give Claude context, have it suggest tests for the feature, select/implement the tests, then have Claude write code until those tests pass.
+*Memory hook:* Either make Claude sketch the blueprint before building (plan-then-build), or hand it a target to hit and let it keep swinging until the tests say bullseye (TDD).

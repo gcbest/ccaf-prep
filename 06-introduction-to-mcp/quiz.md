@@ -109,3 +109,48 @@
 ---
 **A:** Version or deprecate the capability instead of silently changing its meaning, so clients can adapt without unexpected behavior.
 *Memory hook:* If a blue button used to mean “save,” do not secretly make it “delete”—give the new button a new label and retire the old one carefully.
+
+### Q23. In the "typical flow" described for MCP clients, walk through what happens between a user's query and Claude's final answer — and clarify exactly what role the MCP client plays throughout.
+---
+**A:** User submits a query → your server asks its MCP client for the available tools → the client sends a list-tools request to the MCP server → server returns the tool list → your server sends the query plus tools to Claude → Claude decides to call a tool → your server asks the client to run it → the client sends a call-tool request to the MCP server → the MCP server actually executes the tool (e.g., hits the GitHub API) and returns the result → that result flows back up through the client, to your server, to Claude, which then writes the final answer for the user. The client never executes anything itself — at every step it's purely a messenger relaying requests and results between your server and the MCP server.
+*Memory hook:* The MCP client is a hotel concierge who phones the kitchen for you and carries the tray back — never once does the concierge cook the meal.
+
+### Q24. In the course's CLI project, what happens to a document's edits after you close and restart the program — and why does that matter?
+---
+**A:** Nothing survives — the "documents" live only in an in-memory Python dictionary with no database or file backing, so any edit made via the edit tool is gone the instant the process restarts and you're back to the original seeded content. It's a reminder that this is a teaching sandbox, not a persistence layer.
+*Memory hook:* Editing a doc here is like writing on a whiteboard in a room that gets wiped clean the second you shut the door.
+
+### Q25. What are the two tools on the course's example document server, and what's their exact error behavior?
+---
+**A:** `read_doc_contents(doc_id)` returns the stored text for that ID and raises a `ValueError` if the ID isn't in the docs dictionary. `edit_document(doc_id, old_string, new_string)` does a find/replace on the document's content, first validating the document exists and likewise raising `ValueError` if not.
+*Memory hook:* A librarian (read) who says "no such book" and an editor (edit) with a red pen who won't touch a manuscript that isn't on the shelf — both refuse politely with the same kind of error.
+
+### Q26. What two methods does the MCP client wrapper expose for working with tools, and exactly what SDK calls do they make?
+---
+**A:** `list_tools()` awaits `self.session.list_tools()` and returns `result.tools`. `call_tool(name, args)` awaits `self.session.call_tool(tool_name, tool_input)` and returns the execution result. Together they're the entire discovery-plus-execution surface the rest of the app needs.
+*Memory hook:* Two remote-control buttons: "Show channels" (list_tools) and "Tune in" (call_tool) — nothing else needed to watch TV.
+
+### Q27. What's the recommended pattern for how many distinct read operations a single MCP resource should cover, and why?
+---
+**A:** One resource per distinct read operation — e.g., a separate resource for "list all documents" (`docs://documents`) versus "fetch one document" (`docs://documents/{doc_id}`) rather than overloading a single URI with multiple behaviors. This keeps each URI's contract single-purpose and predictable.
+*Memory hook:* One key per lock — the lobby key that lists all mailboxes shouldn't also be the key that opens apartment 4B.
+
+### Q28. On the client, what exact call does `read_resource()` make to the server, and which part of the response does it actually use?
+---
+**A:** It calls `await self.session.read_resource(AnyUrl(uri))` to fetch the data, then reads `result.contents[0]` — the first item in the returned contents list — as the resource payload, before checking that item's `mime_type` to decide how to parse it.
+*Memory hook:* You ask the archive for "the file" and the clerk always hands you just the top folder off the stack, never the whole drawer.
+
+### Q29. How does a user pick which document to attach as a resource from the course project's CLI, and what happens once they do?
+---
+**A:** They navigate an interactive menu with arrow keys and select with the space bar; once chosen, the resource's contents are automatically pulled in and included in the prompt sent to Claude — no tool call required to read it.
+*Memory hook:* It's a self-serve topping bar — arrow over, tap space, and it's already on your plate before the model ever has to ask for it.
+
+### Q30. What does an MCP prompt function actually return, and what is done with that return value?
+---
+**A:** A list of role-tagged messages (typically built with something like `base.user_message(prompt_text)`, with arguments already interpolated into the text). That list is sent directly to Claude as conversation input — no further assembly needed.
+*Memory hook:* A prompt function isn't a suggestion, it's a pre-written boarding pass — Claude just reads it and boards.
+
+### Q31. What client-side call lists the prompts a server exposes, and how does it parallel the tool-listing call?
+---
+**A:** `list_prompts()` awaits `self.session.list_prompts()` and returns the prompt list from the result — the exact same discovery pattern as `list_tools()` awaiting `self.session.list_tools()` and returning `result.tools`, just for a different primitive.
+*Memory hook:* Same doorbell, different room — press it for the tools closet or the prompts drawer, but it's the identical "what have you got" gesture either way.
