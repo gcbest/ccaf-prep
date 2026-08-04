@@ -94,6 +94,16 @@
 **A:** A `server_tool_use` block (paired with a corresponding tool-result block, e.g. `bash_code_execution_tool_result`).
 *Memory hook:* `server_tool_use` is the airport stamp showing that the request flew to Anthropic's runway, not your local terminal.
 
+### Q18b. What does "environment inspection" mean as an agent-design concept, and why does it matter?
+---
+**A:** Explicitly checking the state of the environment before and after acting — e.g. reading a file before editing it, or taking a screenshot after a Computer Use click — rather than assuming an action landed as expected. It matters because Claude can only perceive effects through tool results; skipping this step means the agent "flies blind" and can silently repeat or compound a failed action.
+*Memory hook:* Look both ways before crossing, then look back to confirm you made it across.
+
+### Q18c. What problem does the "batch tool" trick solve, and how does it work?
+---
+**A:** It collapses several independent tool calls into one round trip instead of Claude issuing them one at a time across multiple turns. You give Claude a single `batch_tool` whose input schema accepts an array of sub-tool invocations; Claude packs multiple calls into one request, and your code executes them all (optionally in parallel) and returns the combined results.
+*Memory hook:* Instead of five separate takeout orders, place one order with five items and have the kitchen fire them all at once.
+
 ## Tool design & MCP integration (API side)
 
 ### Q19. Give the one-line distinction between Tools, Skills, and MCP.
@@ -167,6 +177,33 @@
 ---
 **A:** Since the Docker sandbox can't make external calls, the Files API is the only way to get data in (upload once, reference by file ID via a container_upload block) and get generated outputs back out.
 *Memory hook:* The sandbox is an airlocked lab: the Files API is the loading hatch for samples and finished specimens.
+
+## Multimodal input & Computer Use
+
+### Q32b. When an image and text appear in the same message, which should come first, and why does it matter?
+---
+**A:** The image block should come before the text describing it — this ordering, plus clear labels/captions when using multiple images, helps Claude unambiguously match each description to the right image.
+*Memory hook:* Show the photo before you start narrating it — nobody explains a picture before hanging it on the wall.
+
+### Q32c. What can Claude read from a PDF document block that a plain OCR text dump would miss?
+---
+**A:** The visual layout — tables, charts, and embedded images — not just the extracted text; Claude processes the PDF as a document block that preserves this structure.
+*Memory hook:* OCR gives you the transcript; the PDF block gives you the transcript plus the stage directions and diagrams.
+
+### Q32d. What are the two citation location types, and when is each used?
+---
+**A:** `citation_page_location` for PDFs (page start/end) and `citation_char_location` for plain text (character start/end index) — both require enabling `"citations": {"enabled": true}` on the source document block.
+*Memory hook:* Cite a PDF by its page number in the book; cite plain text by its character mile-marker on the page.
+
+### Q32e. Describe the Computer Use loop in order.
+---
+**A:** 1) Send Claude a screenshot of current state. 2) Claude requests a computer action (click, type, key, etc.) as a tool call. 3) Your code executes it in a sandboxed environment. 4) Your code takes a new screenshot and returns it as the tool result. 5) Repeat until done.
+*Memory hook:* It's the standard agent loop wearing a security-camera costume: screenshot in, action out, screenshot in again.
+
+### Q32f. Why must Computer Use run against a sandboxed VM/container rather than a real production desktop?
+---
+**A:** Because Claude can take arbitrary UI actions (clicks, keystrokes, shell commands) to accomplish a goal, and an unsandboxed environment gives no containment if it does something unintended.
+*Memory hook:* Let the new intern practice on the training server, not the live production keyboard.
 
 ## Prompt engineering techniques
 
@@ -283,6 +320,16 @@
 ---
 **A:** Running semantic search and BM25 (lexical) search in parallel and merging results — combines conceptual understanding with precision on exact terms/IDs.
 *Memory hook:* Hybrid search uses both a **face-recognition expert** and a **fingerprint expert**, then compares their suspect lists.
+
+### Q54b. What is "reranking" in a RAG pipeline, and how does it differ from the initial retrieval step?
+---
+**A:** A second pass, applied after initial retrieval, that reorders a wider candidate set (e.g. top 20–50) using a more discriminating method — often an LLM call scoring each candidate's relevance. Initial retrieval optimizes for recall (cast a wide net); reranking optimizes for precision (put the best items first) before truncating to the final top-K sent to Claude.
+*Memory hook:* First cast a wide net, then have a expert judge re-sort the catch so the best fish sit on top of the pile.
+
+### Q54c. What problem does "contextual retrieval" solve, and when in the pipeline does it happen?
+---
+**A:** It solves the problem of an isolated chunk losing the surrounding context that makes it findable (e.g. "revenue grew 3%" without saying which company/quarter). Before embedding/indexing, an LLM generates a short situating sentence for each chunk using the full document, which gets prepended to the chunk — a preprocessing-time fix, unlike reranking which happens at query time.
+*Memory hook:* Contextual retrieval staples a sticky note ("this is Acme's Q4 report") to each page before it ever goes in the filing cabinet.
 
 ## Agentic orchestration patterns
 

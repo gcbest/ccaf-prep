@@ -69,10 +69,53 @@ Ships in TypeScript/Python/Ruby SDKs. Takes your actual functions, auto-generate
 - **The schema is built into Claude, but you must write the implementation** — Claude knows how to *ask* for file ops; your code must actually perform them.
 - Schema stub varies by model (e.g., `text_editor_20250124` for Claude 3.7 Sonnet).
 
+### Environment inspection
+- A named agent-design concept: **before acting, look; after acting, look again.** Claude can only perceive its environment through tool results, so the loop must explicitly feed it fresh state rather than assuming an action landed as expected.
+- Concrete forms: reading a file before editing it (so the edit targets current content, not a stale assumption), listing a directory before deciding whether to create a file, taking a screenshot after a Computer Use action to confirm the click/type actually worked.
+- Skipping this step is a common source of agent failures — the agent "flies blind," repeating or compounding an action that silently failed or had an unexpected effect.
+
 ### Fine-grained tool calling (streaming detail)
 - Default streaming behavior: the API **buffers and validates** JSON, only sending complete top-level key-value pairs at a time — causes delay-then-burst streaming.
 - `fine_grained=True` disables server-side JSON validation → chunks stream immediately as generated, no buffering delay — but **your code must handle invalid/partial JSON** (Claude might emit malformed values like `undefined`).
 - Trade-off: faster/more granular UX vs. losing the API's validation safety net.
+
+### The batch tool (trick to get parallel tool calls in one turn)
+- By default, Claude *can* call multiple tools in a single turn, but often plays it safe and calls them one at a time across several turns — costing extra round trips when the calls are actually independent.
+- **The trick**: give Claude a single `batch_tool` whose input schema accepts an **array of sub-tool invocations** (each with its own name + input). Claude packs several independent calls into one `batch_tool` request instead of issuing them serially.
+- Your code unpacks the array, executes each sub-call (optionally in parallel), and returns all results together as one `tool_result`.
+- Use when several tool calls are known to be independent (e.g., "look up the weather in 5 different cities") — collapses N round trips into 1, cutting latency significantly.
+
+## Multimodal input: images, PDFs, and citations
+
+### Image support (vision)
+- Claude accepts image content blocks alongside text in the `messages` array — as base64-encoded data or a URL. A single message can include multiple images.
+- Supported formats: JPEG, PNG, GIF, WebP. Larger/higher-resolution images cost more input tokens; downscale when full resolution isn't needed for the task.
+- Best practices: when an image and text appear in the same message, **put the image block before the text** describing it. Give multiple images clear labels/captions so Claude can refer to "the second image" unambiguously. Works across multi-turn conversations (Claude can reference images from earlier turns still in context).
+
+### PDF support
+- Claude can process a PDF directly as a `document` content block (base64 or URL) — it reads **both the extracted text and the visual layout** (tables, charts, embedded images), not just OCR'd text.
+- Subject to page-count and file-size limits; each page is billed roughly like an image (visual tokens) plus its extracted text tokens.
+- Preferable to pre-extracting text yourself when the PDF's visual structure (tables, figures) carries meaning a plain-text dump would lose.
+
+### Citations
+- Opt in per document block with `"citations": {"enabled": true}`. Claude's response then includes citation blocks that point back to the exact source location backing each claim.
+- Two location types depending on source format: **`citation_page_location`** (PDFs — page start/end) and **`citation_char_location`** (plain text — character start/end index).
+- Use to ground generated claims in verifiable source spans and let a UI let users click through from an answer straight to the supporting passage.
+
+## Computer Use
+
+### What it is
+- A server-side agentic capability that lets Claude operate a computer like a human would: view the screen, move the mouse, click, type, scroll, and run shell commands — instead of calling purpose-built APIs.
+- Useful for driving software that has no API (legacy apps, most consumer GUIs) or for automating UI-level testing/flows.
+- Because Claude can take arbitrary UI actions, it must run against a **sandboxed environment** (a VM or container), never a production desktop.
+
+### How Computer Use works (the loop)
+1. Your code sends Claude a screenshot of the current screen state (plus the task).
+2. Claude responds with a tool-use request for a computer action (e.g., `screenshot`, `left_click`, `type`, `key`).
+3. Your code executes that action against the sandboxed environment.
+4. Your code takes a **new screenshot** and sends it back as the tool result — Claude has no other way to perceive whether the action worked.
+5. Repeat until Claude decides the task is complete.
+This is the general agent loop specialized to a visual environment: instead of a JSON tool result, the "result" Claude reads is a fresh image of what changed on screen.
 
 ## Tool design & MCP integration (from the API side)
 
@@ -229,6 +272,16 @@ Semantic search alone can miss **exact term matches** (e.g., a specific incident
 3. Weight rarer terms higher (common words like "a" get low weight; specific/rare terms get high weight).
 4. Return documents with the most instances of the highest-weighted terms.
 **Hybrid search** = run semantic search + BM25 in parallel, merge results — gets both conceptual relevance AND exact-term precision. This is the standard production pattern for robust RAG retrieval.
+
+### Reranking results
+- A second, more expensive refinement pass run **after** initial retrieval: pull a wider candidate set (e.g., top 20–50 via embeddings/BM25) optimized for *recall*, then rerank those candidates for *precision* using a more discriminating method — often an LLM call (or dedicated reranking model) that scores each candidate's actual relevance to the query.
+- Only the reordered top-K after reranking gets sent to Claude as context — catches cases where a fast first-pass retriever ranks a mediocre chunk above a truly relevant one.
+- Trade-off: extra latency/cost per query, so it's typically applied only to the shortlist, not the whole corpus.
+
+### Contextual retrieval
+- Problem: an isolated chunk often loses the surrounding context that makes it findable or interpretable — e.g., a chunk that just says "revenue grew 3%" without saying which company or quarter it's from.
+- Fix: **before embedding/indexing**, run each chunk through an LLM along with the full document (or a summary of it) and have the model generate a short "situating" sentence — e.g., "This chunk is from Acme Corp's Q4 2023 earnings report, discussing automotive-division revenue." Prepend that generated context to the chunk.
+- Improves both semantic search (richer embedding) and BM25 (adds indexable keywords the original chunk lacked) — a preprocessing-time fix rather than a query-time one like reranking.
 
 ## Agentic orchestration patterns
 
