@@ -3,91 +3,114 @@
 ### Q1. What training approach guides Claude to be helpful, harmless, and honest?
 ---
 **A:** Constitutional AI.
+*Memory hook:* Imagine Claude carrying a pocket constitution: helpful, harmless, and honest are the three articles it checks before speaking.
 
 ### Q2. What protocol powers Claude's connectors, and what analogy does Anthropic use to describe it?
 ---
 **A:** Model Context Protocol (MCP) — described as "USB-C for AI," a universal standard letting Claude connect to many applications through one consistent interface.
+*Memory hook:* One USB-C cable charges your phone, headphones, and tablet; MCP is the one connector for Claude's many apps.
 
 ### Q3. Name the three "shapes of work" in the Claude desktop app and which tab each lives in.
 ---
 **A:** Turn-by-turn work → Chat. Handing work off (multi-step, deliverable, scheduled) → Cowork. Building software → the Code tab.
+*Memory hook:* See three desks: a **conversation café** (Chat), a **project workshop** (Cowork), and a **developer garage** (Code).
 
 ### Q4. What happens to a Claude Project's knowledge base when it approaches the context window limit?
 ---
 **A:** Claude switches from loading everything into context to using RAG (Retrieval Augmented Generation) — searching the knowledge base and pulling in only relevant parts, expanding effective capacity up to 10x.
+*Memory hook:* When the suitcase is full, Claude stops carrying the whole library and sends a librarian to fetch only the right pages.
 
 ### Q5. What's the key distinction between Projects and Skills?
 ---
 **A:** Projects store knowledge Claude references (the "what"); Skills define a process/procedure Claude executes (the "how"). A skill can pull from knowledge stored in a project.
+*Memory hook:* A Project is the **bookshelf**; a Skill is the **recipe card** telling Claude what to cook with those books.
 
 ### Q6. Which file types are created via a separate "file creation" capability (Skills) rather than as Artifacts?
 ---
 **A:** Word documents, Excel spreadsheets, PowerPoint presentations, and PDFs.
+*Memory hook:* Picture an office delivery truck carrying four boxes: **Word**, **Excel**, **PowerPoint**, and **PDF**.
 
 ### Q7. What are the two types of connectors, and what's the difference?
 ---
 **A:** Web connectors (link to cloud services like Google Drive/Slack/Notion) and desktop extensions (run locally via the Claude Desktop app, access local files/native apps).
+*Memory hook:* One connector is a **cloud mailbox**; the other is a **keyring** that opens the apps and files on your own desk.
 
 ### Q8. What two things does an admin need to connect when setting up Enterprise Search for an org?
 ---
 **A:** A Documents connector (e.g., Google Drive or SharePoint) and a Chat connector (e.g., Slack or Microsoft Teams) are required; Email is recommended but optional.
+*Memory hook:* Enterprise Search needs the **filing cabinet door** and the **office chat door**; the **mailroom door** is a useful extra.
 
 ### Q9. How does Claude's "Research" feature differ from a quick web search?
 ---
 **A:** Research is agentic and multi-step: it plans using Thinking, runs many searches that build on each other (sometimes across hundreds of sources), synthesizes findings, and provides citations — taking minutes rather than seconds.
+*Memory hook:* Quick search asks one librarian; Research sends a detective team into the stacks, then returns with a cited dossier.
 
 ### Q10. What must be enabled for Research to function?
 ---
 **A:** Web search must be enabled.
+*Memory hook:* Research is a car with a sophisticated navigation system—but without the **web-search ignition key**, it cannot leave the driveway.
 
 ### Q11. In Cowork, what's the concrete difference between local folder access and Chat's file handling?
 ---
 **A:** Cowork can read a folder's contents and save finished work back into that same folder; Chat can read what you upload but returns finished files only as downloads.
+*Memory hook:* Cowork is a **workshop with a key** to put the finished chair back on the shelf; Chat is a **courier** who hands you a package at the door.
 
 ### Q12. What criteria make Claude auto-create an Artifact?
 ---
 **A:** Content that's significant/self-contained (typically over 15 lines), likely to be edited/iterated/reused, complex enough to stand alone without the conversation, or something you'd reference/use later.
+*Memory hook:* A sticky note stays in the chat; a 20-line dashboard destined for repeated use gets mounted as a museum exhibit—an Artifact.
 
 ### Q13. What are the three elements of an effective prompt per Claude 101's framework?
 ---
 **A:** Setting the stage (role/objective/context), defining the task (the action to take), specifying rules (style/tone/examples).
+*Memory hook:* A director gives the **actor's role**, calls the **scene's action**, and hands over the **style rulebook**.
 
 ### Q14. A user complains Claude's response ignored their formatting preference even though they described it. What's the recommended fix?
 ---
 **A:** Show, don't just tell — provide an example of the format or describe the structure explicitly (e.g., "use bullet points with bold headers for each section").
+*Memory hook:* A paint swatch beats saying “make it blue”; give Claude the formatting equivalent of the exact color chip.
 
 ### Q15. What's the difference between "Memory" and "Styles" in Claude.ai personalization?
 ---
 **A:** Memory automatically saves context (role, preferences, past decisions) across conversations. Styles let you set how Claude communicates (tone/format), either from presets or a custom description, applied across all conversations.
+*Memory hook:* **Memory** is the notebook Claude carries between visits; **Styles** are the outfit and speaking voice it wears every day.
 
 ### Q16. Describe the lightweight eval approach for testing whether Claude is a good fit for a recurring task.
 ---
 **A:** Gather 5–10 examples of the task you already do, write test prompts with natural context, run them and compare Claude's output to your originals (key info? right tone? gaps?), then refine your prompt/add examples based on findings.
+*Memory hook:* Build a tiny audition reel: bring 5–10 real performances, compare Claude's version to the originals, then coach the weak scenes.
 
 ### Q17. Why might Claude give a confidently wrong answer, and what's the mitigation?
 ---
 **A:** Claude can generate plausible but incorrect information on specific/niche facts. Mitigate by verifying independently for high-stakes work, asking for sources/confidence level, and enabling web search to ground responses.
+*Memory hook:* A charismatic tour guide can confidently point you to the wrong street; for important trips, check the map and ask for the address.
 
 ### Q18. What's a faster way to refine a message than sending a new follow-up?
 ---
 **A:** Click the pencil icon on your own message to edit and resubmit it in place.
+*Memory hook:* The pencil is a time machine: erase the bad instruction at its source instead of sending a second apology downstream.
 
 ### Q19. How does Learning mode differ from Claude simply answering a question?
 ---
 **A:** Learning mode guides the user's reasoning and helps them work toward the answer instead of only providing the answer directly.
+*Memory hook:* It is the difference between handing someone an answer key and giving them a flashlight while they solve the puzzle.
 
 ### Q20. What does scoped connector access mean in practice?
 ---
 **A:** Claude can see only the data the user is already allowed to access in the connected service; individual permissions can be toggled and the connection can be revoked.
+*Memory hook:* Your connector is an office badge, not a master key: it opens only your doors, and security can deactivate it.
 
 ### Q21. What becomes public when an Artifact is published?
 ---
 **A:** Only the selected Artifact version is published; the surrounding chat remains private, and other people can remix the published Artifact.
+*Memory hook:* Publish the finished sculpture in the gallery, not the messy backstage conversation; visitors may still remix the sculpture.
 
 ### Q22. What does a custom Skill contain, and what must be enabled for it to run?
 ---
 **A:** A custom Skill packages instructions, scripts, and resources for a specialized workflow. Code execution and file creation must be enabled, and they run in a sandboxed environment.
+*Memory hook:* A Skill is a chef's recipe binder plus kitchen tools—but the kitchen doors must be unlocked and the work stays inside a safe test kitchen.
 
 ### Q23. Which Claude surface best fits each task: interactive brainstorming, a delegated multi-step deliverable, and work inside a software repository?
 ---
 **A:** Chat fits interactive turn-by-turn work, Cowork fits delegated multi-step deliverables that may use files or connectors, and Code fits inspecting, editing, testing, and committing changes in a codebase.
+*Memory hook:* Choose the **café** for conversation, the **workshop** for a delegated project, and the **garage** for rebuilding an engine.
