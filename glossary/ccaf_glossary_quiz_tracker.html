@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CCA-F Terminology Quiz & Progress Tracker</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f7f7f8; color: #1f1f23;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 20px 20px 60px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .subtitle { color: #666; font-size: 13px; margin-bottom: 18px; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid #e2e2e6; flex-wrap: wrap; }
+  .tab {
+    padding: 9px 14px; cursor: pointer; font-size: 13px; font-weight: 600;
+    color: #666; border-bottom: 2px solid transparent; user-select: none;
+  }
+  .tab.active { color: #b5651d; border-bottom-color: #b5651d; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .card {
+    background: #fff; border: 1px solid #e6e6ea; border-radius: 10px;
+    padding: 16px 18px; margin-bottom: 12px;
+  }
+  .domain-tag {
+    display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px;
+    border-radius: 999px; color: #fff; margin-bottom: 8px;
+  }
+  .term-row {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 10px; padding: 10px 0; border-bottom: 1px solid #f0f0f3;
+  }
+  .term-row:last-child { border-bottom: none; }
+  .term-name { font-weight: 700; font-size: 14px; }
+  .term-def { font-size: 13px; color: #444; margin-top: 2px; line-height: 1.4; }
+  .mastery-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px;
+  }
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+  select, button {
+    font-size: 13px; padding: 7px 12px; border-radius: 7px; border: 1px solid #d8d8dd;
+    background: #fff; cursor: pointer;
+  }
+  button.primary { background: #b5651d; color: #fff; border-color: #b5651d; font-weight: 600; }
+  button.primary:hover { background: #9c5416; }
+  button.ghost { background: #fff; color: #b5651d; border-color: #e0c3a8; }
+  input[type=text] {
+    font-size: 13px; padding: 7px 12px; border-radius: 7px; border: 1px solid #d8d8dd; flex: 1; min-width: 160px;
+  }
+  .qtext { font-size: 15px; font-weight: 600; margin-bottom: 12px; line-height: 1.4; }
+  .option {
+    display: block; width: 100%; text-align: left; padding: 10px 12px; margin-bottom: 8px;
+    border: 1px solid #d8d8dd; border-radius: 8px; background: #fff; font-size: 13.5px; cursor: pointer;
+  }
+  .option:hover { border-color: #b5651d; }
+  .option.correct { background: #e8f5e9; border-color: #4caf50; }
+  .option.wrong { background: #fdecea; border-color: #e57373; }
+  .option.disabled { cursor: default; }
+  .feedback { font-size: 13px; margin: 10px 0; padding: 10px 12px; border-radius: 8px; }
+  .feedback.good { background: #e8f5e9; color: #2e6b31; }
+  .feedback.bad { background: #fdecea; color: #a13a2e; }
+  .progress-bar-outer {
+    width: 100%; height: 8px; background: #ececef; border-radius: 999px; overflow: hidden; margin: 6px 0 2px;
+  }
+  .progress-bar-inner { height: 100%; border-radius: 999px; background: #b5651d; }
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 10px; margin-bottom: 14px; }
+  .stat-box { background: #fff; border: 1px solid #e6e6ea; border-radius: 10px; padding: 12px 14px; text-align: center; }
+  .stat-num { font-size: 22px; font-weight: 700; }
+  .stat-label { font-size: 11px; color: #777; margin-top: 2px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid #f0f0f3; }
+  th { color: #777; font-weight: 600; font-size: 11px; text-transform: uppercase; }
+  .explain { font-size: 13px; color: #444; margin-top: 10px; padding: 10px 12px; background: #f7f2ec; border-radius: 8px; line-height: 1.5; }
+  .small { font-size: 12px; color: #777; }
+  .row-between { display: flex; justify-content: space-between; align-items: center; }
+  .badge { font-size: 11px; padding: 2px 7px; border-radius: 999px; background: #eee; color: #555; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Claude Certified Architect – Foundations</h1>
+  <div class="subtitle">Terminology glossary, quizzes, and progress tracking · from the CCAR-F Exam Guide (v1.0, effective July 2026)</div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="glossary">Glossary</div>
+    <div class="tab" data-tab="quiz">Term Quiz</div>
+    <div class="tab" data-tab="scenarios">Scenario Practice</div>
+    <div class="tab" data-tab="progress">My Progress</div>
+  </div>
+
+  <!-- GLOSSARY -->
+  <div class="panel active" id="panel-glossary">
+    <div class="controls">
+      <input type="text" id="glossarySearch" placeholder="Search terms or definitions...">
+      <select id="glossaryDomainFilter"><option value="all">All domains</option></select>
+    </div>
+    <div id="glossaryList"></div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="panel" id="panel-quiz">
+    <div class="card" id="quizSetup">
+      <div class="controls">
+        <select id="quizDomain"><option value="all">All domains</option></select>
+        <select id="quizLen">
+          <option value="8">8 questions</option>
+          <option value="12" selected>12 questions</option>
+          <option value="20">20 questions</option>
+          <option value="999">All terms in scope</option>
+        </select>
+        <select id="quizMode">
+          <option value="weak">Prioritize weak terms (recommended)</option>
+          <option value="random">Fully random</option>
+        </select>
+        <button class="primary" id="startQuizBtn">Start quiz</button>
+      </div>
+      <div class="small">Weak-term mode weights terms you've gotten wrong or haven't seen yet, so review sessions target real gaps.</div>
+    </div>
+    <div id="quizArea"></div>
+  </div>
+
+  <!-- SCENARIOS -->
+  <div class="panel" id="panel-scenarios">
+    <div class="card">
+      <div class="small">12 official sample questions from the exam guide, grouped by scenario. Each includes the full explanation after you answer.</div>
+    </div>
+    <div id="scenarioList"></div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="panel" id="panel-progress">
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="card">
+      <div class="row-between"><strong style="font-size:13px;">Mastery by domain</strong></div>
+      <div id="domainBars" style="margin-top:10px;"></div>
+    </div>
+    <div class="card">
+      <div class="row-between"><strong style="font-size:13px;">Weakest terms right now</strong></div>
+      <div id="weakTable" style="margin-top:8px;"></div>
+    </div>
+    <div class="card">
+      <div class="row-between">
+        <strong style="font-size:13px;">Scenario practice score</strong>
+      </div>
+      <div id="scenarioStats" style="margin-top:8px;"></div>
+    </div>
+    <div class="card">
+      <div class="row-between">
+        <span class="small">Progress is saved in this browser and persists across visits.</span>
+        <button class="ghost" id="resetBtn">Reset all progress</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- DOMAINS ---------- */
+const DOMAINS = {
+  d1: { name: "Agentic Architecture & Orchestration", color: "#b5651d" },
+  d2: { name: "Tool Design & MCP Integration", color: "#3d7a5c" },
+  d3: { name: "Claude Code Configuration & Workflows", color: "#3a6ea5" },
+  d4: { name: "Prompt Engineering & Structured Output", color: "#8548a6" },
+  d5: { name: "Context Management & Reliability", color: "#a5473a" }
+};
+
+/* ---------- TERM GLOSSARY + QUIZ BANK ---------- */
+const TERMS = [
+{id:"t1",domain:"d1",term:"Agentic loop",def:"The cycle of sending a request to Claude, checking stop_reason, executing any requested tools, and returning results for the next iteration until the model ends its turn.",q:"What defines the core control flow of an agentic loop?",options:["Checking stop_reason and looping while it's \"tool_use\", stopping at \"end_turn\"","Parsing the assistant's text for phrases like \"I'm done\"","Running a fixed number of iterations regardless of model output","Stopping as soon as any tool call fails"],correct:0},
+{id:"t2",domain:"d1",term:"stop_reason",def:"A response field indicating why generation stopped; \"tool_use\" means continue the loop, \"end_turn\" means the model is finished.",q:"Which stop_reason value should trigger an agentic loop to terminate?",options:["\"tool_use\"","\"end_turn\"","\"max_tokens\"","\"stop_sequence\""],correct:1},
+{id:"t3",domain:"d1",term:"Hub-and-spoke architecture",def:"A multi-agent pattern where a coordinator manages all inter-subagent communication, error handling, and information routing.",q:"In hub-and-spoke multi-agent orchestration, who manages inter-subagent communication and error handling?",options:["Each subagent independently","The coordinator agent","A shared queue subagents poll directly","The end user"],correct:1},
+{id:"t4",domain:"d1",term:"Task tool",def:"The Agent SDK mechanism for spawning subagents; a coordinator's allowedTools must include \"Task\" to invoke them.",q:"What must a coordinator's allowedTools include to spawn subagents?",options:["\"Spawn\"","\"Delegate\"","\"Task\"","\"Fork\""],correct:2},
+{id:"t5",domain:"d1",term:"AgentDefinition",def:"Configuration for a subagent type, including its description, system prompt, and tool restrictions.",q:"What does an AgentDefinition specify for a subagent?",options:["Only its name","Description, system prompt, and tool restrictions","The coordinator's memory files","The user's billing tier"],correct:1},
+{id:"t6",domain:"d1",term:"Subagent context isolation",def:"Subagents do not automatically inherit the coordinator's conversation history or share memory between invocations; context must be explicitly passed.",q:"How does a subagent receive context from prior research findings?",options:["It automatically inherits the coordinator's full history","Findings must be explicitly included in its prompt","It reads the coordinator's memory files directly","It shares a global memory object with other subagents"],correct:1},
+{id:"t7",domain:"d1",term:"fork_session",def:"Creates an independent branch from a shared analysis baseline, for exploring divergent approaches from the same starting context.",q:"When comparing two implementation strategies from the same codebase analysis, what should you use?",options:["--resume","fork_session","/compact","A new CLAUDE.md file"],correct:1},
+{id:"t8",domain:"d1",term:"--resume <session-name>",def:"CLI mechanism for continuing a specific named prior conversation/session.",q:"What does --resume <session-name> do?",options:["Starts a brand-new session with no history","Continues a specific named prior conversation","Forks a session into two branches","Compacts the current session's context"],correct:1},
+{id:"t9",domain:"d1",term:"Programmatic enforcement vs. prompt guidance",def:"Programmatic enforcement (hooks, gates) guarantees compliance deterministically; prompt instructions alone are only probabilistic and have a non-zero failure rate.",q:"Why prefer a programmatic prerequisite gate over a prompt instruction for \"verify identity before refund\"?",options:["It's easier to write","It guarantees deterministic compliance instead of relying on probabilistic prompt-following","It requires no testing","It removes the need for tool descriptions"],correct:1},
+{id:"t10",domain:"d1",term:"PostToolUse hook",def:"An Agent SDK hook that intercepts tool results to transform/normalize them (e.g., mixed date formats) before the model processes them.",q:"Which hook pattern normalizes inconsistent timestamp formats returned by different MCP tools?",options:["PreToolUse","PostToolUse","tool_choice","argument-hint"],correct:1},
+{id:"t11",domain:"d1",term:"Tool call interception hook",def:"A hook that intercepts outgoing tool calls to enforce business rules, e.g. blocking refunds above a threshold and redirecting to escalation.",q:"What hook pattern blocks a process_refund call exceeding $500 and redirects to human escalation?",options:["A tool call interception hook","A PostToolUse hook","A few-shot example","A CLAUDE.md instruction"],correct:0},
+{id:"t12",domain:"d1",term:"Prompt chaining",def:"A fixed, sequential task decomposition pattern — e.g., analyzing each file individually, then a separate cross-file integration pass.",q:"Splitting a code review into \"per-file analysis\" then \"cross-file integration\" is an example of:",options:["Dynamic adaptive decomposition","Prompt chaining","Hub-and-spoke orchestration","Fork-based session management"],correct:1},
+{id:"t13",domain:"d1",term:"Dynamic / adaptive decomposition",def:"Task decomposition where subtasks are generated based on what's discovered at each step, suited to open-ended investigation.",q:"Which decomposition strategy suits \"add comprehensive tests to a legacy codebase\"?",options:["Fixed sequential prompt chaining","Dynamic decomposition that adapts as dependencies are discovered","A single monolithic prompt","Batch processing"],correct:1},
+
+{id:"t14",domain:"d2",term:"Tool description",def:"The primary mechanism an LLM uses to select the right tool; minimal descriptions cause unreliable selection among similar tools.",q:"What's the most effective first fix when an agent confuses two similarly-named tools?",options:["Add a routing classifier","Expand each tool's description with input formats, examples, and boundaries","Merge them into one tool immediately","Add few-shot examples without touching descriptions"],correct:1},
+{id:"t15",domain:"d2",term:"isError flag",def:"The MCP pattern for communicating tool call failure back to the calling agent.",q:"How does an MCP tool signal that a call failed?",options:["Returning an empty string","The isError flag","Throwing an uncaught exception only","Setting stop_reason to \"tool_use\""],correct:1},
+{id:"t16",domain:"d2",term:"errorCategory",def:"Structured classification of tool errors (transient, validation, business, permission) enabling the agent to choose the right recovery action.",q:"Why return an errorCategory field instead of a generic \"Operation failed\" message?",options:["It looks more professional","It lets the agent choose the right recovery action instead of guessing","It reduces token usage","It's required by JSON syntax"],correct:1},
+{id:"t17",domain:"d2",term:"isRetryable",def:"Boolean flag indicating whether a failed operation can be safely retried, preventing wasted retry attempts.",q:"What does isRetryable: false on a business error tell the agent?",options:["Retry immediately with backoff","Don't retry — explain the business rule violation instead","Escalate regardless of context","The tool is permanently broken"],correct:1},
+{id:"t18",domain:"d2",term:"tool_choice: \"auto\"",def:"tool_choice setting where the model may return text instead of calling a tool.",q:"Which tool_choice setting allows Claude to respond with plain text instead of calling a tool?",options:["\"auto\"","\"any\"","forced selection","None of these"],correct:0},
+{id:"t19",domain:"d2",term:"tool_choice: \"any\"",def:"tool_choice setting that guarantees the model calls some tool, but lets it choose which one.",q:"You want a tool guaranteed to be called, but the model can pick among several extraction schemas. Which tool_choice?",options:["\"auto\"","\"any\"","{\"type\":\"tool\",\"name\":\"...\"}","isError"],correct:1},
+{id:"t20",domain:"d2",term:"Forced tool selection",def:"tool_choice: {\"type\": \"tool\", \"name\": \"...\"} forces the model to call one specific named tool.",q:"How do you force Claude to call extract_metadata before any enrichment tools run?",options:["tool_choice: \"auto\"","tool_choice: \"any\"","tool_choice: {\"type\":\"tool\",\"name\":\"extract_metadata\"}","Add it as the first line in CLAUDE.md"],correct:2},
+{id:"t21",domain:"d2",term:".mcp.json",def:"Project-level MCP server configuration, shared with the team via version control.",q:"Where do you configure an MCP server so the whole team shares it via version control?",options:["~/.claude.json",".mcp.json","CLAUDE.md",".claude/rules/"],correct:1},
+{id:"t22",domain:"d2",term:"~/.claude.json",def:"User-level MCP server configuration for personal or experimental servers, not shared with teammates.",q:"Where should a personal, experimental MCP server live so it doesn't affect teammates?",options:[".mcp.json","~/.claude.json",".claude/commands/","argument-hint frontmatter"],correct:1},
+{id:"t23",domain:"d2",term:"Environment variable expansion",def:"Syntax like ${GITHUB_TOKEN} in .mcp.json letting credentials be referenced without committing secrets.",q:"How do you reference a credential in .mcp.json without committing the secret itself?",options:["Hardcode it and .gitignore the file","Use environment variable expansion, e.g. ${GITHUB_TOKEN}","Store it in CLAUDE.md","Base64-encode it inline"],correct:1},
+{id:"t24",domain:"d2",term:"MCP resources",def:"A mechanism for exposing content catalogs (issue summaries, doc hierarchies, schemas) to agents, reducing exploratory tool calls.",q:"What MCP feature exposes a catalog of available content without needing exploratory tool calls?",options:["MCP tools","MCP resources","isError flag","tool_choice"],correct:1},
+{id:"t25",domain:"d2",term:"Grep (built-in tool)",def:"Built-in tool for searching file contents for patterns like function names, error messages, or imports.",q:"Which built-in tool searches file contents for a specific function name across a codebase?",options:["Glob","Grep","Read","Edit"],correct:1},
+{id:"t26",domain:"d2",term:"Glob (built-in tool)",def:"Built-in tool for matching file paths by name/extension pattern (e.g. **/*.test.tsx).",q:"Which tool finds all files matching **/*.test.tsx regardless of directory?",options:["Grep","Glob","Bash","Write"],correct:1},
+{id:"t27",domain:"d2",term:"Edit-fails fallback",def:"When Edit can't find a unique text anchor, Read the full file then Write the modified version instead.",q:"Edit fails because the anchor text isn't unique in the file. What's the reliable fallback?",options:["Give up and ask the user","Read the full file, then Write the modified version","Use Glob to find another file","Use Bash sed blindly"],correct:1},
+
+{id:"t28",domain:"d3",term:"CLAUDE.md hierarchy",def:"Configuration loads from user-level (~/.claude/CLAUDE.md), project-level, and directory-level files.",q:"A new teammate isn't receiving instructions everyone else has. Likely cause?",options:["The instructions are in project-level CLAUDE.md","They're only in another dev's user-level ~/.claude/CLAUDE.md, which isn't shared","CLAUDE.md doesn't support hierarchies","The teammate needs a different model"],correct:1},
+{id:"t29",domain:"d3",term:"@import syntax",def:"Syntax for referencing external files from CLAUDE.md to keep it modular (e.g., package-specific standards).",q:"How do you keep CLAUDE.md modular by referencing external standards files per package?",options:["Copy-paste each file's content in","Use @import syntax","Use .claude/commands/","Use tool_choice"],correct:1},
+{id:"t30",domain:"d3",term:".claude/rules/",def:"Directory of topic-specific rule files with YAML frontmatter path fields (glob patterns) for conditional, path-scoped loading.",q:"Test files are scattered across many directories, but conventions should apply consistently regardless of location. Best approach?",options:["A CLAUDE.md file in each directory","A .claude/rules/ file with paths: [\"**/*.test.tsx\"]","A single monolithic root CLAUDE.md","A custom slash command"],correct:1},
+{id:"t31",domain:"d3",term:"/memory command",def:"Verifies which memory files are currently loaded, useful for diagnosing inconsistent behavior across sessions.",q:"How do you check which CLAUDE.md / memory files are actually loaded in the current session?",options:["/compact","/memory","--resume","argument-hint"],correct:1},
+{id:"t32",domain:"d3",term:".claude/commands/",def:"Project-scoped custom slash commands, shared via version control with the whole team.",q:"Where should a /review slash command live so every developer gets it automatically on clone/pull?",options:["~/.claude/commands/",".claude/commands/","CLAUDE.md",".claude/config.json"],correct:1},
+{id:"t33",domain:"d3",term:"~/.claude/commands/",def:"User-scoped personal slash commands, not shared with teammates.",q:"Where do personal, non-shared slash commands belong?",options:[".claude/commands/","~/.claude/commands/",".claude/rules/",".mcp.json"],correct:1},
+{id:"t34",domain:"d3",term:"SKILL.md frontmatter",def:"Configuration for skills in .claude/skills/, supporting options like context: fork, allowed-tools, and argument-hint.",q:"Which file defines a custom skill's behavior and frontmatter options?",options:["CLAUDE.md","SKILL.md",".mcp.json","settings.json"],correct:1},
+{id:"t35",domain:"d3",term:"context: fork",def:"Frontmatter option that runs a skill in an isolated sub-agent context so its verbose output doesn't pollute the main conversation.",q:"A skill produces verbose analysis output you don't want cluttering the main conversation. What option isolates it?",options:["allowed-tools","context: fork","argument-hint","--resume"],correct:1},
+{id:"t36",domain:"d3",term:"allowed-tools (skill frontmatter)",def:"Restricts which tools a skill can use during execution, e.g. limiting to file-write operations only.",q:"How do you prevent a skill from making destructive Bash calls while still letting it write files?",options:["context: fork","allowed-tools restricted to file write operations","argument-hint",".claude/rules/"],correct:1},
+{id:"t37",domain:"d3",term:"argument-hint",def:"Frontmatter that prompts developers for required parameters when a skill is invoked without arguments.",q:"What frontmatter option prompts a user for missing required parameters when invoking a skill?",options:["context: fork","argument-hint","allowed-tools","@import"],correct:1},
+{id:"t38",domain:"d3",term:"Plan mode",def:"Mode for exploring a codebase and designing an approach before making changes; suited to complex, architectural, multi-file tasks.",q:"You're restructuring a monolith into microservices across dozens of files. What should you use first?",options:["Direct execution with detailed upfront instructions","Plan mode, to explore and design before committing","Skip exploration and iterate live","The Message Batches API"],correct:1},
+{id:"t39",domain:"d3",term:"Direct execution",def:"Appropriate for simple, well-scoped changes like adding a single validation check to one function.",q:"A single-file bug fix with a clear stack trace calls for:",options:["Plan mode","Direct execution","fork_session","Message Batches API"],correct:1},
+{id:"t40",domain:"d3",term:"Explore subagent",def:"Isolates verbose discovery/search output and returns a summary, preserving the main conversation's context budget.",q:"Which subagent type prevents context exhaustion during a verbose multi-phase discovery process?",options:["The Explore subagent","The coordinator agent","The synthesis agent","The escalation agent"],correct:0},
+{id:"t41",domain:"d3",term:"Interview pattern",def:"Having Claude ask clarifying questions to surface considerations (e.g., cache invalidation strategy) before implementing, in unfamiliar domains.",q:"Before implementing a caching layer in an unfamiliar domain, what pattern surfaces design considerations first?",options:["The interview pattern — Claude asks questions first","Direct execution","Batch processing","tool_choice: \"any\""],correct:0},
+{id:"t42",domain:"d3",term:"-p / --print flag",def:"Runs Claude Code in non-interactive mode so it doesn't wait for user input — required for CI/CD pipelines.",q:"A CI pipeline running `claude \"review this PR\"` hangs waiting for input. What flag fixes it?",options:["--batch","-p / --print","--json-schema","--resume"],correct:1},
+{id:"t43",domain:"d3",term:"--output-format json / --json-schema",def:"CLI flags that enforce machine-parseable structured output for CI-invoked Claude Code.",q:"How do you get machine-parseable findings from Claude Code to post as inline PR comments?",options:["--output-format json with --json-schema","-p alone","/compact","CLAUDE.md alone"],correct:0},
+
+{id:"t44",domain:"d4",term:"Few-shot prompting",def:"Providing targeted examples (2-4) to demonstrate correct handling of ambiguous cases, improving consistency and reducing hallucination.",q:"Prose instructions alone produce inconsistent output for an ambiguous classification task. Most effective fix?",options:["Add few-shot examples showing correct judgment on ambiguous cases","Lengthen the prose instructions further","Lower max_tokens","Switch to tool_choice: \"auto\""],correct:0},
+{id:"t45",domain:"d4",term:"tool_use with JSON schema",def:"The most reliable way to get guaranteed schema-compliant structured output, eliminating JSON syntax errors (not semantic errors).",q:"What technique guarantees schema-compliant output and eliminates JSON syntax errors?",options:["Asking nicely in the prompt","tool_use with a JSON schema","Regex post-processing","Batch processing"],correct:1},
+{id:"t46",domain:"d4",term:"Nullable / optional fields",def:"Schema fields marked optional so the model returns null instead of fabricating values when info is absent from the source.",q:"A required schema field is sometimes missing from source documents, and the model invents values. What's the fix?",options:["Make the field required with a default","Make the field nullable/optional","Remove tool_use entirely","Add examples of fabricated data"],correct:1},
+{id:"t47",domain:"d4",term:"enum + \"other\" + detail pattern",def:"Schema design using an enum with an \"other\" option plus a free-text detail field for extensible categorization.",q:"How do you handle categories that don't fit a fixed enum without breaking the schema?",options:["Add every possible value to the enum","Use \"other\" + a detail string field alongside the enum","Make the field a raw string with no enum","Reject the document"],correct:1},
+{id:"t48",domain:"d4",term:"Retry-with-error-feedback",def:"On validation failure, the follow-up request includes the original document, the failed extraction, and specific validation errors.",q:"An extraction fails schema validation. What should the retry prompt include?",options:["Just \"try again\"","The document, the failed extraction, and the specific validation errors","A completely new document","Nothing — switch models"],correct:1},
+{id:"t49",domain:"d4",term:"detected_pattern field",def:"A structured field tracking which code construct triggered a finding, enabling analysis of false-positive dismissal patterns.",q:"How can you systematically analyze which patterns cause developers to dismiss findings as false positives?",options:["Manually re-read every review","Add a detected_pattern field to structured findings","Disable the review entirely","Increase max_tokens"],correct:1},
+{id:"t50",domain:"d4",term:"Message Batches API",def:"Offers 50% cost savings with up to a 24-hour processing window but no guaranteed latency SLA; unsuitable for blocking workflows.",q:"Which workflow is appropriate for the Message Batches API?",options:["A blocking pre-merge check","An overnight technical debt report","Real-time customer chat","A synchronous tool-calling loop"],correct:1},
+{id:"t51",domain:"d4",term:"custom_id",def:"Field used to correlate batch request/response pairs, enabling targeted resubmission of only failed items.",q:"After a batch job partially fails, how do you resubmit only the failed documents?",options:["Resubmit the entire batch","Identify failures by custom_id and resubmit only those","There's no way to correlate results","Switch to synchronous API for everything"],correct:1},
+{id:"t52",domain:"d4",term:"Multi-pass review",def:"Splitting a large review into per-file local-analysis passes plus a separate cross-file integration pass to avoid attention dilution.",q:"A single-pass review of a 14-file PR gives inconsistent, contradictory feedback. What's the fix?",options:["Use a bigger context window in one pass","Split into per-file passes plus a separate cross-file integration pass","Require smaller PRs from developers","Run 3 passes and require majority vote"],correct:1},
+{id:"t53",domain:"d4",term:"Independent review instance",def:"A separate Claude instance without the generator's reasoning context, more effective at catching issues than self-review.",q:"Why is a second, independent Claude instance better at catching bugs than self-review?",options:["It's cheaper","The generator retains its own reasoning and is less likely to question its decisions","Self-review is technically impossible","Independent instances have larger context windows"],correct:1},
+
+{id:"t54",domain:"d5",term:"Lost in the middle effect",def:"Models reliably process information at the beginning and end of long inputs but may omit findings buried in the middle.",q:"Why might a synthesis agent miss a key finding buried in the middle of a long aggregated input?",options:["The finding was formatted incorrectly","The \"lost in the middle\" effect — models attend less to middle content","The finding used the wrong JSON schema","Batch processing dropped it"],correct:1},
+{id:"t55",domain:"d5",term:"Case facts block",def:"A persistent block of extracted transactional facts (amounts, dates, order numbers) included in every prompt, kept outside summarized history.",q:"How do you prevent numeric details from being lost during progressive summarization?",options:["Summarize more aggressively","Extract them into a persistent \"case facts\" block included in every prompt","Remove them from context entirely","Store them only in the final message"],correct:1},
+{id:"t56",domain:"d5",term:"Escalation triggers",def:"Valid triggers include explicit customer requests for a human, policy gaps/exceptions, and inability to make progress — not sentiment or self-confidence.",q:"Which is a valid, reliable trigger for escalating to a human agent?",options:["The customer sounds frustrated (sentiment)","The agent's self-reported confidence dropped","The request falls into a policy gap the rules don't address","The case took longer than 2 minutes"],correct:2},
+{id:"t57",domain:"d5",term:"Structured error context",def:"Includes failure type, what was attempted, partial results, and alternative approaches, enabling intelligent coordinator recovery.",q:"A subagent times out. What should it return to enable a good coordinator recovery decision?",options:["A generic \"search unavailable\" status","Structured context: failure type, attempted query, partial results, alternatives","An empty result marked as success","Nothing — let the exception propagate"],correct:1},
+{id:"t58",domain:"d5",term:"Scratchpad files",def:"Files where an agent records key findings during long exploration sessions, referenced later to counteract context degradation.",q:"During a long exploration, the agent gives inconsistent answers about classes found earlier. What helps?",options:["Restarting from scratch every time","Maintaining scratchpad files recording key findings to reference later","Increasing max_tokens indefinitely","Switching to batch processing"],correct:1},
+{id:"t59",domain:"d5",term:"Manifest (crash recovery)",def:"Structured state export from each agent to a known location; the coordinator loads this manifest on resume to recover from a crash.",q:"How do you design a multi-agent system to recover cleanly after a mid-workflow crash?",options:["Restart the entire pipeline from the beginning","Each agent exports state to a known location; coordinator loads a manifest on resume","Ignore the crash and continue","Use fork_session exclusively"],correct:1},
+{id:"t60",domain:"d5",term:"/compact",def:"Reduces context usage during extended sessions when context fills with verbose discovery output.",q:"Context is filling up with verbose exploration output mid-session. What reduces usage without starting over?",options:["/compact","/memory","--resume","fork_session"],correct:0},
+{id:"t61",domain:"d5",term:"Stratified random sampling",def:"Sampling across document types/segments to measure error rates in high-confidence extractions, since aggregate accuracy can mask poor segment performance.",q:"Overall accuracy is 97%, but you suspect it masks poor performance on one document type. What technique reveals this?",options:["Trust the aggregate number","Stratified random sampling across document types/fields","Increase the confidence threshold","Switch to the Batches API"],correct:1},
+{id:"t62",domain:"d5",term:"Field-level confidence scores",def:"Model-output confidence per field, calibrated against labeled validation sets, used to route low-confidence extractions to human review.",q:"How do you decide which individual extracted fields need human review?",options:["Route the whole document based on one overall score","Use field-level confidence scores calibrated with labeled validation data","Always require 100% human review","Never review anything above 90% aggregate accuracy"],correct:1},
+{id:"t63",domain:"d5",term:"Claim-source mapping",def:"Structured attribution linking each claim to its source (URL, document, excerpt) that must be preserved through synthesis.",q:"How do you preserve source attribution when synthesis combines findings from multiple subagents?",options:["Summarize freely and drop source metadata","Require structured claim-source mappings preserved through synthesis","Cite only the first source found","Merge all sources into one generic citation"],correct:1},
+{id:"t64",domain:"d5",term:"Conflict annotation",def:"When sources disagree on a statistic, annotate the conflict with source attribution rather than arbitrarily picking one value.",q:"Two credible sources report different statistics for the same metric. What should synthesis do?",options:["Pick whichever value sounds more authoritative","Annotate both values with source attribution rather than choosing one","Average the two values","Omit the statistic entirely"],correct:1}
+];
+
+/* ---------- OFFICIAL SAMPLE SCENARIO QUESTIONS ---------- */
+const SCENARIOS = [
+{id:"s1",scenario:"Customer Support Resolution Agent",q:"Production data shows that in 12% of cases, your agent skips get_customer entirely and calls lookup_order using only the customer's stated name, occasionally leading to misidentified accounts and incorrect refunds. What change would most effectively address this reliability issue?",options:["Add a programmatic prerequisite that blocks lookup_order and process_refund calls until get_customer has returned a verified customer ID.","Enhance the system prompt to state that customer verification via get_customer is mandatory before any order operations.","Add few-shot examples showing the agent always calling get_customer first, even when customers volunteer order details.","Implement a routing classifier that analyzes each request and enables only the subset of tools appropriate for that request type."],correct:0,explain:"Programmatic enforcement provides deterministic guarantees that prompt-based approaches (B, C) cannot, which matters when errors have financial consequences. D addresses tool availability, not tool ordering, which isn't the real problem."},
+{id:"s2",scenario:"Customer Support Resolution Agent",q:"Production logs show the agent frequently calls get_customer when users ask about orders (e.g., \"check my order #12345\"), instead of calling lookup_order. Both tools have minimal descriptions and accept similar identifier formats. What's the most effective first step?",options:["Add few-shot examples to the system prompt demonstrating correct tool selection patterns.","Expand each tool's description to include input formats, example queries, edge cases, and boundaries versus similar tools.","Implement a routing layer that parses user input before each turn and pre-selects the appropriate tool.","Consolidate both tools into a single lookup_entity tool that internally determines which backend to query."],correct:1,explain:"Tool descriptions are the primary mechanism LLMs use for tool selection. Minimal descriptions leave models without the context to differentiate similar tools — this is the low-effort, high-leverage first fix. A adds token overhead without fixing the root cause; C is over-engineered; D is valid but requires more effort than a first step warrants."},
+{id:"s3",scenario:"Customer Support Resolution Agent",q:"Your agent achieves 55% first-contact resolution, well below the 80% target. Logs show it escalates straightforward cases while attempting to autonomously handle complex situations requiring policy exceptions. What's the most effective way to improve escalation calibration?",options:["Add explicit escalation criteria to your system prompt with few-shot examples demonstrating when to escalate versus resolve autonomously.","Have the agent self-report a confidence score (1-10) and automatically route to humans below a threshold.","Deploy a separate classifier model trained on historical tickets to predict which requests need escalation.","Implement sentiment analysis to detect customer frustration and escalate when negative sentiment exceeds a threshold."],correct:0,explain:"Explicit criteria with few-shot examples directly address unclear decision boundaries — the root cause. Self-reported confidence (B) is poorly calibrated on hard cases; a separate classifier (C) is over-engineered before simpler fixes are tried; sentiment (D) doesn't correlate with case complexity."},
+{id:"s4",scenario:"Code Generation with Claude Code",q:"You want to create a custom /review slash command available to every developer when they clone or pull the repository. Where should you create this command file?",options:["In the .claude/commands/ directory in the project repository","In ~/.claude/commands/ in each developer's home directory","In the CLAUDE.md file at the project root","In a .claude/config.json file with a commands array"],correct:0,explain:"Project-scoped commands in .claude/commands/ are version-controlled and automatically available to everyone who clones/pulls. ~/.claude/commands/ is personal and not shared; CLAUDE.md is for context/instructions, not command definitions; option D references a mechanism that doesn't exist."},
+{id:"s5",scenario:"Code Generation with Claude Code",q:"You've been assigned to restructure the team's monolithic application into microservices, involving changes across dozens of files and decisions about service boundaries. Which approach should you take?",options:["Enter plan mode to explore the codebase, understand dependencies, and design an implementation approach before making changes.","Start with direct execution and make changes incrementally, letting the implementation reveal service boundaries.","Use direct execution with comprehensive upfront instructions detailing exactly how each service should be structured.","Begin in direct execution mode and only switch to plan mode if you encounter unexpected complexity."],correct:0,explain:"Plan mode is designed for exactly this: large-scale changes, multiple valid approaches, architectural decisions. It enables safe exploration before committing. B risks costly rework; C assumes you already know the right structure; D ignores that complexity is already known upfront."},
+{id:"s6",scenario:"Code Generation with Claude Code",q:"Your codebase has distinct conventions per area (React components, API handlers, database models), and test files are spread throughout the codebase alongside the code they test. You want all tests to follow the same conventions regardless of location. What's the most maintainable approach?",options:["Create rule files in .claude/rules/ with YAML frontmatter specifying glob patterns to conditionally apply conventions based on file paths.","Consolidate all conventions in the root CLAUDE.md under headers for each area, relying on Claude to infer which section applies.","Create skills in .claude/skills/ for each code type that include the relevant conventions in their SKILL.md files.","Place a separate CLAUDE.md file in each subdirectory containing that area's specific conventions."],correct:0,explain:".claude/rules/ with glob patterns (e.g. **/*.test.tsx) applies conventions based on file path regardless of directory location — essential for scattered test files. B relies on unreliable inference; C requires manual/conditional invocation; D can't handle files spread across many directories."},
+{id:"s7",scenario:"Multi-Agent Research System",q:"Each subagent completes successfully, but the final report covers only visual arts, completely missing music, writing, and film. The coordinator's logs show it decomposed \"impact of AI on creative industries\" into three subtasks all about visual arts. What is the most likely root cause?",options:["The synthesis agent lacks instructions for identifying coverage gaps in the findings it receives.","The coordinator agent's task decomposition is too narrow, resulting in subagent assignments that don't cover all relevant domains.","The web search agent's queries are not comprehensive enough and need to be expanded.","The document analysis agent is filtering out sources related to non-visual creative industries."],correct:1,explain:"The coordinator's logs show the root cause directly — it only assigned visual-arts subtasks. The subagents executed correctly within their (too-narrow) assigned scope; A, C, and D incorrectly blame downstream agents working correctly."},
+{id:"s8",scenario:"Multi-Agent Research System",q:"The web search subagent times out while researching a complex topic. Which error propagation approach best enables intelligent recovery by the coordinator?",options:["Return structured error context including the failure type, the attempted query, any partial results, and potential alternative approaches.","Implement automatic retry with exponential backoff within the subagent, returning a generic \"search unavailable\" status only after retries are exhausted.","Catch the timeout within the subagent and return an empty result set marked as successful.","Propagate the timeout exception directly to a top-level handler that terminates the entire research workflow."],correct:0,explain:"Structured error context gives the coordinator what it needs for intelligent recovery. B's generic status still hides valuable context; C suppresses the error as false success; D terminates the whole workflow unnecessarily."},
+{id:"s9",scenario:"Multi-Agent Research System",q:"The synthesis agent frequently needs to verify simple facts (85% of cases) and occasionally needs deeper investigation (15%), currently round-tripping through the coordinator each time, adding 40% latency. What's the most effective approach?",options:["Give the synthesis agent a scoped verify_fact tool for simple lookups, while complex verifications continue delegating to the web search agent through the coordinator.","Have the synthesis agent accumulate all verification needs and return them as a batch to the coordinator at the end of its pass.","Give the synthesis agent access to all web search tools so it can handle any verification need directly.","Have the web search agent proactively cache extra context around each source, anticipating what synthesis might need to verify."],correct:0,explain:"This applies least-privilege: a scoped tool for the common case (85%), preserving coordinator delegation for complex cases. B creates blocking dependencies; C over-provisions the agent; D relies on unreliable speculative caching."},
+{id:"s10",scenario:"Claude Code for Continuous Integration",q:"Your pipeline script runs `claude \"Analyze this pull request for security issues\"` but the job hangs indefinitely, waiting for interactive input. What's the correct approach?",options:["Add the -p flag: claude -p \"Analyze this pull request for security issues\"","Set the environment variable CLAUDE_HEADLESS=true before running the command.","Redirect stdin from /dev/null: claude \"...\" < /dev/null","Add the --batch flag: claude --batch \"...\""],correct:0,explain:"The -p (--print) flag is the documented way to run Claude Code non-interactively — it processes the prompt, prints to stdout, and exits. The other options reference non-existent features or Unix workarounds that don't address Claude Code's actual syntax."},
+{id:"s11",scenario:"Claude Code for Continuous Integration",q:"Your manager proposes switching both a blocking pre-merge check and an overnight technical debt report to the Message Batches API for its 50% cost savings. How should you evaluate this proposal?",options:["Use batch processing for the technical debt reports only; keep real-time calls for pre-merge checks.","Switch both workflows to batch processing with status polling to check for completion.","Keep real-time calls for both workflows to avoid batch result ordering issues.","Switch both to batch processing with a timeout fallback to real-time if batches take too long."],correct:0,explain:"Batches offer savings but up to 24-hour processing with no latency SLA — unsuitable for blocking pre-merge checks, ideal for overnight reports. B relies on unacceptable \"often faster\" hope for a blocking workflow; C is a misconception (custom_id correlates results); D adds unneeded complexity."},
+{id:"s12",scenario:"Claude Code for Continuous Integration",q:"A pull request modifies 14 files. A single-pass review produces inconsistent results — detailed feedback for some files, superficial for others, and contradictory feedback on identical patterns. How should you restructure the review?",options:["Split into focused passes: analyze each file individually for local issues, then run a separate integration-focused pass examining cross-file data flow.","Require developers to split large PRs into smaller submissions of 3-4 files before review.","Switch to a higher-tier model with a larger context window to give all 14 files adequate attention in one pass.","Run three independent review passes on the full PR and only flag issues appearing in at least two of three runs."],correct:0,explain:"Splitting into focused passes addresses the root cause — attention dilution across many files at once. B shifts burden to developers; C misunderstands that larger context windows don't fix attention quality; D would suppress real bugs by requiring consensus."}
+];
+
+/* ---------- STATE / PERSISTENCE ---------- */
+const STORAGE_KEY = "ccaf_progress_v1";
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return { terms: {}, scenarios: {}, totalQuizAnswers: 0, totalQuizCorrect: 0 };
+}
+function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+let state = loadState();
+
+function getTermStat(id) {
+  if (!state.terms[id]) state.terms[id] = { seen: 0, correct: 0, mastery: 0, lastResult: null };
+  return state.terms[id];
+}
+function getScenarioStat(id) {
+  if (!state.scenarios[id]) state.scenarios[id] = { seen: 0, correct: 0 };
+  return state.scenarios[id];
+}
+function recordTermAnswer(id, wasCorrect) {
+  const s = getTermStat(id);
+  s.seen += 1;
+  if (wasCorrect) { s.correct += 1; s.mastery = Math.min(3, s.mastery + 1); s.lastResult = "correct"; }
+  else { s.mastery = Math.max(0, s.mastery - 1); s.lastResult = "wrong"; }
+  state.totalQuizAnswers = (state.totalQuizAnswers||0) + 1;
+  if (wasCorrect) state.totalQuizCorrect = (state.totalQuizCorrect||0) + 1;
+  saveState();
+}
+function recordScenarioAnswer(id, wasCorrect) {
+  const s = getScenarioStat(id);
+  s.seen += 1;
+  if (wasCorrect) s.correct += 1;
+  saveState();
+}
+
+/* ---------- TABS ---------- */
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
+    if (tab.dataset.tab === "progress") renderProgress();
+  });
+});
+
+/* ---------- GLOSSARY ---------- */
+function masteryColor(mastery) {
+  if (mastery >= 3) return "#4caf50";
+  if (mastery === 2) return "#8bc34a";
+  if (mastery === 1) return "#ffb74d";
+  return "#cfcfd4";
+}
+function initDomainFilters() {
+  const opts = Object.entries(DOMAINS).map(([k,v]) => `<option value="${k}">${v.name}</option>`).join("");
+  document.getElementById("glossaryDomainFilter").insertAdjacentHTML("beforeend", opts);
+  document.getElementById("quizDomain").insertAdjacentHTML("beforeend", opts);
+}
+function renderGlossary() {
+  const search = document.getElementById("glossarySearch").value.toLowerCase();
+  const domainFilter = document.getElementById("glossaryDomainFilter").value;
+  const grouped = {};
+  TERMS.forEach(t => {
+    if (domainFilter !== "all" && t.domain !== domainFilter) return;
+    if (search && !(t.term.toLowerCase().includes(search) || t.def.toLowerCase().includes(search))) return;
+    (grouped[t.domain] = grouped[t.domain] || []).push(t);
+  });
+  let html = "";
+  Object.keys(DOMAINS).forEach(dKey => {
+    const list = grouped[dKey];
+    if (!list || !list.length) return;
+    html += `<div class="card"><span class="domain-tag" style="background:${DOMAINS[dKey].color}">${DOMAINS[dKey].name}</span>`;
+    list.forEach(t => {
+      const st = getTermStat(t.id);
+      html += `<div class="term-row">
+        <div>
+          <div class="term-name">${t.term}</div>
+          <div class="term-def">${t.def}</div>
+        </div>
+        <div class="mastery-dot" title="Mastery: ${st.mastery}/3" style="background:${masteryColor(st.mastery)}"></div>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  if (!html) html = `<div class="card small">No terms match your search.</div>`;
+  document.getElementById("glossaryList").innerHTML = html;
+}
+document.getElementById("glossarySearch").addEventListener("input", renderGlossary);
+document.getElementById("glossaryDomainFilter").addEventListener("change", renderGlossary);
+
+/* ---------- QUIZ ---------- */
+let quizQueue = [];
+let quizIndex = 0;
+let quizScore = 0;
+
+function pickQuizTerms(domain, len, mode) {
+  let pool = TERMS.filter(t => domain === "all" || t.domain === domain);
+  if (mode === "weak") {
+    pool = pool.slice().sort((a,b) => {
+      const ma = getTermStat(a.id).mastery, mb = getTermStat(b.id).mastery;
+      if (ma !== mb) return ma - mb;
+      return Math.random() - 0.5;
+    });
+  } else {
+    pool = pool.slice().sort(() => Math.random() - 0.5);
+  }
+  return pool.slice(0, Math.min(len, pool.length));
+}
+
+document.getElementById("startQuizBtn").addEventListener("click", () => {
+  const domain = document.getElementById("quizDomain").value;
+  const len = parseInt(document.getElementById("quizLen").value, 10);
+  const mode = document.getElementById("quizMode").value;
+  quizQueue = pickQuizTerms(domain, len, mode);
+  quizIndex = 0;
+  quizScore = 0;
+  renderQuizQuestion();
+});
+
+function renderQuizQuestion() {
+  const area = document.getElementById("quizArea");
+  if (quizIndex >= quizQueue.length) {
+    area.innerHTML = `<div class="card">
+      <div class="qtext">Session complete: ${quizScore} / ${quizQueue.length} correct</div>
+      <div class="small">Progress has been saved. Check the "My Progress" tab for weak-term breakdown, or start another round above.</div>
+    </div>`;
+    return;
+  }
+  const t = quizQueue[quizIndex];
+  const optHtml = t.options.map((opt, i) =>
+    `<button class="option" data-idx="${i}">${opt}</button>`
+  ).join("");
+  area.innerHTML = `<div class="card">
+    <div class="row-between small" style="margin-bottom:8px;">
+      <span>Question ${quizIndex+1} of ${quizQueue.length}</span>
+      <span class="badge" style="background:${DOMAINS[t.domain].color}20;color:${DOMAINS[t.domain].color}">${DOMAINS[t.domain].name}</span>
+    </div>
+    <div class="qtext">${t.q}</div>
+    <div id="quizOptions">${optHtml}</div>
+    <div id="quizFeedback"></div>
+    <div id="quizNextWrap"></div>
+  </div>`;
+  document.querySelectorAll("#quizOptions .option").forEach(btn => {
+    btn.addEventListener("click", () => handleQuizAnswer(t, parseInt(btn.dataset.idx,10)));
+  });
+}
+
+function handleQuizAnswer(t, idx) {
+  const correct = idx === t.correct;
+  if (correct) quizScore += 1;
+  recordTermAnswer(t.id, correct);
+  document.querySelectorAll("#quizOptions .option").forEach((btn, i) => {
+    btn.classList.add("disabled");
+    btn.disabled = true;
+    if (i === t.correct) btn.classList.add("correct");
+    else if (i === idx) btn.classList.add("wrong");
+  });
+  document.getElementById("quizFeedback").innerHTML =
+    `<div class="feedback ${correct ? "good" : "bad"}">${correct ? "Correct." : "Not quite."} ${t.term}: ${t.def}</div>`;
+  document.getElementById("quizNextWrap").innerHTML = `<button class="primary" id="nextQBtn">${quizIndex+1 < quizQueue.length ? "Next question" : "See results"}</button>`;
+  document.getElementById("nextQBtn").addEventListener("click", () => { quizIndex += 1; renderQuizQuestion(); });
+}
+
+/* ---------- SCENARIOS ---------- */
+function renderScenarios() {
+  let html = "";
+  SCENARIOS.forEach(s => {
+    const optHtml = s.options.map((opt, i) => `<button class="option" data-idx="${i}" data-qid="${s.id}">${opt}</button>`).join("");
+    html += `<div class="card" id="scen-${s.id}">
+      <div class="badge" style="margin-bottom:8px;">${s.scenario}</div>
+      <div class="qtext">${s.q}</div>
+      <div class="scenOptions">${optHtml}</div>
+      <div class="scenFeedback"></div>
+    </div>`;
+  });
+  document.getElementById("scenarioList").innerHTML = html;
+  SCENARIOS.forEach(s => {
+    document.querySelectorAll(`#scen-${s.id} .option`).forEach(btn => {
+      btn.addEventListener("click", () => handleScenarioAnswer(s, parseInt(btn.dataset.idx,10)));
+    });
+  });
+}
+function handleScenarioAnswer(s, idx) {
+  const correct = idx === s.correct;
+  recordScenarioAnswer(s.id, correct);
+  const container = document.getElementById("scen-" + s.id);
+  container.querySelectorAll(".option").forEach((btn, i) => {
+    btn.classList.add("disabled");
+    btn.disabled = true;
+    if (i === s.correct) btn.classList.add("correct");
+    else if (i === idx) btn.classList.add("wrong");
+  });
+  container.querySelector(".scenFeedback").innerHTML =
+    `<div class="feedback ${correct ? "good" : "bad"}">${correct ? "Correct." : "Not quite — correct answer highlighted above."}</div>
+     <div class="explain"><strong>Why:</strong> ${s.explain}</div>`;
+}
+
+/* ---------- PROGRESS ---------- */
+function renderProgress() {
+  const totalTerms = TERMS.length;
+  let masteredCount = 0, totalMasterySum = 0;
+  TERMS.forEach(t => {
+    const st = getTermStat(t.id);
+    totalMasterySum += st.mastery;
+    if (st.mastery >= 3) masteredCount += 1;
+  });
+  const overallPct = Math.round((totalMasterySum / (totalTerms * 3)) * 100);
+  const quizAcc = state.totalQuizAnswers ? Math.round((state.totalQuizCorrect / state.totalQuizAnswers) * 100) : 0;
+
+  document.getElementById("statGrid").innerHTML = `
+    <div class="stat-box"><div class="stat-num">${overallPct}%</div><div class="stat-label">Overall mastery</div></div>
+    <div class="stat-box"><div class="stat-num">${masteredCount}/${totalTerms}</div><div class="stat-label">Terms mastered</div></div>
+    <div class="stat-box"><div class="stat-num">${state.totalQuizAnswers||0}</div><div class="stat-label">Quiz answers given</div></div>
+    <div class="stat-box"><div class="stat-num">${quizAcc}%</div><div class="stat-label">Quiz accuracy</div></div>
+  `;
+
+  let barsHtml = "";
+  Object.entries(DOMAINS).forEach(([key, d]) => {
+    const termsInDomain = TERMS.filter(t => t.domain === key);
+    const sum = termsInDomain.reduce((acc, t) => acc + getTermStat(t.id).mastery, 0);
+    const pct = Math.round((sum / (termsInDomain.length * 3)) * 100);
+    barsHtml += `<div style="margin-bottom:10px;">
+      <div class="row-between small"><span>${d.name}</span><span>${pct}%</span></div>
+      <div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${pct}%;background:${d.color}"></div></div>
+    </div>`;
+  });
+  document.getElementById("domainBars").innerHTML = barsHtml;
+
+  const weakest = TERMS.slice().sort((a,b) => {
+    const sa = getTermStat(a.id), sb = getTermStat(b.id);
+    if (sa.mastery !== sb.mastery) return sa.mastery - sb.mastery;
+    return sb.seen - sa.seen;
+  }).filter(t => getTermStat(t.id).seen > 0 || true).slice(0, 10);
+  let tableHtml = `<table><thead><tr><th>Term</th><th>Domain</th><th>Mastery</th><th>Seen</th><th>Correct</th></tr></thead><tbody>`;
+  weakest.forEach(t => {
+    const st = getTermStat(t.id);
+    tableHtml += `<tr><td>${t.term}</td><td>${DOMAINS[t.domain].name}</td><td>${st.mastery}/3</td><td>${st.seen}</td><td>${st.correct}</td></tr>`;
+  });
+  tableHtml += `</tbody></table>`;
+  document.getElementById("weakTable").innerHTML = tableHtml;
+
+  let scenAttempted = 0, scenCorrect = 0, scenSeen = 0;
+  SCENARIOS.forEach(s => {
+    const st = getScenarioStat(s.id);
+    if (st.seen > 0) scenSeen += 1;
+    scenAttempted += st.seen;
+    scenCorrect += st.correct;
+  });
+  document.getElementById("scenarioStats").innerHTML =
+    `<div class="small">Scenario questions attempted: ${scenSeen}/${SCENARIOS.length} · Accuracy: ${scenAttempted ? Math.round((scenCorrect/scenAttempted)*100) : 0}%</div>`;
+}
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (confirm("Reset all quiz and scenario progress? This can't be undone.")) {
+    state = { terms: {}, scenarios: {}, totalQuizAnswers: 0, totalQuizCorrect: 0 };
+    saveState();
+    renderProgress();
+    renderGlossary();
+  }
+});
+
+/* ---------- INIT ---------- */
+initDomainFilters();
+renderGlossary();
+renderScenarios();
+renderProgress();
+</script>
+</body>
+</html>
