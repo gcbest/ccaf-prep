@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CCA-F Study System</title>
+  <style>
+    :root {
+      --ink: #242321;
+      --muted: #706b63;
+      --paper: #f7f3ec;
+      --paper-deep: #ece4d7;
+      --rust: #a84e31;
+      --rust-dark: #7d3825;
+      --line: #d6ccbd;
+      --white: #fffdfa;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.7 Georgia, 'Times New Roman', serif;
+    }
+    main { max-width: 780px; margin: 0 auto; padding: 44px 24px 80px; }
+    .masthead {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+      border-bottom: 1px solid var(--line); padding-bottom: 10px;
+      color: var(--muted); font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .13em; text-transform: uppercase;
+    }
+    h1 { max-width: 680px; margin: 28px 0 12px; font: 700 clamp(2.2rem, 8vw, 4rem)/1.02 Georgia, serif; letter-spacing: -.03em; }
+    .dek { max-width: 670px; margin: 0 0 34px; color: var(--muted); font-size: 1.15rem; }
+    p { max-width: 70ch; margin: 0 0 13px; }
+    h2 { margin: 40px 0 4px; font: 700 1.5rem/1.2 Georgia, serif; }
+    .hub {
+      position: relative; display: block; margin: 18px 0 0; padding: 22px 24px;
+      background: var(--rust-dark); border-radius: 3px; color: var(--white); text-decoration: none;
+    }
+    .hub:hover, .hub:focus-visible { background: var(--rust); outline: none; }
+    .hub .kicker { display: block; margin: 0 0 6px; color: #f0d9cd; font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    .hub .title { display: block; font: 700 1.4rem/1.25 Georgia, serif; }
+    .hub .blurb { display: block; margin-top: 6px; color: #f0d9cd; font-size: .95rem; }
+    ol.lessons { list-style: none; margin: 16px 0 0; padding: 0; counter-reset: lesson; }
+    ol.lessons li { counter-increment: lesson; margin: 0; border-top: 1px solid var(--line); }
+    ol.lessons li:last-child { border-bottom: 1px solid var(--line); }
+    ol.lessons a {
+      display: flex; align-items: baseline; gap: 14px; padding: 13px 4px;
+      color: inherit; text-decoration: none;
+    }
+    ol.lessons a::before {
+      content: counter(lesson, decimal-leading-zero);
+      flex: none; color: var(--rust-dark); font: 700 13px/1 system-ui, sans-serif;
+    }
+    ol.lessons a:hover, ol.lessons a:focus-visible { background: var(--white); outline: none; }
+    ol.lessons .title { font: 700 1.02rem/1.3 Georgia, serif; }
+    ol.lessons .section { display: block; color: var(--muted); font-size: .85rem; margin-top: 2px; }
+    .companions { display: grid; gap: 10px; margin-top: 16px; }
+    .companions a {
+      display: block; padding: 14px 18px; background: var(--white); border: 1px solid var(--line);
+      border-radius: 3px; color: inherit; text-decoration: none;
+    }
+    .companions a:hover, .companions a:focus-visible { background: #fffaf3; }
+    .companions .title { font: 700 1rem/1.3 Georgia, serif; }
+    .companions .blurb { display: block; color: var(--muted); font-size: .9rem; margin-top: 3px; }
+    footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; }
+    a { color: var(--rust-dark); }
+    code { background: var(--paper-deep); padding: .08em .28em; border-radius: 3px; }
+    @media (max-width: 560px) {
+      main { padding: 28px 18px 60px; }
+      .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
+      .hub { padding: 18px 18px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="masthead"><span>Claude Certified Architect · Foundations</span><span>Study system</span></div>
+    <h1>CCA-F study system</h1>
+    <p class="dek">Nine narrative lessons, a glossary quiz, and a quick-reference sheet — built to prep for the Claude Certified Architect – Foundations exam. Bookmark this page on your phone for quick access.</p>
+
+    <a class="hub" href="lessons/index.html">
+      <span class="kicker">Start here</span>
+      <span class="title">The Northstar Dispatch — all 9 lessons</span>
+      <span class="blurb">One company, one continuous story, told across all seven official prep courses.</span>
+    </a>
+
+    <h2>Lessons</h2>
+    <ol class="lessons">
+      <li><a href="lessons/0002-ai-fluency-the-four-d-framework.html"><span><span class="title">The week Northstar decided how to work</span><span class="section">Section 1 · AI Fluency: Framework &amp; Foundations</span></span></a></li>
+      <li><a href="lessons/0001-claude-101-choose-the-right-surface.html"><span><span class="title">The Northstar launch</span><span class="section">Section 2 · Claude 101</span></span></a></li>
+      <li><a href="lessons/0003-claude-api-the-first-integration.html"><span><span class="title">The first integration</span><span class="section">Section 3, part 1 · Building with the Claude API</span></span></a></li>
+      <li><a href="lessons/0004-claude-api-tools-retrieval-and-context.html"><span><span class="title">The day Northstar grew hands</span><span class="section">Section 3, part 2 · Building with the Claude API</span></span></a></li>
+      <li><a href="lessons/0005-claude-api-agentic-orchestration.html"><span><span class="title">The shape of the system</span><span class="section">Section 3, part 3 · Building with the Claude API</span></span></a></li>
+      <li><a href="lessons/0006-claude-with-amazon-bedrock.html"><span><span class="title">The Cascade Mutual migration</span><span class="section">Section 4 · Claude with Amazon Bedrock</span></span></a></li>
+      <li><a href="lessons/0007-claude-on-google-cloud.html"><span><span class="title">The Meridian port</span><span class="section">Section 5 · Claude on Google Cloud</span></span></a></li>
+      <li><a href="lessons/0008-model-context-protocol.html"><span><span class="title">The Northstar adapter</span><span class="section">Section 6 · Introduction to MCP</span></span></a></li>
+      <li><a href="lessons/0009-claude-code-in-action.html"><span><span class="title">The keys to the repo</span><span class="section">Section 7 · Claude Code in Action</span></span></a></li>
+    </ol>
+
+    <h2>Companion material</h2>
+    <div class="companions">
+      <a href="reference/claude-101-quick-reference.html">
+        <span class="title">Claude 101 quick reference</span>
+        <span class="blurb">One-page cheat sheet for surfaces, Projects, Skills, Artifacts, and connectors.</span>
+      </a>
+      <a href="glossary/ccaf_glossary_quiz_tracker.html">
+        <span class="title">Glossary quiz tracker</span>
+        <span class="blurb">Self-contained quiz covering 64 exam-specific terms across all 5 domains. Tracks mastery locally.</span>
+      </a>
+    </div>
+
+    <footer>
+      <p>Question banks and condensed notes live in each course folder (<code>01-…</code> through <code>07-…</code>). <code>study-reference/ccaf_study_reference.md</code> has the 12 official-style scenario questions. See <code>README.md</code> for how this repo is organized.</p>
+    </footer>
+  </main>
+</body>
+</html>
