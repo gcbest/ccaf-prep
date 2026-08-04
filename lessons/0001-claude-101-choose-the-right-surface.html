@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Claude 101 — The Northstar Launch</title>
+  <style>
+    :root {
+      --ink: #242321;
+      --muted: #706b63;
+      --paper: #f7f3ec;
+      --paper-deep: #ece4d7;
+      --rust: #a84e31;
+      --rust-dark: #7d3825;
+      --sage: #dfe9df;
+      --line: #d6ccbd;
+      --white: #fffdfa;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.7 Georgia, 'Times New Roman', serif;
+    }
+    main { max-width: 760px; margin: 0 auto; padding: 44px 24px 80px; }
+    .masthead {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+      border-bottom: 1px solid var(--line); padding-bottom: 10px;
+      color: var(--muted); font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .13em; text-transform: uppercase;
+    }
+    h1 { max-width: 680px; margin: 28px 0 12px; font: 700 clamp(2.5rem, 8vw, 5.2rem)/.98 Georgia, serif; letter-spacing: -.04em; }
+    .dek { max-width: 630px; margin: 0 0 34px; color: var(--muted); font-size: 1.2rem; }
+    .scene { position: relative; margin: 34px 0 0; padding: 25px 26px 27px; background: var(--white); border: 1px solid var(--line); border-radius: 3px; }
+    .scene::before { content: ''; position: absolute; left: -1px; top: 0; bottom: 0; width: 4px; background: var(--rust); }
+    .time { margin: 0 0 7px; color: var(--rust-dark); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    h2 { margin: 0 0 13px; font: 700 1.65rem/1.2 Georgia, serif; }
+    h3 { margin: 27px 0 7px; font: 700 1.1rem/1.3 Georgia, serif; }
+    p { max-width: 68ch; margin: 0 0 13px; }
+    .voice { margin: 18px 0; padding-left: 19px; border-left: 2px solid var(--paper-deep); font-style: italic; }
+    .choice { margin: 20px 0 2px; color: var(--muted); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+    .choices { display: flex; flex-wrap: wrap; gap: 9px; margin: 10px 0 5px; }
+    button {
+      border: 1px solid var(--rust); border-radius: 3px; background: var(--white); color: var(--rust-dark);
+      padding: 9px 13px; font: 600 14px/1.2 system-ui, sans-serif; cursor: pointer;
+    }
+    button:hover, button:focus-visible { background: var(--rust); color: #fff; outline: none; }
+    button:focus-visible { box-shadow: 0 0 0 3px rgba(168, 78, 49, .22); }
+    .outcome { display: none; margin-top: 13px; padding: 14px 16px; border-left: 3px solid var(--sage); background: #f1f6ef; }
+    .outcome.visible { display: block; }
+    .outcome strong { color: var(--rust-dark); }
+    .lesson { margin: 26px 0 0; padding: 17px 18px; background: var(--paper-deep); }
+    .lesson p:last-child { margin-bottom: 0; }
+    .rule { margin: 34px 0; padding: 25px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); text-align: center; }
+    .rule strong { display: block; color: var(--rust-dark); font: 700 1.35rem/1.25 Georgia, serif; }
+    .prompt { margin: 15px 0; padding: 16px 18px; background: #fff4eb; border-left: 3px solid var(--rust); font-size: .98rem; }
+    .prompt code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em; }
+    .progress { position: sticky; top: 0; z-index: 2; height: 4px; background: var(--paper-deep); }
+    .progress span { display: block; width: 0; height: 100%; background: var(--rust); transition: width .25s ease; }
+    .end { margin-top: 39px; padding: 25px; background: var(--rust-dark); color: #fff8f1; }
+    .end h2 { color: #fff; }
+    .end p { color: #f6dfd1; }
+    .source, footer { color: var(--muted); font-size: .9rem; }
+    footer { margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--line); }
+    a { color: var(--rust-dark); }
+    @media (max-width: 560px) {
+      main { padding-top: 28px; }
+      .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
+      .scene { padding: 21px 19px 23px; }
+      .choices { display: grid; grid-template-columns: 1fr; }
+      button { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+  <main>
+    <div class="masthead"><span>CCA-F · Section 2</span><span>Northstar Dispatch · Monday</span></div>
+    <h1>The Northstar launch</h1>
+    <p class="dek">You are the architect. One busy day, five messages, and one question underneath all of them: <em>what kind of work is this?</em></p>
+
+    <section class="scene" id="scene1">
+      <p class="time">8:42 a.m. · The first message</p>
+      <h2>“Can you think this through with me?”</h2>
+      <p>Maya, the support lead, is preparing a new refund policy. She does not want a report yet. She wants to bounce ideas around, ask follow-up questions, and revise the wording as she goes.</p>
+      <p class="voice">“I need a thinking partner, not a robot that disappears for ten minutes and comes back with a finished memo.”</p>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Choose a Claude surface for Maya">
+        <button type="button" onclick="choose('one','Chat')">Open Chat</button>
+        <button type="button" onclick="choose('one','Cowork')">Hand it to Cowork</button>
+        <button type="button" onclick="choose('one','Code')">Open Code</button>
+      </div>
+      <div class="outcome" id="one-Chat"><strong>Exactly.</strong> Chat is turn-by-turn work: brainstorming, explaining, drafting, reviewing. The next move depends on the last reply.</div>
+      <div class="outcome" id="one-Cowork"><strong>Not quite.</strong> Cowork can do this, but it adds delegation and tool access that Maya does not need. This is a conversational job, so Chat is the natural fit.</div>
+      <div class="outcome" id="one-Code"><strong>Wrong workshop.</strong> Code is designed for work inside a software repository. Maya needs a conversation, so Chat is the natural fit.</div>
+      <div class="lesson"><p><strong>Chat is the café.</strong> You stay present, exchange turns, and steer the work as understanding develops.</p></div>
+    </section>
+
+    <section class="scene" id="scene2">
+      <p class="time">9:16 a.m. · The handoff</p>
+      <h2>“Make the launch kit while I’m in the meeting.”</h2>
+      <p>Owen from operations drops a folder of product notes on your desk. He needs a customer FAQ, a checklist, and a polished HTML handout saved back into the launch folder. He also wants this repeated every Friday.</p>
+      <p class="voice">“I can give it the folder, the deadline, and the rules. I don’t need to supervise every paragraph.”</p>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Choose a Claude surface for Owen">
+        <button type="button" onclick="choose('two','Chat')">Open Chat</button>
+        <button type="button" onclick="choose('two','Cowork')">Start Cowork</button>
+        <button type="button" onclick="choose('two','Code')">Open Code</button>
+      </div>
+      <div class="outcome" id="two-Chat"><strong>Possible, but awkward.</strong> Chat can draft from uploads, but it is not the best fit for a delegated workflow that must save work into a local folder and run on a schedule.</div>
+      <div class="outcome" id="two-Cowork"><strong>That’s the workshop.</strong> Cowork is built for multi-step handoffs involving local folders, connectors, browser/computer use, subagents, or schedules.</div>
+      <div class="outcome" id="two-Code"><strong>Too code-shaped.</strong> Unless the deliverable is primarily repository work, Code is not the best surface for this operations handoff. Cowork fits the shape.</div>
+      <div class="lesson"><p><strong>Cowork is the workshop.</strong> It can take a goal, use permitted tools, produce a deliverable, and put it where it belongs. More agency means you need clear permissions, checkpoints, and a way to verify the result.</p></div>
+    </section>
+
+    <section class="scene" id="scene3">
+      <p class="time">10:03 a.m. · The red build</p>
+      <h2>“Find the bug. Prove the fix.”</h2>
+      <p>Priya from engineering sends a failing test and a link to the Northstar repository. The job is to inspect the code, edit the function, run the test suite, and show the diff for review.</p>
+      <p class="voice">“The answer is not enough. I need the change, the evidence, and a reviewable trail.”</p>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Choose a Claude surface for Priya">
+        <button type="button" onclick="choose('three','Chat')">Open Chat</button>
+        <button type="button" onclick="choose('three','Cowork')">Start Cowork</button>
+        <button type="button" onclick="choose('three','Code')">Open Code</button>
+      </div>
+      <div class="outcome" id="three-Chat"><strong>Good for discussion, not the full workflow.</strong> Chat could help reason about the bug, but the repository, edits, tests, and diff belong in Code.</div>
+      <div class="outcome" id="three-Cowork"><strong>Broader than necessary.</strong> Cowork can coordinate multi-step work, but Code is the purpose-built surface for repository inspection, editing, testing, and review.</div>
+      <div class="outcome" id="three-Code"><strong>Open the garage.</strong> Code is designed for the full software loop: inspect → plan → edit → test → review.</div>
+      <div class="lesson"><p><strong>Code is the garage.</strong> The surface matches the artifact and the verification loop—not just the topic.</p></div>
+    </section>
+
+    <div class="rule"><strong>Surface selection is a shape-of-work decision.</strong><span>Conversation → Chat · Delegation → Cowork · Repository → Code</span></div>
+
+    <section class="scene" id="scene4">
+      <p class="time">11:21 a.m. · The briefing</p>
+      <h2>Maya asks for a better instruction</h2>
+      <p>Her first prompt was: “Explain our refund policy.” The answer was accurate but generic. You help her rewrite it as a brief she could hand to a capable coworker.</p>
+      <div class="prompt"><strong>Stage:</strong> “You are a customer-support coach helping new Northstar agents.”<br><strong>Task:</strong> “Explain the refund policy and identify the three decisions an agent must make.”<br><strong>Rules:</strong> “Use plain language, a numbered decision tree, and one example conversation under 120 words.”</div>
+      <p>The three ingredients are <strong>setting the stage</strong>, <strong>defining the task</strong>, and <strong>specifying rules</strong>. If format matters, show an example or describe the structure explicitly—“make it clear” is not a structure.</p>
+      <p class="voice">A good prompt is not a spell. It is a clear brief.</p>
+    </section>
+
+    <section class="scene" id="scene5">
+      <p class="time">1:40 p.m. · The growing library</p>
+      <h2>“Where should this knowledge live?”</h2>
+      <p>Northstar has a permanent support playbook: policies, product history, and team decisions. It belongs in a <strong>Project</strong>—a persistent workspace for knowledge, instructions, and conversation history.</p>
+      <p>But the team also has a repeatable procedure called “Friday launch kit”: inspect the folder, summarize changes, create three files, run a checklist, and save the results. That belongs in a <strong>Skill</strong>—a packaged process with instructions, scripts, and resources.</p>
+      <div class="lesson"><p><strong>Project = the what.</strong> <strong>Skill = the how.</strong> The bookshelf stores the knowledge; the recipe card describes the procedure. A Skill can draw on knowledge in a Project.</p></div>
+      <p>When the Project’s knowledge grows too large for the context window, Claude can use <strong>RAG</strong>: search the knowledge base and retrieve only the relevant pieces instead of loading everything at once.</p>
+    </section>
+
+    <section class="scene" id="scene6">
+      <p class="time">3:05 p.m. · The locked doors</p>
+      <h2>“Can Claude search the company?”</h2>
+      <p>Northstar connects Slack and SharePoint. Claude’s connectors use <strong>MCP</strong>, a shared standard Anthropic compares to “USB-C for AI”: one consistent way to connect many tools.</p>
+      <p>But the connector is not a master key. Claude sees only what the user is already permitted to see. Access can be scoped, toggled, and revoked. Enterprise Search adds a permission-aware organizational search experience; admins configure document and chat sources, while each user authenticates their own access.</p>
+      <p class="voice">The rule at Northstar: a connector is an office badge, not a skeleton key.</p>
+    </section>
+
+    <section class="scene" id="scene7">
+      <p class="time">4:18 p.m. · The research question</p>
+      <h2>“Should we change vendors?”</h2>
+      <p>The COO asks for a sourced comparison across current pricing, support policies, and three years of analyst reports. A quick fact would call for web search. This is different: the answer needs a plan, many searches that build on each other, synthesis, and citations.</p>
+      <div class="lesson"><p><strong>Research is agentic and multi-step.</strong> It uses Thinking to plan, searches across many sources, synthesizes, and cites. It may take minutes. Web search is the lighter tool for a quick current fact. Research needs web search enabled to function.</p></div>
+    </section>
+
+    <section class="scene" id="scene8">
+      <p class="time">5:02 p.m. · The last check</p>
+      <h2>“Did we make Claude reliable—or just impressive?”</h2>
+      <p>Before automating the Friday launch kit, you gather 5–10 real examples of the task. You write test prompts using natural context, compare Claude’s output with the team’s originals, look for missing facts, wrong tone, and format drift, then refine the prompt or add examples.</p>
+      <p>That is the lightweight <strong>eval</strong> loop. And when Claude sounds confident about a niche fact, you verify it independently, ask for sources or confidence, and use web search when current evidence matters.</p>
+      <p>Finally, you separate two kinds of personalization: <strong>Memory</strong> carries context such as preferences and past decisions across conversations; <strong>Styles</strong> control how Claude communicates.</p>
+    </section>
+
+    <section class="end">
+      <h2>The architect’s pocket card</h2>
+      <p>At the launch meeting, someone asks how you made all those calls so quickly. You answer:</p>
+      <p><strong>First identify the shape of work.</strong> Then choose the surface. Give Claude a clear brief. Put durable knowledge in Projects and repeatable procedures in Skills. Scope connectors like badges. Match Research to questions that need multi-step evidence. Test recurring work with real examples.</p>
+      <p>That is Claude 101: not “what button do I press?” but “what kind of collaboration does this job require?”</p>
+    </section>
+
+    <p class="source">Primary source: <code>02-claude-101/notes.md</code> and <code>02-claude-101/quiz.md</code> in this study workspace. For the compact review version, see <a href="../reference/claude-101-quick-reference.html">Claude 101 Quick Reference</a>.</p>
+    <footer>When you are ready, ask your teacher to quiz you on one Northstar decision at a time. If any scene feels fuzzy, ask a follow-up—the point is durable understanding, not speed.</footer>
+  </main>
+  <script>
+    function choose(scene, answer) {
+      document.querySelectorAll('[id^="' + scene + '-"]').forEach(function (el) { el.classList.remove('visible'); });
+      var selected = document.getElementById(scene + '-' + answer);
+      if (selected) selected.classList.add('visible');
+      var bar = document.getElementById('progressBar');
+      var number = { one: 1, two: 2, three: 3 }[scene] || 0;
+      if (number) bar.style.width = (number / 3 * 100) + '%';
+    }
+  </script>
+</body>
+</html>
