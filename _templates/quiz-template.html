@@ -111,6 +111,8 @@
     .feedback.bad { background: var(--bad-bg); color: var(--bad); }
     .explain { font: 400 15px/1.6 Georgia, serif; color: var(--ink); margin-top: 8px; padding: 12px 14px; background: var(--paper-deep); border-radius: 3px; }
     .explain strong { color: var(--rust-dark); }
+    .review-link { display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; font: 600 13px/1.4 system-ui, sans-serif; color: var(--accent-text); text-decoration: none; border-bottom: 1px solid transparent; }
+    .review-link:hover { border-bottom-color: var(--accent-text); }
 
     .progress-bar-outer { width: 100%; height: 8px; background: var(--paper-deep); border-radius: 999px; overflow: hidden; margin: 6px 0 2px; }
     .progress-bar-inner { height: 100%; border-radius: 999px; background: var(--accent); }
@@ -316,9 +318,13 @@ function handleQuizAnswer(q, idx) {
     if (i === q.correct) btn.classList.add("correct");
     else if (i === idx) btn.classList.add("wrong");
   });
+  const reviewLink = (!correct && q.reviewHref)
+    ? `<a class="review-link" href="${q.reviewHref}" target="_blank" rel="noopener">Review this in the lesson →</a>`
+    : "";
   document.getElementById("quizFeedback").innerHTML =
     `<div class="feedback ${correct ? "good" : "bad"}">${correct ? "Correct." : "Not quite."}</div>
-     <div class="explain"><strong>Why:</strong> ${q.explain}</div>`;
+     <div class="explain"><strong>Why:</strong> ${q.explain}</div>
+     ${reviewLink}`;
   document.getElementById("quizNextWrap").innerHTML = `<button class="primary" id="nextQBtn" style="margin-top:12px;">${quizIndex+1 < quizQueue.length ? "Next question" : "See results"}</button>`;
   document.getElementById("nextQBtn").addEventListener("click", () => { quizIndex += 1; renderQuizQuestion(); });
 }

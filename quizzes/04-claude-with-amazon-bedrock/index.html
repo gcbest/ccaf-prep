@@ -111,6 +111,8 @@
     .feedback.bad { background: var(--bad-bg); color: var(--bad); }
     .explain { font: 400 15px/1.6 Georgia, serif; color: var(--ink); margin-top: 8px; padding: 12px 14px; background: var(--paper-deep); border-radius: 3px; }
     .explain strong { color: var(--rust-dark); }
+    .review-link { display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; font: 600 13px/1.4 system-ui, sans-serif; color: var(--accent-text); text-decoration: none; border-bottom: 1px solid transparent; }
+    .review-link:hover { border-bottom-color: var(--accent-text); }
 
     .progress-bar-outer { width: 100%; height: 8px; background: var(--paper-deep); border-radius: 999px; overflow: hidden; margin: 6px 0 2px; }
     .progress-bar-inner { height: 100%; border-radius: 999px; background: var(--accent); }
@@ -207,7 +209,8 @@ const QUESTIONS = [
       "Sonnet, Haiku, Instant, and a new Fable 5 tier that sits between Opus and Sonnet in capability"
     ],
     "correct": 0,
-    "explain": "The course presents Opus, Sonnet, and Haiku as the base tiers, with Fable 5 introduced as a new tier positioned above Opus, at a significantly higher cost, reserved for the hardest challenges where the extra capability is worth paying for."
+    "explain": "The course presents Opus, Sonnet, and Haiku as the base tiers, with Fable 5 introduced as a new tier positioned above Opus, at a significantly higher cost, reserved for the hardest challenges where the extra capability is worth paying for.",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene6"
   },
   {
     "id": "brk02",
@@ -219,7 +222,8 @@ const QUESTIONS = [
       "Fable 5 — optimized for low latency, best suited for simple conversational replies"
     ],
     "correct": 1,
-    "explain": "Haiku lacks extended-thinking support and is instead optimized for speed and cost efficiency, making it the right choice for real-time, user-facing interactions rather than complex problem-solving."
+    "explain": "Haiku lacks extended-thinking support and is instead optimized for speed and cost efficiency, making it the right choice for real-time, user-facing interactions rather than complex problem-solving.",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene6"
   },
   {
     "id": "brk03",
@@ -231,7 +235,8 @@ const QUESTIONS = [
       "boto3.client(\"bedrock-runtime\", api_key=...), authenticating via a Bedrock-specific API key issued by AWS"
     ],
     "correct": 2,
-    "explain": "Bedrock access goes through boto3's bedrock-runtime client, and authentication uses standard AWS IAM credentials instead of an Anthropic API key."
+    "explain": "Bedrock access goes through boto3's bedrock-runtime client, and authentication uses standard AWS IAM credentials instead of an Anthropic API key.",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene1"
   },
   {
     "id": "brk04",
@@ -243,7 +248,8 @@ const QUESTIONS = [
       "A cryptic \"model doesn't exist\" error, solved by a cross-region inference profile that automatically routes to a region hosting the model"
     ],
     "correct": 3,
-    "explain": "Requesting a model unavailable in the configured region produces a confusing 'model doesn't exist' error; cross-region inference profiles fix this by automatically routing the request to a region where the model is actually hosted."
+    "explain": "Requesting a model unavailable in the configured region produces a confusing 'model doesn't exist' error; cross-region inference profiles fix this by automatically routing the request to a region where the model is actually hosted.",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene3"
   },
   {
     "id": "brk05",
@@ -255,7 +261,8 @@ const QUESTIONS = [
       "Under \"Provisioned Throughput\"; an inference profile ID guarantees dedicated capacity while a plain model ID is on-demand only"
     ],
     "correct": 0,
-    "explain": "Inference profile IDs live under the console's 'Cross-region inference' section, separate from the main model catalog, and unlike a plain model ID (locked to one region), they can transparently route requests across multiple regions."
+    "explain": "Inference profile IDs live under the console's 'Cross-region inference' section, separate from the main model catalog, and unlike a plain model ID (locked to one region), they can transparently route requests across multiple regions.",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene4"
   },
   {
     "id": "brk06",
@@ -267,7 +274,8 @@ const QUESTIONS = [
       "An IAM Role, a Model ID, and a Temperature setting"
     ],
     "correct": 1,
-    "explain": "A converse() request needs a Bedrock Runtime Client for the connection, a Model ID specifying which model to run, and a User Message providing the input content."
+    "explain": "A converse() request needs a Bedrock Runtime Client for the connection, a Model ID specifying which model to run, and a User Message providing the input content.",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene2"
   },
   {
     "id": "brk07",
@@ -279,7 +287,8 @@ const QUESTIONS = [
       "AWS requires each field of a message to be logged as a separate list entry"
     ],
     "correct": 2,
-    "explain": "The content field is a list because a single message can hold multiple content types—text, images, and other media—so the list structure is what enables multimodal requests."
+    "explain": "The content field is a list because a single message can hold multiple content types—text, images, and other media—so the list structure is what enables multimodal requests.",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene2"
   },
   {
     "id": "brk08",
@@ -291,7 +300,8 @@ const QUESTIONS = [
       "response[\"output\"][\"message\"][\"content\"][0][\"text\"]"
     ],
     "correct": 3,
-    "explain": "The generated text is nested as response['output']['message']['content'][0]['text'], following the response's output-message-content structure down to the first content block's text field."
+    "explain": "The generated text is nested as response['output']['message']['content'][0]['text'], following the response's output-message-content structure down to the first content block's text field.",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene2"
   },
   {
     "id": "brk09",
@@ -303,7 +313,8 @@ const QUESTIONS = [
       "The specific JSON request and response structure of the converse() API"
     ],
     "correct": 0,
-    "explain": "Bedrock only changes the auth, client, and call layer; core skills like prompt engineering, tool schema design, RAG chunking/retrieval, evaluation methodology, and agentic orchestration patterns carry over unchanged."
+    "explain": "Bedrock only changes the auth, client, and call layer; core skills like prompt engineering, tool schema design, RAG chunking/retrieval, evaluation methodology, and agentic orchestration patterns carry over unchanged.",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene5"
   },
   {
     "id": "brk10",
@@ -315,7 +326,8 @@ const QUESTIONS = [
       "Because plain model IDs only work with converse_stream; fixed by switching to the converse call"
     ],
     "correct": 1,
-    "explain": "A plain model ID is tied to the region you configured, so it fails if that region doesn't host the model; a cross-region inference profile solves this by automatically routing to a supported region."
+    "explain": "A plain model ID is tied to the region you configured, so it fails if that region doesn't host the model; a cross-region inference profile solves this by automatically routing to a supported region.",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene4"
   },
   {
     "id": "brk11",
@@ -327,7 +339,8 @@ const QUESTIONS = [
       "Use a structured_output=True flag on converse(), which removes the need for any application-side parsing"
     ],
     "correct": 2,
-    "explain": "Structured output is achieved by defining a dedicated tool schema and forcing its use via toolChoice; the application is still responsible for parsing and validating the returned data, since Bedrock doesn't guarantee correctness on its own."
+    "explain": "Structured output is achieved by defining a dedicated tool schema and forcing its use via toolChoice; the application is still responsible for parsing and validating the returned data, since Bedrock doesn't guarantee correctness on its own.",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene11"
   },
   {
     "id": "brk12",
@@ -339,7 +352,8 @@ const QUESTIONS = [
       "The complete assistant content blocks including each toolUse, matching toolResult blocks with the correct IDs, and the original tool definitions on the follow-up request"
     ],
     "correct": 3,
-    "explain": "Continuing a tool-use conversation requires preserving the full assistant content blocks (including each toolUse), sending matching toolResult blocks with correct IDs, and keeping the original tool definitions available on the follow-up request."
+    "explain": "Continuing a tool-use conversation requires preserving the full assistant content blocks (including each toolUse), sending matching toolResult blocks with correct IDs, and keeping the original tool definitions available on the follow-up request.",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene10"
   },
   {
     "id": "brk13",
@@ -351,7 +365,8 @@ const QUESTIONS = [
       "Use it only for logging and audit calls; avoid it for any user-facing generation calls"
     ],
     "correct": 0,
-    "explain": "Batch-tool calling is appropriate for independent operations that can run concurrently to cut latency, but should be avoided when calls depend on each other's results or could duplicate unsafe side effects."
+    "explain": "Batch-tool calling is appropriate for independent operations that can run concurrently to cut latency, but should be avoided when calls depend on each other's results or could duplicate unsafe side effects.",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene10"
   },
   {
     "id": "brk14",
@@ -363,7 +378,8 @@ const QUESTIONS = [
       "Bedrock enforces human approval for consequential actions automatically, without application involvement"
     ],
     "correct": 1,
-    "explain": "Running through Bedrock doesn't offload safety work: the application still must handle authentication/authorization, input and path validation, rate limits, retries, timeouts, audit logging, and human approval for consequential actions."
+    "explain": "Running through Bedrock doesn't offload safety work: the application still must handle authentication/authorization, input and path validation, rate limits, retries, timeouts, audit logging, and human approval for consequential actions.",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene16"
   },
   {
     "id": "brk15",
@@ -375,7 +391,8 @@ const QUESTIONS = [
       "Bedrock automatically merges consecutive same-role messages, so the application doesn't need to track message order"
     ],
     "correct": 2,
-    "explain": "Because the Converse API is stateless, the application must keep and resend the full message history on every call, and messages must strictly alternate between user and assistant roles with no consecutive repeats."
+    "explain": "Because the Converse API is stateless, the application must keep and resend the full message history on every call, and messages must strictly alternate between user and assistant roles with no consecutive repeats.",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene7"
   },
   {
     "id": "brk16",
@@ -387,7 +404,8 @@ const QUESTIONS = [
       "Via the system keyword parameter as a list containing a dictionary with a text field, and that text must contain at least one character — an empty string throws an error"
     ],
     "correct": 3,
-    "explain": "The system prompt is passed via the system parameter as a list holding a dict with a text field, and that text must be non-empty since an empty string throws an error—so well-designed code should default the parameter to None rather than an empty string."
+    "explain": "The system prompt is passed via the system parameter as a list holding a dict with a text field, and that text must be non-empty since an empty string throws an error—so well-designed code should default the parameter to None rather than an empty string.",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene7"
   },
   {
     "id": "brk17",
@@ -399,7 +417,8 @@ const QUESTIONS = [
       "An integer from 1 to 10, defaulting to 5, set inside inference_config"
     ],
     "correct": 0,
-    "explain": "Temperature ranges from 0 to 1, defaults to 1.0 (maximum randomness), and is set inside the inference_config dictionary passed to converse()."
+    "explain": "Temperature ranges from 0 to 1, defaults to 1.0 (maximum randomness), and is set inside the inference_config dictionary passed to converse().",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene7"
   },
   {
     "id": "brk18",
@@ -411,7 +430,8 @@ const QUESTIONS = [
       "An \"output\" key holding the events; every event type carries a text chunk that the application concatenates"
     ],
     "correct": 1,
-    "explain": "converse_stream returns a 'stream' key with an iterable of events; of the five event types, only content_block_delta carries actual text, accessible at event['content_block_delta']['delta']['text'], while the other four are structural bookkeeping."
+    "explain": "converse_stream returns a 'stream' key with an iterable of events; of the five event types, only content_block_delta carries actual text, accessible at event['content_block_delta']['delta']['text'], while the other four are structural bookkeeping.",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene8"
   },
   {
     "id": "brk19",
@@ -423,7 +443,8 @@ const QUESTIONS = [
       "Pre-filling is appended to the system prompt rather than concatenated afterward; stop sequences are included in the returned text and must be stripped manually"
     ],
     "correct": 2,
-    "explain": "Pre-filling appends a partial assistant-role message that Claude continues from, so the app must glue the prefill and Claude's output together; stop sequences, passed via inference_config, halt generation the moment they're produced and are excluded from the returned text."
+    "explain": "Pre-filling appends a partial assistant-role message that Claude continues from, so the app must glue the prefill and Claude's output together; stop sequences, passed via inference_config, halt generation the moment they're produced and are excluded from the returned text.",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene9"
   },
   {
     "id": "brk20",
@@ -435,7 +456,8 @@ const QUESTIONS = [
       "Claude 3-7 requires \"str_replace_editor\" and Claude 3-5 requires \"str_replace_based_edit_tool\"; the developer must implement all five command handlers themselves: view, str_replace, create, insert, and undo_edit"
     ],
     "correct": 3,
-    "explain": "Claude 3-7 uses the exact tool name 'str_replace_editor' while Claude 3-5 uses 'str_replace_based_edit_tool'; Claude supplies the schema automatically, but the developer still has to implement all five command handlers: view, str_replace, create, insert, and undo_edit."
+    "explain": "Claude 3-7 uses the exact tool name 'str_replace_editor' while Claude 3-5 uses 'str_replace_based_edit_tool'; Claude supplies the schema automatically, but the developer still has to implement all five command handlers: view, str_replace, create, insert, and undo_edit.",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene10"
   },
   {
     "id": "brk21",
@@ -447,7 +469,8 @@ const QUESTIONS = [
       "\"auto\" lets Claude decide; \"all\" forces Claude to call every available tool; naming a specific tool forces that exact tool"
     ],
     "correct": 0,
-    "explain": "The three settings are 'auto' (Claude decides for itself, the default), 'any' (Claude must call some tool but chooses which), and naming a specific tool via {\"tool\": {\"name\": \"...\"}} (forces that exact tool)."
+    "explain": "The three settings are 'auto' (Claude decides for itself, the default), 'any' (Claude must call some tool but chooses which), and naming a specific tool via {\"tool\": {\"name\": \"...\"}} (forces that exact tool).",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene11"
   },
   {
     "id": "brk22",
@@ -459,7 +482,8 @@ const QUESTIONS = [
       "An open-ended object input whose fields are defined directly in the schema, though it can't handle nested objects"
     ],
     "correct": 1,
-    "explain": "The toJSON technique uses one generic, open-ended tool whose desired fields are described in the prompt rather than the schema, making structure changes easy at the cost of slightly lower reliability than a purpose-built schema."
+    "explain": "The toJSON technique uses one generic, open-ended tool whose desired fields are described in the prompt rather than the schema, making structure changes easy at the cost of slightly lower reliability than a purpose-built schema.",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene11"
   },
   {
     "id": "brk23",
@@ -471,7 +495,8 @@ const QUESTIONS = [
       "Amazon Titan Embed Text V1, returning roughly 768 floating-point numbers each between -1 and 1"
     ],
     "correct": 2,
-    "explain": "The course uses Amazon Titan Embed Text V2, which returns a vector of roughly 1024 floats, each typically between -1 and +1, with no individual dimension being independently interpretable."
+    "explain": "The course uses Amazon Titan Embed Text V2, which returns a vector of roughly 1024 floats, each typically between -1 and +1, with no individual dimension being independently interpretable.",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene14"
   },
   {
     "id": "brk24",
@@ -483,7 +508,8 @@ const QUESTIONS = [
       "Cosine similarity ranges from -1 to 1, with values closer to 1 meaning more similar; cosine distance is 1 minus similarity, with values closer to 0 meaning more similar, and vector databases typically rank by lowest distance"
     ],
     "correct": 3,
-    "explain": "Cosine similarity is the cosine of the angle between vectors (-1 to 1, closer to 1 is more similar), while cosine distance is 1 minus similarity (closer to 0 is more similar); vector databases usually report distance and rank the lowest-distance chunks as best matches."
+    "explain": "Cosine similarity is the cosine of the angle between vectors (-1 to 1, closer to 1 is more similar), while cosine distance is 1 minus similarity (closer to 0 is more similar); vector databases usually report distance and rank the lowest-distance chunks as best matches.",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene14"
   },
   {
     "id": "brk25",
@@ -495,7 +521,8 @@ const QUESTIONS = [
       "score = Σ 1/(1+rank), but lower combined scores win; the same document still scores 0.83"
     ],
     "correct": 0,
-    "explain": "RRF sums 1/(1+rank) across each ranking method; a document ranked 1st by vector search and 2nd by BM25 scores 1/(1+1) + 1/(1+2) = 0.5 + 0.33 = 0.83, and documents are re-sorted with higher scores winning."
+    "explain": "RRF sums 1/(1+rank) across each ranking method; a document ranked 1st by vector search and 2nd by BM25 scores 1/(1+1) + 1/(1+2) = 0.5 + 0.33 = 0.83, and documents are re-sorted with higher scores winning.",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene14"
   },
   {
     "id": "brk26",
@@ -507,7 +534,8 @@ const QUESTIONS = [
       "A reasoning_effort enum set to low, medium, or high, with no token minimum required"
     ],
     "correct": 1,
-    "explain": "Extended Thinking is configured with a boolean thinking flag plus a thinking_budget capping reasoning tokens, with a hard minimum of 1024 tokens; there's no one-size-fits-all budget, so it should be tuned using prompt evals."
+    "explain": "Extended Thinking is configured with a boolean thinking flag plus a thinking_budget capping reasoning tokens, with a hard minimum of 1024 tokens; there's no one-size-fits-all budget, so it should be tuned using prompt evals.",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene13"
   },
   {
     "id": "brk27",
@@ -519,7 +547,8 @@ const QUESTIONS = [
       "The signature is optional and used only for billing purposes; \"redacted\" content is thinking the developer chooses to hide from end users via a flag"
     ],
     "correct": 2,
-    "explain": "The signature is an integrity check proving the reasoning text wasn't tampered with when resent to Claude later; redacted content is thinking flagged and encrypted by Anthropic's safety systems, which the app can't read but must still pass back unmodified, and a special test string exists to trigger this case for testing."
+    "explain": "The signature is an integrity check proving the reasoning text wasn't tampered with when resent to Claude later; redacted content is thinking flagged and encrypted by Anthropic's safety systems, which the app can't read but must still pass back unmodified, and a special test string exists to trigger this case for testing.",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene13"
   },
   {
     "id": "brk28",
@@ -531,7 +560,8 @@ const QUESTIONS = [
       "A maximum of 20 images across all messages in one request; token cost scales with the image's pixel dimensions (height × width) — larger images cost more"
     ],
     "correct": 3,
-    "explain": "A single Bedrock request allows up to 20 images across all messages, and token cost scales with the image's pixel dimensions (height times width), so larger images consume more tokens just as longer text does."
+    "explain": "A single Bedrock request allows up to 20 images across all messages, and token cost scales with the image's pixel dimensions (height times width), so larger images consume more tokens just as longer text does.",
+    "reviewHref": "../lessons/0006-claude-with-amazon-bedrock.html#scene12"
   }
 ];
 
@@ -653,9 +683,13 @@ function handleQuizAnswer(q, idx) {
     if (i === q.correct) btn.classList.add("correct");
     else if (i === idx) btn.classList.add("wrong");
   });
+  const reviewLink = (!correct && q.reviewHref)
+    ? `<a class="review-link" href="${q.reviewHref}" target="_blank" rel="noopener">Review this in the lesson →</a>`
+    : "";
   document.getElementById("quizFeedback").innerHTML =
     `<div class="feedback ${correct ? "good" : "bad"}">${correct ? "Correct." : "Not quite."}</div>
-     <div class="explain"><strong>Why:</strong> ${q.explain}</div>`;
+     <div class="explain"><strong>Why:</strong> ${q.explain}</div>
+     ${reviewLink}`;
   document.getElementById("quizNextWrap").innerHTML = `<button class="primary" id="nextQBtn" style="margin-top:12px;">${quizIndex+1 < quizQueue.length ? "Next question" : "See results"}</button>`;
   document.getElementById("nextQBtn").addEventListener("click", () => { quizIndex += 1; renderQuizQuestion(); });
 }

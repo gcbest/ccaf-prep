@@ -111,6 +111,8 @@
     .feedback.bad { background: var(--bad-bg); color: var(--bad); }
     .explain { font: 400 15px/1.6 Georgia, serif; color: var(--ink); margin-top: 8px; padding: 12px 14px; background: var(--paper-deep); border-radius: 3px; }
     .explain strong { color: var(--rust-dark); }
+    .review-link { display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; font: 600 13px/1.4 system-ui, sans-serif; color: var(--accent-text); text-decoration: none; border-bottom: 1px solid transparent; }
+    .review-link:hover { border-bottom-color: var(--accent-text); }
 
     .progress-bar-outer { width: 100%; height: 8px; background: var(--paper-deep); border-radius: 999px; overflow: hidden; margin: 6px 0 2px; }
     .progress-bar-inner { height: 100%; border-radius: 999px; background: var(--accent); }
@@ -207,7 +209,8 @@ const QUESTIONS = [
       "It lets Claude access the internet directly without any tool definitions."
     ],
     "correct": 0,
-    "explain": "MCP moves the work of building and maintaining integrations to dedicated MCP servers, which are often published by the service provider itself, rather than requiring every application to reimplement that integration work."
+    "explain": "MCP moves the work of building and maintaining integrations to dedicated MCP servers, which are often published by the service provider itself, rather than requiring every application to reimplement that integration work.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene0"
   },
   {
     "id": "mcp02",
@@ -219,7 +222,8 @@ const QUESTIONS = [
       "Only certified partners specifically approved to publish MCP servers."
     ],
     "correct": 1,
-    "explain": "MCP servers can be written by anyone; a common pattern is that the service provider itself releases the official server for its own API, but that is not a requirement."
+    "explain": "MCP servers can be written by anyone; a common pattern is that the service provider itself releases the official server for its own API, but that is not a requirement.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene0"
   },
   {
     "id": "mcp03",
@@ -231,7 +235,8 @@ const QUESTIONS = [
       "Tool use is a feature exclusive to MCP servers, and Claude cannot call any tool without an MCP server present."
     ],
     "correct": 2,
-    "explain": "MCP and tool use are complementary: MCP servers supply the pre-built tool schemas and implementations, while tool use is Claude's mechanism for invoking them. The difference is simply who did the implementation work."
+    "explain": "MCP and tool use are complementary: MCP servers supply the pre-built tool schemas and implementations, while tool use is Claude's mechanism for invoking them. The difference is simply who did the implementation work.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene15"
   },
   {
     "id": "mcp04",
@@ -243,7 +248,8 @@ const QUESTIONS = [
       "The client and server can communicate over different protocols such as stdio, HTTP, or WebSockets, and most commonly both run on the same machine communicating via standard input/output."
     ],
     "correct": 3,
-    "explain": "Transport agnostic means the underlying communication channel (stdio, HTTP, WebSockets, etc.) can vary, and in practice the most common setup is a local client and server on the same machine talking over stdio."
+    "explain": "Transport agnostic means the underlying communication channel (stdio, HTTP, WebSockets, etc.) can vary, and in practice the most common setup is a local client and server on the same machine talking over stdio.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene3"
   },
   {
     "id": "mcp05",
@@ -255,7 +261,8 @@ const QUESTIONS = [
       "ListToolsRequest/ListToolsResult and ReadResourceRequest/ReadResourceResult."
     ],
     "correct": 0,
-    "explain": "The two core pairs are ListToolsRequest/ListToolsResult, used to discover available tools, and CallToolRequest/CallToolResult, used to run a specific tool and get its result."
+    "explain": "The two core pairs are ListToolsRequest/ListToolsResult, used to discover available tools, and CallToolRequest/CallToolResult, used to run a specific tool and get its result.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene2"
   },
   {
     "id": "mcp06",
@@ -267,7 +274,8 @@ const QUESTIONS = [
       "The need for a transport layer, since the decorator handles network communication directly."
     ],
     "correct": 1,
-    "explain": "The decorator uses Python type hints and Pydantic Field() descriptions to auto-generate the JSON schema, removing manual schema authoring while also providing automatic input validation and exception-based error handling."
+    "explain": "The decorator uses Python type hints and Pydantic Field() descriptions to auto-generate the JSON schema, removing manual schema authoring while also providing automatic input validation and exception-based error handling.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene5"
   },
   {
     "id": "mcp07",
@@ -279,7 +287,8 @@ const QUESTIONS = [
       "`mcp client mcp_server.py` — it launches a full client application to test end-to-end behavior."
     ],
     "correct": 2,
-    "explain": "`mcp dev mcp_server.py` starts the Inspector, which lets you connect to the server, list and invoke tools with real inputs, and observe results without needing to build a full client application first."
+    "explain": "`mcp dev mcp_server.py` starts the Inspector, which lets you connect to the server, list and invoke tools with real inputs, and observe results without needing to build a full client application first.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene6"
   },
   {
     "id": "mcp08",
@@ -291,7 +300,8 @@ const QUESTIONS = [
       "A custom MCP Client wrapper class around the SDK's Client Session (the actual connection); the wrapper handles careful resource cleanup automatically."
     ],
     "correct": 3,
-    "explain": "The implementation pairs a custom wrapper class with the SDK's Client Session, which is the real connection object; the wrapper exists specifically to automatically and carefully handle resource cleanup."
+    "explain": "The implementation pairs a custom wrapper class with the SDK's Client Session, which is the real connection object; the wrapper exists specifically to automatically and carefully handle resource cleanup.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene7"
   },
   {
     "id": "mcp09",
@@ -303,7 +313,8 @@ const QUESTIONS = [
       "A direct resource requires authentication, while a templated resource does not."
     ],
     "correct": 0,
-    "explain": "A direct resource uses a fixed, static URI like docs://documents, while a templated resource uses a parameterized URI like docs://documents/{doc_id}, with the SDK automatically parsing the parameter into a keyword argument."
+    "explain": "A direct resource uses a fixed, static URI like docs://documents, while a templated resource uses a parameterized URI like docs://documents/{doc_id}, with the SDK automatically parsing the parameter into a keyword argument.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene9"
   },
   {
     "id": "mcp10",
@@ -315,7 +326,8 @@ const QUESTIONS = [
       "Resources bypass the need for the MCP client to maintain a session at all."
     ],
     "correct": 2,
-    "explain": "Because the app already knows the user wants the data, a resource can inject it directly into context, avoiding the extra round trip of Claude making and waiting on a separate tool call."
+    "explain": "Because the app already knows the user wants the data, a resource can inject it directly into context, avoiding the extra round trip of Claude making and waiting on a separate tool call.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene8"
   },
   {
     "id": "mcp11",
@@ -327,7 +339,8 @@ const QUESTIONS = [
       "The tool that originally created the resource specifies how the client should parse it."
     ],
     "correct": 2,
-    "explain": "The client inspects the resource's mimeType to decide how to parse the payload, such as running json.loads() on application/json content and otherwise treating it as plain text."
+    "explain": "The client inspects the resource's mimeType to decide how to parse the payload, such as running json.loads() on application/json content and otherwise treating it as plain text.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene10"
   },
   {
     "id": "mcp12",
@@ -339,7 +352,8 @@ const QUESTIONS = [
       "They are pre-built, thoroughly tested instruction templates for a server's domain that handle edge cases and encode expertise more reliably than an ad hoc user-written instruction."
     ],
     "correct": 3,
-    "explain": "Prompts package tested, expert-crafted instructions for a domain; even though a user could type a similar request themselves, the tested template handles edge cases more consistently than an improvised instruction."
+    "explain": "Prompts package tested, expert-crafted instructions for a domain; even though a user could type a similar request themselves, the tested template handles edge cases more consistently than an improvised instruction.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene11"
   },
   {
     "id": "mcp13",
@@ -351,7 +365,8 @@ const QUESTIONS = [
       "They're sent as a separate ListToolsRequest that merges with the prompt before rendering."
     ],
     "correct": 0,
-    "explain": "Arguments such as {\"doc_id\": \"plan.md\"} are passed as a dict to get_prompt(prompt_name, args), and the SDK interpolates them as keyword arguments directly into the prompt template function."
+    "explain": "Arguments such as {\"doc_id\": \"plan.md\"} are passed as a dict to get_prompt(prompt_name, args), and the SDK interpolates them as keyword arguments directly into the prompt template function.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene12"
   },
   {
     "id": "mcp14",
@@ -363,7 +378,8 @@ const QUESTIONS = [
       "Tools — the model; Resources — the user; Prompts — the app."
     ],
     "correct": 1,
-    "explain": "Tools are controlled by the model, which autonomously decides when to call them; resources are controlled by the app, which decides when to fetch them; prompts are controlled by the user, triggered through an explicit UI action."
+    "explain": "Tools are controlled by the model, which autonomously decides when to call them; resources are controlled by the app, which decides when to fetch them; prompts are controlled by the user, triggered through an explicit UI action.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene8"
   },
   {
     "id": "mcp15",
@@ -375,7 +391,8 @@ const QUESTIONS = [
       "Neither — autonomous calculations require a separate function-calling API outside MCP."
     ],
     "correct": 2,
-    "explain": "Since Claude itself decides when to invoke the sandbox, this matches the defining trait of a tool: the model owns the invocation decision, unlike resources (app-controlled) or prompts (user-controlled)."
+    "explain": "Since Claude itself decides when to invoke the sandbox, this matches the defining trait of a tool: the model owns the invocation decision, unlike resources (app-controlled) or prompts (user-controlled).",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene13"
   },
   {
     "id": "mcp16",
@@ -387,7 +404,8 @@ const QUESTIONS = [
       "A prompt, because user-triggered, predefined workflows are exactly what MCP prompts are for."
     ],
     "correct": 3,
-    "explain": "A user-triggered, predefined workflow exposed as a button matches the definition of a prompt, which is explicitly meant for user-initiated, predefined instruction templates."
+    "explain": "A user-triggered, predefined workflow exposed as a button matches the definition of a prompt, which is explicitly meant for user-initiated, predefined instruction templates.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene11"
   },
   {
     "id": "mcp17",
@@ -399,7 +417,8 @@ const QUESTIONS = [
       "The file upload button, because it lets the model choose which files to request from the user."
     ],
     "correct": 0,
-    "explain": "The 'Add from Google Drive' feature mirrors an app-controlled resource: the application, not the model, decides which document is offered and handles injecting its content into context."
+    "explain": "The 'Add from Google Drive' feature mirrors an app-controlled resource: the application, not the model, decides which document is offered and handles injecting its content into context.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene10"
   },
   {
     "id": "mcp18",
@@ -411,7 +430,8 @@ const QUESTIONS = [
       "It automatically generates unit tests based on the calls you make during a session."
     ],
     "correct": 1,
-    "explain": "Because the Inspector keeps state across calls within a session, you can chain calls, such as editing then reading back a document, to verify multi-tool interactions without a full client application."
+    "explain": "Because the Inspector keeps state across calls within a session, you can chain calls, such as editing then reading back a document, to verify multi-tool interactions without a full client application.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene6"
   },
   {
     "id": "mcp19",
@@ -423,7 +443,8 @@ const QUESTIONS = [
       "Minimal documentation so Claude infers behavior contextually, plus silent failure on bad input."
     ],
     "correct": 2,
-    "explain": "Reliability comes from a clear, specific name and description, typed and validated inputs, and predictable results paired with meaningful error messages, not from vagueness or silent failure."
+    "explain": "Reliability comes from a clear, specific name and description, typed and validated inputs, and predictable results paired with meaningful error messages, not from vagueness or silent failure.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene16"
   },
   {
     "id": "mcp20",
@@ -435,7 +456,8 @@ const QUESTIONS = [
       "Usually it implements just the side it owns, either a server that publishes capabilities or a client that connects to one; the course builds both mainly for end-to-end understanding."
     ],
     "correct": 3,
-    "explain": "In practice a project typically owns only one side of the connection; the course builds both client and server so learners can see the whole protocol flow end to end."
+    "explain": "In practice a project typically owns only one side of the connection; the course builds both client and server so learners can see the whole protocol flow end to end.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene4"
   },
   {
     "id": "mcp21",
@@ -447,7 +469,8 @@ const QUESTIONS = [
       "They implement the exchange for negotiating which transport protocol to use."
     ],
     "correct": 0,
-    "explain": "This request/response pair is specifically for reading a resource's read-only data, for example fetching a document that the application will then inject directly into the prompt."
+    "explain": "This request/response pair is specifically for reading a resource's read-only data, for example fetching a document that the application will then inject directly into the prompt.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene9"
   },
   {
     "id": "mcp22",
@@ -459,7 +482,8 @@ const QUESTIONS = [
       "Rename the capability's URI only, keeping its schema and behavior otherwise unchanged."
     ],
     "correct": 1,
-    "explain": "Best practice is to version or deprecate a capability rather than silently redefine it, so that clients relying on the old behavior are not broken unexpectedly."
+    "explain": "Best practice is to version or deprecate a capability rather than silently redefine it, so that clients relying on the old behavior are not broken unexpectedly.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene16"
   },
   {
     "id": "mcp23",
@@ -471,7 +495,8 @@ const QUESTIONS = [
       "The client is purely a messenger, relaying list-tools and call-tool requests and results between your server and the MCP server, never executing anything itself."
     ],
     "correct": 3,
-    "explain": "Throughout the flow, from listing tools to calling one, the MCP client only relays requests and results between your server and the MCP server; the actual tool execution happens on the MCP server, not the client."
+    "explain": "Throughout the flow, from listing tools to calling one, the MCP client only relays requests and results between your server and the MCP server; the actual tool execution happens on the MCP server, not the client.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene2"
   },
   {
     "id": "mcp24",
@@ -483,7 +508,8 @@ const QUESTIONS = [
       "Nothing survives, because documents live only in an in-memory Python dictionary with no persistence, so edits vanish and the server returns to its original seeded content on restart."
     ],
     "correct": 3,
-    "explain": "Since the documents are stored only in an in-memory dictionary with no database or file backing, restarting the process wipes any edits and resets everything to the original seeded content."
+    "explain": "Since the documents are stored only in an in-memory dictionary with no database or file backing, restarting the process wipes any edits and resets everything to the original seeded content.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene4"
   },
   {
     "id": "mcp25",
@@ -495,7 +521,8 @@ const QUESTIONS = [
       "`read_doc_contents` raises `FileNotFoundError`; `edit_document` overwrites the entire document rather than doing find/replace."
     ],
     "correct": 0,
-    "explain": "read_doc_contents returns the stored text and raises ValueError when the ID isn't in the docs dictionary, while edit_document performs a find/replace and likewise raises ValueError if the document doesn't exist."
+    "explain": "read_doc_contents returns the stored text and raises ValueError when the ID isn't in the docs dictionary, while edit_document performs a find/replace and likewise raises ValueError if the document doesn't exist.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene5"
   },
   {
     "id": "mcp26",
@@ -507,7 +534,8 @@ const QUESTIONS = [
       "`list_tools()` awaits `self.session.call_tool()` and returns `result.tools`; `call_tool(name, args)` awaits `self.session.list_tools(tool_name, tool_input)`."
     ],
     "correct": 1,
-    "explain": "list_tools() awaits self.session.list_tools() and returns result.tools, while call_tool(name, args) awaits self.session.call_tool(tool_name, tool_input) and returns the execution result — the complete discovery-plus-execution surface."
+    "explain": "list_tools() awaits self.session.list_tools() and returns result.tools, while call_tool(name, args) awaits self.session.call_tool(tool_name, tool_input) and returns the execution result — the complete discovery-plus-execution surface.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene7"
   },
   {
     "id": "mcp27",
@@ -519,7 +547,8 @@ const QUESTIONS = [
       "Multiple resources should share the same URI but differ by HTTP method, similar to a REST API."
     ],
     "correct": 2,
-    "explain": "The recommended pattern dedicates one resource to each distinct read operation, for example separate URIs for listing all documents versus fetching a single one, so each URI's behavior stays single-purpose and predictable."
+    "explain": "The recommended pattern dedicates one resource to each distinct read operation, for example separate URIs for listing all documents versus fetching a single one, so each URI's behavior stays single-purpose and predictable.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene9"
   },
   {
     "id": "mcp28",
@@ -531,7 +560,8 @@ const QUESTIONS = [
       "It calls `await self.session.read_resource(AnyUrl(uri))` then reads `result.contents[0]`, the first item in the returned list, before checking its `mime_type` to decide how to parse it."
     ],
     "correct": 3,
-    "explain": "The client calls await self.session.read_resource(AnyUrl(uri)) and uses only result.contents[0], the first item of the returned contents list, checking its mime_type to determine how to parse the payload."
+    "explain": "The client calls await self.session.read_resource(AnyUrl(uri)) and uses only result.contents[0], the first item of the returned contents list, checking its mime_type to determine how to parse the payload.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene10"
   },
   {
     "id": "mcp29",
@@ -543,7 +573,8 @@ const QUESTIONS = [
       "They navigate an interactive menu with arrow keys and select with the space bar; once chosen, the resource's contents are automatically pulled in and included in the prompt sent to Claude."
     ],
     "correct": 3,
-    "explain": "The CLI uses an arrow-key interactive menu with space-bar selection, and once a document is chosen its contents are automatically pulled into the prompt sent to Claude, with no separate tool call needed to read it."
+    "explain": "The CLI uses an arrow-key interactive menu with space-bar selection, and once a document is chosen its contents are automatically pulled into the prompt sent to Claude, with no separate tool call needed to read it.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene10"
   },
   {
     "id": "mcp30",
@@ -555,7 +586,8 @@ const QUESTIONS = [
       "A dictionary of tool names and descriptions that Claude selects from before answering."
     ],
     "correct": 1,
-    "explain": "A prompt function returns a list of role-tagged messages, such as those built with base.user_message(prompt_text) with arguments already interpolated, and that list is sent directly to Claude as conversation input with no further assembly needed."
+    "explain": "A prompt function returns a list of role-tagged messages, such as those built with base.user_message(prompt_text) with arguments already interpolated, and that list is sent directly to Claude as conversation input with no further assembly needed.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene11"
   },
   {
     "id": "mcp31",
@@ -567,7 +599,8 @@ const QUESTIONS = [
       "`list_prompts()` awaits `self.session.list_prompts()` and returns the prompt list, the exact same discovery pattern as `list_tools()` awaiting `self.session.list_tools()` and returning `result.tools`."
     ],
     "correct": 3,
-    "explain": "list_prompts() mirrors list_tools() exactly in structure: it awaits self.session.list_prompts() and returns the prompt list, following the identical discovery pattern used for tools, just applied to a different primitive."
+    "explain": "list_prompts() mirrors list_tools() exactly in structure: it awaits self.session.list_prompts() and returns the prompt list, following the identical discovery pattern used for tools, just applied to a different primitive.",
+    "reviewHref": "../lessons/0008-model-context-protocol.html#scene12"
   }
 ];
 
@@ -689,9 +722,13 @@ function handleQuizAnswer(q, idx) {
     if (i === q.correct) btn.classList.add("correct");
     else if (i === idx) btn.classList.add("wrong");
   });
+  const reviewLink = (!correct && q.reviewHref)
+    ? `<a class="review-link" href="${q.reviewHref}" target="_blank" rel="noopener">Review this in the lesson →</a>`
+    : "";
   document.getElementById("quizFeedback").innerHTML =
     `<div class="feedback ${correct ? "good" : "bad"}">${correct ? "Correct." : "Not quite."}</div>
-     <div class="explain"><strong>Why:</strong> ${q.explain}</div>`;
+     <div class="explain"><strong>Why:</strong> ${q.explain}</div>
+     ${reviewLink}`;
   document.getElementById("quizNextWrap").innerHTML = `<button class="primary" id="nextQBtn" style="margin-top:12px;">${quizIndex+1 < quizQueue.length ? "Next question" : "See results"}</button>`;
   document.getElementById("nextQBtn").addEventListener("click", () => { quizIndex += 1; renderQuizQuestion(); });
 }

@@ -111,6 +111,8 @@
     .feedback.bad { background: var(--bad-bg); color: var(--bad); }
     .explain { font: 400 15px/1.6 Georgia, serif; color: var(--ink); margin-top: 8px; padding: 12px 14px; background: var(--paper-deep); border-radius: 3px; }
     .explain strong { color: var(--rust-dark); }
+    .review-link { display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; font: 600 13px/1.4 system-ui, sans-serif; color: var(--accent-text); text-decoration: none; border-bottom: 1px solid transparent; }
+    .review-link:hover { border-bottom-color: var(--accent-text); }
 
     .progress-bar-outer { width: 100%; height: 8px; background: var(--paper-deep); border-radius: 999px; overflow: hidden; margin: 6px 0 2px; }
     .progress-bar-inner { height: 100%; border-radius: 999px; background: var(--accent); }
@@ -207,7 +209,8 @@ const QUESTIONS = [
       "Adversarial red-teaming applied during the pretraining phase"
     ],
     "correct": 1,
-    "explain": "Claude is trained with Constitutional AI, an approach that checks its behavior against a set of principles covering helpfulness, harmlessness, and honesty, much like a written constitution it consults before responding."
+    "explain": "Claude is trained with Constitutional AI, an approach that checks its behavior against a set of principles covering helpfulness, harmlessness, and honesty, much like a written constitution it consults before responding.",
+    "reviewHref": "../lessons/0001-claude-101-choose-the-right-surface.html#scene0"
   },
   {
     "id": "c10102",
@@ -219,7 +222,8 @@ const QUESTIONS = [
       "The Claude Skills framework, described as a Swiss Army knife"
     ],
     "correct": 2,
-    "explain": "Anthropic uses MCP as the standard that lets Claude connect to many applications, and compares it to USB-C: one universal connector that works across many devices instead of needing a different plug for each one."
+    "explain": "Anthropic uses MCP as the standard that lets Claude connect to many applications, and compares it to USB-C: one universal connector that works across many devices instead of needing a different plug for each one.",
+    "reviewHref": "../lessons/0001-claude-101-choose-the-right-surface.html#scene9"
   },
   {
     "id": "c10103",
@@ -231,7 +235,8 @@ const QUESTIONS = [
       "Turn-by-turn work in Chat, handed-off multi-step work in Cowork, building software in Code"
     ],
     "correct": 3,
-    "explain": "The desktop app maps three shapes of work to three tabs: Chat for turn-by-turn conversation, Cowork for handing off multi-step or scheduled deliverables, and Code for building software."
+    "explain": "The desktop app maps three shapes of work to three tabs: Chat for turn-by-turn conversation, Cowork for handing off multi-step or scheduled deliverables, and Code for building software.",
+    "reviewHref": "../lessons/0001-claude-101-choose-the-right-surface.html#scene1"
   },
   {
     "id": "c10104",
@@ -243,7 +248,8 @@ const QUESTIONS = [
       "Claude pauses the conversation until the user manually removes documents"
     ],
     "correct": 0,
-    "explain": "Rather than loading the entire knowledge base into context, Claude shifts to Retrieval Augmented Generation, searching for and retrieving only the relevant sections, which can expand effective capacity up to 10x."
+    "explain": "Rather than loading the entire knowledge base into context, Claude shifts to Retrieval Augmented Generation, searching for and retrieving only the relevant sections, which can expand effective capacity up to 10x.",
+    "reviewHref": "../lessons/0001-claude-101-choose-the-right-surface.html#scene6"
   },
   {
     "id": "c10105",
@@ -255,7 +261,8 @@ const QUESTIONS = [
       "Projects store knowledge Claude references; Skills define a process or procedure Claude executes"
     ],
     "correct": 3,
-    "explain": "Projects hold the \"what\" — reference knowledge Claude can draw on — while Skills define the \"how,\" a repeatable process or procedure, and a Skill can even pull from knowledge stored in a Project."
+    "explain": "Projects hold the \"what\" — reference knowledge Claude can draw on — while Skills define the \"how,\" a repeatable process or procedure, and a Skill can even pull from knowledge stored in a Project.",
+    "reviewHref": "../lessons/0001-claude-101-choose-the-right-surface.html#scene7"
   },
   {
     "id": "c10106",
@@ -267,7 +274,8 @@ const QUESTIONS = [
       "Word documents, PDFs, images, and video files"
     ],
     "correct": 0,
-    "explain": "Office-style deliverables — Word documents, Excel spreadsheets, PowerPoint presentations, and PDFs — are generated through the file creation capability powered by Skills, rather than shown as in-chat Artifacts."
+    "explain": "Office-style deliverables — Word documents, Excel spreadsheets, PowerPoint presentations, and PDFs — are generated through the file creation capability powered by Skills, rather than shown as in-chat Artifacts.",
+    "reviewHref": "../lessons/0001-claude-101-choose-the-right-surface.html#scene8"
   },
   {
     "id": "c10107",
@@ -279,7 +287,8 @@ const QUESTIONS = [
       "API connectors and MCP connectors, distinguished by which protocol version they use"
     ],
     "correct": 1,
-    "explain": "Web connectors link out to cloud services such as Google Drive, Slack, or Notion, while desktop extensions run locally through the Claude Desktop app and can access local files and native applications."
+    "explain": "Web connectors link out to cloud services such as Google Drive, Slack, or Notion, while desktop extensions run locally through the Claude Desktop app and can access local files and native applications.",
+    "reviewHref": "../lessons/0001-claude-101-choose-the-right-surface.html#scene9"
   },
   {
     "id": "c10108",
@@ -291,7 +300,8 @@ const QUESTIONS = [
       "A Documents connector and a Chat connector are required; an Email connector is recommended but optional"
     ],
     "correct": 3,
-    "explain": "Enterprise Search needs a Documents connector (like Google Drive or SharePoint) and a Chat connector (like Slack or Microsoft Teams) to function, with an Email connector as a helpful but optional addition."
+    "explain": "Enterprise Search needs a Documents connector (like Google Drive or SharePoint) and a Chat connector (like Slack or Microsoft Teams) to function, with an Email connector as a helpful but optional addition.",
+    "reviewHref": "../lessons/0001-claude-101-choose-the-right-surface.html#scene10"
   },
   {
     "id": "c10109",
@@ -303,7 +313,8 @@ const QUESTIONS = [
       "Research skips citations entirely in exchange for searching more sources at once"
     ],
     "correct": 1,
-    "explain": "Research plans its approach using Thinking, runs many searches that build on one another, sometimes across hundreds of sources, and synthesizes the findings with citations — a process that takes minutes rather than seconds."
+    "explain": "Research plans its approach using Thinking, runs many searches that build on one another, sometimes across hundreds of sources, and synthesizes the findings with citations — a process that takes minutes rather than seconds.",
+    "reviewHref": "../lessons/0001-claude-101-choose-the-right-surface.html#scene11"
   },
   {
     "id": "c10110",
@@ -315,7 +326,8 @@ const QUESTIONS = [
       "The Projects knowledge base must already contain at least one document"
     ],
     "correct": 2,
-    "explain": "Research depends on the ability to search the web, so without web search enabled, the feature has no way to gather the sources it needs to investigate a topic."
+    "explain": "Research depends on the ability to search the web, so without web search enabled, the feature has no way to gather the sources it needs to investigate a topic.",
+    "reviewHref": "../lessons/0001-claude-101-choose-the-right-surface.html#scene11"
   },
   {
     "id": "c10111",
@@ -327,7 +339,8 @@ const QUESTIONS = [
       "Both Cowork and Chat can read and save directly back into a local folder"
     ],
     "correct": 2,
-    "explain": "Cowork has ongoing access to a local folder, letting it read files and write finished work back in place, while Chat can only read what you upload and hands back completed files as separate downloads."
+    "explain": "Cowork has ongoing access to a local folder, letting it read files and write finished work back in place, while Chat can only read what you upload and hands back completed files as separate downloads.",
+    "reviewHref": "../lessons/0001-claude-101-choose-the-right-surface.html#scene2"
   },
   {
     "id": "c10112",
@@ -339,7 +352,8 @@ const QUESTIONS = [
       "Only specific file types like spreadsheets and slide decks, regardless of length"
     ],
     "correct": 2,
-    "explain": "Artifacts are created for content substantial enough to stand on its own, generally more than 15 lines, that's likely to be iterated on, reused, or referenced later, rather than for brief conversational content."
+    "explain": "Artifacts are created for content substantial enough to stand on its own, generally more than 15 lines, that's likely to be iterated on, reused, or referenced later, rather than for brief conversational content.",
+    "reviewHref": "../lessons/0001-claude-101-choose-the-right-surface.html#scene8"
   },
   {
     "id": "c10113",
@@ -351,7 +365,8 @@ const QUESTIONS = [
       "Setting the stage, defining the task, and requesting a confidence score"
     ],
     "correct": 2,
-    "explain": "The framework describes setting the stage (role, objective, context), defining the task (the specific action to take), and specifying rules (style, tone, examples) as the three building blocks of an effective prompt."
+    "explain": "The framework describes setting the stage (role, objective, context), defining the task (the specific action to take), and specifying rules (style, tone, examples) as the three building blocks of an effective prompt.",
+    "reviewHref": "../lessons/0001-claude-101-choose-the-right-surface.html#scene4"
   },
   {
     "id": "c10114",
@@ -363,7 +378,8 @@ const QUESTIONS = [
       "Ask Claude to enable Artifacts mode before it responds"
     ],
     "correct": 1,
-    "explain": "Describing a preference in words is often less effective than showing it directly, such as giving an example format or explicitly spelling out structure like bullet points with bold headers."
+    "explain": "Describing a preference in words is often less effective than showing it directly, such as giving an example format or explicitly spelling out structure like bullet points with bold headers.",
+    "reviewHref": "../lessons/0001-claude-101-choose-the-right-surface.html#scene4"
   },
   {
     "id": "c10115",
@@ -375,7 +391,8 @@ const QUESTIONS = [
       "Memory automatically saves context like preferences and past decisions across conversations; Styles let you set how Claude communicates, from presets or a custom description"
     ],
     "correct": 3,
-    "explain": "Memory quietly carries forward context such as role, preferences, and past decisions between conversations, while Styles are an explicit setting for tone and format, chosen from presets or a custom description, applied consistently across chats."
+    "explain": "Memory quietly carries forward context such as role, preferences, and past decisions between conversations, while Styles are an explicit setting for tone and format, chosen from presets or a custom description, applied consistently across chats.",
+    "reviewHref": "../lessons/0001-claude-101-choose-the-right-surface.html#scene12"
   },
   {
     "id": "c10116",
@@ -387,7 +404,8 @@ const QUESTIONS = [
       "Write test prompts with no examples included, then grade only Claude's tone"
     ],
     "correct": 0,
-    "explain": "The lightweight eval starts with a small set of real examples you already have, runs them through Claude with natural context, compares the results to your originals for accuracy, tone, and gaps, and then refines the prompt based on what's found."
+    "explain": "The lightweight eval starts with a small set of real examples you already have, runs them through Claude with natural context, compares the results to your originals for accuracy, tone, and gaps, and then refines the prompt based on what's found.",
+    "reviewHref": "../lessons/0001-claude-101-choose-the-right-surface.html#scene12"
   },
   {
     "id": "c10117",
@@ -399,7 +417,8 @@ const QUESTIONS = [
       "Claude always displays an explicit confidence score; mitigate by trusting only high-confidence answers"
     ],
     "correct": 2,
-    "explain": "On specific or niche facts, Claude can produce answers that sound plausible but are wrong, so for high-stakes work it helps to verify independently, ask for sources or a confidence level, and enable web search to ground the response."
+    "explain": "On specific or niche facts, Claude can produce answers that sound plausible but are wrong, so for high-stakes work it helps to verify independently, ask for sources or a confidence level, and enable web search to ground the response.",
+    "reviewHref": "../lessons/0001-claude-101-choose-the-right-surface.html#scene12"
   },
   {
     "id": "c10118",
@@ -411,7 +430,8 @@ const QUESTIONS = [
       "Send a new follow-up message that clarifies the original instruction"
     ],
     "correct": 2,
-    "explain": "Editing your own message with the pencil icon and resubmitting it fixes the instruction at its source, which is quicker than sending a separate follow-up message to correct course."
+    "explain": "Editing your own message with the pencil icon and resubmitting it fixes the instruction at its source, which is quicker than sending a separate follow-up message to correct course.",
+    "reviewHref": "../lessons/0001-claude-101-choose-the-right-surface.html#scene5"
   },
   {
     "id": "c10119",
@@ -423,7 +443,8 @@ const QUESTIONS = [
       "Learning mode guides the user's reasoning and helps them work toward the answer instead of only providing it directly"
     ],
     "correct": 3,
-    "explain": "Instead of just handing over the answer, Learning mode walks the user through their own reasoning process, more like offering a flashlight to help them find the solution themselves."
+    "explain": "Instead of just handing over the answer, Learning mode walks the user through their own reasoning process, more like offering a flashlight to help them find the solution themselves.",
+    "reviewHref": "../lessons/0001-claude-101-choose-the-right-surface.html#scene0"
   },
   {
     "id": "c10120",
@@ -435,7 +456,8 @@ const QUESTIONS = [
       "Scoped access limits the connector's use to a single conversation session only"
     ],
     "correct": 1,
-    "explain": "Scoped access means Claude's view through a connector mirrors the user's own existing permissions in that service, and the user can toggle individual permissions or revoke the connection entirely."
+    "explain": "Scoped access means Claude's view through a connector mirrors the user's own existing permissions in that service, and the user can toggle individual permissions or revoke the connection entirely.",
+    "reviewHref": "../lessons/0001-claude-101-choose-the-right-surface.html#scene9"
   },
   {
     "id": "c10121",
@@ -447,7 +469,8 @@ const QUESTIONS = [
       "Only the selected Artifact version is published; the surrounding chat stays private, and others can remix it"
     ],
     "correct": 3,
-    "explain": "Publishing shares just the chosen version of the Artifact itself, not the conversation that produced it, and other people who view the published Artifact are able to remix it."
+    "explain": "Publishing shares just the chosen version of the Artifact itself, not the conversation that produced it, and other people who view the published Artifact are able to remix it.",
+    "reviewHref": "../lessons/0001-claude-101-choose-the-right-surface.html#scene8"
   },
   {
     "id": "c10122",
@@ -459,7 +482,8 @@ const QUESTIONS = [
       "Instructions and scripts that run directly on the user's local filesystem without any sandboxing"
     ],
     "correct": 1,
-    "explain": "A custom Skill bundles instructions, scripts, and resources for a specialized workflow, but it needs code execution and file creation enabled to operate, and it executes inside a sandboxed environment for safety."
+    "explain": "A custom Skill bundles instructions, scripts, and resources for a specialized workflow, but it needs code execution and file creation enabled to operate, and it executes inside a sandboxed environment for safety.",
+    "reviewHref": "../lessons/0001-claude-101-choose-the-right-surface.html#scene7"
   },
   {
     "id": "c10123",
@@ -471,7 +495,8 @@ const QUESTIONS = [
       "Chat fits brainstorming, Cowork fits repository work, and Code fits delegated deliverables"
     ],
     "correct": 2,
-    "explain": "Chat suits interactive turn-by-turn conversation, Cowork suits delegated multi-step deliverables that may draw on files or connectors, and Code suits inspecting, editing, testing, and committing changes within a codebase."
+    "explain": "Chat suits interactive turn-by-turn conversation, Cowork suits delegated multi-step deliverables that may draw on files or connectors, and Code suits inspecting, editing, testing, and committing changes within a codebase.",
+    "reviewHref": "../lessons/0001-claude-101-choose-the-right-surface.html#scene1"
   }
 ];
 
@@ -593,9 +618,13 @@ function handleQuizAnswer(q, idx) {
     if (i === q.correct) btn.classList.add("correct");
     else if (i === idx) btn.classList.add("wrong");
   });
+  const reviewLink = (!correct && q.reviewHref)
+    ? `<a class="review-link" href="${q.reviewHref}" target="_blank" rel="noopener">Review this in the lesson →</a>`
+    : "";
   document.getElementById("quizFeedback").innerHTML =
     `<div class="feedback ${correct ? "good" : "bad"}">${correct ? "Correct." : "Not quite."}</div>
-     <div class="explain"><strong>Why:</strong> ${q.explain}</div>`;
+     <div class="explain"><strong>Why:</strong> ${q.explain}</div>
+     ${reviewLink}`;
   document.getElementById("quizNextWrap").innerHTML = `<button class="primary" id="nextQBtn" style="margin-top:12px;">${quizIndex+1 < quizQueue.length ? "Next question" : "See results"}</button>`;
   document.getElementById("nextQBtn").addEventListener("click", () => { quizIndex += 1; renderQuizQuestion(); });
 }
