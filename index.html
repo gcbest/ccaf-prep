@@ -42,19 +42,24 @@
     .hub .title { display: block; font: 700 1.4rem/1.25 Georgia, serif; }
     .hub .blurb { display: block; margin-top: 6px; color: #f0d9cd; font-size: .95rem; }
     ol.lessons { list-style: none; margin: 16px 0 0; padding: 0; counter-reset: lesson; }
-    ol.lessons li { counter-increment: lesson; margin: 0; border-top: 1px solid var(--line); }
+    ol.lessons li { counter-increment: lesson; margin: 0; border-top: 1px solid var(--line); display: flex; align-items: center; gap: 8px; }
     ol.lessons li:last-child { border-bottom: 1px solid var(--line); }
-    ol.lessons a {
-      display: flex; align-items: baseline; gap: 14px; padding: 13px 4px;
+    ol.lessons a.lesson-link {
+      flex: 1; display: flex; align-items: baseline; gap: 14px; padding: 13px 4px; min-width: 0;
       color: inherit; text-decoration: none;
     }
-    ol.lessons a::before {
+    ol.lessons a.lesson-link::before {
       content: counter(lesson, decimal-leading-zero);
       flex: none; color: var(--rust-dark); font: 700 13px/1 system-ui, sans-serif;
     }
-    ol.lessons a:hover, ol.lessons a:focus-visible { background: var(--white); outline: none; }
+    ol.lessons a.lesson-link:hover, ol.lessons a.lesson-link:focus-visible { background: var(--white); outline: none; }
     ol.lessons .title { font: 700 1.02rem/1.3 Georgia, serif; }
     ol.lessons .section { display: block; color: var(--muted); font-size: .85rem; margin-top: 2px; }
+    ol.lessons a.quiz-link {
+      flex: none; padding: 5px 10px; margin-right: 4px; border: 1px solid var(--line); border-radius: 999px;
+      color: var(--rust-dark); text-decoration: none; font: 600 11px/1.4 system-ui, sans-serif; letter-spacing: .03em; white-space: nowrap;
+    }
+    ol.lessons a.quiz-link:hover, ol.lessons a.quiz-link:focus-visible { background: var(--white); border-color: var(--rust-dark); outline: none; }
     .companions { display: grid; gap: 10px; margin-top: 16px; }
     .companions a {
       display: block; padding: 14px 18px; background: var(--white); border: 1px solid var(--line);
@@ -85,17 +90,23 @@
       <span class="blurb">One company, one continuous story, told across all seven official prep courses.</span>
     </a>
 
+    <a class="hub" href="quizzes/index.html">
+      <span class="kicker">Practice</span>
+      <span class="title">Section quizzes — 344 multiple-choice questions</span>
+      <span class="blurb">Four-option questions per section, exam-style, with automatic right/wrong tracking so you can review what you keep missing.</span>
+    </a>
+
     <h2>Lessons</h2>
     <ol class="lessons">
-      <li><a href="lessons/0002-ai-fluency-the-four-d-framework.html"><span><span class="title">The week Northstar decided how to work</span><span class="section">Section 1 · AI Fluency: Framework &amp; Foundations</span></span></a></li>
-      <li><a href="lessons/0001-claude-101-choose-the-right-surface.html"><span><span class="title">The Northstar launch</span><span class="section">Section 2 · Claude 101</span></span></a></li>
-      <li><a href="lessons/0003-claude-api-the-first-integration.html"><span><span class="title">The first integration</span><span class="section">Section 3, part 1 · Building with the Claude API</span></span></a></li>
-      <li><a href="lessons/0004-claude-api-tools-retrieval-and-context.html"><span><span class="title">The day Northstar grew hands</span><span class="section">Section 3, part 2 · Building with the Claude API</span></span></a></li>
-      <li><a href="lessons/0005-claude-api-agentic-orchestration.html"><span><span class="title">The shape of the system</span><span class="section">Section 3, part 3 · Building with the Claude API</span></span></a></li>
-      <li><a href="lessons/0006-claude-with-amazon-bedrock.html"><span><span class="title">The Cascade Mutual migration</span><span class="section">Section 4 · Claude with Amazon Bedrock</span></span></a></li>
-      <li><a href="lessons/0007-claude-on-google-cloud.html"><span><span class="title">The Meridian port</span><span class="section">Section 5 · Claude on Google Cloud</span></span></a></li>
-      <li><a href="lessons/0008-model-context-protocol.html"><span><span class="title">The Northstar adapter</span><span class="section">Section 6 · Introduction to MCP</span></span></a></li>
-      <li><a href="lessons/0009-claude-code-in-action.html"><span><span class="title">The keys to the repo</span><span class="section">Section 7 · Claude Code in Action</span></span></a></li>
+      <li><a class="lesson-link" href="lessons/0002-ai-fluency-the-four-d-framework.html"><span><span class="title">The week Northstar decided how to work</span><span class="section">Section 1 · AI Fluency: Framework &amp; Foundations</span></span></a><a class="quiz-link" href="quizzes/01-ai-fluency-framework-foundations/index.html">Quiz →</a></li>
+      <li><a class="lesson-link" href="lessons/0001-claude-101-choose-the-right-surface.html"><span><span class="title">The Northstar launch</span><span class="section">Section 2 · Claude 101</span></span></a><a class="quiz-link" href="quizzes/02-claude-101/index.html">Quiz →</a></li>
+      <li><a class="lesson-link" href="lessons/0003-claude-api-the-first-integration.html"><span><span class="title">The first integration</span><span class="section">Section 3, part 1 · Building with the Claude API</span></span></a><a class="quiz-link" href="quizzes/03-building-with-the-claude-api/index.html">Quiz →</a></li>
+      <li><a class="lesson-link" href="lessons/0004-claude-api-tools-retrieval-and-context.html"><span><span class="title">The day Northstar grew hands</span><span class="section">Section 3, part 2 · Building with the Claude API</span></span></a><a class="quiz-link" href="quizzes/03-building-with-the-claude-api/index.html">Quiz →</a></li>
+      <li><a class="lesson-link" href="lessons/0005-claude-api-agentic-orchestration.html"><span><span class="title">The shape of the system</span><span class="section">Section 3, part 3 · Building with the Claude API</span></span></a><a class="quiz-link" href="quizzes/03-building-with-the-claude-api/index.html">Quiz →</a></li>
+      <li><a class="lesson-link" href="lessons/0006-claude-with-amazon-bedrock.html"><span><span class="title">The Cascade Mutual migration</span><span class="section">Section 4 · Claude with Amazon Bedrock</span></span></a><a class="quiz-link" href="quizzes/04-claude-with-amazon-bedrock/index.html">Quiz →</a></li>
+      <li><a class="lesson-link" href="lessons/0007-claude-on-google-cloud.html"><span><span class="title">The Meridian port</span><span class="section">Section 5 · Claude on Google Cloud</span></span></a><a class="quiz-link" href="quizzes/05-claude-on-google-cloud/index.html">Quiz →</a></li>
+      <li><a class="lesson-link" href="lessons/0008-model-context-protocol.html"><span><span class="title">The Northstar adapter</span><span class="section">Section 6 · Introduction to MCP</span></span></a><a class="quiz-link" href="quizzes/06-introduction-to-mcp/index.html">Quiz →</a></li>
+      <li><a class="lesson-link" href="lessons/0009-claude-code-in-action.html"><span><span class="title">The keys to the repo</span><span class="section">Section 7 · Claude Code in Action</span></span></a><a class="quiz-link" href="quizzes/07-claude-code-in-action/index.html">Quiz →</a></li>
     </ol>
 
     <h2>Companion material</h2>
@@ -107,6 +118,10 @@
       <a href="glossary/ccaf_glossary_quiz_tracker.html">
         <span class="title">Glossary quiz tracker</span>
         <span class="blurb">Self-contained quiz covering 64 exam-specific terms across all 5 domains. Tracks mastery locally.</span>
+      </a>
+      <a href="quizzes/index.html">
+        <span class="title">Section quizzes</span>
+        <span class="blurb">344 four-option multiple-choice questions, one set per section, with automatic right/wrong tracking.</span>
       </a>
     </div>
 

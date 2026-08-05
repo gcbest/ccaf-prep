@@ -11,9 +11,10 @@ This folder is a spaced-repetition study system built from the official **"Prepa
 
 **One narrative lesson per course** — `lessons/` holds a self-contained interactive HTML lesson for each of the 7 courses (section 03 is split into three parts, since it carries the exam's heaviest domain). Each lesson teaches the course material as a story set at a fictional company, Northstar, with timestamped scenes and interactive decision points where every wrong option is explained rather than just marked wrong. Open `lessons/index.html` in a browser to start. Use these to *learn* the material; use `quiz.md` to test whether it stuck.
 
-Two additional reference folders sit alongside the 7 course folders:
+Three additional reference folders sit alongside the 7 course folders:
 - `glossary/ccaf_glossary_quiz_tracker.html` — an interactive, self-contained quiz/tracker artifact covering 64 exam-specific terms across all 5 domains, built directly from the official CCA-F Exam Guide (not just course content). Open it in a browser and click through — it tracks your mastery locally.
 - `study-reference/ccaf_study_reference.md` — a machine-readable companion covering the same 64-term glossary plus 12 official-style scenario practice questions (drawn from the exam's actual scenario bank), with a built-in progress-tracking log. This is the single most authoritative file in this folder for exam-realistic prep, since it's sourced from the Exam Guide itself rather than course transcripts.
+- `quizzes/` — a self-contained, no-Claude-needed HTML quiz for each of the 7 course folders (344 four-option multiple-choice questions total), converted from each course's `quiz.md`. Each quiz tracks right/wrong answers per question in the browser's `localStorage` and offers a "missed & new first" mode plus a "review only missed" mode so wrong answers resurface more often. Open `quizzes/index.html` to start, or jump in from `index.html` / `lessons/index.html` / any individual lesson page.
 
 See `EXAM-DOMAINS.md` for how these courses map to the five scored exam domains, and `PROGRESS.md` for a running log of what's been reviewed and how well you know it.
 

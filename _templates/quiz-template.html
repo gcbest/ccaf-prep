@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>__TITLE__ — CCA-F Quiz</title>
+  <style>
+    :root {
+      --ink: #242321;
+      --muted: #706b63;
+      --paper: #f7f3ec;
+      --paper-deep: #ece4d7;
+      --rust: #a84e31;
+      --rust-dark: #7d3825;
+      --line: #d6ccbd;
+      --white: #fffdfa;
+      --accent: __ACCENT__;
+      --good: #3d7a4a;
+      --good-bg: #e6f0e4;
+      --bad: #a13a2e;
+      --bad-bg: #f7e6e2;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.7 Georgia, 'Times New Roman', serif;
+    }
+    main { max-width: 720px; margin: 0 auto; padding: 40px 22px 80px; }
+    .masthead {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+      border-bottom: 1px solid var(--line); padding-bottom: 10px;
+      color: var(--muted); font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .13em; text-transform: uppercase;
+    }
+    .masthead a { color: var(--muted); }
+    .kicker { display: block; margin: 22px 0 6px; color: var(--accent); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    h1 { max-width: 680px; margin: 0 0 10px; font: 700 clamp(1.8rem, 6vw, 2.7rem)/1.08 Georgia, serif; letter-spacing: -.02em; }
+    .dek { max-width: 640px; margin: 0 0 24px; color: var(--muted); font-size: 1.02rem; }
+    p { max-width: 70ch; margin: 0 0 13px; }
+    a { color: var(--rust-dark); }
+    code { background: var(--paper-deep); padding: .08em .28em; border-radius: 3px; }
+
+    nav.crumbs { font: 600 12px/1.5 system-ui, sans-serif; color: var(--muted); margin-bottom: 6px; }
+    nav.crumbs a { color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--line); }
+    nav.crumbs a:hover { color: var(--rust-dark); border-color: var(--rust-dark); }
+
+    .tabs { display: flex; gap: 4px; margin: 26px 0 18px; border-bottom: 1px solid var(--line); }
+    .tab {
+      padding: 9px 14px; cursor: pointer; font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .04em;
+      color: var(--muted); border-bottom: 2px solid transparent; user-select: none; background: none; border-top: none; border-left: none; border-right: none;
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .card {
+      background: var(--white); border: 1px solid var(--line); border-radius: 3px;
+      padding: 20px 22px; margin-bottom: 14px;
+    }
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+    select, button {
+      font: 600 13px/1.3 system-ui, sans-serif; padding: 8px 13px; border-radius: 3px; border: 1px solid var(--line);
+      background: var(--white); color: var(--ink); cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: var(--white); border-color: var(--accent); }
+    button.primary:hover { filter: brightness(1.08); }
+    button.ghost { background: var(--white); color: var(--accent); border-color: var(--line); }
+    button.ghost:hover { background: var(--paper-deep); }
+    .small { font: 400 13px/1.5 Georgia, serif; color: var(--muted); }
+    .small.sys { font: 400 12.5px/1.5 system-ui, sans-serif; color: var(--muted); }
+
+    .qmeta { display: flex; justify-content: space-between; align-items: center; font: 600 12px/1.4 system-ui, sans-serif; color: var(--muted); margin-bottom: 10px; }
+    .badge { font: 700 10.5px/1.4 system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: var(--paper-deep); color: var(--rust-dark); }
+    .qtext { font: 700 1.18rem/1.4 Georgia, serif; margin-bottom: 16px; }
+    .option {
+      display: block; width: 100%; text-align: left; padding: 11px 14px; margin-bottom: 9px;
+      border: 1px solid var(--line); border-radius: 3px; background: var(--white);
+      font: 400 15px/1.5 Georgia, serif; color: var(--ink); cursor: pointer;
+    }
+    .option:hover:not(.disabled) { border-color: var(--accent); background: var(--paper); }
+    .option .optkey { display: inline-block; width: 20px; font-weight: 700; color: var(--muted); }
+    .option.correct { background: var(--good-bg); border-color: var(--good); }
+    .option.wrong { background: var(--bad-bg); border-color: var(--bad); }
+    .option.disabled { cursor: default; }
+    .feedback { font: 700 13px/1.5 system-ui, sans-serif; margin: 12px 0 4px; padding: 10px 13px; border-radius: 3px; }
+    .feedback.good { background: var(--good-bg); color: var(--good); }
+    .feedback.bad { background: var(--bad-bg); color: var(--bad); }
+    .explain { font: 400 15px/1.6 Georgia, serif; color: var(--ink); margin-top: 8px; padding: 12px 14px; background: var(--paper-deep); border-radius: 3px; }
+    .explain strong { color: var(--rust-dark); }
+
+    .progress-bar-outer { width: 100%; height: 8px; background: var(--paper-deep); border-radius: 999px; overflow: hidden; margin: 6px 0 2px; }
+    .progress-bar-inner { height: 100%; border-radius: 999px; background: var(--accent); }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 10px; margin-bottom: 14px; }
+    .stat-box { background: var(--white); border: 1px solid var(--line); border-radius: 3px; padding: 13px 14px; text-align: center; }
+    .stat-num { font: 700 1.5rem/1.2 Georgia, serif; color: var(--rust-dark); }
+    .stat-label { font: 600 10.5px/1.4 system-ui, sans-serif; color: var(--muted); margin-top: 3px; letter-spacing: .03em; text-transform: uppercase; }
+    table { width: 100%; border-collapse: collapse; font: 400 13.5px/1.5 Georgia, serif; }
+    th, td { text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font: 600 10.5px/1.4 system-ui, sans-serif; text-transform: uppercase; letter-spacing: .03em; }
+    .row-between { display: flex; justify-content: space-between; align-items: center; }
+    .mastery-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+
+    footer { margin-top: 34px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: .88rem; }
+    @media (max-width: 560px) {
+      main { padding: 26px 16px 60px; }
+      .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
+      .card { padding: 16px 16px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <div class="masthead"><a href="../index.html">CCA-F Study System</a><span>__SECTION_SHORT__</span></div>
+
+  <nav class="crumbs"><a href="../index.html">Home</a> › <a href="index.html">Quizzes</a> › __SECTION_SHORT__</nav>
+  <span class="kicker">__KICKER__</span>
+  <h1>__TITLE__</h1>
+  <p class="dek">__DEK__</p>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="quiz">Quiz</button>
+    <button class="tab" data-tab="progress">My progress</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="panel active" id="panel-quiz">
+    <div class="card" id="quizSetup">
+      <div class="controls">
+        <select id="quizLen">
+          <option value="10">10 questions</option>
+          <option value="20">20 questions</option>
+          <option value="999" selected>All __QCOUNT__ questions</option>
+        </select>
+        <select id="quizMode">
+          <option value="weak" selected>Missed &amp; new first (recommended)</option>
+          <option value="random">Fully random</option>
+          <option value="sequential">In order</option>
+        </select>
+        <button class="primary" id="startQuizBtn">Start quiz</button>
+        <button class="ghost" id="reviewMissedBtn">Review only missed</button>
+      </div>
+      <div class="small sys">"Missed &amp; new first" weights questions you've gotten wrong or haven't seen, so review sessions target real gaps. "Review only missed" quizzes you exclusively on questions currently marked wrong.</div>
+    </div>
+    <div id="quizArea"></div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="panel" id="panel-progress">
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="card">
+      <div class="row-between"><strong style="font:700 13px/1.4 system-ui, sans-serif; color:var(--rust-dark);">Mastery</strong></div>
+      <div class="progress-bar-outer"><div class="progress-bar-inner" id="masteryBar" style="width:0%"></div></div>
+      <div class="small sys" id="masteryLabel" style="margin-top:6px;"></div>
+    </div>
+    <div class="card">
+      <div class="row-between"><strong style="font:700 13px/1.4 system-ui, sans-serif; color:var(--rust-dark);">Questions currently missed</strong></div>
+      <div id="weakTable" style="margin-top:8px;"></div>
+    </div>
+    <div class="card">
+      <div class="row-between">
+        <span class="small sys">Progress is saved in this browser and persists across visits.</span>
+        <button class="ghost" id="resetBtn">Reset progress</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>Source questions: <code>__SOURCE_PATH__</code> · <a href="__NOTES_HREF__">section notes</a>__LESSON_LINK__</p>
+    <p><a href="index.html">← All section quizzes</a></p>
+  </footer>
+</main>
+
+<script>
+/* ---------- QUESTION BANK ---------- */
+const QUESTIONS = __QUESTIONS_JSON__;
+
+/* ---------- STATE / PERSISTENCE ---------- */
+const STORAGE_KEY = "__STORAGE_KEY__";
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return { q: {}, totalAnswers: 0, totalCorrect: 0 };
+}
+function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+let state = loadState();
+
+function getStat(id) {
+  if (!state.q[id]) state.q[id] = { seen: 0, correct: 0, wrong: 0, mastery: 0, lastResult: null };
+  return state.q[id];
+}
+function recordAnswer(id, wasCorrect) {
+  const s = getStat(id);
+  s.seen += 1;
+  if (wasCorrect) { s.correct += 1; s.mastery = Math.min(3, s.mastery + 1); s.lastResult = "correct"; }
+  else { s.wrong += 1; s.mastery = 0; s.lastResult = "wrong"; }
+  state.totalAnswers = (state.totalAnswers||0) + 1;
+  if (wasCorrect) state.totalCorrect = (state.totalCorrect||0) + 1;
+  saveState();
+}
+
+/* ---------- TABS ---------- */
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
+    if (tab.dataset.tab === "progress") renderProgress();
+  });
+});
+
+/* ---------- QUIZ ---------- */
+let quizQueue = [];
+let quizIndex = 0;
+let quizScore = 0;
+
+function pickQuizQuestions(len, mode) {
+  let pool = QUESTIONS.slice();
+  if (mode === "weak") {
+    pool.sort((a,b) => {
+      const ma = getStat(a.id).mastery, mb = getStat(b.id).mastery;
+      if (ma !== mb) return ma - mb;
+      return Math.random() - 0.5;
+    });
+  } else if (mode === "random") {
+    pool.sort(() => Math.random() - 0.5);
+  }
+  return pool.slice(0, Math.min(len, pool.length));
+}
+
+function startQuiz(pool) {
+  quizQueue = pool;
+  quizIndex = 0;
+  quizScore = 0;
+  renderQuizQuestion();
+}
+
+document.getElementById("startQuizBtn").addEventListener("click", () => {
+  const len = parseInt(document.getElementById("quizLen").value, 10);
+  const mode = document.getElementById("quizMode").value;
+  startQuiz(pickQuizQuestions(len, mode));
+});
+
+document.getElementById("reviewMissedBtn").addEventListener("click", () => {
+  const missed = QUESTIONS.filter(q => getStat(q.id).lastResult === "wrong");
+  if (!missed.length) {
+    alert("No questions are currently marked wrong. Take a quiz first, or nice work — you're clean!");
+    return;
+  }
+  missed.sort(() => Math.random() - 0.5);
+  startQuiz(missed);
+});
+
+function renderQuizQuestion() {
+  const area = document.getElementById("quizArea");
+  if (quizIndex >= quizQueue.length) {
+    area.innerHTML = `<div class="card">
+      <div class="qtext">Session complete: ${quizScore} / ${quizQueue.length} correct</div>
+      <div class="small sys">Progress has been saved. Check "My progress" for what's still missed, or start another round above.</div>
+    </div>`;
+    return;
+  }
+  const q = quizQueue[quizIndex];
+  const letters = ["A","B","C","D"];
+  const optHtml = q.options.map((opt, i) =>
+    `<button class="option" data-idx="${i}"><span class="optkey">${letters[i]}.</span>${opt}</button>`
+  ).join("");
+  area.innerHTML = `<div class="card">
+    <div class="qmeta">
+      <span>Question ${quizIndex+1} of ${quizQueue.length}</span>
+      <span class="badge">__SECTION_SHORT__</span>
+    </div>
+    <div class="qtext">${q.q}</div>
+    <div id="quizOptions">${optHtml}</div>
+    <div id="quizFeedback"></div>
+    <div id="quizNextWrap"></div>
+  </div>`;
+  document.querySelectorAll("#quizOptions .option").forEach(btn => {
+    btn.addEventListener("click", () => handleQuizAnswer(q, parseInt(btn.dataset.idx,10)));
+  });
+}
+
+function handleQuizAnswer(q, idx) {
+  const correct = idx === q.correct;
+  if (correct) quizScore += 1;
+  recordAnswer(q.id, correct);
+  document.querySelectorAll("#quizOptions .option").forEach((btn, i) => {
+    btn.classList.add("disabled");
+    btn.disabled = true;
+    if (i === q.correct) btn.classList.add("correct");
+    else if (i === idx) btn.classList.add("wrong");
+  });
+  document.getElementById("quizFeedback").innerHTML =
+    `<div class="feedback ${correct ? "good" : "bad"}">${correct ? "Correct." : "Not quite."}</div>
+     <div class="explain"><strong>Why:</strong> ${q.explain}</div>`;
+  document.getElementById("quizNextWrap").innerHTML = `<button class="primary" id="nextQBtn" style="margin-top:12px;">${quizIndex+1 < quizQueue.length ? "Next question" : "See results"}</button>`;
+  document.getElementById("nextQBtn").addEventListener("click", () => { quizIndex += 1; renderQuizQuestion(); });
+}
+
+/* ---------- PROGRESS ---------- */
+function masteryColor(mastery) {
+  if (mastery >= 3) return "#3d7a4a";
+  if (mastery === 2) return "#8bc34a";
+  if (mastery === 1) return "#e0a34a";
+  return "#cfcfd4";
+}
+function renderProgress() {
+  const total = QUESTIONS.length;
+  let masteredCount = 0, sumMastery = 0, missedCount = 0;
+  QUESTIONS.forEach(q => {
+    const s = getStat(q.id);
+    sumMastery += s.mastery;
+    if (s.mastery >= 3) masteredCount += 1;
+    if (s.lastResult === "wrong") missedCount += 1;
+  });
+  const pct = Math.round((sumMastery / (total * 3)) * 100);
+  const acc = state.totalAnswers ? Math.round((state.totalCorrect / state.totalAnswers) * 100) : 0;
+
+  document.getElementById("statGrid").innerHTML = `
+    <div class="stat-box"><div class="stat-num">${masteredCount}/${total}</div><div class="stat-label">Mastered</div></div>
+    <div class="stat-box"><div class="stat-num">${missedCount}</div><div class="stat-label">Currently missed</div></div>
+    <div class="stat-box"><div class="stat-num">${state.totalAnswers||0}</div><div class="stat-label">Answers given</div></div>
+    <div class="stat-box"><div class="stat-num">${acc}%</div><div class="stat-label">Accuracy</div></div>
+  `;
+  document.getElementById("masteryBar").style.width = pct + "%";
+  document.getElementById("masteryLabel").textContent = pct + "% overall mastery across " + total + " questions";
+
+  const missed = QUESTIONS.filter(q => getStat(q.id).lastResult === "wrong")
+    .sort((a,b) => getStat(b.id).wrong - getStat(a.id).wrong);
+  let html;
+  if (!missed.length) {
+    html = `<div class="small sys">Nothing currently marked wrong. Take the quiz to build up a review queue.</div>`;
+  } else {
+    html = `<table><thead><tr><th></th><th>Question</th><th>Times wrong</th><th>Seen</th></tr></thead><tbody>`;
+    missed.forEach(q => {
+      const s = getStat(q.id);
+      const qtext = q.q.length > 90 ? q.q.slice(0,87) + "…" : q.q;
+      html += `<tr><td><span class="mastery-dot" style="background:${masteryColor(s.mastery)}"></span></td><td>${qtext}</td><td>${s.wrong}</td><td>${s.seen}</td></tr>`;
+    });
+    html += `</tbody></table>`;
+  }
+  document.getElementById("weakTable").innerHTML = html;
+}
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (confirm("Reset all quiz progress for this section? This can't be undone.")) {
+    state = { q: {}, totalAnswers: 0, totalCorrect: 0 };
+    saveState();
+    renderProgress();
+  }
+});
+
+/* ---------- INIT ---------- */
+renderProgress();
+</script>
+</body>
+</html>

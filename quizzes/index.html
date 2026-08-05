@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CCA-F Section Quizzes</title>
+  <style>
+    :root {
+      --ink: #242321;
+      --muted: #706b63;
+      --paper: #f7f3ec;
+      --paper-deep: #ece4d7;
+      --rust: #a84e31;
+      --rust-dark: #7d3825;
+      --line: #d6ccbd;
+      --white: #fffdfa;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.7 Georgia, 'Times New Roman', serif;
+    }
+    main { max-width: 780px; margin: 0 auto; padding: 44px 24px 80px; }
+    .masthead {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+      border-bottom: 1px solid var(--line); padding-bottom: 10px;
+      color: var(--muted); font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .13em; text-transform: uppercase;
+    }
+    .masthead a { color: var(--muted); }
+    nav.crumbs { font: 600 12px/1.5 system-ui, sans-serif; color: var(--muted); margin: 22px 0 0; }
+    nav.crumbs a { color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--line); }
+    nav.crumbs a:hover { color: var(--rust-dark); border-color: var(--rust-dark); }
+    h1 { max-width: 680px; margin: 10px 0 12px; font: 700 clamp(2.2rem, 8vw, 3.6rem)/1.02 Georgia, serif; letter-spacing: -.03em; }
+    .dek { max-width: 670px; margin: 0 0 24px; color: var(--muted); font-size: 1.1rem; }
+    p { max-width: 70ch; margin: 0 0 13px; }
+    a { color: var(--rust-dark); }
+    code { background: var(--paper-deep); padding: .08em .28em; border-radius: 3px; }
+
+    .note { margin: 20px 0 30px; padding: 16px 18px; background: var(--paper-deep); }
+    .note p:last-child { margin-bottom: 0; }
+
+    .card {
+      position: relative; display: block; margin: 14px 0 0; padding: 18px 22px 20px;
+      background: var(--white); border: 1px solid var(--line); border-radius: 3px;
+      color: inherit; text-decoration: none;
+    }
+    .card::before { content: ''; position: absolute; left: -1px; top: 0; bottom: 0; width: 4px; background: var(--accent, var(--rust)); }
+    .card:hover, .card:focus-visible { background: #fffaf3; outline: none; box-shadow: 0 0 0 3px rgba(168, 78, 49, .16); }
+    .card .kicker { display: block; margin: 0 0 5px; color: var(--accent, var(--rust-dark)); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    .card .title { display: block; margin: 0 0 6px; font: 700 1.25rem/1.25 Georgia, serif; }
+    .card .blurb { display: block; max-width: 66ch; color: var(--muted); font-size: .95rem; }
+    .card .count { display: inline-block; margin-top: 9px; padding: 3px 9px; background: var(--paper-deep); color: var(--rust-dark); border-radius: 3px; font: 600 11px/1.5 system-ui, sans-serif; letter-spacing: .05em; }
+
+    footer { margin-top: 34px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; }
+    @media (max-width: 560px) {
+      main { padding: 28px 18px 60px; }
+      .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
+      .card { padding: 16px 16px 18px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="masthead"><a href="../index.html">CCA-F Study System</a><span>Section quizzes</span></div>
+    <nav class="crumbs"><a href="../index.html">Home</a> › Quizzes</nav>
+    <h1>Section quizzes</h1>
+    <p class="dek">344 multiple-choice questions across all 7 official prep courses, four options each, mimicking the Claude Certified Architect – Foundations exam format.</p>
+
+    <div class="note">
+      <p><strong>Right/wrong tracking is automatic.</strong> Each quiz saves your answers in this browser. Use "Missed &amp; new first" to weight questions you've gotten wrong or haven't seen yet, or "Review only missed" to drill exclusively on your current weak spots. Each quiz's "My progress" tab shows accuracy and a live list of what's still missed.</p>
+    </div>
+
+    <a class="card" href="01-ai-fluency-framework-foundations/index.html" style="--accent:#4f6d5a">
+      <span class="kicker">Section 1</span>
+      <span class="title">AI Fluency: Framework &amp; Foundations</span>
+      <span class="blurb">The 4D Framework (Delegation, Description, Discernment, Diligence), the three modes of AI engagement, and effective prompting techniques.</span>
+      <span class="count">14 questions</span>
+    </a>
+
+    <a class="card" href="02-claude-101/index.html" style="--accent:#a84e31">
+      <span class="kicker">Section 2</span>
+      <span class="title">Claude 101</span>
+      <span class="blurb">Chat vs. Cowork vs. Code, Projects, Skills, Artifacts, connectors, and the lightweight eval loop.</span>
+      <span class="count">23 questions</span>
+    </a>
+
+    <a class="card" href="03-building-with-the-claude-api/index.html" style="--accent:#96652a">
+      <span class="kicker">Section 3 · Heaviest domain</span>
+      <span class="title">Building with the Claude API</span>
+      <span class="blurb">The Messages API, tool use and the agent loop, structured output, RAG and context management, and workflow vs. agent orchestration.</span>
+      <span class="count">102 questions</span>
+    </a>
+
+    <a class="card" href="04-claude-with-amazon-bedrock/index.html" style="--accent:#3f6b86">
+      <span class="kicker">Section 4</span>
+      <span class="title">Claude with Amazon Bedrock</span>
+      <span class="blurb">What changes, and what provably doesn't, when Claude moves behind Amazon Bedrock.</span>
+      <span class="count">28 questions</span>
+    </a>
+
+    <a class="card" href="05-claude-on-google-cloud/index.html" style="--accent:#55578f">
+      <span class="kicker">Section 5</span>
+      <span class="title">Claude on Google Cloud</span>
+      <span class="blurb">Deploying Claude through Vertex AI, and how it compares to the direct API and Bedrock.</span>
+      <span class="count">70 questions</span>
+    </a>
+
+    <a class="card" href="06-introduction-to-mcp/index.html" style="--accent:#5f6b3a">
+      <span class="kicker">Section 6</span>
+      <span class="title">Introduction to MCP</span>
+      <span class="blurb">The Model Context Protocol's three primitives — tools, resources, and prompts — and who controls each.</span>
+      <span class="count">31 questions</span>
+    </a>
+
+    <a class="card" href="07-claude-code-in-action/index.html" style="--accent:#8f3f3f">
+      <span class="kicker">Section 7</span>
+      <span class="title">Claude Code in Action</span>
+      <span class="blurb">CLAUDE.md hierarchy, rules, skills, hooks, subagents, plan mode, and using Claude Code safely in CI.</span>
+      <span class="count">76 questions</span>
+    </a>
+
+    <footer>
+      <p>Each quiz is self-contained and stores progress in this browser's <code>localStorage</code> only — nothing is sent anywhere. See also the <a href="../glossary/ccaf_glossary_quiz_tracker.html">glossary quiz tracker</a> (64 terms + 12 official-style scenario questions) and the <a href="../lessons/index.html">narrative lessons</a>.</p>
+    </footer>
+  </main>
+</body>
+</html>

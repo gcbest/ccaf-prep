@@ -1,0 +1,1202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Claude on Google Cloud Quiz — CCA-F Quiz</title>
+  <style>
+    :root {
+      --ink: #242321;
+      --muted: #706b63;
+      --paper: #f7f3ec;
+      --paper-deep: #ece4d7;
+      --rust: #a84e31;
+      --rust-dark: #7d3825;
+      --line: #d6ccbd;
+      --white: #fffdfa;
+      --accent: #55578f;
+      --good: #3d7a4a;
+      --good-bg: #e6f0e4;
+      --bad: #a13a2e;
+      --bad-bg: #f7e6e2;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.7 Georgia, 'Times New Roman', serif;
+    }
+    main { max-width: 720px; margin: 0 auto; padding: 40px 22px 80px; }
+    .masthead {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+      border-bottom: 1px solid var(--line); padding-bottom: 10px;
+      color: var(--muted); font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .13em; text-transform: uppercase;
+    }
+    .masthead a { color: var(--muted); }
+    .kicker { display: block; margin: 22px 0 6px; color: var(--accent); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    h1 { max-width: 680px; margin: 0 0 10px; font: 700 clamp(1.8rem, 6vw, 2.7rem)/1.08 Georgia, serif; letter-spacing: -.02em; }
+    .dek { max-width: 640px; margin: 0 0 24px; color: var(--muted); font-size: 1.02rem; }
+    p { max-width: 70ch; margin: 0 0 13px; }
+    a { color: var(--rust-dark); }
+    code { background: var(--paper-deep); padding: .08em .28em; border-radius: 3px; }
+
+    nav.crumbs { font: 600 12px/1.5 system-ui, sans-serif; color: var(--muted); margin-bottom: 6px; }
+    nav.crumbs a { color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--line); }
+    nav.crumbs a:hover { color: var(--rust-dark); border-color: var(--rust-dark); }
+
+    .tabs { display: flex; gap: 4px; margin: 26px 0 18px; border-bottom: 1px solid var(--line); }
+    .tab {
+      padding: 9px 14px; cursor: pointer; font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .04em;
+      color: var(--muted); border-bottom: 2px solid transparent; user-select: none; background: none; border-top: none; border-left: none; border-right: none;
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .card {
+      background: var(--white); border: 1px solid var(--line); border-radius: 3px;
+      padding: 20px 22px; margin-bottom: 14px;
+    }
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+    select, button {
+      font: 600 13px/1.3 system-ui, sans-serif; padding: 8px 13px; border-radius: 3px; border: 1px solid var(--line);
+      background: var(--white); color: var(--ink); cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: var(--white); border-color: var(--accent); }
+    button.primary:hover { filter: brightness(1.08); }
+    button.ghost { background: var(--white); color: var(--accent); border-color: var(--line); }
+    button.ghost:hover { background: var(--paper-deep); }
+    .small { font: 400 13px/1.5 Georgia, serif; color: var(--muted); }
+    .small.sys { font: 400 12.5px/1.5 system-ui, sans-serif; color: var(--muted); }
+
+    .qmeta { display: flex; justify-content: space-between; align-items: center; font: 600 12px/1.4 system-ui, sans-serif; color: var(--muted); margin-bottom: 10px; }
+    .badge { font: 700 10.5px/1.4 system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: var(--paper-deep); color: var(--rust-dark); }
+    .qtext { font: 700 1.18rem/1.4 Georgia, serif; margin-bottom: 16px; }
+    .option {
+      display: block; width: 100%; text-align: left; padding: 11px 14px; margin-bottom: 9px;
+      border: 1px solid var(--line); border-radius: 3px; background: var(--white);
+      font: 400 15px/1.5 Georgia, serif; color: var(--ink); cursor: pointer;
+    }
+    .option:hover:not(.disabled) { border-color: var(--accent); background: var(--paper); }
+    .option .optkey { display: inline-block; width: 20px; font-weight: 700; color: var(--muted); }
+    .option.correct { background: var(--good-bg); border-color: var(--good); }
+    .option.wrong { background: var(--bad-bg); border-color: var(--bad); }
+    .option.disabled { cursor: default; }
+    .feedback { font: 700 13px/1.5 system-ui, sans-serif; margin: 12px 0 4px; padding: 10px 13px; border-radius: 3px; }
+    .feedback.good { background: var(--good-bg); color: var(--good); }
+    .feedback.bad { background: var(--bad-bg); color: var(--bad); }
+    .explain { font: 400 15px/1.6 Georgia, serif; color: var(--ink); margin-top: 8px; padding: 12px 14px; background: var(--paper-deep); border-radius: 3px; }
+    .explain strong { color: var(--rust-dark); }
+
+    .progress-bar-outer { width: 100%; height: 8px; background: var(--paper-deep); border-radius: 999px; overflow: hidden; margin: 6px 0 2px; }
+    .progress-bar-inner { height: 100%; border-radius: 999px; background: var(--accent); }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 10px; margin-bottom: 14px; }
+    .stat-box { background: var(--white); border: 1px solid var(--line); border-radius: 3px; padding: 13px 14px; text-align: center; }
+    .stat-num { font: 700 1.5rem/1.2 Georgia, serif; color: var(--rust-dark); }
+    .stat-label { font: 600 10.5px/1.4 system-ui, sans-serif; color: var(--muted); margin-top: 3px; letter-spacing: .03em; text-transform: uppercase; }
+    table { width: 100%; border-collapse: collapse; font: 400 13.5px/1.5 Georgia, serif; }
+    th, td { text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font: 600 10.5px/1.4 system-ui, sans-serif; text-transform: uppercase; letter-spacing: .03em; }
+    .row-between { display: flex; justify-content: space-between; align-items: center; }
+    .mastery-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+
+    footer { margin-top: 34px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: .88rem; }
+    @media (max-width: 560px) {
+      main { padding: 26px 16px 60px; }
+      .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
+      .card { padding: 16px 16px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <div class="masthead"><a href="../index.html">CCA-F Study System</a><span>Section 5 · Google Cloud</span></div>
+
+  <nav class="crumbs"><a href="../index.html">Home</a> › <a href="index.html">Quizzes</a> › Section 5 · Google Cloud</nav>
+  <span class="kicker">Section 5 · Claude on Google Cloud</span>
+  <h1>Claude on Google Cloud Quiz</h1>
+  <p class="dek">70 multiple-choice questions on deploying Claude through Vertex AI on Google Cloud, and how it compares to the direct API and Bedrock.</p>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="quiz">Quiz</button>
+    <button class="tab" data-tab="progress">My progress</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="panel active" id="panel-quiz">
+    <div class="card" id="quizSetup">
+      <div class="controls">
+        <select id="quizLen">
+          <option value="10">10 questions</option>
+          <option value="20">20 questions</option>
+          <option value="999" selected>All 70 questions</option>
+        </select>
+        <select id="quizMode">
+          <option value="weak" selected>Missed &amp; new first (recommended)</option>
+          <option value="random">Fully random</option>
+          <option value="sequential">In order</option>
+        </select>
+        <button class="primary" id="startQuizBtn">Start quiz</button>
+        <button class="ghost" id="reviewMissedBtn">Review only missed</button>
+      </div>
+      <div class="small sys">"Missed &amp; new first" weights questions you've gotten wrong or haven't seen, so review sessions target real gaps. "Review only missed" quizzes you exclusively on questions currently marked wrong.</div>
+    </div>
+    <div id="quizArea"></div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="panel" id="panel-progress">
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="card">
+      <div class="row-between"><strong style="font:700 13px/1.4 system-ui, sans-serif; color:var(--rust-dark);">Mastery</strong></div>
+      <div class="progress-bar-outer"><div class="progress-bar-inner" id="masteryBar" style="width:0%"></div></div>
+      <div class="small sys" id="masteryLabel" style="margin-top:6px;"></div>
+    </div>
+    <div class="card">
+      <div class="row-between"><strong style="font:700 13px/1.4 system-ui, sans-serif; color:var(--rust-dark);">Questions currently missed</strong></div>
+      <div id="weakTable" style="margin-top:8px;"></div>
+    </div>
+    <div class="card">
+      <div class="row-between">
+        <span class="small sys">Progress is saved in this browser and persists across visits.</span>
+        <button class="ghost" id="resetBtn">Reset progress</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>Source questions: <code>05-claude-on-google-cloud/quiz.md</code> · <a href="../05-claude-on-google-cloud/notes.md">section notes</a> · <a href="../lessons/0007-claude-on-google-cloud.html">read the lesson</a></p>
+    <p><a href="index.html">← All section quizzes</a></p>
+  </footer>
+</main>
+
+<script>
+/* ---------- QUESTION BANK ---------- */
+const QUESTIONS = [
+  {
+    "id": "gcp01",
+    "q": "Why should you never call Vertex AI directly from client-side code?",
+    "options": [
+      "Direct client-side calls trigger stricter rate limiting than server-side calls",
+      "Vertex AI blocks all requests originating from a web browser by default",
+      "API credentials would be exposed to anyone viewing the client code, so requests must be routed through your own server",
+      "Client-side code cannot correctly parse the JSON responses Vertex AI returns"
+    ],
+    "correct": 2,
+    "explain": "Credentials embedded in client-side code are visible to anyone who inspects it, so requests must be routed through your own server, which acts as a secure intermediary that keeps the credentials hidden."
+  },
+  {
+    "id": "gcp02",
+    "q": "Which of the following correctly lists the four internal stages Claude uses to generate text, in order?",
+    "options": [
+      "Chunking, Embedding, Retrieval, Generation",
+      "Tokenization, Embedding, Contextualization, Generation",
+      "Tokenization, Retrieval, Contextualization, Validation",
+      "Parsing, Vectorization, Ranking, Generation"
+    ],
+    "correct": 1,
+    "explain": "Claude tokenizes input into tokens, converts each token to a numeric embedding, contextualizes those embeddings using surrounding context to resolve meaning, and finally generates next-token probabilities to produce output."
+  },
+  {
+    "id": "gcp03",
+    "q": "Which of the following correctly lists the three conditions that stop Claude's text generation?",
+    "options": [
+      "Max tokens reached, a temperature threshold, or a predefined stop sequence",
+      "A context window limit, a natural end-of-sequence token, or a rate limit",
+      "Max tokens reached, a natural end-of-sequence token, or an error threshold",
+      "Max tokens reached, a natural end-of-sequence token, or a predefined stop sequence"
+    ],
+    "correct": 3,
+    "explain": "Generation halts when the response hits the max_tokens budget, when Claude naturally produces an end-of-sequence token, or when a configured stop sequence appears in the output."
+  },
+  {
+    "id": "gcp04",
+    "q": "Which of the following correctly lists the four setup steps for Vertex AI access before making your first request?",
+    "options": [
+      "Enable the Anthropic model in Model Garden, install gcloud CLI, run gcloud init/auth login, then gcloud config set project and application-default login",
+      "Enable Model Garden access, install gcloud CLI, generate an API key, export it as an environment variable",
+      "Enable billing, install the anthropic pip package, set ANTHROPIC_API_KEY, run gcloud init",
+      "Create an Anthropic API key, install boto3, configure AWS credentials, set a region"
+    ],
+    "correct": 0,
+    "explain": "The setup flow is: enable the Anthropic model in Vertex AI's Model Garden, install the gcloud CLI, authenticate with gcloud init/auth login, then set the project and run gcloud auth application-default login."
+  },
+  {
+    "id": "gcp05",
+    "q": "Does the Anthropic SDK require you to manually pass an API key when using Vertex AI?",
+    "options": [
+      "No, the SDK instead reads credentials from a manually created .env file",
+      "Yes, an ANTHROPIC_API_KEY must always be set alongside gcloud credentials",
+      "Yes, both an API key and an OAuth token must be supplied together",
+      "No, the SDK automatically uses the application-default login credentials tied to your GCP project"
+    ],
+    "correct": 3,
+    "explain": "On Vertex, the SDK picks up the credentials established by gcloud auth application-default login automatically, so there is no manual API key wiring needed."
+  },
+  {
+    "id": "gcp06",
+    "q": "Which client class is used to call Claude via Vertex, and what two parameters does it require?",
+    "options": [
+      "AnthropicBedrock(region=..., model_id=...)",
+      "Anthropic(api_key=..., project_id=...)",
+      "AnthropicVertex(region=..., project_id=...)",
+      "VertexClient(zone=..., billing_account=...)"
+    ],
+    "correct": 2,
+    "explain": "Vertex calls use the AnthropicVertex client class, which requires a region and a project_id to know which GCP region and project to route requests through."
+  },
+  {
+    "id": "gcp07",
+    "q": "How does Vertex's model naming convention differ from the direct Anthropic API's?",
+    "options": [
+      "Vertex model names include an @ version suffix, e.g. claude-sonnet-4@20250514, while the direct API uses a plain model name string",
+      "Both use identical plain model name strings with no version markers",
+      "Vertex uses a plain model name; the direct API adds an @ version suffix",
+      "Vertex prefixes model names with the GCP project ID instead of a version suffix"
+    ],
+    "correct": 0,
+    "explain": "Vertex appends a dated @ version suffix like @20250514 to the model name, whereas the direct Anthropic API just uses a plain model name string."
+  },
+  {
+    "id": "gcp08",
+    "q": "Is max_tokens a target Claude tries to hit, or a ceiling?",
+    "options": [
+      "It is a soft suggestion Claude may exceed if the answer requires more room",
+      "It is a ceiling/budget: Claude stops when it judges the response complete but never exceeds it",
+      "It is a target Claude always tries to fully use in every response",
+      "It indirectly controls temperature rather than response length"
+    ],
+    "correct": 1,
+    "explain": "max_tokens acts as a hard ceiling on response length; Claude stops generating whenever it judges the response complete, but it will never exceed that budget."
+  },
+  {
+    "id": "gcp09",
+    "q": "How does the AnthropicVertex client's call shape compare to Bedrock's .converse() call?",
+    "options": [
+      "Both Vertex and Bedrock use an identical converse(modelId=..., messages=[...]) call",
+      "Vertex's call shape closely mirrors the direct Anthropic API's messages.create, while Bedrock uses a differently-structured converse() call",
+      "Vertex uses converse(); Bedrock's call shape mirrors the direct Anthropic API",
+      "Vertex requires a fully custom call shape unlike both Bedrock and the direct API"
+    ],
+    "correct": 1,
+    "explain": "Vertex's AnthropicVertex client uses messages.create, closely matching the direct Anthropic API, while Bedrock uses its own differently-structured converse(modelId=..., messages=[...]) call."
+  },
+  {
+    "id": "gcp10",
+    "q": "Across Vertex, Bedrock, and the direct Anthropic API, what stays constant and what changes?",
+    "options": [
+      "Only the model-ID format changes; all other aspects are identical across providers",
+      "Everything changes across providers, including prompting strategy and tool schema design",
+      "Authentication and client class stay constant; prompt engineering and RAG strategy change",
+      "Authentication method, client class, call shape, and model-ID format change; prompt engineering, tool schema design, RAG strategy, evaluation methodology, and agentic orchestration stay constant"
+    ],
+    "correct": 3,
+    "explain": "The plumbing differs by provider (auth, client class, call shape, model-ID format), but the underlying thinking layer — prompting, tool schemas, RAG strategy, evaluation, and agent orchestration — stays the same everywhere."
+  },
+  {
+    "id": "gcp11",
+    "q": "How does the Anthropic Vertex SDK obtain credentials, and what command establishes them?",
+    "options": [
+      "It uses a manually set GOOGLE_API_KEY environment variable",
+      "It uses credentials established solely by gcloud config set project",
+      "It uses Google Cloud application-default credentials, established via gcloud auth application-default login",
+      "It uses application-default credentials, established via plain gcloud auth login without the application-default flag"
+    ],
+    "correct": 2,
+    "explain": "The Vertex SDK relies on Google Cloud application-default credentials, which are established by running gcloud auth application-default login; the SDK then picks these up automatically."
+  },
+  {
+    "id": "gcp12",
+    "q": "What does a Vertex response contain, and why should the application inspect its stop reason?",
+    "options": [
+      "It contains the generated message, usage information, and a stop reason, which distinguishes natural completion from hitting the token budget or a stop sequence",
+      "It contains the message and usage information only; Vertex responses omit a stop reason",
+      "It contains the message, a token cost estimate, and latency metrics",
+      "It contains the message, the model version used, and a safety score"
+    ],
+    "correct": 0,
+    "explain": "A Vertex response includes the generated message, usage info, and a stop reason; the stop reason tells the application whether the response ended naturally, hit max_tokens, or matched a configured stop sequence, which can affect logging and retry logic."
+  },
+  {
+    "id": "gcp13",
+    "q": "How can a Vertex application constrain a response to a small machine-readable format such as JSON or CSV?",
+    "options": [
+      "By enabling citations, which forces machine-readable formatting automatically",
+      "By using an assistant prefill together with a stop sequence for the delimiter, or a dedicated tool schema, and always validating the result",
+      "By using the Text Editor tool to enforce a strict output schema",
+      "By setting temperature to 0 and hoping for consistent formatting"
+    ],
+    "correct": 1,
+    "explain": "The recommended approach is prefilling the assistant response plus a stop sequence for the delimiter, or using a dedicated tool schema for stricter contracts — with the application still parsing and validating the result afterward."
+  },
+  {
+    "id": "gcp14",
+    "q": "What must a Vertex tool loop preserve on the follow-up request after Claude asks to call a tool?",
+    "options": [
+      "The tool result alone; prior assistant content can be dropped",
+      "The assistant content and tool result, but tool definitions can be omitted after the first call",
+      "The complete assistant content, the executed and validated tool result matched by tool_use_id, and the original tool definitions",
+      "Only the tool_use_id and system prompt need to be resent"
+    ],
+    "correct": 2,
+    "explain": "The follow-up request must keep the full assistant content, include a properly validated tool result matched to its tool_use_id, and retain the original tool definitions so Claude has everything it needs to continue."
+  },
+  {
+    "id": "gcp15",
+    "q": "How can you tell whether a wrong RAG answer came from retrieval or generation?",
+    "options": [
+      "Evaluate retrieval and generation separately: check whether the needed chunk was retrieved, whether Claude interpreted the context correctly, and whether it synthesized the answer accurately",
+      "Check whether temperature was set correctly, whether XML tags were used, and whether prefill was applied",
+      "Check retrieval latency, response token count, and citation accuracy",
+      "Check embedding model version, chunk size setting, and cache hit rate"
+    ],
+    "correct": 0,
+    "explain": "Debugging RAG requires separating the pipeline stages: confirm the right chunk was retrieved, confirm Claude read the supplied context correctly, and confirm it synthesized the final answer accurately."
+  },
+  {
+    "id": "gcp16",
+    "q": "Which of the following best describes the framework for choosing among Opus, Sonnet, and Haiku, and why teams mix models within one app?",
+    "options": [
+      "Opus for speed, Haiku for deep reasoning, Sonnet for cost efficiency; teams pick one model per app",
+      "Sonnet for intelligence, Opus for speed, Haiku for balanced general use; mixing models adds unnecessary complexity",
+      "Choose a single model for the entire application based on budget alone; mixing models is discouraged",
+      "Opus for intelligence and deep reasoning, Haiku for speed and cost-efficient high-volume work, Sonnet for balanced general use; teams often combine them, e.g. Haiku for chat turns, Sonnet for business logic, Opus for the hardest steps"
+    ],
+    "correct": 3,
+    "explain": "The framework matches model to priority: Opus for the hardest reasoning, Haiku for fast/cheap high-volume work, and Sonnet as the balanced general-purpose choice — and teams commonly combine all three within a single application rather than picking just one."
+  },
+  {
+    "id": "gcp17",
+    "q": "Why does a naive follow-up request to Claude produce irrelevant answers, and what must the application do to fix it?",
+    "options": [
+      "The API stores conversation history server-side for five minutes via prompt caching, so only recent turns need resending",
+      "The API is stateless with zero memory between calls, so the app must resend the full messages list with every new request",
+      "The app must resend only the most recent user message and let Claude infer the rest",
+      "The API is stateful and remembers prior turns automatically via a session ID, so no fix is needed"
+    ],
+    "correct": 1,
+    "explain": "The Anthropic API is stateless and stores no messages between requests, so the application must manually maintain and resend the entire conversation history (alternating user/assistant entries) with every call."
+  },
+  {
+    "id": "gcp18",
+    "q": "What's the hard technical rule about the system parameter, and the recommended implementation practice?",
+    "options": [
+      "system can safely be set to None; it is simply ignored when empty",
+      "system must always be included, even as an empty string, or the request fails",
+      "system cannot be passed as None; it must be conditionally included only when a system prompt exists, and should be made configurable rather than hard-coded",
+      "system should be hard-coded per use case for consistency rather than made configurable"
+    ],
+    "correct": 2,
+    "explain": "system cannot be passed as None — it must only be included in the API call when a real system prompt exists, and best practice is to make system prompts configurable so the same calling code can be reused."
+  },
+  {
+    "id": "gcp19",
+    "q": "Besides forcing clean structured output, what's the broader use of assistant-message prefilling, and how does it differ from a stop sequence?",
+    "options": [
+      "Prefilling is used only for JSON formatting and cannot influence tone or stance",
+      "Both prefilling and stop sequences only affect the length of the response, not its content",
+      "Prefilling controls termination timing; stop sequences steer content and stance",
+      "Prefilling steers the content/stance of Claude's response by continuing from written text; stop sequences instead control length/format by halting generation at a trigger string"
+    ],
+    "correct": 3,
+    "explain": "Prefilling lets you steer what Claude argues or how it responds by writing the start of its message, which Claude then continues; stop sequences instead control when generation halts, shaping length and format rather than content."
+  },
+  {
+    "id": "gcp20",
+    "q": "When a stop sequence is triggered, does the matched trigger text appear in Claude's returned output?",
+    "options": [
+      "No, the stop sequence text is excluded; generation halts immediately and the returned content ends right before it",
+      "Yes, it is included as the final characters of the returned output",
+      "Whether it appears depends on whether streaming is enabled",
+      "It appears in the output but is flagged with a special marker"
+    ],
+    "correct": 0,
+    "explain": "The stop sequence text itself is excluded from the final output — generation stops the instant it is produced, and the returned content ends right before the trigger text."
+  },
+  {
+    "id": "gcp21",
+    "q": "What does temperature=0 actually guarantee, and what's the parameter's default value?",
+    "options": [
+      "It disables the max_tokens limit, and defaults to 0.7",
+      "It makes generation deterministic by always picking the highest-probability token, and defaults to 1.0",
+      "It randomizes token selection for variety, and defaults to 1.0",
+      "It guarantees the shortest possible response, and defaults to 0.5"
+    ],
+    "correct": 1,
+    "explain": "Temperature 0 makes generation deterministic, since Claude always selects the highest-probability token at each step; if left unset, the parameter defaults to 1.0, which favors more variation."
+  },
+  {
+    "id": "gcp22",
+    "q": "When should you reach for low vs. high temperature?",
+    "options": [
+      "Temperature has no meaningful effect on creative versus factual tasks, only on response speed",
+      "Low temperature for short responses; high temperature for long responses",
+      "Low temperature for creative writing; high temperature for factual data extraction",
+      "Low temperature for data extraction and factual, repeatable tasks; high temperature for creative writing and brainstorming"
+    ],
+    "correct": 3,
+    "explain": "Low temperature near 0 suits factual, repeatable tasks like data extraction, while high temperature near 1 suits creative tasks like brainstorming, jokes, or marketing copy where variation is desirable."
+  },
+  {
+    "id": "gcp23",
+    "q": "Which of the following correctly lists the six streaming event types Claude emits, and identifies which one carries the visible text?",
+    "options": [
+      "message_start, text_delta, message_stop, error, retry, content_block_stop — text_delta carries the text",
+      "content_block_start, content_block_delta, content_block_stop, message_stop — content_block_delta carries the text (only four listed)",
+      "message_start, content_block_start, content_block_delta, content_block_stop, message_delta, message_stop — content_block_delta carries the actual text chunks",
+      "message_start, content_block_start, content_block_end, message_complete, token_delta, stream_stop — token_delta carries the text"
+    ],
+    "correct": 2,
+    "explain": "The six event types are message_start, content_block_start, content_block_delta, content_block_stop, message_delta, and message_stop, and it's specifically content_block_delta that carries the actual visible text chunks."
+  },
+  {
+    "id": "gcp24",
+    "q": "What are the two ways to consume a streaming response, and what does get_final_message() do?",
+    "options": [
+      "stream=True returns a raw iterator you parse yourself; .messages.stream() exposes stream.text_stream for clean text access; get_final_message() collects all streamed chunks into one complete message object",
+      "stream=True gives clean text_stream access directly; .messages.stream() requires manual parsing of raw events",
+      "The only supported method is .messages.stream(); raw stream=True iteration isn't available",
+      "get_final_message() cancels the stream early and discards the remaining chunks"
+    ],
+    "correct": 0,
+    "explain": "Basic streaming with stream=True hands you a raw event iterator to parse yourself, while .messages.stream() as a context manager exposes stream.text_stream for clean text access; get_final_message() reassembles all the chunks into one complete message object, useful for saving the full response afterward."
+  },
+  {
+    "id": "gcp25",
+    "q": "What are the three paths an engineer can take after writing a prompt, and which two are traps?",
+    "options": [
+      "Only two paths exist: manual testing or an automated eval pipeline",
+      "All three paths — minimal testing, a few tweaks, and full evaluation — are equally valid depending on team size",
+      "Test once and ship, test a few inputs with minor tweaks, or run a full evaluation pipeline; the first two are traps and only the eval pipeline is recommended",
+      "Run a full eval pipeline, test a few inputs, or skip testing entirely; the eval pipeline and few-input testing are traps"
+    ],
+    "correct": 2,
+    "explain": "Testing once and shipping, or testing a handful of custom inputs with minor tweaks, are both traps that most engineers fall into; only running the prompt through a full evaluation pipeline gives objective scoring before production."
+  },
+  {
+    "id": "gcp26",
+    "q": "Which of the following correctly describes the 5-step typical eval workflow?",
+    "options": [
+      "Draft prompt, run it once, grade the final score, then ship",
+      "Draft an initial prompt, build an evaluation dataset, run each input through the prompt, grade each output on a 1-10 scale and average, then iterate on the prompt and repeat",
+      "Draft prompt, deploy to production, monitor errors, patch, redeploy",
+      "Build dataset, grade with pass/fail only, deploy immediately, no iteration"
+    ],
+    "correct": 1,
+    "explain": "The workflow is: write an initial prompt draft, build an evaluation dataset of test inputs, run each input through the prompt and send to Claude, grade each output on a 1-10 scale and average the scores, then iterate on the prompt and repeat, comparing scores across versions."
+  },
+  {
+    "id": "gcp27",
+    "q": "What are the three grader types, and what's the key gotcha about using an LLM as a model grader?",
+    "options": [
+      "Code, model, and human graders; without a prompt requiring reasoning first, model graders default to middling scores around 6",
+      "Code, model, and human graders; the gotcha is that model graders default to a score of 10 unless told to be strict",
+      "Code and model graders only; human grading isn't used for LLM evaluation",
+      "Code, human, and heuristic graders; the gotcha is that model graders always score too high"
+    ],
+    "correct": 0,
+    "explain": "The three grader types are code graders (programmatic checks), model graders (an LLM judging quality), and human graders; the gotcha is that a model grader asked only for a number tends to default to a middling score around 6, unless the prompt explicitly requires it to state strengths, weaknesses, and reasoning first."
+  },
+  {
+    "id": "gcp28",
+    "q": "How does code-based grading validate that Claude's output is 'just code,' and how is the final score computed when combined with a model grader?",
+    "options": [
+      "It attempts to parse the output and returns the higher of the model score or syntax score",
+      "It attempts to parse the output, but the syntax score is used only as a pass/fail gate before the model score counts",
+      "It only checks for keyword presence, not actual parsing; final score equals the model score alone",
+      "It attempts to parse/compile the output with format-specific validators, returning 10 if it parses cleanly and 0 otherwise; the final score averages the model score and syntax score"
+    ],
+    "correct": 3,
+    "explain": "Code grading dispatches to a format-specific validator (JSON parsing, AST parsing, regex compilation) that returns 10 for a clean parse and 0 for an error, and the final score merges this with the model grader's score by simple averaging."
+  },
+  {
+    "id": "gcp29",
+    "q": "Which of the following best describes the 'Being Clear and Direct' technique, and the score improvement shown in the course example?",
+    "options": [
+      "It focuses on wrapping content in XML tags; the score jumped from 2.32 to 7.86",
+      "It focuses on the prompt's first line, opening with an action verb and direct language stating the task and expected output; the score jumped from 2.32 to 3.92",
+      "It focuses on lowering temperature to improve consistency; the score improved from 3.92 to 9.1",
+      "It focuses on adding more examples to the prompt; the score jumped from 3.92 to 7.86"
+    ],
+    "correct": 1,
+    "explain": "The technique is about tightening the prompt's opening line with an action verb and direct, unambiguous language describing the task and expected output — the course example showed this alone raised the score from 2.32 to 3.92."
+  },
+  {
+    "id": "gcp30",
+    "q": "Which of the following correctly distinguishes 'Type A' and 'Type B' guidelines in the 'Being Specific' technique, including the example score improvement?",
+    "options": [
+      "Type A and Type B are interchangeable names for the same kind of guideline",
+      "Type A is steps to follow; Type B is output attributes; the score jumped from 2.32 to 3.92",
+      "Type A is examples; Type B is XML tag wrapping; the score jumped from 3.92 to 9.1",
+      "Type A controls output attributes and should almost always be included; Type B gives steps to follow, reserved for complex problems; the score jumped from 3.92 to 7.86"
+    ],
+    "correct": 3,
+    "explain": "Type A guidelines shape output attributes like length and structure and should almost always be included, while Type B guidelines give step-by-step instructions reserved for complex problems requiring broader consideration — adding these guidelines lifted the example score from 3.92 to 7.86."
+  },
+  {
+    "id": "gcp31",
+    "q": "What's the purpose of wrapping content in XML tags within a prompt, and the naming best practice?",
+    "options": [
+      "XML tags help distinguish different types of interpolated content and reduce ambiguity; best practice is to use specific, descriptive tag names",
+      "XML tags are required for tool schemas but provide no benefit in plain prompt text",
+      "XML tags primarily exist to reduce token cost by compressing large text blocks",
+      "XML tags should use generic names like 'data' so Claude can interpret them flexibly"
+    ],
+    "correct": 0,
+    "explain": "XML tags help the model tell apart different chunks of interpolated content, reducing ambiguity and improving comprehension, and the best practice is to use specific, descriptive tag names rather than generic ones like 'data.'"
+  },
+  {
+    "id": "gcp32",
+    "q": "What's the difference between one-shot and multi-shot prompting, and when is multi-shot specifically recommended?",
+    "options": [
+      "One-shot and multi-shot refer to the number of API calls made, not examples in the prompt",
+      "One-shot uses multiple examples; multi-shot uses a single example",
+      "One-shot embeds a single example in the prompt; multi-shot embeds multiple examples, and is specifically recommended for handling corner cases like sarcasm detection",
+      "Multi-shot is recommended mainly to reduce token usage rather than to handle edge cases"
+    ],
+    "correct": 2,
+    "explain": "One-shot prompting includes a single example while multi-shot includes several, and multi-shot is specifically useful for corner and edge cases — such as sarcasm detection — where extra examples help the model generalize correctly."
+  },
+  {
+    "id": "gcp33",
+    "q": "Why does Claude need 'tool use' at all, and what's the 5-step flow from user question to final answer?",
+    "options": [
+      "Claude's knowledge is frozen at training time; the flow is Claude requests data, the server fetches it, and Claude generates a final answer using the original prompt plus retrieved data",
+      "Claude needs tool use to reduce token costs, not to access real-time data",
+      "The flow is: user asks, Claude answers directly, the server logs it, no external fetch is needed",
+      "Claude needs tool use because it cannot generate structured output without it"
+    ],
+    "correct": 0,
+    "explain": "Because Claude's knowledge is frozen at training time with no access to real-time information, the flow lets Claude request external data, have the server fetch it, send it back to Claude, and have Claude produce a final answer combining the original prompt with the retrieved data."
+  },
+  {
+    "id": "gcp34",
+    "q": "What are the tool-function best practices for input validation, and why does clear error messaging matter specifically for Claude?",
+    "options": [
+      "Validation should be handled client-side only, never inside the tool function itself",
+      "Claude cannot see tool error text at all; only the developer sees it in logs",
+      "Use descriptive names, validate inputs, and raise clear errors; Claude itself sees the error text and can use it to retry with corrected parameters",
+      "Error messages matter only for developer debugging logs, not for Claude's own retries"
+    ],
+    "correct": 2,
+    "explain": "Best practice is descriptive function/argument names plus input validation with meaningful error messages, because Claude itself reads the exact error text when a tool call fails and can use it to self-correct on a retry."
+  },
+  {
+    "id": "gcp35",
+    "q": "What three fields make up a tool schema, and what's the best-practice guidance on description length?",
+    "options": [
+      "name, input_schema, and output_schema; descriptions should be one short sentence",
+      "name, description, and input_schema; best practice is 3-4 sentence descriptions for the tool and its arguments",
+      "name, description, and examples; descriptions should be as brief as possible",
+      "function, arguments, and return_type; description length doesn't matter"
+    ],
+    "correct": 1,
+    "explain": "A tool schema consists of name, description, and input_schema, and best practice is writing 3-4 sentence descriptions for both the tool and its individual arguments so Claude fully understands purpose and usage."
+  },
+  {
+    "id": "gcp36",
+    "q": "What three fields make up a tool_result block, and what is the tool_use_id used for?",
+    "options": [
+      "tool_use_id, content, and timestamp",
+      "tool_name, content, and status_code",
+      "request_id, output, and retry_count",
+      "tool_use_id, content, and is_error; the ID matches the result to the original tool_use block so Claude can correlate which result answers which request"
+    ],
+    "correct": 3,
+    "explain": "A tool_result block includes tool_use_id, content, and is_error; the tool_use_id must match the ID from the original tool_use block, which matters especially when Claude makes several tool calls at once so each gets the correct matched result."
+  },
+  {
+    "id": "gcp37",
+    "q": "What stop_reason value signals that Claude wants to call a tool, and how does the run-conversation loop use it?",
+    "options": [
+      "stop_reason 'tool_use' ends the loop immediately without executing the tool",
+      "stop_reason 'max_tokens' signals a tool call is requested",
+      "stop_reason 'tool_use' signals a tool call; the loop keeps executing tools and calling Claude again until stop_reason is no longer 'tool_use'",
+      "The loop checks the content block type instead of stop_reason to detect tool calls"
+    ],
+    "correct": 2,
+    "explain": "stop_reason equal to 'tool_use' signals Claude wants to call a tool; the loop executes the requested tool(s), appends results, and calls Claude again, repeating until stop_reason is no longer 'tool_use' and the final answer can be returned."
+  },
+  {
+    "id": "gcp38",
+    "q": "What problem does the 'batch tool' workaround solve, and how much does it reduce request round-trips?",
+    "options": [
+      "It reduces round trips from 2 down to N+1",
+      "It is used to cache tool definitions rather than combine invocations",
+      "It only works with the Text Editor and Web Search built-in tools",
+      "It combines multiple tool invocations into one call so the server runs them all and returns a combined result, cutting round trips from N+1 down to 2"
+    ],
+    "correct": 3,
+    "explain": "Since Claude tends to send separate sequential single-tool-use messages instead of batching them naturally, the batch tool lets Claude submit a list of invocations that the server runs together, cutting request rounds from N+1 down to just 2."
+  },
+  {
+    "id": "gcp39",
+    "q": "Besides prefill plus stop sequence, what's the alternative method for extracting reliable structured JSON from Claude, and what parameter forces it?",
+    "options": [
+      "Defining a tool schema matching the desired output structure and forcing its use via tool_choice = {'type': 'tool', 'name': 'tool_name'}",
+      "Using extended thinking with a JSON-only system prompt",
+      "Setting temperature to 0 and prefilling with just an opening brace",
+      "Enabling the citations feature, which structures output automatically"
+    ],
+    "correct": 0,
+    "explain": "The alternative is to define a tool whose input schema matches the desired output structure and force Claude to call it using tool_choice, then read the structured data from the tool_use block's input field — more reliable than prefill/stop-sequence but requiring more setup."
+  },
+  {
+    "id": "gcp40",
+    "q": "What's unique about the Text Editor tool compared to other tools Claude supports?",
+    "options": [
+      "Its schema stub is identical across every Claude model version",
+      "It is the only tool where Claude has a built-in JSON schema but no built-in implementation, so developers must still write the actual tool function",
+      "It requires no schema at all, only a custom implementation",
+      "It has both a built-in schema and a built-in implementation, unlike other tools"
+    ],
+    "correct": 1,
+    "explain": "Unlike other tools, the Text Editor tool ships with a built-in schema stub from Anthropic, but developers still have to implement the actual functionality themselves, such as view, string_replace, and create_file methods."
+  },
+  {
+    "id": "gcp41",
+    "q": "How is the Web Search tool configured, and what does max_uses actually limit?",
+    "options": [
+      "allowed_domains sets which languages results can be returned in",
+      "max_uses caps the number of results returned per search, not the number of searches",
+      "It uses a minimal schema with no custom implementation needed; max_uses caps the total number of searches performed, not results returned",
+      "Web Search requires a custom implementation similar to the Text Editor tool"
+    ],
+    "correct": 2,
+    "explain": "Web Search uses a minimal schema (type, name, max_uses) with no custom implementation since Claude runs the search itself; max_uses limits how many searches Claude can perform, not how many results a single search can return."
+  },
+  {
+    "id": "gcp42",
+    "q": "Why not just paste an entire large document into the prompt instead of using RAG?",
+    "options": [
+      "Large documents cause Claude to refuse the request entirely above 10 pages",
+      "A whole 100-1000 page document runs into token limits, reduced effectiveness, higher cost, and slower processing; RAG retrieves only the relevant pieces",
+      "Pasting the whole document is fine and preferred whenever latency isn't a concern",
+      "RAG is used instead mainly to enable citations, not to reduce token usage"
+    ],
+    "correct": 1,
+    "explain": "Feeding an entire large document into the prompt hits token limits, decreases model effectiveness, and increases cost and latency; RAG instead chunks the document and retrieves only the most relevant pieces for a given question."
+  },
+  {
+    "id": "gcp43",
+    "q": "Which of the following correctly lists the three text-chunking strategies for RAG, and identifies the recommended default despite being suboptimal?",
+    "options": [
+      "Token-based, sentence-based, paragraph-based; structure-based is the default",
+      "Size-based, structure-based, semantic-based; structure-based is the default since it's most reliable",
+      "Semantic-based, structure-based, size-based; semantic-based is the recommended default despite being the most complex",
+      "Size-based, structure-based, semantic-based; size-based is the default despite being suboptimal"
+    ],
+    "correct": 3,
+    "explain": "The three strategies are size-based (equal-length chunks), structure-based (split by headers/sections), and semantic-based (NLP-grouped); size-based is the recommended default because it's the most reliable across arbitrary document types, even though results are suboptimal."
+  },
+  {
+    "id": "gcp44",
+    "q": "What problem does chunk 'overlap' solve, and what's its trade-off?",
+    "options": [
+      "It solves mid-sentence/context cutoffs at chunk boundaries; the trade-off is text duplication across chunks",
+      "It reduces storage cost by compressing shared text between chunks",
+      "It solves text duplication across chunks; the trade-off is mid-sentence cutoffs",
+      "It is only needed for semantic-based chunking, not size-based chunking"
+    ],
+    "correct": 0,
+    "explain": "Overlap includes some characters from the neighboring chunk on each side to prevent context from being cut off mid-thought at chunk boundaries, at the cost of duplicating text across chunks."
+  },
+  {
+    "id": "gcp45",
+    "q": "What does a text embedding actually represent, and what specific embedding model was named as available on Vertex AI?",
+    "options": [
+      "A binary fingerprint used purely for exact-match deduplication; textembedding-gecko",
+      "A summary string generated by an LLM, not numeric data; claude-embedding-1",
+      "A keyword index built via BM25 tokenization; text-embedding-005",
+      "A long list of numbers (roughly -1 to +1) representing the meaning of the input text; text-embedding-005 was named as available on Vertex AI"
+    ],
+    "correct": 3,
+    "explain": "An embedding is a numeric vector, each value conceptually a score on some semantic feature, representing the meaning of the text; Google's text-embedding-005 was named as the specific model available on Vertex AI for generating these vectors."
+  },
+  {
+    "id": "gcp46",
+    "q": "Which of the following correctly defines cosine similarity and cosine distance, including where normalization fits into the RAG pipeline?",
+    "options": [
+      "Cosine similarity ranges 0 to 1; distance equals similarity squared; normalization happens only at query time",
+      "Cosine distance ranges -1 to 1; similarity equals 1 minus distance; normalization happens during chunking, before embeddings exist",
+      "Cosine similarity ranges -1 to 1 (1 is most similar); distance equals 1 minus similarity; normalization happens right after embedding generation, before storage",
+      "Normalization happens after the vectors are stored in the vector database, not before"
+    ],
+    "correct": 2,
+    "explain": "Cosine similarity measures the angle between two vectors on a -1 to 1 scale where 1 means most similar; cosine distance is 1 minus similarity; normalization, scaling vectors to unit length, happens as a preprocessing step right after embedding generation and before storage."
+  },
+  {
+    "id": "gcp47",
+    "q": "What problem does BM25 solve that pure semantic search can miss, and how does it weight terms?",
+    "options": [
+      "BM25 is a reranking algorithm applied after semantic search, not a separate lexical search",
+      "BM25 solves missing exact identifiers that semantic search can dilute, by weighting rare/specific terms higher than common words",
+      "BM25 weights common words higher to catch general topic matches",
+      "BM25 solves the problem of chunk overlap duplication, not keyword matching"
+    ],
+    "correct": 1,
+    "explain": "Semantic search can surface conceptually nearby but wrong results that miss exact identifiers; BM25 is a lexical search algorithm that counts term frequency and assigns higher weight to rare, specific terms while down-weighting common words."
+  },
+  {
+    "id": "gcp48",
+    "q": "What is Reciprocal Rank Fusion, and how does it combine results from multiple search indexes?",
+    "options": [
+      "It sums 1/(1+rank) for each document across every method it appears in, then sorts by the combined score",
+      "It multiplies rank positions across methods to compute a final score",
+      "It keeps only documents that rank #1 in every method searched",
+      "It averages the raw similarity scores from each search method directly"
+    ],
+    "correct": 0,
+    "explain": "RRF merges ranked lists from different search methods by summing 1/(1+rank) for each document across every method it appears in, then sorting by the combined score, so a document that ranks well in multiple methods beats one that ranks only moderately in a single method."
+  },
+  {
+    "id": "gcp49",
+    "q": "In the reranking step, why does the implementation pass document IDs to Claude instead of full chunk text, and what's reranking's main trade-off?",
+    "options": [
+      "Full chunk text is passed to Claude while only IDs are returned back to the app",
+      "Passing IDs eliminates the need for an extra LLM call, making reranking free",
+      "IDs are passed for security reasons; the trade-off is reduced accuracy",
+      "IDs are more efficient since Claude just returns an ordered list to look up afterward; the trade-off is added latency from an extra LLM call"
+    ],
+    "correct": 3,
+    "explain": "Passing document IDs instead of full text is more efficient since Claude only needs to return an ordered list of IDs that the application looks up afterward; the main trade-off is that reranking adds latency because it requires an extra LLM call on top of the initial retrieval."
+  },
+  {
+    "id": "gcp50",
+    "q": "What problem does 'contextual retrieval' solve, and how does it handle documents too large to fit in a single prompt?",
+    "options": [
+      "It removes context to shrink chunk size before embedding",
+      "It uses an LLM to generate context describing each chunk's place in the document before embedding it, and for oversized documents includes starter chunks plus chunks preceding the target chunk",
+      "It happens after embedding by tagging results at query time rather than before indexing",
+      "For oversized documents it randomly samples chunks instead of using starter or preceding chunks"
+    ],
+    "correct": 1,
+    "explain": "Contextual retrieval fixes chunks losing meaning in isolation by using an LLM to generate a brief description situating each chunk within the document before it's indexed; for documents too large for one prompt, it selectively includes starter chunks for overall summary plus chunks immediately preceding the target chunk for local context."
+  },
+  {
+    "id": "gcp51",
+    "q": "What are the two hard rules for using Extended Thinking, and when does the course recommend enabling it?",
+    "options": [
+      "Minimum thinking budget is 1024 tokens, and max_tokens must exceed thinking_budget; it's recommended only after prompt evals show accuracy is still insufficient",
+      "Extended thinking should be enabled by default for all prompts before evaluation",
+      "Minimum thinking budget is 4096 tokens, and max_tokens can be less than thinking_budget",
+      "Minimum thinking budget is 1024 tokens, and it should be enabled before trying any prompt optimization"
+    ],
+    "correct": 0,
+    "explain": "Extended thinking requires a minimum 1024-token budget and max_tokens greater than the thinking_budget with a buffer; the course recommends running prompt evals first and enabling extended thinking only when accuracy remains insufficient, since it adds real cost and latency."
+  },
+  {
+    "id": "gcp52",
+    "q": "What is a 'redacted thinking block,' and what security mechanism protects normal thinking blocks from tampering?",
+    "options": [
+      "It occurs when max_tokens is exceeded mid-thought, cutting the block off",
+      "Normal thinking blocks are encrypted while redacted blocks are shown in plain text",
+      "It occurs when thinking text gets flagged by safety systems and is returned in encrypted form; normal thinking blocks carry a cryptographic signature Claude checks before reuse",
+      "It is simply deleted and never returned to the application at all"
+    ],
+    "correct": 2,
+    "explain": "A redacted thinking block is Claude's internal reasoning flagged by safety systems and returned encrypted rather than in the clear, preserving conversational context; separately, every normal thinking block carries a cryptographic signature that Claude verifies to ensure it hasn't been tampered with."
+  },
+  {
+    "id": "gcp53",
+    "q": "How many images can Claude analyze in a single request, what determines their token cost, and what's the key takeaway about accuracy?",
+    "options": [
+      "Up to 100 images; cost is a flat fee per image; accuracy depends on image format",
+      "Up to 20 images; cost based on file size in bytes; accuracy depends mainly on image resolution",
+      "Up to 100 images; cost is based on pixel dimensions (height x width); accuracy depends almost entirely on prompt-engineering quality, not image clarity alone",
+      "Up to 500 images; cost based on pixel dimensions; accuracy depends primarily on image clarity"
+    ],
+    "correct": 2,
+    "explain": "Claude can analyze up to 100 images per request, with token cost based on each image's pixel dimensions; the key takeaway is that accuracy hinges on prompt-engineering quality — simple prompts typically fail even on clear images."
+  },
+  {
+    "id": "gcp54",
+    "q": "How does implementing PDF support differ from implementing image support in the API call?",
+    "options": [
+      "PDFs require the Text Editor tool while images use the standard content block",
+      "PDF support needs an added citations field that image support doesn't require",
+      "PDF support requires a completely separate API endpoint from image support",
+      "Almost nothing changes: swap the block's file type from image to document, the media type to application/pdf, and rename the variable accordingly"
+    ],
+    "correct": 3,
+    "explain": "Adding PDF support only requires swapping the content block's type from 'image' to 'document', changing the media type to something like 'application/pdf', and renaming the variable — Claude can then extract text, images, charts, and tables directly."
+  },
+  {
+    "id": "gcp55",
+    "q": "What are the two citation types Claude supports, and what location data does each include?",
+    "options": [
+      "Only one citation type exists, used uniformly for both PDFs and plain text",
+      "Citation page location for PDFs (document index, title, start/end pages) and citation char location for plain text (character position)",
+      "Line location and paragraph location, both requiring cache_control",
+      "Page location for plain text and char location for PDFs"
+    ],
+    "correct": 1,
+    "explain": "Citation page location applies to PDF documents and includes cited text plus document index, title, and start/end page numbers, while citation char location applies to plain text sources and includes the character position within the text block; both require enabling citations on the source document."
+  },
+  {
+    "id": "gcp56",
+    "q": "What's the single strict requirement for cached content to actually be reused, and how long does a cache last?",
+    "options": [
+      "The input text must be exactly identical to the previously cached content up to the cache breakpoint; the cache lasts 5 minutes",
+      "Exact identical matching is required; the cache lasts 24 hours",
+      "Approximate semantic matching is sufficient; the cache lasts 5 minutes",
+      "Cached content can differ slightly, such as whitespace, and still be reused; the cache lasts 1 hour"
+    ],
+    "correct": 0,
+    "explain": "For a cache to be reused, the input text must be exactly identical to the previously cached content through the cache breakpoint — any change forces a fresh cache_creation — and the cache itself only lasts 5 minutes."
+  },
+  {
+    "id": "gcp57",
+    "q": "Is prompt caching enabled by default, and what format change does a text block need to support a cache breakpoint?",
+    "options": [
+      "No, it requires a manual cache breakpoint using the longhand object format with a cache_control field, instead of the plain shorthand string",
+      "It requires the shorthand plain string format; the longhand object format disables caching",
+      "It is enabled via a request header, not a change to the text block format",
+      "Yes, it is enabled by default for all requests over 1024 tokens; no format change is needed"
+    ],
+    "correct": 0,
+    "explain": "Caching is off by default and requires a manually set cache breakpoint; a text block must use the longhand object format with a cache_control field instead of the plain shorthand string assignment."
+  },
+  {
+    "id": "gcp58",
+    "q": "What's the minimum content length eligible for caching, the max number of breakpoints allowed, and the required processing order of cacheable sections?",
+    "options": [
+      "Minimum 512 tokens; max 4 breakpoints; order is tools, then messages, then system",
+      "Minimum 1024 tokens; max 4 breakpoints; order is tools, then system prompt, then messages",
+      "Minimum 1024 tokens; max 4 breakpoints; order is system, then tools, then messages",
+      "Minimum 2048 tokens; max 10 breakpoints; order is messages, then system, then tools"
+    ],
+    "correct": 1,
+    "explain": "At least 1024 tokens of content is required for caching, up to 4 breakpoints are allowed per request, and content must be cached in the order: tools, then system prompt, then messages."
+  },
+  {
+    "id": "gcp59",
+    "q": "Which of the following correctly distinguishes cache_creation_input_tokens from cache_read_input_tokens in the API usage response?",
+    "options": [
+      "Both fields represent the same value, differing only by SDK version",
+      "cache_creation_input_tokens are pulled from cache; cache_read_input_tokens are written this request",
+      "cache_creation_input_tokens tracks output tokens, not input tokens",
+      "cache_creation_input_tokens are tokens written to the cache this request; cache_read_input_tokens are tokens pulled from an existing cache"
+    ],
+    "correct": 3,
+    "explain": "cache_creation_input_tokens counts tokens newly written to the cache on this request, while cache_read_input_tokens counts tokens reused from an existing cache; any modification to the cached content forces a new cache_creation instead of a cache_read."
+  },
+  {
+    "id": "gcp60",
+    "q": "What specific problem does MCP solve, and how is it related to (but distinct from) 'tool use'?",
+    "options": [
+      "MCP replaces tool use entirely with a new, incompatible mechanism",
+      "MCP requires Claude to write its own tool implementations from scratch, same as before",
+      "MCP shifts the burden of defining and running tools onto a pre-built MCP server rather than your own code; it's complementary to tool use, addressing who builds the tools",
+      "MCP is only a transport protocol and does not involve tool definitions at all"
+    ],
+    "correct": 2,
+    "explain": "MCP moves the work of authoring tool schemas and implementations onto a pre-built MCP server instead of your own codebase; it's complementary to tool use rather than a replacement — tool use is the general mechanism, MCP is about who builds the tools."
+  },
+  {
+    "id": "gcp61",
+    "q": "What does 'transport agnostic' mean for an MCP client-server connection, and what are the two core message-type pairs used for tool interaction?",
+    "options": [
+      "MCP only supports HTTP transport; pairs are list tools and run tools",
+      "It refers to model choice rather than communication protocol; pairs are get resource and get prompt",
+      "It means the server auto-detects the client's programming language; pairs are init and shutdown",
+      "The client and server can communicate over multiple underlying transports like stdin/stdout, HTTP, or WebSockets; pairs are list tools request/result and call tool request/result"
+    ],
+    "correct": 3,
+    "explain": "Transport agnostic means MCP doesn't dictate the wire format — it can run over stdin/stdout, HTTP, WebSockets, etc.; the core message pairs are the client asking what tools exist (list tools) and asking to run a specific tool (call tool)."
+  },
+  {
+    "id": "gcp62",
+    "q": "Which of the following correctly lists the three MCP server primitives and the control pattern distinguishing them?",
+    "options": [
+      "Tools are model-controlled, Resources are app-controlled, Prompts are user-controlled",
+      "Tools are app-controlled, Resources are model-controlled, Prompts are user-controlled",
+      "Tools are user-controlled, Resources are app-controlled, Prompts are model-controlled",
+      "Tools, Resources, and Templates, all three of which are model-controlled"
+    ],
+    "correct": 0,
+    "explain": "Tools are model-controlled since Claude itself decides when to invoke them; Resources are app-controlled since the application code decides when to fetch data; Prompts are user-controlled since users trigger them explicitly through the UI."
+  },
+  {
+    "id": "gcp63",
+    "q": "Which of the following correctly distinguishes 'direct/static' resources from 'templated' resources in MCP, and describes the role of MIME type?",
+    "options": [
+      "Direct/static resources use a parameterized URI while templated resources use a fixed URI",
+      "Templated resources cannot accept parameters, only static resources can",
+      "Direct/static resources have a fixed URI; templated resources have a parameterized URI whose parameters become function arguments; MIME type hints at the data format for parsing",
+      "MIME type determines whether a resource is app-controlled or model-controlled"
+    ],
+    "correct": 2,
+    "explain": "Direct/static resources always use the same fixed URI, while templated resources use a parameterized URI with wildcards that become keyword arguments at call time; the declared MIME type simply hints at the data format so the client knows how to parse the content."
+  },
+  {
+    "id": "gcp64",
+    "q": "What does the MCP 'Prompts' primitive actually return, and what's its core value proposition for server authors?",
+    "options": [
+      "It returns raw text strings rather than structured messages",
+      "It returns a list of messages fed directly to the LLM; its value is letting server authors ship tested, domain-specific prompt templates for end users to invoke",
+      "Its value proposition is reducing token usage rather than providing tested templates",
+      "It returns a JSON schema for structured output, similar to tools"
+    ],
+    "correct": 1,
+    "explain": "A defined MCP prompt returns a list of user/assistant messages that get fed directly to the LLM, letting server authors ship high-quality, tested, domain-specific prompt templates that users can invoke instead of writing their own generic prompts."
+  },
+  {
+    "id": "gcp65",
+    "q": "What's the core decision rule for choosing a workflow over an agent, or vice versa?",
+    "options": [
+      "Workflows and agents are interchangeable terms for the same execution pattern",
+      "Use a workflow when you know the exact task steps ahead of time; use an agent when the steps are uncertain and Claude must figure out how to combine tools dynamically",
+      "Choose based on cost alone: workflows are always cheaper than agents",
+      "Use a workflow when task steps are uncertain; use an agent when steps are known ahead of time"
+    ],
+    "correct": 1,
+    "explain": "A workflow fits when the exact sequence of steps is predetermined and plannable, while an agent fits when the steps are uncertain and Claude needs to dynamically figure out how to combine available tools to complete the task."
+  },
+  {
+    "id": "gcp66",
+    "q": "Which of the following best describes the evaluator-optimizer workflow pattern, using the image-to-3D-model example?",
+    "options": [
+      "The evaluator generates the 3D model while the producer only judges its accuracy",
+      "The loop repeats a fixed number of times regardless of what the evaluation finds",
+      "A single Claude instance both produces and evaluates without any feedback loop",
+      "A producer creates output (a 3D model from an image) and an evaluator judges its quality (comparing a rendering against the original); the loop repeats with feedback until accurate, then returns the final output"
+    ],
+    "correct": 3,
+    "explain": "In the evaluator-optimizer pattern, a producer generates output and an evaluator judges quality by comparing a rendering back against the original image, feeding corrective feedback into another producer pass until the result is accurate, at which point the final output is returned."
+  },
+  {
+    "id": "gcp67",
+    "q": "Which of the following correctly distinguishes the chaining, routing, and parallelization workflow patterns?",
+    "options": [
+      "Routing splits complex analysis into independent sub-requests aggregated at the end; parallelization forwards input to a specialized pipeline based on category",
+      "Chaining classifies input into categories; routing runs sequential steps where each output feeds the next",
+      "Chaining breaks a task into sequential steps where each output feeds the next; routing classifies input then forwards it to a specialized pipeline; parallelization splits analysis into independent sub-requests then aggregates",
+      "Parallelization runs sequential steps feeding one into the next; chaining splits work into independent parallel sub-requests"
+    ],
+    "correct": 2,
+    "explain": "Chaining is a sequence of steps where each step's output feeds the next; routing first classifies the input and forwards it to a specialized pipeline for that category; parallelization splits one analysis into independent sub-requests that get combined by a final aggregator step."
+  },
+  {
+    "id": "gcp68",
+    "q": "What's the 'tool abstraction principle' for building effective agents, illustrated by the Claude Code example?",
+    "options": [
+      "Agents work best with a small set of abstract, general-purpose tools Claude can combine creatively, like Claude Code's use of bash, web fetch, and file write instead of narrow specialized tools",
+      "Claude Code relies on dedicated refactor and install tools rather than general primitives",
+      "Agents work best with many narrow, hyper-specialized tools for each specific action",
+      "The principle recommends limiting Claude to exactly one tool per agent"
+    ],
+    "correct": 0,
+    "explain": "The principle favors a small set of abstract, general-purpose tools that Claude can combine creatively over many narrow specialized ones — Claude Code exemplifies this by relying on primitives like bash, web fetch, and file write instead of dedicated refactor or install tools."
+  },
+  {
+    "id": "gcp69",
+    "q": "Why do agents need 'environment inspection,' and what's the computer-use example illustrating it?",
+    "options": [
+      "The computer-use example is Claude reading the HTML source instead of taking a screenshot",
+      "Agents can't always predict how an action changes their environment, so they need feedback beyond a tool's raw return value; the computer-use example is Claude taking a screenshot after every action to see the real resulting state",
+      "It means checking API rate limits before every tool call",
+      "Agents need environment inspection only during initial setup, not after each subsequent action"
+    ],
+    "correct": 1,
+    "explain": "Since agents often can't predict exactly how an action changes the environment, they need feedback on the actual outcome; the computer-use example is Claude taking a screenshot after every click or keystroke to reveal the real resulting state before planning its next move."
+  },
+  {
+    "id": "gcp70",
+    "q": "Which of the following best compares workflows and agents on accuracy, testability, and reliability, and states the course's ultimate recommendation?",
+    "options": [
+      "Workflows and agents perform identically on accuracy and testability, so the choice is a matter of preference",
+      "Recommendation: prioritize agents for reliability and use workflows only when true flexibility is required",
+      "Agents achieve higher accuracy and are easier to test than workflows",
+      "Workflows achieve higher accuracy, are easier to test, and are more reliable; agents are more flexible but less predictable; the recommendation is to prioritize workflows and reach for agents only when true flexibility is required"
+    ],
+    "correct": 3,
+    "explain": "Workflows offer higher accuracy, easier testability, and more reliable completion because their steps are known and focused, while agents trade some reliability for flexibility; the course recommends prioritizing workflows whenever possible and reaching for agents only when genuine flexibility is needed."
+  }
+];
+
+/* ---------- STATE / PERSISTENCE ---------- */
+const STORAGE_KEY = "ccaf_quiz_05_v1";
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return { q: {}, totalAnswers: 0, totalCorrect: 0 };
+}
+function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+let state = loadState();
+
+function getStat(id) {
+  if (!state.q[id]) state.q[id] = { seen: 0, correct: 0, wrong: 0, mastery: 0, lastResult: null };
+  return state.q[id];
+}
+function recordAnswer(id, wasCorrect) {
+  const s = getStat(id);
+  s.seen += 1;
+  if (wasCorrect) { s.correct += 1; s.mastery = Math.min(3, s.mastery + 1); s.lastResult = "correct"; }
+  else { s.wrong += 1; s.mastery = 0; s.lastResult = "wrong"; }
+  state.totalAnswers = (state.totalAnswers||0) + 1;
+  if (wasCorrect) state.totalCorrect = (state.totalCorrect||0) + 1;
+  saveState();
+}
+
+/* ---------- TABS ---------- */
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
+    if (tab.dataset.tab === "progress") renderProgress();
+  });
+});
+
+/* ---------- QUIZ ---------- */
+let quizQueue = [];
+let quizIndex = 0;
+let quizScore = 0;
+
+function pickQuizQuestions(len, mode) {
+  let pool = QUESTIONS.slice();
+  if (mode === "weak") {
+    pool.sort((a,b) => {
+      const ma = getStat(a.id).mastery, mb = getStat(b.id).mastery;
+      if (ma !== mb) return ma - mb;
+      return Math.random() - 0.5;
+    });
+  } else if (mode === "random") {
+    pool.sort(() => Math.random() - 0.5);
+  }
+  return pool.slice(0, Math.min(len, pool.length));
+}
+
+function startQuiz(pool) {
+  quizQueue = pool;
+  quizIndex = 0;
+  quizScore = 0;
+  renderQuizQuestion();
+}
+
+document.getElementById("startQuizBtn").addEventListener("click", () => {
+  const len = parseInt(document.getElementById("quizLen").value, 10);
+  const mode = document.getElementById("quizMode").value;
+  startQuiz(pickQuizQuestions(len, mode));
+});
+
+document.getElementById("reviewMissedBtn").addEventListener("click", () => {
+  const missed = QUESTIONS.filter(q => getStat(q.id).lastResult === "wrong");
+  if (!missed.length) {
+    alert("No questions are currently marked wrong. Take a quiz first, or nice work — you're clean!");
+    return;
+  }
+  missed.sort(() => Math.random() - 0.5);
+  startQuiz(missed);
+});
+
+function renderQuizQuestion() {
+  const area = document.getElementById("quizArea");
+  if (quizIndex >= quizQueue.length) {
+    area.innerHTML = `<div class="card">
+      <div class="qtext">Session complete: ${quizScore} / ${quizQueue.length} correct</div>
+      <div class="small sys">Progress has been saved. Check "My progress" for what's still missed, or start another round above.</div>
+    </div>`;
+    return;
+  }
+  const q = quizQueue[quizIndex];
+  const letters = ["A","B","C","D"];
+  const optHtml = q.options.map((opt, i) =>
+    `<button class="option" data-idx="${i}"><span class="optkey">${letters[i]}.</span>${opt}</button>`
+  ).join("");
+  area.innerHTML = `<div class="card">
+    <div class="qmeta">
+      <span>Question ${quizIndex+1} of ${quizQueue.length}</span>
+      <span class="badge">Section 5 · Google Cloud</span>
+    </div>
+    <div class="qtext">${q.q}</div>
+    <div id="quizOptions">${optHtml}</div>
+    <div id="quizFeedback"></div>
+    <div id="quizNextWrap"></div>
+  </div>`;
+  document.querySelectorAll("#quizOptions .option").forEach(btn => {
+    btn.addEventListener("click", () => handleQuizAnswer(q, parseInt(btn.dataset.idx,10)));
+  });
+}
+
+function handleQuizAnswer(q, idx) {
+  const correct = idx === q.correct;
+  if (correct) quizScore += 1;
+  recordAnswer(q.id, correct);
+  document.querySelectorAll("#quizOptions .option").forEach((btn, i) => {
+    btn.classList.add("disabled");
+    btn.disabled = true;
+    if (i === q.correct) btn.classList.add("correct");
+    else if (i === idx) btn.classList.add("wrong");
+  });
+  document.getElementById("quizFeedback").innerHTML =
+    `<div class="feedback ${correct ? "good" : "bad"}">${correct ? "Correct." : "Not quite."}</div>
+     <div class="explain"><strong>Why:</strong> ${q.explain}</div>`;
+  document.getElementById("quizNextWrap").innerHTML = `<button class="primary" id="nextQBtn" style="margin-top:12px;">${quizIndex+1 < quizQueue.length ? "Next question" : "See results"}</button>`;
+  document.getElementById("nextQBtn").addEventListener("click", () => { quizIndex += 1; renderQuizQuestion(); });
+}
+
+/* ---------- PROGRESS ---------- */
+function masteryColor(mastery) {
+  if (mastery >= 3) return "#3d7a4a";
+  if (mastery === 2) return "#8bc34a";
+  if (mastery === 1) return "#e0a34a";
+  return "#cfcfd4";
+}
+function renderProgress() {
+  const total = QUESTIONS.length;
+  let masteredCount = 0, sumMastery = 0, missedCount = 0;
+  QUESTIONS.forEach(q => {
+    const s = getStat(q.id);
+    sumMastery += s.mastery;
+    if (s.mastery >= 3) masteredCount += 1;
+    if (s.lastResult === "wrong") missedCount += 1;
+  });
+  const pct = Math.round((sumMastery / (total * 3)) * 100);
+  const acc = state.totalAnswers ? Math.round((state.totalCorrect / state.totalAnswers) * 100) : 0;
+
+  document.getElementById("statGrid").innerHTML = `
+    <div class="stat-box"><div class="stat-num">${masteredCount}/${total}</div><div class="stat-label">Mastered</div></div>
+    <div class="stat-box"><div class="stat-num">${missedCount}</div><div class="stat-label">Currently missed</div></div>
+    <div class="stat-box"><div class="stat-num">${state.totalAnswers||0}</div><div class="stat-label">Answers given</div></div>
+    <div class="stat-box"><div class="stat-num">${acc}%</div><div class="stat-label">Accuracy</div></div>
+  `;
+  document.getElementById("masteryBar").style.width = pct + "%";
+  document.getElementById("masteryLabel").textContent = pct + "% overall mastery across " + total + " questions";
+
+  const missed = QUESTIONS.filter(q => getStat(q.id).lastResult === "wrong")
+    .sort((a,b) => getStat(b.id).wrong - getStat(a.id).wrong);
+  let html;
+  if (!missed.length) {
+    html = `<div class="small sys">Nothing currently marked wrong. Take the quiz to build up a review queue.</div>`;
+  } else {
+    html = `<table><thead><tr><th></th><th>Question</th><th>Times wrong</th><th>Seen</th></tr></thead><tbody>`;
+    missed.forEach(q => {
+      const s = getStat(q.id);
+      const qtext = q.q.length > 90 ? q.q.slice(0,87) + "…" : q.q;
+      html += `<tr><td><span class="mastery-dot" style="background:${masteryColor(s.mastery)}"></span></td><td>${qtext}</td><td>${s.wrong}</td><td>${s.seen}</td></tr>`;
+    });
+    html += `</tbody></table>`;
+  }
+  document.getElementById("weakTable").innerHTML = html;
+}
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (confirm("Reset all quiz progress for this section? This can't be undone.")) {
+    state = { q: {}, totalAnswers: 0, totalCorrect: 0 };
+    saveState();
+    renderProgress();
+  }
+});
+
+/* ---------- INIT ---------- */
+renderProgress();
+</script>
+</body>
+</html>

@@ -36,14 +36,18 @@
     .card {
       position: relative; display: block; margin: 16px 0 0; padding: 20px 24px 22px;
       background: var(--white); border: 1px solid var(--line); border-radius: 3px;
-      color: inherit; text-decoration: none;
+      color: inherit;
     }
     .card::before { content: ''; position: absolute; left: -1px; top: 0; bottom: 0; width: 4px; background: var(--accent, var(--rust)); }
-    .card:hover, .card:focus-visible { background: #fffaf3; outline: none; box-shadow: 0 0 0 3px rgba(168, 78, 49, .16); }
+    .card:hover, .card:focus-within { background: #fffaf3; }
+    .card a.card-link { display: block; color: inherit; text-decoration: none; }
+    .card a.card-link:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(168, 78, 49, .16); }
     .card .kicker { display: block; margin: 0 0 6px; color: var(--accent, var(--rust-dark)); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
     .card .title { display: block; margin: 0 0 7px; font: 700 1.3rem/1.25 Georgia, serif; }
     .card .blurb { display: block; max-width: 66ch; color: var(--muted); font-size: .97rem; }
     .weight { display: inline-block; margin-top: 10px; padding: 3px 9px; background: var(--paper-deep); color: var(--rust-dark); border-radius: 3px; font: 600 11px/1.5 system-ui, sans-serif; letter-spacing: .05em; }
+    .quiz-pill { display: inline-block; margin-top: 10px; margin-left: 6px; padding: 3px 9px; border: 1px solid var(--line); color: var(--accent, var(--rust-dark)); border-radius: 3px; font: 600 11px/1.5 system-ui, sans-serif; letter-spacing: .05em; text-decoration: none; }
+    .quiz-pill:hover, .quiz-pill:focus-visible { background: var(--paper-deep); outline: none; }
     .lesson-note { margin: 25px 0 0; padding: 17px 18px; background: var(--paper-deep); }
     .lesson-note p:last-child { margin-bottom: 0; }
     .rule { margin: 38px 0 0; padding: 25px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); text-align: center; }
@@ -71,73 +75,100 @@
 
     <h2>The lessons</h2>
 
-    <a class="card" href="0002-ai-fluency-the-four-d-framework.html" style="--accent:#4f6d5a">
+    <div class="card" style="--accent:#4f6d5a">
+      <a class="card-link" href="0002-ai-fluency-the-four-d-framework.html">
       <span class="kicker">Section 1 · AI Fluency</span>
       <span class="title">The week Northstar decided how to work</span>
       <span class="blurb">Before anyone picks a tool, the company has to answer a harder question: what work belongs to a person, what belongs to an AI, and how will anyone know the result is good? The 4D framework, and the three modes of engaging AI.</span>
       <span class="weight">Prompt Engineering &amp; Structured Output · 20%</span>
     </a>
+      <a class="quiz-pill" href="../quizzes/01-ai-fluency-framework-foundations/index.html">Take the practice quiz →</a>
+    </div>
 
-    <a class="card" href="0001-claude-101-choose-the-right-surface.html" style="--accent:#a84e31">
+    <div class="card" style="--accent:#a84e31">
+      <a class="card-link" href="0001-claude-101-choose-the-right-surface.html">
       <span class="kicker">Section 2 · Claude 101</span>
       <span class="title">The Northstar launch</span>
       <span class="blurb">One busy day, a growing team, and a series of decisions that reveal what Claude is — and how to work with it well. Chat vs. Cowork vs. Code, Projects, Skills, Artifacts, connectors, and the lightweight eval loop.</span>
       <span class="weight">Prompt Engineering &amp; Structured Output · 20%</span>
     </a>
+      <a class="quiz-pill" href="../quizzes/02-claude-101/index.html">Take the practice quiz →</a>
+    </div>
 
-    <a class="card" href="0003-claude-api-the-first-integration.html" style="--accent:#96652a">
+    <div class="card" style="--accent:#96652a">
+      <a class="card-link" href="0003-claude-api-the-first-integration.html">
       <span class="kicker">Section 3 · Part 1 of 3</span>
       <span class="title">The first integration</span>
       <span class="blurb">Northstar leaves the Claude apps behind and builds a product on the API. One request path, and every parameter that decides whether the thing works: models, messages, system prompts, temperature, streaming, structured output, prompt engineering, and evals.</span>
       <span class="weight">Prompt Engineering &amp; Structured Output · 20%</span>
     </a>
+      <a class="quiz-pill" href="../quizzes/03-building-with-the-claude-api/index.html">Take the practice quiz →</a>
+    </div>
 
-    <a class="card" href="0004-claude-api-tools-retrieval-and-context.html" style="--accent:#7b4a6e">
+    <div class="card" style="--accent:#7b4a6e">
+      <a class="card-link" href="0004-claude-api-tools-retrieval-and-context.html">
       <span class="kicker">Section 3 · Part 2 of 3</span>
       <span class="title">The day Northstar grew hands</span>
       <span class="blurb">The product can already write beautifully and knows nothing recent. Today it learns to <em>do</em> things and to <em>look things up</em>: tool use and the agent loop, tool schema design, computer use, RAG and hybrid retrieval, context management, and prompt caching.</span>
       <span class="weight">Tool Design &amp; MCP 18% · Context &amp; Reliability 15%</span>
     </a>
+      <a class="quiz-pill" href="../quizzes/03-building-with-the-claude-api/index.html">Take the practice quiz →</a>
+    </div>
 
-    <a class="card" href="0005-claude-api-agentic-orchestration.html" style="--accent:#2f6b6b">
+    <div class="card" style="--accent:#2f6b6b">
+      <a class="card-link" href="0005-claude-api-agentic-orchestration.html">
       <span class="kicker">Section 3 · Part 3 of 3</span>
       <span class="title">The shape of the system</span>
       <span class="blurb">One Claude call is no longer enough, and the question stops being “what do I send?” and becomes “what kind of system am I building?” Workflows vs. agents, the four workflow patterns, environment inspection, and managed agents.</span>
       <span class="weight">Agentic Architecture &amp; Orchestration · 27% — the heaviest domain</span>
     </a>
+      <a class="quiz-pill" href="../quizzes/03-building-with-the-claude-api/index.html">Take the practice quiz →</a>
+    </div>
 
-    <a class="card" href="0006-claude-with-amazon-bedrock.html" style="--accent:#3f6b86">
+    <div class="card" style="--accent:#3f6b86">
+      <a class="card-link" href="0006-claude-with-amazon-bedrock.html">
       <span class="kicker">Section 4 · Amazon Bedrock</span>
       <span class="title">The Cascade Mutual migration</span>
       <span class="blurb">The biggest customer runs entirely on AWS and will not accept a second vendor path. The product has to move to Bedrock this quarter — without rewriting the product. What changes at the access layer, and what provably does not.</span>
       <span class="weight">Deployment options · scenario material</span>
     </a>
+      <a class="quiz-pill" href="../quizzes/04-claude-with-amazon-bedrock/index.html">Take the practice quiz →</a>
+    </div>
 
-    <a class="card" href="0007-claude-on-google-cloud.html" style="--accent:#55578f">
+    <div class="card" style="--accent:#55578f">
+      <a class="card-link" href="0007-claude-on-google-cloud.html">
       <span class="kicker">Section 5 · Google Cloud</span>
       <span class="title">The Meridian port</span>
       <span class="blurb">The second big customer runs on Google Cloud. Same product, same prompts, same agent loop — and a completely different front door. Exactly which pieces move, and how Vertex differs from Bedrock on the same axes.</span>
       <span class="weight">Deployment options · scenario material</span>
     </a>
+      <a class="quiz-pill" href="../quizzes/05-claude-on-google-cloud/index.html">Take the practice quiz →</a>
+    </div>
 
-    <a class="card" href="0008-model-context-protocol.html" style="--accent:#5f6b3a">
+    <div class="card" style="--accent:#5f6b3a">
+      <a class="card-link" href="0008-model-context-protocol.html">
       <span class="kicker">Section 6 · MCP</span>
       <span class="title">The Northstar adapter</span>
       <span class="blurb">Northstar has been hand-building a connector for every service it touches. Today it stops, and builds one thing every surface can plug into. The three primitives — tools, resources, and prompts — and who controls each.</span>
       <span class="weight">Tool Design &amp; MCP Integration · 18%</span>
     </a>
+      <a class="quiz-pill" href="../quizzes/06-introduction-to-mcp/index.html">Take the practice quiz →</a>
+    </div>
 
-    <a class="card" href="0009-claude-code-in-action.html" style="--accent:#8f3f3f">
+    <div class="card" style="--accent:#8f3f3f">
+      <a class="card-link" href="0009-claude-code-in-action.html">
       <span class="kicker">Section 7 · Claude Code</span>
       <span class="title">The keys to the repo</span>
       <span class="blurb">Engineering is adopting Claude Code across a real payments codebase, and every hour someone asks for a little more autonomy than the last person. How much to grant, where the rules live, and what must never be automatic.</span>
       <span class="weight">Claude Code Configuration &amp; Workflows · 20%</span>
     </a>
+      <a class="quiz-pill" href="../quizzes/07-claude-code-in-action/index.html">Take the practice quiz →</a>
+    </div>
 
     <div class="rule"><strong>Read for the decision, not the definition.</strong><span>The exam is scenario-based. Knowing what a thing is matters less than knowing when it is the wrong choice.</span></div>
 
     <footer>
-      <p>Companion material: <a href="../reference/claude-101-quick-reference.html">Claude 101 Quick Reference</a> · <a href="../glossary/ccaf_glossary_quiz_tracker.html">Glossary quiz tracker</a> (64 exam terms) · <code>study-reference/ccaf_study_reference.md</code> for the 12 official-style scenario questions.</p>
+      <p>Companion material: <a href="../reference/claude-101-quick-reference.html">Claude 101 Quick Reference</a> · <a href="../glossary/ccaf_glossary_quiz_tracker.html">Glossary quiz tracker</a> (64 exam terms) · <a href="../quizzes/index.html">Section quizzes</a> (344 multiple-choice questions with right/wrong tracking) · <code>study-reference/ccaf_study_reference.md</code> for the 12 official-style scenario questions.</p>
       <p>Question banks live in each course folder's <code>quiz.md</code>. When you have read a lesson, ask your teacher to quiz you on it one decision at a time, and record the result in <code>PROGRESS.md</code>.</p>
     </footer>
   </main>

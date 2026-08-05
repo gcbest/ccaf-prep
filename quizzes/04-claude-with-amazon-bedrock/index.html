@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Claude with Amazon Bedrock Quiz — CCA-F Quiz</title>
+  <style>
+    :root {
+      --ink: #242321;
+      --muted: #706b63;
+      --paper: #f7f3ec;
+      --paper-deep: #ece4d7;
+      --rust: #a84e31;
+      --rust-dark: #7d3825;
+      --line: #d6ccbd;
+      --white: #fffdfa;
+      --accent: #3f6b86;
+      --good: #3d7a4a;
+      --good-bg: #e6f0e4;
+      --bad: #a13a2e;
+      --bad-bg: #f7e6e2;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.7 Georgia, 'Times New Roman', serif;
+    }
+    main { max-width: 720px; margin: 0 auto; padding: 40px 22px 80px; }
+    .masthead {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+      border-bottom: 1px solid var(--line); padding-bottom: 10px;
+      color: var(--muted); font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .13em; text-transform: uppercase;
+    }
+    .masthead a { color: var(--muted); }
+    .kicker { display: block; margin: 22px 0 6px; color: var(--accent); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    h1 { max-width: 680px; margin: 0 0 10px; font: 700 clamp(1.8rem, 6vw, 2.7rem)/1.08 Georgia, serif; letter-spacing: -.02em; }
+    .dek { max-width: 640px; margin: 0 0 24px; color: var(--muted); font-size: 1.02rem; }
+    p { max-width: 70ch; margin: 0 0 13px; }
+    a { color: var(--rust-dark); }
+    code { background: var(--paper-deep); padding: .08em .28em; border-radius: 3px; }
+
+    nav.crumbs { font: 600 12px/1.5 system-ui, sans-serif; color: var(--muted); margin-bottom: 6px; }
+    nav.crumbs a { color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--line); }
+    nav.crumbs a:hover { color: var(--rust-dark); border-color: var(--rust-dark); }
+
+    .tabs { display: flex; gap: 4px; margin: 26px 0 18px; border-bottom: 1px solid var(--line); }
+    .tab {
+      padding: 9px 14px; cursor: pointer; font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .04em;
+      color: var(--muted); border-bottom: 2px solid transparent; user-select: none; background: none; border-top: none; border-left: none; border-right: none;
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .card {
+      background: var(--white); border: 1px solid var(--line); border-radius: 3px;
+      padding: 20px 22px; margin-bottom: 14px;
+    }
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+    select, button {
+      font: 600 13px/1.3 system-ui, sans-serif; padding: 8px 13px; border-radius: 3px; border: 1px solid var(--line);
+      background: var(--white); color: var(--ink); cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: var(--white); border-color: var(--accent); }
+    button.primary:hover { filter: brightness(1.08); }
+    button.ghost { background: var(--white); color: var(--accent); border-color: var(--line); }
+    button.ghost:hover { background: var(--paper-deep); }
+    .small { font: 400 13px/1.5 Georgia, serif; color: var(--muted); }
+    .small.sys { font: 400 12.5px/1.5 system-ui, sans-serif; color: var(--muted); }
+
+    .qmeta { display: flex; justify-content: space-between; align-items: center; font: 600 12px/1.4 system-ui, sans-serif; color: var(--muted); margin-bottom: 10px; }
+    .badge { font: 700 10.5px/1.4 system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: var(--paper-deep); color: var(--rust-dark); }
+    .qtext { font: 700 1.18rem/1.4 Georgia, serif; margin-bottom: 16px; }
+    .option {
+      display: block; width: 100%; text-align: left; padding: 11px 14px; margin-bottom: 9px;
+      border: 1px solid var(--line); border-radius: 3px; background: var(--white);
+      font: 400 15px/1.5 Georgia, serif; color: var(--ink); cursor: pointer;
+    }
+    .option:hover:not(.disabled) { border-color: var(--accent); background: var(--paper); }
+    .option .optkey { display: inline-block; width: 20px; font-weight: 700; color: var(--muted); }
+    .option.correct { background: var(--good-bg); border-color: var(--good); }
+    .option.wrong { background: var(--bad-bg); border-color: var(--bad); }
+    .option.disabled { cursor: default; }
+    .feedback { font: 700 13px/1.5 system-ui, sans-serif; margin: 12px 0 4px; padding: 10px 13px; border-radius: 3px; }
+    .feedback.good { background: var(--good-bg); color: var(--good); }
+    .feedback.bad { background: var(--bad-bg); color: var(--bad); }
+    .explain { font: 400 15px/1.6 Georgia, serif; color: var(--ink); margin-top: 8px; padding: 12px 14px; background: var(--paper-deep); border-radius: 3px; }
+    .explain strong { color: var(--rust-dark); }
+
+    .progress-bar-outer { width: 100%; height: 8px; background: var(--paper-deep); border-radius: 999px; overflow: hidden; margin: 6px 0 2px; }
+    .progress-bar-inner { height: 100%; border-radius: 999px; background: var(--accent); }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 10px; margin-bottom: 14px; }
+    .stat-box { background: var(--white); border: 1px solid var(--line); border-radius: 3px; padding: 13px 14px; text-align: center; }
+    .stat-num { font: 700 1.5rem/1.2 Georgia, serif; color: var(--rust-dark); }
+    .stat-label { font: 600 10.5px/1.4 system-ui, sans-serif; color: var(--muted); margin-top: 3px; letter-spacing: .03em; text-transform: uppercase; }
+    table { width: 100%; border-collapse: collapse; font: 400 13.5px/1.5 Georgia, serif; }
+    th, td { text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font: 600 10.5px/1.4 system-ui, sans-serif; text-transform: uppercase; letter-spacing: .03em; }
+    .row-between { display: flex; justify-content: space-between; align-items: center; }
+    .mastery-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+
+    footer { margin-top: 34px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: .88rem; }
+    @media (max-width: 560px) {
+      main { padding: 26px 16px 60px; }
+      .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
+      .card { padding: 16px 16px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <div class="masthead"><a href="../index.html">CCA-F Study System</a><span>Section 4 · Amazon Bedrock</span></div>
+
+  <nav class="crumbs"><a href="../index.html">Home</a> › <a href="index.html">Quizzes</a> › Section 4 · Amazon Bedrock</nav>
+  <span class="kicker">Section 4 · Claude with Amazon Bedrock</span>
+  <h1>Claude with Amazon Bedrock Quiz</h1>
+  <p class="dek">28 multiple-choice questions on what changes (and what doesn't) when Claude is deployed through Amazon Bedrock instead of the direct API.</p>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="quiz">Quiz</button>
+    <button class="tab" data-tab="progress">My progress</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="panel active" id="panel-quiz">
+    <div class="card" id="quizSetup">
+      <div class="controls">
+        <select id="quizLen">
+          <option value="10">10 questions</option>
+          <option value="20">20 questions</option>
+          <option value="999" selected>All 28 questions</option>
+        </select>
+        <select id="quizMode">
+          <option value="weak" selected>Missed &amp; new first (recommended)</option>
+          <option value="random">Fully random</option>
+          <option value="sequential">In order</option>
+        </select>
+        <button class="primary" id="startQuizBtn">Start quiz</button>
+        <button class="ghost" id="reviewMissedBtn">Review only missed</button>
+      </div>
+      <div class="small sys">"Missed &amp; new first" weights questions you've gotten wrong or haven't seen, so review sessions target real gaps. "Review only missed" quizzes you exclusively on questions currently marked wrong.</div>
+    </div>
+    <div id="quizArea"></div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="panel" id="panel-progress">
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="card">
+      <div class="row-between"><strong style="font:700 13px/1.4 system-ui, sans-serif; color:var(--rust-dark);">Mastery</strong></div>
+      <div class="progress-bar-outer"><div class="progress-bar-inner" id="masteryBar" style="width:0%"></div></div>
+      <div class="small sys" id="masteryLabel" style="margin-top:6px;"></div>
+    </div>
+    <div class="card">
+      <div class="row-between"><strong style="font:700 13px/1.4 system-ui, sans-serif; color:var(--rust-dark);">Questions currently missed</strong></div>
+      <div id="weakTable" style="margin-top:8px;"></div>
+    </div>
+    <div class="card">
+      <div class="row-between">
+        <span class="small sys">Progress is saved in this browser and persists across visits.</span>
+        <button class="ghost" id="resetBtn">Reset progress</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>Source questions: <code>04-claude-with-amazon-bedrock/quiz.md</code> · <a href="../04-claude-with-amazon-bedrock/notes.md">section notes</a> · <a href="../lessons/0006-claude-with-amazon-bedrock.html">read the lesson</a></p>
+    <p><a href="index.html">← All section quizzes</a></p>
+  </footer>
+</main>
+
+<script>
+/* ---------- QUESTION BANK ---------- */
+const QUESTIONS = [
+  {
+    "id": "brk01",
+    "q": "Which of the following correctly describes Claude's four model tiers and where Fable 5 sits relative to Opus?",
+    "options": [
+      "Opus, Sonnet, and Haiku, plus a new Fable 5 tier that sits above Opus at a significantly higher cost, for the toughest challenges",
+      "Opus, Sonnet, and Haiku, plus a new Fable 5 tier that sits below Haiku as an ultra-cheap, ultra-fast option",
+      "Opus, Sonnet, Haiku, and Instant, with Fable 5 replacing Opus as the new top-tier model",
+      "Sonnet, Haiku, Instant, and a new Fable 5 tier that sits between Opus and Sonnet in capability"
+    ],
+    "correct": 0,
+    "explain": "The course presents Opus, Sonnet, and Haiku as the base tiers, with Fable 5 introduced as a new tier positioned above Opus, at a significantly higher cost, reserved for the hardest challenges where the extra capability is worth paying for."
+  },
+  {
+    "id": "brk02",
+    "q": "Which model tier does NOT support reasoning/extended-thinking capabilities, and what's it optimized for instead?",
+    "options": [
+      "Sonnet — optimized for cost efficiency, best suited for high-volume batch processing jobs",
+      "Haiku — optimized for speed and cost efficiency, best suited for real-time, user-facing interactions",
+      "Opus — optimized for maximum context length, best suited for analyzing long documents",
+      "Fable 5 — optimized for low latency, best suited for simple conversational replies"
+    ],
+    "correct": 1,
+    "explain": "Haiku lacks extended-thinking support and is instead optimized for speed and cost efficiency, making it the right choice for real-time, user-facing interactions rather than complex problem-solving."
+  },
+  {
+    "id": "brk03",
+    "q": "What Python library and client do you use to connect to Bedrock, and how does auth differ from the direct Anthropic API?",
+    "options": [
+      "anthropic.Bedrock(api_key=...), authenticating with the same Anthropic API key used for the direct API",
+      "boto3.client(\"bedrock\", region_name=...), authenticating via an Anthropic API key stored in AWS Secrets Manager",
+      "boto3.client(\"bedrock-runtime\", region_name=...), authenticating via AWS IAM credentials rather than an Anthropic API key",
+      "boto3.client(\"bedrock-runtime\", api_key=...), authenticating via a Bedrock-specific API key issued by AWS"
+    ],
+    "correct": 2,
+    "explain": "Bedrock access goes through boto3's bedrock-runtime client, and authentication uses standard AWS IAM credentials instead of an Anthropic API key."
+  },
+  {
+    "id": "brk04",
+    "q": "What error do you get if you request a model that isn't available in your client's configured AWS region, and what solves this?",
+    "options": [
+      "An \"AccessDenied\" error, solved by requesting a broader IAM policy for the model",
+      "A \"ThrottlingException\", solved by retrying the request with exponential backoff",
+      "A \"ValidationException: unsupported region\" error, solved by manually switching the client's region for every call",
+      "A cryptic \"model doesn't exist\" error, solved by a cross-region inference profile that automatically routes to a region hosting the model"
+    ],
+    "correct": 3,
+    "explain": "Requesting a model unavailable in the configured region produces a confusing 'model doesn't exist' error; cross-region inference profiles fix this by automatically routing the request to a region where the model is actually hosted."
+  },
+  {
+    "id": "brk05",
+    "q": "Where in the AWS Bedrock console do you find inference profile IDs, and how do they differ from a plain model ID?",
+    "options": [
+      "Under \"Cross-region inference\" (not the main model catalog); a plain model ID is locked to one region while an inference profile ID can route across multiple regions",
+      "Under \"Model catalog\"; a plain model ID and an inference profile ID are functionally identical, just different names",
+      "Under \"IAM roles\"; an inference profile ID requires a separate AWS subscription while a plain model ID is free",
+      "Under \"Provisioned Throughput\"; an inference profile ID guarantees dedicated capacity while a plain model ID is on-demand only"
+    ],
+    "correct": 0,
+    "explain": "Inference profile IDs live under the console's 'Cross-region inference' section, separate from the main model catalog, and unlike a plain model ID (locked to one region), they can transparently route requests across multiple regions."
+  },
+  {
+    "id": "brk06",
+    "q": "What are the three essential components of a Bedrock request via the converse API?",
+    "options": [
+      "An API Key, a Model ID, and a System Prompt",
+      "A Bedrock Runtime Client, a Model ID, and a User Message",
+      "A Bedrock Runtime Client, an Inference Profile, and a Tool Schema",
+      "An IAM Role, a Model ID, and a Temperature setting"
+    ],
+    "correct": 1,
+    "explain": "A converse() request needs a Bedrock Runtime Client for the connection, a Model ID specifying which model to run, and a User Message providing the input content."
+  },
+  {
+    "id": "brk07",
+    "q": "Why is a Bedrock message's content field a list rather than a plain string?",
+    "options": [
+      "It lets multiple conversation turns be batched together in a single call",
+      "It allows partial streamed tokens to be delivered as separate list items",
+      "It supports multimodal content, since a single message can contain text, images, and other media types",
+      "AWS requires each field of a message to be logged as a separate list entry"
+    ],
+    "correct": 2,
+    "explain": "The content field is a list because a single message can hold multiple content types—text, images, and other media—so the list structure is what enables multimodal requests."
+  },
+  {
+    "id": "brk08",
+    "q": "How do you extract the generated text from a client.converse() response?",
+    "options": [
+      "response[\"result\"][\"text\"]",
+      "response[\"message\"][\"output\"][\"text\"][0]",
+      "response[\"output\"][\"content\"][0][\"message\"][\"text\"]",
+      "response[\"output\"][\"message\"][\"content\"][0][\"text\"]"
+    ],
+    "correct": 3,
+    "explain": "The generated text is nested as response['output']['message']['content'][0]['text'], following the response's output-message-content structure down to the first content block's text field."
+  },
+  {
+    "id": "brk09",
+    "q": "What does this course teach that ISN'T Bedrock-specific — i.e., what carries over unchanged from Building with the Claude API?",
+    "options": [
+      "Prompt engineering technique, tool schema design, RAG chunking/retrieval strategy, evaluation methodology, and agentic orchestration patterns",
+      "IAM authentication setup and configuring the boto3 client's credentials",
+      "Configuring cross-region inference profiles for model availability",
+      "The specific JSON request and response structure of the converse() API"
+    ],
+    "correct": 0,
+    "explain": "Bedrock only changes the auth, client, and call layer; core skills like prompt engineering, tool schema design, RAG chunking/retrieval, evaluation methodology, and agentic orchestration patterns carry over unchanged."
+  },
+  {
+    "id": "brk10",
+    "q": "Why might a plain Bedrock model ID fail even when the model is available somewhere in AWS, and what solves the problem?",
+    "options": [
+      "Because plain model IDs require a separate IAM policy per model; fixed by requesting elevated permissions",
+      "Because a plain model ID is region-locked and fails when the configured region doesn't host that model; a cross-region inference profile routes the request to a region that does",
+      "Because plain model IDs expire after 24 hours; fixed by regenerating AWS credentials",
+      "Because plain model IDs only work with converse_stream; fixed by switching to the converse call"
+    ],
+    "correct": 1,
+    "explain": "A plain model ID is tied to the region you configured, so it fails if that region doesn't host the model; a cross-region inference profile solves this by automatically routing to a supported region."
+  },
+  {
+    "id": "brk11",
+    "q": "How can you force Claude to return structured data through Bedrock's Converse API?",
+    "options": [
+      "Set response_format=\"json\" inside inference_config, which Bedrock validates automatically server-side",
+      "Pass a JSON Schema directly in the system prompt text, which Bedrock enforces before returning a response",
+      "Provide a dedicated tool schema and select it with toolChoice set to that specific tool, then parse and validate the returned data in your application",
+      "Use a structured_output=True flag on converse(), which removes the need for any application-side parsing"
+    ],
+    "correct": 2,
+    "explain": "Structured output is achieved by defining a dedicated tool schema and forcing its use via toolChoice; the application is still responsible for parsing and validating the returned data, since Bedrock doesn't guarantee correctness on its own."
+  },
+  {
+    "id": "brk12",
+    "q": "What must a Bedrock application preserve when continuing a tool-use conversation?",
+    "options": [
+      "Only the final assistant text response — toolUse blocks can be safely discarded on the next turn",
+      "Only the toolResult content, without resending the original toolUse block",
+      "New tool IDs generated for each follow-up request, for security purposes",
+      "The complete assistant content blocks including each toolUse, matching toolResult blocks with the correct IDs, and the original tool definitions on the follow-up request"
+    ],
+    "correct": 3,
+    "explain": "Continuing a tool-use conversation requires preserving the full assistant content blocks (including each toolUse), sending matching toolResult blocks with correct IDs, and keeping the original tool definitions available on the follow-up request."
+  },
+  {
+    "id": "brk13",
+    "q": "When is a batch-tool pattern appropriate, and when should it be avoided?",
+    "options": [
+      "Use it for independent calls that can safely run concurrently to reduce latency; avoid it when calls depend on one another or could duplicate unsafe side effects",
+      "Use it for sequential steps where order must be strictly preserved; avoid it for any read-only calls",
+      "Use it whenever calls share state and must stay synchronized; avoid it for stateless calls",
+      "Use it only for logging and audit calls; avoid it for any user-facing generation calls"
+    ],
+    "correct": 0,
+    "explain": "Batch-tool calling is appropriate for independent operations that can run concurrently to cut latency, but should be avoided when calls depend on each other's results or could duplicate unsafe side effects."
+  },
+  {
+    "id": "brk14",
+    "q": "What safety responsibilities remain with the application when Claude runs through Bedrock?",
+    "options": [
+      "Bedrock automatically manages authentication and audit logging, leaving only prompt design to the application",
+      "The application still owns authentication and authorization, input and path validation, rate limits, retries, timeouts, audit logging, and human approval for consequential actions",
+      "AWS IAM alone provides input validation and rate limiting on the application's behalf",
+      "Bedrock enforces human approval for consequential actions automatically, without application involvement"
+    ],
+    "correct": 1,
+    "explain": "Running through Bedrock doesn't offload safety work: the application still must handle authentication/authorization, input and path validation, rate limits, retries, timeouts, audit logging, and human approval for consequential actions."
+  },
+  {
+    "id": "brk15",
+    "q": "Bedrock's Converse API is stateless. What must your application manage manually, and what strict rule governs the order of roles in the message list?",
+    "options": [
+      "Bedrock stores conversation history server-side for 24 hours, so the application only needs to send the newest message",
+      "The application must maintain the history, but roles can repeat consecutively as long as the content differs each time",
+      "The application must maintain and resend the complete message history with every request, and roles must strictly alternate user → assistant → user with no two consecutive messages of the same role",
+      "Bedrock automatically merges consecutive same-role messages, so the application doesn't need to track message order"
+    ],
+    "correct": 2,
+    "explain": "Because the Converse API is stateless, the application must keep and resend the full message history on every call, and messages must strictly alternate between user and assistant roles with no consecutive repeats."
+  },
+  {
+    "id": "brk16",
+    "q": "How is a system prompt actually passed to Bedrock's converse() call, and what's the one hard requirement on its content?",
+    "options": [
+      "As a plain string via the system parameter, and empty strings are silently ignored",
+      "As a separate system_prompt argument to boto3.client(), which has no minimum length requirement",
+      "As the first message in the list with role=\"system\", capped at 100 characters",
+      "Via the system keyword parameter as a list containing a dictionary with a text field, and that text must contain at least one character — an empty string throws an error"
+    ],
+    "correct": 3,
+    "explain": "The system prompt is passed via the system parameter as a list holding a dict with a text field, and that text must be non-empty since an empty string throws an error—so well-designed code should default the parameter to None rather than an empty string."
+  },
+  {
+    "id": "brk17",
+    "q": "What's the valid range and default value of Bedrock's temperature parameter, and where do you set it in a converse() call?",
+    "options": [
+      "A decimal from 0 to 1, defaulting to 1.0, set inside inference_config (e.g. inferenceConfig={\"temperature\": 0.2})",
+      "A decimal from 0 to 2, defaulting to 0.7, set inside a model_kwargs dictionary",
+      "A decimal from 0 to 1, defaulting to 0.0, set as a top-level parameter of converse()",
+      "An integer from 1 to 10, defaulting to 5, set inside inference_config"
+    ],
+    "correct": 0,
+    "explain": "Temperature ranges from 0 to 1, defaults to 1.0 (maximum randomness), and is set inside the inference_config dictionary passed to converse()."
+  },
+  {
+    "id": "brk18",
+    "q": "When you call converse_stream instead of converse, which response key holds the events, which event type carries the actual generated text, and where exactly does that text live inside the event?",
+    "options": [
+      "An \"events\" key holding the events; the message_stop event carries the text at event['message_stop']['text']",
+      "A \"stream\" key holding an iterable of events; only content_block_delta events carry text, found at event['content_block_delta']['delta']['text']",
+      "A \"stream\" key holding an iterable of events; the content_block_stop event carries the text at event['content_block_stop']['delta']['text']",
+      "An \"output\" key holding the events; every event type carries a text chunk that the application concatenates"
+    ],
+    "correct": 1,
+    "explain": "converse_stream returns a 'stream' key with an iterable of events; of the five event types, only content_block_delta carries actual text, accessible at event['content_block_delta']['delta']['text'], while the other four are structural bookkeeping."
+  },
+  {
+    "id": "brk19",
+    "q": "Bedrock lets you steer generation two ways without touching the prompt text: pre-filling and stop sequences. How does each work, and what happens to the relevant text (the prefill vs. the matched stop string) in the final result?",
+    "options": [
+      "Pre-filling halts generation early and is excluded from the output; stop sequences are partial assistant text that must be concatenated onto the response",
+      "Both pre-filling and stop sequences are passed via inference_config, and both are excluded from the final returned text",
+      "Pre-filling appends a partial assistant message that Claude continues from, so the app must concatenate the prefill with Claude's returned text; stop sequences halt generation immediately and the matched stop string is excluded from the returned text",
+      "Pre-filling is appended to the system prompt rather than concatenated afterward; stop sequences are included in the returned text and must be stripped manually"
+    ],
+    "correct": 2,
+    "explain": "Pre-filling appends a partial assistant-role message that Claude continues from, so the app must glue the prefill and Claude's output together; stop sequences, passed via inference_config, halt generation the moment they're produced and are excluded from the returned text."
+  },
+  {
+    "id": "brk20",
+    "q": "When wiring up Claude's built-in text editor tool through Bedrock, what exact tool-name string must you use for Claude 3.7 vs. Claude 3.5, and who is responsible for implementing the five command handlers behind it?",
+    "options": [
+      "Claude 3-7 requires \"str_replace_based_edit_tool\" and Claude 3-5 requires \"str_replace_editor\"; Bedrock implements all five command handlers automatically",
+      "Both versions use the single tool name \"text_editor_tool\"; the developer implements four handlers: view, edit, create, and delete",
+      "Claude 3-7 requires \"str_replace_editor\" and Claude 3-5 requires \"str_replace_based_edit_tool\"; Anthropic implements the command handlers server-side, so the developer only supplies the schema",
+      "Claude 3-7 requires \"str_replace_editor\" and Claude 3-5 requires \"str_replace_based_edit_tool\"; the developer must implement all five command handlers themselves: view, str_replace, create, insert, and undo_edit"
+    ],
+    "correct": 3,
+    "explain": "Claude 3-7 uses the exact tool name 'str_replace_editor' while Claude 3-5 uses 'str_replace_based_edit_tool'; Claude supplies the schema automatically, but the developer still has to implement all five command handlers: view, str_replace, create, insert, and undo_edit."
+  },
+  {
+    "id": "brk21",
+    "q": "What are the three tool_choice settings you can pass to Claude, and what does each force Claude to do?",
+    "options": [
+      "\"auto\" lets Claude decide whether to use a tool at all; \"any\" forces Claude to call some available tool but lets it pick which; naming a specific tool forces that exact tool to be called",
+      "\"auto\", \"required\", and \"none\", where \"required\" forces any tool call and \"none\" disables tools entirely",
+      "\"manual\", \"auto\", and \"forced\" tool selection modes",
+      "\"auto\" lets Claude decide; \"all\" forces Claude to call every available tool; naming a specific tool forces that exact tool"
+    ],
+    "correct": 0,
+    "explain": "The three settings are 'auto' (Claude decides for itself, the default), 'any' (Claude must call some tool but chooses which), and naming a specific tool via {\"tool\": {\"name\": \"...\"}} (forces that exact tool)."
+  },
+  {
+    "id": "brk22",
+    "q": "What's the \"flexible tool extraction\" (toJSON) technique for getting structured data out of Claude, and what's its trade-off versus a dedicated, tightly-typed schema?",
+    "options": [
+      "A generic tool that auto-generates its own schema from Claude's response, trading higher latency for flexibility",
+      "A single generic tool (e.g. toJSON) with an open-ended input object, where the desired fields are specified in the prompt text rather than the schema — flexible to change but slightly less reliable than a dedicated schema",
+      "The dedicated-schema technique renamed toJSON, which requires rewriting the schema every time the output structure changes",
+      "An open-ended object input whose fields are defined directly in the schema, though it can't handle nested objects"
+    ],
+    "correct": 1,
+    "explain": "The toJSON technique uses one generic, open-ended tool whose desired fields are described in the prompt rather than the schema, making structure changes easy at the cost of slightly lower reliability than a purpose-built schema."
+  },
+  {
+    "id": "brk23",
+    "q": "Which embedding model does this course use for RAG on Bedrock, and what does a typical embedding vector actually look like (size and value range)?",
+    "options": [
+      "Amazon Titan Embed Text V2, returning roughly 1536 floating-point numbers each between 0 and 1",
+      "Cohere Embed Multilingual, returning roughly 1024 floating-point numbers each between -1 and 1",
+      "Amazon Titan Embed Text V2, returning roughly 1024 floating-point numbers each typically between -1 and +1",
+      "Amazon Titan Embed Text V1, returning roughly 768 floating-point numbers each between -1 and 1"
+    ],
+    "correct": 2,
+    "explain": "The course uses Amazon Titan Embed Text V2, which returns a vector of roughly 1024 floats, each typically between -1 and +1, with no individual dimension being independently interpretable."
+  },
+  {
+    "id": "brk24",
+    "q": "How do cosine similarity and cosine distance differ, and which direction (higher or lower) indicates \"more similar\" for each?",
+    "options": [
+      "Cosine similarity ranges from 0 to 1, with values closer to 0 meaning more similar",
+      "Cosine distance is the cosine of the angle between vectors, with values closer to 1 meaning more similar",
+      "Similarity and distance are the same measure expressed in different units, both climbing toward 1 for closer matches",
+      "Cosine similarity ranges from -1 to 1, with values closer to 1 meaning more similar; cosine distance is 1 minus similarity, with values closer to 0 meaning more similar, and vector databases typically rank by lowest distance"
+    ],
+    "correct": 3,
+    "explain": "Cosine similarity is the cosine of the angle between vectors (-1 to 1, closer to 1 is more similar), while cosine distance is 1 minus similarity (closer to 0 is more similar); vector databases usually report distance and rank the lowest-distance chunks as best matches."
+  },
+  {
+    "id": "brk25",
+    "q": "What's the Reciprocal Rank Fusion (RRF) formula for combining rankers, and what score would a document ranked 1st by semantic search and 2nd by BM25 receive?",
+    "options": [
+      "score = Σ 1/(1+rank) for each ranking method; a document ranked 1st in vector search and 2nd in BM25 scores 1/(1+1) + 1/(1+2) = 0.83, with higher combined scores winning",
+      "score = Σ 1/rank² for each ranking method; the same document would score 1 + 0.25 = 1.25",
+      "score = the average of the ranks across methods; the same document scores (1+2)/2 = 1.5, with lower scores winning",
+      "score = Σ 1/(1+rank), but lower combined scores win; the same document still scores 0.83"
+    ],
+    "correct": 0,
+    "explain": "RRF sums 1/(1+rank) across each ranking method; a document ranked 1st by vector search and 2nd by BM25 scores 1/(1+1) + 1/(1+2) = 0.5 + 0.33 = 0.83, and documents are re-sorted with higher scores winning."
+  },
+  {
+    "id": "brk26",
+    "q": "How do you configure Extended Thinking through Bedrock's converse() call, and what's the minimum thinking budget allowed?",
+    "options": [
+      "A thinking_mode string parameter plus a max_reasoning_tokens value, with a minimum of 512 tokens",
+      "A boolean thinking parameter plus a thinking_budget (the max tokens Claude may spend reasoning), with a hard minimum of 1024 tokens and no universal right value — it should be tuned with evals",
+      "A boolean thinking parameter plus a thinking_budget, with a recommended default of 4096 tokens for all use cases",
+      "A reasoning_effort enum set to low, medium, or high, with no token minimum required"
+    ],
+    "correct": 1,
+    "explain": "Extended Thinking is configured with a boolean thinking flag plus a thinking_budget capping reasoning tokens, with a hard minimum of 1024 tokens; there's no one-size-fits-all budget, so it should be tuned using prompt evals."
+  },
+  {
+    "id": "brk27",
+    "q": "What is the cryptographic signature attached to Claude's extended-thinking output for, and what does \"redacted\" thinking content mean?",
+    "options": [
+      "The signature is a checksum ensuring token-count accuracy; \"redacted\" content is a summarized version of thinking shown to save tokens",
+      "The signature authenticates which AWS account made the request; \"redacted\" content is thinking that exceeded the budget and was truncated",
+      "The signature proves the reasoning text hasn't been tampered with when passed back to Claude on a later turn; \"redacted\" content is thinking flagged and encrypted by Anthropic's safety systems — unreadable, but it must still be passed back unmodified",
+      "The signature is optional and used only for billing purposes; \"redacted\" content is thinking the developer chooses to hide from end users via a flag"
+    ],
+    "correct": 2,
+    "explain": "The signature is an integrity check proving the reasoning text wasn't tampered with when resent to Claude later; redacted content is thinking flagged and encrypted by Anthropic's safety systems, which the app can't read but must still pass back unmodified, and a special test string exists to trigger this case for testing."
+  },
+  {
+    "id": "brk28",
+    "q": "What's the maximum number of images allowed in a single Bedrock request, and how does an image's size affect the token cost of processing it?",
+    "options": [
+      "A maximum of 10 images per request; token cost is flat per image regardless of size",
+      "A maximum of 20 images per request; token cost scales with the image's file size in megabytes, not its dimensions",
+      "A maximum of 5 images per message with no per-request limit; token cost scales with pixel dimensions",
+      "A maximum of 20 images across all messages in one request; token cost scales with the image's pixel dimensions (height × width) — larger images cost more"
+    ],
+    "correct": 3,
+    "explain": "A single Bedrock request allows up to 20 images across all messages, and token cost scales with the image's pixel dimensions (height times width), so larger images consume more tokens just as longer text does."
+  }
+];
+
+/* ---------- STATE / PERSISTENCE ---------- */
+const STORAGE_KEY = "ccaf_quiz_04_v1";
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return { q: {}, totalAnswers: 0, totalCorrect: 0 };
+}
+function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+let state = loadState();
+
+function getStat(id) {
+  if (!state.q[id]) state.q[id] = { seen: 0, correct: 0, wrong: 0, mastery: 0, lastResult: null };
+  return state.q[id];
+}
+function recordAnswer(id, wasCorrect) {
+  const s = getStat(id);
+  s.seen += 1;
+  if (wasCorrect) { s.correct += 1; s.mastery = Math.min(3, s.mastery + 1); s.lastResult = "correct"; }
+  else { s.wrong += 1; s.mastery = 0; s.lastResult = "wrong"; }
+  state.totalAnswers = (state.totalAnswers||0) + 1;
+  if (wasCorrect) state.totalCorrect = (state.totalCorrect||0) + 1;
+  saveState();
+}
+
+/* ---------- TABS ---------- */
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
+    if (tab.dataset.tab === "progress") renderProgress();
+  });
+});
+
+/* ---------- QUIZ ---------- */
+let quizQueue = [];
+let quizIndex = 0;
+let quizScore = 0;
+
+function pickQuizQuestions(len, mode) {
+  let pool = QUESTIONS.slice();
+  if (mode === "weak") {
+    pool.sort((a,b) => {
+      const ma = getStat(a.id).mastery, mb = getStat(b.id).mastery;
+      if (ma !== mb) return ma - mb;
+      return Math.random() - 0.5;
+    });
+  } else if (mode === "random") {
+    pool.sort(() => Math.random() - 0.5);
+  }
+  return pool.slice(0, Math.min(len, pool.length));
+}
+
+function startQuiz(pool) {
+  quizQueue = pool;
+  quizIndex = 0;
+  quizScore = 0;
+  renderQuizQuestion();
+}
+
+document.getElementById("startQuizBtn").addEventListener("click", () => {
+  const len = parseInt(document.getElementById("quizLen").value, 10);
+  const mode = document.getElementById("quizMode").value;
+  startQuiz(pickQuizQuestions(len, mode));
+});
+
+document.getElementById("reviewMissedBtn").addEventListener("click", () => {
+  const missed = QUESTIONS.filter(q => getStat(q.id).lastResult === "wrong");
+  if (!missed.length) {
+    alert("No questions are currently marked wrong. Take a quiz first, or nice work — you're clean!");
+    return;
+  }
+  missed.sort(() => Math.random() - 0.5);
+  startQuiz(missed);
+});
+
+function renderQuizQuestion() {
+  const area = document.getElementById("quizArea");
+  if (quizIndex >= quizQueue.length) {
+    area.innerHTML = `<div class="card">
+      <div class="qtext">Session complete: ${quizScore} / ${quizQueue.length} correct</div>
+      <div class="small sys">Progress has been saved. Check "My progress" for what's still missed, or start another round above.</div>
+    </div>`;
+    return;
+  }
+  const q = quizQueue[quizIndex];
+  const letters = ["A","B","C","D"];
+  const optHtml = q.options.map((opt, i) =>
+    `<button class="option" data-idx="${i}"><span class="optkey">${letters[i]}.</span>${opt}</button>`
+  ).join("");
+  area.innerHTML = `<div class="card">
+    <div class="qmeta">
+      <span>Question ${quizIndex+1} of ${quizQueue.length}</span>
+      <span class="badge">Section 4 · Amazon Bedrock</span>
+    </div>
+    <div class="qtext">${q.q}</div>
+    <div id="quizOptions">${optHtml}</div>
+    <div id="quizFeedback"></div>
+    <div id="quizNextWrap"></div>
+  </div>`;
+  document.querySelectorAll("#quizOptions .option").forEach(btn => {
+    btn.addEventListener("click", () => handleQuizAnswer(q, parseInt(btn.dataset.idx,10)));
+  });
+}
+
+function handleQuizAnswer(q, idx) {
+  const correct = idx === q.correct;
+  if (correct) quizScore += 1;
+  recordAnswer(q.id, correct);
+  document.querySelectorAll("#quizOptions .option").forEach((btn, i) => {
+    btn.classList.add("disabled");
+    btn.disabled = true;
+    if (i === q.correct) btn.classList.add("correct");
+    else if (i === idx) btn.classList.add("wrong");
+  });
+  document.getElementById("quizFeedback").innerHTML =
+    `<div class="feedback ${correct ? "good" : "bad"}">${correct ? "Correct." : "Not quite."}</div>
+     <div class="explain"><strong>Why:</strong> ${q.explain}</div>`;
+  document.getElementById("quizNextWrap").innerHTML = `<button class="primary" id="nextQBtn" style="margin-top:12px;">${quizIndex+1 < quizQueue.length ? "Next question" : "See results"}</button>`;
+  document.getElementById("nextQBtn").addEventListener("click", () => { quizIndex += 1; renderQuizQuestion(); });
+}
+
+/* ---------- PROGRESS ---------- */
+function masteryColor(mastery) {
+  if (mastery >= 3) return "#3d7a4a";
+  if (mastery === 2) return "#8bc34a";
+  if (mastery === 1) return "#e0a34a";
+  return "#cfcfd4";
+}
+function renderProgress() {
+  const total = QUESTIONS.length;
+  let masteredCount = 0, sumMastery = 0, missedCount = 0;
+  QUESTIONS.forEach(q => {
+    const s = getStat(q.id);
+    sumMastery += s.mastery;
+    if (s.mastery >= 3) masteredCount += 1;
+    if (s.lastResult === "wrong") missedCount += 1;
+  });
+  const pct = Math.round((sumMastery / (total * 3)) * 100);
+  const acc = state.totalAnswers ? Math.round((state.totalCorrect / state.totalAnswers) * 100) : 0;
+
+  document.getElementById("statGrid").innerHTML = `
+    <div class="stat-box"><div class="stat-num">${masteredCount}/${total}</div><div class="stat-label">Mastered</div></div>
+    <div class="stat-box"><div class="stat-num">${missedCount}</div><div class="stat-label">Currently missed</div></div>
+    <div class="stat-box"><div class="stat-num">${state.totalAnswers||0}</div><div class="stat-label">Answers given</div></div>
+    <div class="stat-box"><div class="stat-num">${acc}%</div><div class="stat-label">Accuracy</div></div>
+  `;
+  document.getElementById("masteryBar").style.width = pct + "%";
+  document.getElementById("masteryLabel").textContent = pct + "% overall mastery across " + total + " questions";
+
+  const missed = QUESTIONS.filter(q => getStat(q.id).lastResult === "wrong")
+    .sort((a,b) => getStat(b.id).wrong - getStat(a.id).wrong);
+  let html;
+  if (!missed.length) {
+    html = `<div class="small sys">Nothing currently marked wrong. Take the quiz to build up a review queue.</div>`;
+  } else {
+    html = `<table><thead><tr><th></th><th>Question</th><th>Times wrong</th><th>Seen</th></tr></thead><tbody>`;
+    missed.forEach(q => {
+      const s = getStat(q.id);
+      const qtext = q.q.length > 90 ? q.q.slice(0,87) + "…" : q.q;
+      html += `<tr><td><span class="mastery-dot" style="background:${masteryColor(s.mastery)}"></span></td><td>${qtext}</td><td>${s.wrong}</td><td>${s.seen}</td></tr>`;
+    });
+    html += `</tbody></table>`;
+  }
+  document.getElementById("weakTable").innerHTML = html;
+}
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (confirm("Reset all quiz progress for this section? This can't be undone.")) {
+    state = { q: {}, totalAnswers: 0, totalCorrect: 0 };
+    saveState();
+    renderProgress();
+  }
+});
+
+/* ---------- INIT ---------- */
+renderProgress();
+</script>
+</body>
+</html>

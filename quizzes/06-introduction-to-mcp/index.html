@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Introduction to MCP Quiz — CCA-F Quiz</title>
+  <style>
+    :root {
+      --ink: #242321;
+      --muted: #706b63;
+      --paper: #f7f3ec;
+      --paper-deep: #ece4d7;
+      --rust: #a84e31;
+      --rust-dark: #7d3825;
+      --line: #d6ccbd;
+      --white: #fffdfa;
+      --accent: #5f6b3a;
+      --good: #3d7a4a;
+      --good-bg: #e6f0e4;
+      --bad: #a13a2e;
+      --bad-bg: #f7e6e2;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.7 Georgia, 'Times New Roman', serif;
+    }
+    main { max-width: 720px; margin: 0 auto; padding: 40px 22px 80px; }
+    .masthead {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+      border-bottom: 1px solid var(--line); padding-bottom: 10px;
+      color: var(--muted); font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .13em; text-transform: uppercase;
+    }
+    .masthead a { color: var(--muted); }
+    .kicker { display: block; margin: 22px 0 6px; color: var(--accent); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    h1 { max-width: 680px; margin: 0 0 10px; font: 700 clamp(1.8rem, 6vw, 2.7rem)/1.08 Georgia, serif; letter-spacing: -.02em; }
+    .dek { max-width: 640px; margin: 0 0 24px; color: var(--muted); font-size: 1.02rem; }
+    p { max-width: 70ch; margin: 0 0 13px; }
+    a { color: var(--rust-dark); }
+    code { background: var(--paper-deep); padding: .08em .28em; border-radius: 3px; }
+
+    nav.crumbs { font: 600 12px/1.5 system-ui, sans-serif; color: var(--muted); margin-bottom: 6px; }
+    nav.crumbs a { color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--line); }
+    nav.crumbs a:hover { color: var(--rust-dark); border-color: var(--rust-dark); }
+
+    .tabs { display: flex; gap: 4px; margin: 26px 0 18px; border-bottom: 1px solid var(--line); }
+    .tab {
+      padding: 9px 14px; cursor: pointer; font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .04em;
+      color: var(--muted); border-bottom: 2px solid transparent; user-select: none; background: none; border-top: none; border-left: none; border-right: none;
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .card {
+      background: var(--white); border: 1px solid var(--line); border-radius: 3px;
+      padding: 20px 22px; margin-bottom: 14px;
+    }
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+    select, button {
+      font: 600 13px/1.3 system-ui, sans-serif; padding: 8px 13px; border-radius: 3px; border: 1px solid var(--line);
+      background: var(--white); color: var(--ink); cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: var(--white); border-color: var(--accent); }
+    button.primary:hover { filter: brightness(1.08); }
+    button.ghost { background: var(--white); color: var(--accent); border-color: var(--line); }
+    button.ghost:hover { background: var(--paper-deep); }
+    .small { font: 400 13px/1.5 Georgia, serif; color: var(--muted); }
+    .small.sys { font: 400 12.5px/1.5 system-ui, sans-serif; color: var(--muted); }
+
+    .qmeta { display: flex; justify-content: space-between; align-items: center; font: 600 12px/1.4 system-ui, sans-serif; color: var(--muted); margin-bottom: 10px; }
+    .badge { font: 700 10.5px/1.4 system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: var(--paper-deep); color: var(--rust-dark); }
+    .qtext { font: 700 1.18rem/1.4 Georgia, serif; margin-bottom: 16px; }
+    .option {
+      display: block; width: 100%; text-align: left; padding: 11px 14px; margin-bottom: 9px;
+      border: 1px solid var(--line); border-radius: 3px; background: var(--white);
+      font: 400 15px/1.5 Georgia, serif; color: var(--ink); cursor: pointer;
+    }
+    .option:hover:not(.disabled) { border-color: var(--accent); background: var(--paper); }
+    .option .optkey { display: inline-block; width: 20px; font-weight: 700; color: var(--muted); }
+    .option.correct { background: var(--good-bg); border-color: var(--good); }
+    .option.wrong { background: var(--bad-bg); border-color: var(--bad); }
+    .option.disabled { cursor: default; }
+    .feedback { font: 700 13px/1.5 system-ui, sans-serif; margin: 12px 0 4px; padding: 10px 13px; border-radius: 3px; }
+    .feedback.good { background: var(--good-bg); color: var(--good); }
+    .feedback.bad { background: var(--bad-bg); color: var(--bad); }
+    .explain { font: 400 15px/1.6 Georgia, serif; color: var(--ink); margin-top: 8px; padding: 12px 14px; background: var(--paper-deep); border-radius: 3px; }
+    .explain strong { color: var(--rust-dark); }
+
+    .progress-bar-outer { width: 100%; height: 8px; background: var(--paper-deep); border-radius: 999px; overflow: hidden; margin: 6px 0 2px; }
+    .progress-bar-inner { height: 100%; border-radius: 999px; background: var(--accent); }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 10px; margin-bottom: 14px; }
+    .stat-box { background: var(--white); border: 1px solid var(--line); border-radius: 3px; padding: 13px 14px; text-align: center; }
+    .stat-num { font: 700 1.5rem/1.2 Georgia, serif; color: var(--rust-dark); }
+    .stat-label { font: 600 10.5px/1.4 system-ui, sans-serif; color: var(--muted); margin-top: 3px; letter-spacing: .03em; text-transform: uppercase; }
+    table { width: 100%; border-collapse: collapse; font: 400 13.5px/1.5 Georgia, serif; }
+    th, td { text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font: 600 10.5px/1.4 system-ui, sans-serif; text-transform: uppercase; letter-spacing: .03em; }
+    .row-between { display: flex; justify-content: space-between; align-items: center; }
+    .mastery-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+
+    footer { margin-top: 34px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: .88rem; }
+    @media (max-width: 560px) {
+      main { padding: 26px 16px 60px; }
+      .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
+      .card { padding: 16px 16px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <div class="masthead"><a href="../index.html">CCA-F Study System</a><span>Section 6 · MCP</span></div>
+
+  <nav class="crumbs"><a href="../index.html">Home</a> › <a href="index.html">Quizzes</a> › Section 6 · MCP</nav>
+  <span class="kicker">Section 6 · Introduction to MCP</span>
+  <h1>Introduction to MCP Quiz</h1>
+  <p class="dek">31 multiple-choice questions on the Model Context Protocol: tools, resources, and prompts, client/server roles, and configuration scope.</p>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="quiz">Quiz</button>
+    <button class="tab" data-tab="progress">My progress</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="panel active" id="panel-quiz">
+    <div class="card" id="quizSetup">
+      <div class="controls">
+        <select id="quizLen">
+          <option value="10">10 questions</option>
+          <option value="20">20 questions</option>
+          <option value="999" selected>All 31 questions</option>
+        </select>
+        <select id="quizMode">
+          <option value="weak" selected>Missed &amp; new first (recommended)</option>
+          <option value="random">Fully random</option>
+          <option value="sequential">In order</option>
+        </select>
+        <button class="primary" id="startQuizBtn">Start quiz</button>
+        <button class="ghost" id="reviewMissedBtn">Review only missed</button>
+      </div>
+      <div class="small sys">"Missed &amp; new first" weights questions you've gotten wrong or haven't seen, so review sessions target real gaps. "Review only missed" quizzes you exclusively on questions currently marked wrong.</div>
+    </div>
+    <div id="quizArea"></div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="panel" id="panel-progress">
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="card">
+      <div class="row-between"><strong style="font:700 13px/1.4 system-ui, sans-serif; color:var(--rust-dark);">Mastery</strong></div>
+      <div class="progress-bar-outer"><div class="progress-bar-inner" id="masteryBar" style="width:0%"></div></div>
+      <div class="small sys" id="masteryLabel" style="margin-top:6px;"></div>
+    </div>
+    <div class="card">
+      <div class="row-between"><strong style="font:700 13px/1.4 system-ui, sans-serif; color:var(--rust-dark);">Questions currently missed</strong></div>
+      <div id="weakTable" style="margin-top:8px;"></div>
+    </div>
+    <div class="card">
+      <div class="row-between">
+        <span class="small sys">Progress is saved in this browser and persists across visits.</span>
+        <button class="ghost" id="resetBtn">Reset progress</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>Source questions: <code>06-introduction-to-mcp/quiz.md</code> · <a href="../06-introduction-to-mcp/notes.md">section notes</a> · <a href="../lessons/0008-model-context-protocol.html">read the lesson</a></p>
+    <p><a href="index.html">← All section quizzes</a></p>
+  </footer>
+</main>
+
+<script>
+/* ---------- QUESTION BANK ---------- */
+const QUESTIONS = [
+  {
+    "id": "mcp01",
+    "q": "Which of the following best describes the core problem MCP solves?",
+    "options": [
+      "It shifts the burden of defining and maintaining tool integrations for third-party services from your server to dedicated, specialized MCP servers, often maintained by the service provider itself.",
+      "It replaces Claude's tool-use mechanism with a faster network protocol for calling functions.",
+      "It eliminates the need for authentication when calling third-party APIs.",
+      "It lets Claude access the internet directly without any tool definitions."
+    ],
+    "correct": 0,
+    "explain": "MCP moves the work of building and maintaining integrations to dedicated MCP servers, which are often published by the service provider itself, rather than requiring every application to reimplement that integration work."
+  },
+  {
+    "id": "mcp02",
+    "q": "Which of the following best describes who can author an MCP server?",
+    "options": [
+      "Only Anthropic, since it defines and controls the MCP specification.",
+      "Anyone can author one, and often the service provider itself publishes the official implementation.",
+      "Only the end user running the client application.",
+      "Only certified partners specifically approved to publish MCP servers."
+    ],
+    "correct": 1,
+    "explain": "MCP servers can be written by anyone; a common pattern is that the service provider itself releases the official server for its own API, but that is not a requirement."
+  },
+  {
+    "id": "mcp03",
+    "q": "Which of the following best describes the actual relationship between MCP and Claude's tool-use mechanism, correcting the common misconception that they're the same thing?",
+    "options": [
+      "MCP and tool use are identical mechanisms, and the terms are interchangeable in every context.",
+      "MCP replaces tool use entirely, so servers built with MCP no longer rely on Claude's tool-calling ability.",
+      "They are complementary but distinct: MCP servers provide already-implemented tool schemas and functions, while tool use is the mechanism Claude uses to actually call those tools.",
+      "Tool use is a feature exclusive to MCP servers, and Claude cannot call any tool without an MCP server present."
+    ],
+    "correct": 2,
+    "explain": "MCP and tool use are complementary: MCP servers supply the pre-built tool schemas and implementations, while tool use is Claude's mechanism for invoking them. The difference is simply who did the implementation work."
+  },
+  {
+    "id": "mcp04",
+    "q": "Which of the following best describes what 'transport agnostic' means for an MCP client/server connection, along with the most common setup?",
+    "options": [
+      "The server must support every transport protocol simultaneously within a single session.",
+      "The client and server must always run on separate machines connected over HTTP.",
+      "The protocol automatically converts data formats between JSON and XML during transport.",
+      "The client and server can communicate over different protocols such as stdio, HTTP, or WebSockets, and most commonly both run on the same machine communicating via standard input/output."
+    ],
+    "correct": 3,
+    "explain": "Transport agnostic means the underlying communication channel (stdio, HTTP, WebSockets, etc.) can vary, and in practice the most common setup is a local client and server on the same machine talking over stdio."
+  },
+  {
+    "id": "mcp05",
+    "q": "Which of the following correctly lists the two core MCP message type pairs used between client and server?",
+    "options": [
+      "ListToolsRequest/ListToolsResult and CallToolRequest/CallToolResult.",
+      "ReadResourceRequest/ReadResourceResult and GetPromptRequest/GetPromptResult.",
+      "ConnectRequest/ConnectResult and ExecuteRequest/ExecuteResult.",
+      "ListToolsRequest/ListToolsResult and ReadResourceRequest/ReadResourceResult."
+    ],
+    "correct": 0,
+    "explain": "The two core pairs are ListToolsRequest/ListToolsResult, used to discover available tools, and CallToolRequest/CallToolResult, used to run a specific tool and get its result."
+  },
+  {
+    "id": "mcp06",
+    "q": "Which of the following best describes what the `@mcp.tool(...)` decorator in the Python MCP SDK eliminates, compared to hand-authoring a tool integration?",
+    "options": [
+      "The need to write any Python function code, since tools are generated purely from docstrings.",
+      "Manual JSON schema writing, since Python type hints and Pydantic `Field()` descriptions let the SDK auto-generate the schema, plus automatic validation and natural error handling via exceptions.",
+      "The requirement to test tools before deploying them to production.",
+      "The need for a transport layer, since the decorator handles network communication directly."
+    ],
+    "correct": 1,
+    "explain": "The decorator uses Python type hints and Pydantic Field() descriptions to auto-generate the JSON schema, removing manual schema authoring while also providing automatic input validation and exception-based error handling."
+  },
+  {
+    "id": "mcp07",
+    "q": "Which of the following best describes the command that starts the MCP Inspector and what it lets you do before wiring up a real client?",
+    "options": [
+      "`mcp run mcp_server.py` — it deploys the server directly to production for live testing.",
+      "`mcp inspect mcp_server.py` — it generates a static schema report without letting you call tools.",
+      "`mcp dev mcp_server.py` — it lets you connect, list and test tools with real inputs, and see success/failure plus returned data.",
+      "`mcp client mcp_server.py` — it launches a full client application to test end-to-end behavior."
+    ],
+    "correct": 2,
+    "explain": "`mcp dev mcp_server.py` starts the Inspector, which lets you connect to the server, list and invoke tools with real inputs, and observe results without needing to build a full client application first."
+  },
+  {
+    "id": "mcp08",
+    "q": "Which of the following best describes the two components of an MCP client implementation and why the second is wrapped in a custom class?",
+    "options": [
+      "A transport handler and a schema validator, wrapped together to enforce type safety.",
+      "A custom Client Session around the SDK's wrapper class, so the wrapper performs the actual connection work.",
+      "A tool registry and a prompt registry, combined so the client can cache both locally.",
+      "A custom MCP Client wrapper class around the SDK's Client Session (the actual connection); the wrapper handles careful resource cleanup automatically."
+    ],
+    "correct": 3,
+    "explain": "The implementation pairs a custom wrapper class with the SDK's Client Session, which is the real connection object; the wrapper exists specifically to automatically and carefully handle resource cleanup."
+  },
+  {
+    "id": "mcp09",
+    "q": "Which of the following best describes the key difference between a 'direct' and a 'templated' MCP resource?",
+    "options": [
+      "A direct resource has a static URI with no parameters, while a templated resource has a parameterized URI that the SDK auto-parses into a function keyword argument.",
+      "A direct resource always returns JSON, while a templated resource always returns plain text.",
+      "A direct resource is controlled by the model, while a templated resource is controlled by the app.",
+      "A direct resource requires authentication, while a templated resource does not."
+    ],
+    "correct": 0,
+    "explain": "A direct resource uses a fixed, static URI like docs://documents, while a templated resource uses a parameterized URI like docs://documents/{doc_id}, with the SDK automatically parsing the parameter into a keyword argument."
+  },
+  {
+    "id": "mcp10",
+    "q": "Which of the following best explains why you'd use a resource instead of a tool call to inject a document's contents into a prompt?",
+    "options": [
+      "Resources are the only primitive that supports binary file formats like images and PDFs.",
+      "Resources allow Claude to write changes back to the document automatically.",
+      "Resources let the app inject content directly into prompt context without Claude needing to make a separate tool call and wait for the round trip, giving a smoother, faster experience.",
+      "Resources bypass the need for the MCP client to maintain a session at all."
+    ],
+    "correct": 2,
+    "explain": "Because the app already knows the user wants the data, a resource can inject it directly into context, avoiding the extra round trip of Claude making and waiting on a separate tool call."
+  },
+  {
+    "id": "mcp11",
+    "q": "Which of the following best describes what determines how a client should parse a resource's returned content?",
+    "options": [
+      "The resource's URI scheme, such as docs:// versus files://, determines the parsing method.",
+      "The length of the returned content determines whether it's parsed as JSON or text.",
+      "The resource's `mimeType`, for example `application/json` meaning the client should `json.loads()` it, otherwise treating it as raw text.",
+      "The tool that originally created the resource specifies how the client should parse it."
+    ],
+    "correct": 2,
+    "explain": "The client inspects the resource's mimeType to decide how to parse the payload, such as running json.loads() on application/json content and otherwise treating it as plain text."
+  },
+  {
+    "id": "mcp12",
+    "q": "Which of the following best describes what MCP 'prompts' are for and why a developer would write one even though users could ask Claude directly?",
+    "options": [
+      "They exist mainly to reduce the number of tokens Claude uses per conversation.",
+      "They let the server bypass Claude entirely and generate responses without a model call.",
+      "They are only useful for authentication flows where the user must confirm identity.",
+      "They are pre-built, thoroughly tested instruction templates for a server's domain that handle edge cases and encode expertise more reliably than an ad hoc user-written instruction."
+    ],
+    "correct": 3,
+    "explain": "Prompts package tested, expert-crafted instructions for a domain; even though a user could type a similar request themselves, the tested template handles edge cases more consistently than an improvised instruction."
+  },
+  {
+    "id": "mcp13",
+    "q": "Which of the following best describes how client-provided arguments make their way into an MCP prompt's text?",
+    "options": [
+      "They're passed as a dict to `get_prompt(prompt_name, args)`, which interpolates them as keyword arguments into the prompt template function.",
+      "They're appended as raw text after the prompt template, without being interpolated into it.",
+      "They're stored server-side in a database and referenced by an ID inside the prompt.",
+      "They're sent as a separate ListToolsRequest that merges with the prompt before rendering."
+    ],
+    "correct": 0,
+    "explain": "Arguments such as {\"doc_id\": \"plan.md\"} are passed as a dict to get_prompt(prompt_name, args), and the SDK interpolates them as keyword arguments directly into the prompt template function."
+  },
+  {
+    "id": "mcp14",
+    "q": "Which of the following correctly completes the MCP primitive-control table for who controls Tools, Resources, and Prompts respectively?",
+    "options": [
+      "Tools — the user; Resources — the model; Prompts — the app.",
+      "Tools — the model decides when to call; Resources — the app decides when to fetch; Prompts — the user triggers via explicit UI action.",
+      "Tools — the app; Resources — the user; Prompts — the model.",
+      "Tools — the model; Resources — the user; Prompts — the app."
+    ],
+    "correct": 1,
+    "explain": "Tools are controlled by the model, which autonomously decides when to call them; resources are controlled by the app, which decides when to fetch them; prompts are controlled by the user, triggered through an explicit UI action."
+  },
+  {
+    "id": "mcp15",
+    "q": "A developer wants to let Claude autonomously decide when to run a calculation using a JS sandbox. Which of the following correctly identifies the MCP primitive this represents and why?",
+    "options": [
+      "A resource, because the sandbox is a piece of read-only data the app injects into context.",
+      "A prompt, because the calculation is triggered by an explicit user action in the UI.",
+      "A tool, because the decision to invoke it belongs to the model, which is the defining trait of tools versus resources or prompts.",
+      "Neither — autonomous calculations require a separate function-calling API outside MCP."
+    ],
+    "correct": 2,
+    "explain": "Since Claude itself decides when to invoke the sandbox, this matches the defining trait of a tool: the model owns the invocation decision, unlike resources (app-controlled) or prompts (user-controlled)."
+  },
+  {
+    "id": "mcp16",
+    "q": "A developer wants a slash-command-style button that lets a user trigger a pre-optimized 'summarize this document' workflow on demand. Which of the following correctly identifies the MCP primitive this represents?",
+    "options": [
+      "A tool, because it performs an action against the document server.",
+      "A resource, because it injects the summarized content directly into context.",
+      "A hybrid tool-resource, because it both fetches and processes data on demand.",
+      "A prompt, because user-triggered, predefined workflows are exactly what MCP prompts are for."
+    ],
+    "correct": 3,
+    "explain": "A user-triggered, predefined workflow exposed as a button matches the definition of a prompt, which is explicitly meant for user-initiated, predefined instruction templates."
+  },
+  {
+    "id": "mcp17",
+    "q": "Which of the following is the concrete real-world parallel to MCP resources inside Claude's own official interface?",
+    "options": [
+      "The 'Add from Google Drive' feature, where the application decides which documents to show and injects their content into the chat context.",
+      "The web search feature, because Claude autonomously decides which pages to fetch mid-conversation.",
+      "The code execution tool, because it lets Claude run scripts the user never explicitly selected.",
+      "The file upload button, because it lets the model choose which files to request from the user."
+    ],
+    "correct": 0,
+    "explain": "The 'Add from Google Drive' feature mirrors an app-controlled resource: the application, not the model, decides which document is offered and handles injecting its content into context."
+  },
+  {
+    "id": "mcp18",
+    "q": "Which of the following best explains why the MCP Inspector's session state is useful when testing a server?",
+    "options": [
+      "It permanently saves changes to a database so they survive server restarts.",
+      "State persists between calls, so you can run an edit tool and immediately use a read tool to verify the result, and test multi-tool interactions without building a full client.",
+      "It allows multiple users to share the same session simultaneously during testing.",
+      "It automatically generates unit tests based on the calls you make during a session."
+    ],
+    "correct": 1,
+    "explain": "Because the Inspector keeps state across calls within a session, you can chain calls, such as editing then reading back a document, to verify multi-tool interactions without a full client application."
+  },
+  {
+    "id": "mcp19",
+    "q": "Which of the following best describes what makes an MCP tool definition reliable for both Claude and the client application?",
+    "options": [
+      "A long, exhaustive description covering every possible edge case, regardless of input typing.",
+      "A generic name that works across many use cases, paired with loosely typed inputs for flexibility.",
+      "A clear name and specific description of when it applies and what it returns, typed and validated inputs, and predictable results with meaningful errors.",
+      "Minimal documentation so Claude infers behavior contextually, plus silent failure on bad input."
+    ],
+    "correct": 2,
+    "explain": "Reliability comes from a clear, specific name and description, typed and validated inputs, and predictable results paired with meaningful error messages, not from vagueness or silent failure."
+  },
+  {
+    "id": "mcp20",
+    "q": "Which of the following best describes whether a typical production project implements both an MCP client and server, and why?",
+    "options": [
+      "Yes, production applications always implement both to maximize protocol flexibility.",
+      "No, MCP requires a third-party intermediary to implement both sides for security.",
+      "Yes, but only when the application also needs to support tool use directly.",
+      "Usually it implements just the side it owns, either a server that publishes capabilities or a client that connects to one; the course builds both mainly for end-to-end understanding."
+    ],
+    "correct": 3,
+    "explain": "In practice a project typically owns only one side of the connection; the course builds both client and server so learners can see the whole protocol flow end to end."
+  },
+  {
+    "id": "mcp21",
+    "q": "Which of the following best describes what `ReadResourceRequest` and `ReadResourceResult` are used for?",
+    "options": [
+      "They implement the request/response exchange for reading a resource's read-only data, such as fetching a document the app will inject directly into the prompt.",
+      "They implement the exchange for listing all prompts a server currently exposes.",
+      "They implement the exchange for calling a tool and receiving its execution result.",
+      "They implement the exchange for negotiating which transport protocol to use."
+    ],
+    "correct": 0,
+    "explain": "This request/response pair is specifically for reading a resource's read-only data, for example fetching a document that the application will then inject directly into the prompt."
+  },
+  {
+    "id": "mcp22",
+    "q": "Which of the following best describes what an MCP server should do when it needs to change the meaning of an existing capability?",
+    "options": [
+      "Immediately update the capability in place, since clients always fetch the latest schema live.",
+      "Version or deprecate the capability instead of silently changing its meaning, so clients can adapt without unexpected behavior.",
+      "Remove the old capability without notice and let clients fail fast so they update quickly.",
+      "Rename the capability's URI only, keeping its schema and behavior otherwise unchanged."
+    ],
+    "correct": 1,
+    "explain": "Best practice is to version or deprecate a capability rather than silently redefine it, so that clients relying on the old behavior are not broken unexpectedly."
+  },
+  {
+    "id": "mcp23",
+    "q": "In the typical flow between a user's query and Claude's final answer, which of the following correctly describes the MCP client's role throughout?",
+    "options": [
+      "The client executes the tool itself locally, then forwards only the final result to Claude.",
+      "The client asks Claude directly for tool results, bypassing the application server entirely.",
+      "The client decides which tool to call, then instructs Claude to format the response.",
+      "The client is purely a messenger, relaying list-tools and call-tool requests and results between your server and the MCP server, never executing anything itself."
+    ],
+    "correct": 3,
+    "explain": "Throughout the flow, from listing tools to calling one, the MCP client only relays requests and results between your server and the MCP server; the actual tool execution happens on the MCP server, not the client."
+  },
+  {
+    "id": "mcp24",
+    "q": "Which of the following best describes what happens to a document's edits in the course's CLI project after you close and restart the program?",
+    "options": [
+      "Edits are saved to a local SQLite file automatically, so they persist across restarts.",
+      "Edits are written to disk as markdown files but lose formatting on restart.",
+      "Edits persist in memory until the server is manually shut down via a stop command.",
+      "Nothing survives, because documents live only in an in-memory Python dictionary with no persistence, so edits vanish and the server returns to its original seeded content on restart."
+    ],
+    "correct": 3,
+    "explain": "Since the documents are stored only in an in-memory dictionary with no database or file backing, restarting the process wipes any edits and resets everything to the original seeded content."
+  },
+  {
+    "id": "mcp25",
+    "q": "Which of the following correctly describes the two tools on the course's example document server and their exact error behavior?",
+    "options": [
+      "`read_doc_contents(doc_id)` returns stored text and raises `ValueError` if the ID isn't found; `edit_document(doc_id, old_string, new_string)` does a find/replace, also raising `ValueError` if the document doesn't exist.",
+      "`read_doc_contents` returns `None` for missing IDs; `edit_document` raises a `KeyError` if not found.",
+      "`list_docs()` returns all document IDs; `edit_document` silently creates a new document if the ID is missing.",
+      "`read_doc_contents` raises `FileNotFoundError`; `edit_document` overwrites the entire document rather than doing find/replace."
+    ],
+    "correct": 0,
+    "explain": "read_doc_contents returns the stored text and raises ValueError when the ID isn't in the docs dictionary, while edit_document performs a find/replace and likewise raises ValueError if the document doesn't exist."
+  },
+  {
+    "id": "mcp26",
+    "q": "Which of the following correctly describes the two methods the MCP client wrapper exposes for working with tools and the exact SDK calls they make?",
+    "options": [
+      "`list_tools()` awaits `self.session.get_tools()` and returns `result.data`; `call_tool(name, args)` awaits `self.session.run_tool(tool_name, tool_input)`.",
+      "`list_tools()` awaits `self.session.list_tools()` and returns `result.tools`; `call_tool(name, args)` awaits `self.session.call_tool(tool_name, tool_input)` and returns the execution result.",
+      "`describe_tools()` awaits `self.session.list_tools()`; `invoke_tool(name, args)` awaits `self.session.call_tool(tool_name)`.",
+      "`list_tools()` awaits `self.session.call_tool()` and returns `result.tools`; `call_tool(name, args)` awaits `self.session.list_tools(tool_name, tool_input)`."
+    ],
+    "correct": 1,
+    "explain": "list_tools() awaits self.session.list_tools() and returns result.tools, while call_tool(name, args) awaits self.session.call_tool(tool_name, tool_input) and returns the execution result — the complete discovery-plus-execution surface."
+  },
+  {
+    "id": "mcp27",
+    "q": "Which of the following best describes the recommended pattern for how many distinct read operations a single MCP resource should cover, and why?",
+    "options": [
+      "One resource should cover all read operations for a domain, using query parameters to distinguish them.",
+      "Resources should mirror tools one-to-one, so every tool must have a matching resource.",
+      "One resource per distinct read operation, such as a separate resource for listing all documents versus fetching one document, to keep each URI's contract single-purpose and predictable.",
+      "Multiple resources should share the same URI but differ by HTTP method, similar to a REST API."
+    ],
+    "correct": 2,
+    "explain": "The recommended pattern dedicates one resource to each distinct read operation, for example separate URIs for listing all documents versus fetching a single one, so each URI's behavior stays single-purpose and predictable."
+  },
+  {
+    "id": "mcp28",
+    "q": "Which of the following correctly describes the exact call `read_resource()` makes on the client and which part of the response it uses?",
+    "options": [
+      "It calls `await self.session.get_resource(uri)` then reads `result.data`, ignoring `mime_type` entirely.",
+      "It calls `await self.session.read_resource(uri)` then reads `result.contents`, concatenating every item in the list.",
+      "It calls `await self.session.fetch(AnyUrl(uri))` then reads `result.body[0]` before checking its `content_type`.",
+      "It calls `await self.session.read_resource(AnyUrl(uri))` then reads `result.contents[0]`, the first item in the returned list, before checking its `mime_type` to decide how to parse it."
+    ],
+    "correct": 3,
+    "explain": "The client calls await self.session.read_resource(AnyUrl(uri)) and uses only result.contents[0], the first item of the returned contents list, checking its mime_type to determine how to parse the payload."
+  },
+  {
+    "id": "mcp29",
+    "q": "Which of the following best describes how a user picks which document to attach as a resource in the course project's CLI, and what happens once they do?",
+    "options": [
+      "They type the document's exact filename into a text prompt, which the server then validates and fetches.",
+      "They select it from a dropdown that triggers a tool call to `read_doc_contents` before attaching it.",
+      "They choose it by typing a slash command that inserts the document as a prompt template.",
+      "They navigate an interactive menu with arrow keys and select with the space bar; once chosen, the resource's contents are automatically pulled in and included in the prompt sent to Claude."
+    ],
+    "correct": 3,
+    "explain": "The CLI uses an arrow-key interactive menu with space-bar selection, and once a document is chosen its contents are automatically pulled into the prompt sent to Claude, with no separate tool call needed to read it."
+  },
+  {
+    "id": "mcp30",
+    "q": "Which of the following best describes what an MCP prompt function actually returns and what is done with that return value?",
+    "options": [
+      "A raw string of instructions that the client must wrap in a message object before sending to Claude.",
+      "A list of role-tagged messages, typically built with something like `base.user_message(prompt_text)` with arguments already interpolated, which is sent directly to Claude as conversation input.",
+      "A JSON schema describing the prompt's parameters, which Claude uses to generate its own message.",
+      "A dictionary of tool names and descriptions that Claude selects from before answering."
+    ],
+    "correct": 1,
+    "explain": "A prompt function returns a list of role-tagged messages, such as those built with base.user_message(prompt_text) with arguments already interpolated, and that list is sent directly to Claude as conversation input with no further assembly needed."
+  },
+  {
+    "id": "mcp31",
+    "q": "Which of the following correctly describes the client-side call that lists the prompts a server exposes, and how it parallels the tool-listing call?",
+    "options": [
+      "`get_prompts()` awaits `self.session.fetch_prompts()` and returns a dict, unlike the list pattern used for tools.",
+      "`list_prompts()` awaits `self.session.call_tool(\"list_prompts\")` since prompts are fetched via the tool-calling mechanism.",
+      "`list_prompts()` awaits `self.session.list_tools()` and filters the result client-side for prompt-type entries.",
+      "`list_prompts()` awaits `self.session.list_prompts()` and returns the prompt list, the exact same discovery pattern as `list_tools()` awaiting `self.session.list_tools()` and returning `result.tools`."
+    ],
+    "correct": 3,
+    "explain": "list_prompts() mirrors list_tools() exactly in structure: it awaits self.session.list_prompts() and returns the prompt list, following the identical discovery pattern used for tools, just applied to a different primitive."
+  }
+];
+
+/* ---------- STATE / PERSISTENCE ---------- */
+const STORAGE_KEY = "ccaf_quiz_06_v1";
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return { q: {}, totalAnswers: 0, totalCorrect: 0 };
+}
+function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+let state = loadState();
+
+function getStat(id) {
+  if (!state.q[id]) state.q[id] = { seen: 0, correct: 0, wrong: 0, mastery: 0, lastResult: null };
+  return state.q[id];
+}
+function recordAnswer(id, wasCorrect) {
+  const s = getStat(id);
+  s.seen += 1;
+  if (wasCorrect) { s.correct += 1; s.mastery = Math.min(3, s.mastery + 1); s.lastResult = "correct"; }
+  else { s.wrong += 1; s.mastery = 0; s.lastResult = "wrong"; }
+  state.totalAnswers = (state.totalAnswers||0) + 1;
+  if (wasCorrect) state.totalCorrect = (state.totalCorrect||0) + 1;
+  saveState();
+}
+
+/* ---------- TABS ---------- */
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
+    if (tab.dataset.tab === "progress") renderProgress();
+  });
+});
+
+/* ---------- QUIZ ---------- */
+let quizQueue = [];
+let quizIndex = 0;
+let quizScore = 0;
+
+function pickQuizQuestions(len, mode) {
+  let pool = QUESTIONS.slice();
+  if (mode === "weak") {
+    pool.sort((a,b) => {
+      const ma = getStat(a.id).mastery, mb = getStat(b.id).mastery;
+      if (ma !== mb) return ma - mb;
+      return Math.random() - 0.5;
+    });
+  } else if (mode === "random") {
+    pool.sort(() => Math.random() - 0.5);
+  }
+  return pool.slice(0, Math.min(len, pool.length));
+}
+
+function startQuiz(pool) {
+  quizQueue = pool;
+  quizIndex = 0;
+  quizScore = 0;
+  renderQuizQuestion();
+}
+
+document.getElementById("startQuizBtn").addEventListener("click", () => {
+  const len = parseInt(document.getElementById("quizLen").value, 10);
+  const mode = document.getElementById("quizMode").value;
+  startQuiz(pickQuizQuestions(len, mode));
+});
+
+document.getElementById("reviewMissedBtn").addEventListener("click", () => {
+  const missed = QUESTIONS.filter(q => getStat(q.id).lastResult === "wrong");
+  if (!missed.length) {
+    alert("No questions are currently marked wrong. Take a quiz first, or nice work — you're clean!");
+    return;
+  }
+  missed.sort(() => Math.random() - 0.5);
+  startQuiz(missed);
+});
+
+function renderQuizQuestion() {
+  const area = document.getElementById("quizArea");
+  if (quizIndex >= quizQueue.length) {
+    area.innerHTML = `<div class="card">
+      <div class="qtext">Session complete: ${quizScore} / ${quizQueue.length} correct</div>
+      <div class="small sys">Progress has been saved. Check "My progress" for what's still missed, or start another round above.</div>
+    </div>`;
+    return;
+  }
+  const q = quizQueue[quizIndex];
+  const letters = ["A","B","C","D"];
+  const optHtml = q.options.map((opt, i) =>
+    `<button class="option" data-idx="${i}"><span class="optkey">${letters[i]}.</span>${opt}</button>`
+  ).join("");
+  area.innerHTML = `<div class="card">
+    <div class="qmeta">
+      <span>Question ${quizIndex+1} of ${quizQueue.length}</span>
+      <span class="badge">Section 6 · MCP</span>
+    </div>
+    <div class="qtext">${q.q}</div>
+    <div id="quizOptions">${optHtml}</div>
+    <div id="quizFeedback"></div>
+    <div id="quizNextWrap"></div>
+  </div>`;
+  document.querySelectorAll("#quizOptions .option").forEach(btn => {
+    btn.addEventListener("click", () => handleQuizAnswer(q, parseInt(btn.dataset.idx,10)));
+  });
+}
+
+function handleQuizAnswer(q, idx) {
+  const correct = idx === q.correct;
+  if (correct) quizScore += 1;
+  recordAnswer(q.id, correct);
+  document.querySelectorAll("#quizOptions .option").forEach((btn, i) => {
+    btn.classList.add("disabled");
+    btn.disabled = true;
+    if (i === q.correct) btn.classList.add("correct");
+    else if (i === idx) btn.classList.add("wrong");
+  });
+  document.getElementById("quizFeedback").innerHTML =
+    `<div class="feedback ${correct ? "good" : "bad"}">${correct ? "Correct." : "Not quite."}</div>
+     <div class="explain"><strong>Why:</strong> ${q.explain}</div>`;
+  document.getElementById("quizNextWrap").innerHTML = `<button class="primary" id="nextQBtn" style="margin-top:12px;">${quizIndex+1 < quizQueue.length ? "Next question" : "See results"}</button>`;
+  document.getElementById("nextQBtn").addEventListener("click", () => { quizIndex += 1; renderQuizQuestion(); });
+}
+
+/* ---------- PROGRESS ---------- */
+function masteryColor(mastery) {
+  if (mastery >= 3) return "#3d7a4a";
+  if (mastery === 2) return "#8bc34a";
+  if (mastery === 1) return "#e0a34a";
+  return "#cfcfd4";
+}
+function renderProgress() {
+  const total = QUESTIONS.length;
+  let masteredCount = 0, sumMastery = 0, missedCount = 0;
+  QUESTIONS.forEach(q => {
+    const s = getStat(q.id);
+    sumMastery += s.mastery;
+    if (s.mastery >= 3) masteredCount += 1;
+    if (s.lastResult === "wrong") missedCount += 1;
+  });
+  const pct = Math.round((sumMastery / (total * 3)) * 100);
+  const acc = state.totalAnswers ? Math.round((state.totalCorrect / state.totalAnswers) * 100) : 0;
+
+  document.getElementById("statGrid").innerHTML = `
+    <div class="stat-box"><div class="stat-num">${masteredCount}/${total}</div><div class="stat-label">Mastered</div></div>
+    <div class="stat-box"><div class="stat-num">${missedCount}</div><div class="stat-label">Currently missed</div></div>
+    <div class="stat-box"><div class="stat-num">${state.totalAnswers||0}</div><div class="stat-label">Answers given</div></div>
+    <div class="stat-box"><div class="stat-num">${acc}%</div><div class="stat-label">Accuracy</div></div>
+  `;
+  document.getElementById("masteryBar").style.width = pct + "%";
+  document.getElementById("masteryLabel").textContent = pct + "% overall mastery across " + total + " questions";
+
+  const missed = QUESTIONS.filter(q => getStat(q.id).lastResult === "wrong")
+    .sort((a,b) => getStat(b.id).wrong - getStat(a.id).wrong);
+  let html;
+  if (!missed.length) {
+    html = `<div class="small sys">Nothing currently marked wrong. Take the quiz to build up a review queue.</div>`;
+  } else {
+    html = `<table><thead><tr><th></th><th>Question</th><th>Times wrong</th><th>Seen</th></tr></thead><tbody>`;
+    missed.forEach(q => {
+      const s = getStat(q.id);
+      const qtext = q.q.length > 90 ? q.q.slice(0,87) + "…" : q.q;
+      html += `<tr><td><span class="mastery-dot" style="background:${masteryColor(s.mastery)}"></span></td><td>${qtext}</td><td>${s.wrong}</td><td>${s.seen}</td></tr>`;
+    });
+    html += `</tbody></table>`;
+  }
+  document.getElementById("weakTable").innerHTML = html;
+}
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (confirm("Reset all quiz progress for this section? This can't be undone.")) {
+    state = { q: {}, totalAnswers: 0, totalCorrect: 0 };
+    saveState();
+    renderProgress();
+  }
+});
+
+/* ---------- INIT ---------- */
+renderProgress();
+</script>
+</body>
+</html>

@@ -1,0 +1,1586 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Building with the Claude API Quiz — CCA-F Quiz</title>
+  <style>
+    :root {
+      --ink: #242321;
+      --muted: #706b63;
+      --paper: #f7f3ec;
+      --paper-deep: #ece4d7;
+      --rust: #a84e31;
+      --rust-dark: #7d3825;
+      --line: #d6ccbd;
+      --white: #fffdfa;
+      --accent: #96652a;
+      --good: #3d7a4a;
+      --good-bg: #e6f0e4;
+      --bad: #a13a2e;
+      --bad-bg: #f7e6e2;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.7 Georgia, 'Times New Roman', serif;
+    }
+    main { max-width: 720px; margin: 0 auto; padding: 40px 22px 80px; }
+    .masthead {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+      border-bottom: 1px solid var(--line); padding-bottom: 10px;
+      color: var(--muted); font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .13em; text-transform: uppercase;
+    }
+    .masthead a { color: var(--muted); }
+    .kicker { display: block; margin: 22px 0 6px; color: var(--accent); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    h1 { max-width: 680px; margin: 0 0 10px; font: 700 clamp(1.8rem, 6vw, 2.7rem)/1.08 Georgia, serif; letter-spacing: -.02em; }
+    .dek { max-width: 640px; margin: 0 0 24px; color: var(--muted); font-size: 1.02rem; }
+    p { max-width: 70ch; margin: 0 0 13px; }
+    a { color: var(--rust-dark); }
+    code { background: var(--paper-deep); padding: .08em .28em; border-radius: 3px; }
+
+    nav.crumbs { font: 600 12px/1.5 system-ui, sans-serif; color: var(--muted); margin-bottom: 6px; }
+    nav.crumbs a { color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--line); }
+    nav.crumbs a:hover { color: var(--rust-dark); border-color: var(--rust-dark); }
+
+    .tabs { display: flex; gap: 4px; margin: 26px 0 18px; border-bottom: 1px solid var(--line); }
+    .tab {
+      padding: 9px 14px; cursor: pointer; font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .04em;
+      color: var(--muted); border-bottom: 2px solid transparent; user-select: none; background: none; border-top: none; border-left: none; border-right: none;
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .card {
+      background: var(--white); border: 1px solid var(--line); border-radius: 3px;
+      padding: 20px 22px; margin-bottom: 14px;
+    }
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+    select, button {
+      font: 600 13px/1.3 system-ui, sans-serif; padding: 8px 13px; border-radius: 3px; border: 1px solid var(--line);
+      background: var(--white); color: var(--ink); cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: var(--white); border-color: var(--accent); }
+    button.primary:hover { filter: brightness(1.08); }
+    button.ghost { background: var(--white); color: var(--accent); border-color: var(--line); }
+    button.ghost:hover { background: var(--paper-deep); }
+    .small { font: 400 13px/1.5 Georgia, serif; color: var(--muted); }
+    .small.sys { font: 400 12.5px/1.5 system-ui, sans-serif; color: var(--muted); }
+
+    .qmeta { display: flex; justify-content: space-between; align-items: center; font: 600 12px/1.4 system-ui, sans-serif; color: var(--muted); margin-bottom: 10px; }
+    .badge { font: 700 10.5px/1.4 system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: var(--paper-deep); color: var(--rust-dark); }
+    .qtext { font: 700 1.18rem/1.4 Georgia, serif; margin-bottom: 16px; }
+    .option {
+      display: block; width: 100%; text-align: left; padding: 11px 14px; margin-bottom: 9px;
+      border: 1px solid var(--line); border-radius: 3px; background: var(--white);
+      font: 400 15px/1.5 Georgia, serif; color: var(--ink); cursor: pointer;
+    }
+    .option:hover:not(.disabled) { border-color: var(--accent); background: var(--paper); }
+    .option .optkey { display: inline-block; width: 20px; font-weight: 700; color: var(--muted); }
+    .option.correct { background: var(--good-bg); border-color: var(--good); }
+    .option.wrong { background: var(--bad-bg); border-color: var(--bad); }
+    .option.disabled { cursor: default; }
+    .feedback { font: 700 13px/1.5 system-ui, sans-serif; margin: 12px 0 4px; padding: 10px 13px; border-radius: 3px; }
+    .feedback.good { background: var(--good-bg); color: var(--good); }
+    .feedback.bad { background: var(--bad-bg); color: var(--bad); }
+    .explain { font: 400 15px/1.6 Georgia, serif; color: var(--ink); margin-top: 8px; padding: 12px 14px; background: var(--paper-deep); border-radius: 3px; }
+    .explain strong { color: var(--rust-dark); }
+
+    .progress-bar-outer { width: 100%; height: 8px; background: var(--paper-deep); border-radius: 999px; overflow: hidden; margin: 6px 0 2px; }
+    .progress-bar-inner { height: 100%; border-radius: 999px; background: var(--accent); }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 10px; margin-bottom: 14px; }
+    .stat-box { background: var(--white); border: 1px solid var(--line); border-radius: 3px; padding: 13px 14px; text-align: center; }
+    .stat-num { font: 700 1.5rem/1.2 Georgia, serif; color: var(--rust-dark); }
+    .stat-label { font: 600 10.5px/1.4 system-ui, sans-serif; color: var(--muted); margin-top: 3px; letter-spacing: .03em; text-transform: uppercase; }
+    table { width: 100%; border-collapse: collapse; font: 400 13.5px/1.5 Georgia, serif; }
+    th, td { text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font: 600 10.5px/1.4 system-ui, sans-serif; text-transform: uppercase; letter-spacing: .03em; }
+    .row-between { display: flex; justify-content: space-between; align-items: center; }
+    .mastery-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+
+    footer { margin-top: 34px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: .88rem; }
+    @media (max-width: 560px) {
+      main { padding: 26px 16px 60px; }
+      .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
+      .card { padding: 16px 16px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <div class="masthead"><a href="../index.html">CCA-F Study System</a><span>Section 3 · Claude API</span></div>
+
+  <nav class="crumbs"><a href="../index.html">Home</a> › <a href="index.html">Quizzes</a> › Section 3 · Claude API</nav>
+  <span class="kicker">Section 3 · Building with the Claude API</span>
+  <h1>Building with the Claude API Quiz</h1>
+  <p class="dek">102 multiple-choice questions covering the Messages API, tool use and the agent loop, structured output, RAG and context management, and workflow vs. agent orchestration patterns — the single heaviest-weighted section on the exam.</p>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="quiz">Quiz</button>
+    <button class="tab" data-tab="progress">My progress</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="panel active" id="panel-quiz">
+    <div class="card" id="quizSetup">
+      <div class="controls">
+        <select id="quizLen">
+          <option value="10">10 questions</option>
+          <option value="20">20 questions</option>
+          <option value="999" selected>All 102 questions</option>
+        </select>
+        <select id="quizMode">
+          <option value="weak" selected>Missed &amp; new first (recommended)</option>
+          <option value="random">Fully random</option>
+          <option value="sequential">In order</option>
+        </select>
+        <button class="primary" id="startQuizBtn">Start quiz</button>
+        <button class="ghost" id="reviewMissedBtn">Review only missed</button>
+      </div>
+      <div class="small sys">"Missed &amp; new first" weights questions you've gotten wrong or haven't seen, so review sessions target real gaps. "Review only missed" quizzes you exclusively on questions currently marked wrong.</div>
+    </div>
+    <div id="quizArea"></div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="panel" id="panel-progress">
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="card">
+      <div class="row-between"><strong style="font:700 13px/1.4 system-ui, sans-serif; color:var(--rust-dark);">Mastery</strong></div>
+      <div class="progress-bar-outer"><div class="progress-bar-inner" id="masteryBar" style="width:0%"></div></div>
+      <div class="small sys" id="masteryLabel" style="margin-top:6px;"></div>
+    </div>
+    <div class="card">
+      <div class="row-between"><strong style="font:700 13px/1.4 system-ui, sans-serif; color:var(--rust-dark);">Questions currently missed</strong></div>
+      <div id="weakTable" style="margin-top:8px;"></div>
+    </div>
+    <div class="card">
+      <div class="row-between">
+        <span class="small sys">Progress is saved in this browser and persists across visits.</span>
+        <button class="ghost" id="resetBtn">Reset progress</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>Source questions: <code>03-building-with-the-claude-api/quiz.md</code> · <a href="../03-building-with-the-claude-api/notes.md">section notes</a> · <a href="../lessons/0005-claude-api-agentic-orchestration.html">read the lesson</a></p>
+    <p><a href="index.html">← All section quizzes</a></p>
+  </footer>
+</main>
+
+<script>
+/* ---------- QUESTION BANK ---------- */
+const QUESTIONS = [
+  {
+    "id": "api001",
+    "q": "Which of the following correctly identifies the three layers of the Claude Platform and their shorthand relationship?",
+    "options": [
+      "Models, Tools, and Agents — build with models, scale on tools, run with agents",
+      "Tools, Skills, and MCP — build with tools, scale on skills, run with MCP",
+      "Primitives, Infrastructure, and Controls — build with primitives, scale on infrastructure, run with control",
+      "Primitives, Workflows, and Evaluations — build with primitives, scale on workflows, run with evaluations"
+    ],
+    "correct": 2,
+    "explain": "The Claude Platform's three layers are Primitives (Messages API, tool use, MCP, etc.), Infrastructure (managed agents, retries, observability), and Controls (dashboards, evals) — summarized as build with primitives, scale on infrastructure, run with control."
+  },
+  {
+    "id": "api002",
+    "q": "What three things must you specify in a basic messages.create call?",
+    "options": [
+      "A model, a temperature setting, and a system prompt",
+      "A model, a max_tokens limit, and a messages array (role + content)",
+      "A model, a max_tokens limit, and a tools array",
+      "An API key, a model, and a stop_sequences list"
+    ],
+    "correct": 1,
+    "explain": "Every basic Messages API call requires a model, a max_tokens ceiling, and a messages array containing the conversation's role/content turns."
+  },
+  {
+    "id": "api003",
+    "q": "Why should you always loop over response.content and check block types, rather than treating it as a plain string?",
+    "options": [
+      "Because response.content is always returned as a raw JSON string that must be parsed before use",
+      "Because response.content is an array of blocks — a single response can contain multiple block types like text, tool_use, and thinking",
+      "Because Claude returns blocks in random order and your code must re-sort them by timestamp",
+      "Because only the first block in the array is guaranteed to be valid and later blocks may be malformed"
+    ],
+    "correct": 1,
+    "explain": "response.content is an array, not a plain string — a single turn can include several block types (text, tool_use, thinking) that your code must handle individually."
+  },
+  {
+    "id": "api004",
+    "q": "Where should you store your Anthropic API key, and why?",
+    "options": [
+      "Hardcoded directly in the source file, with a comment flagging it as sensitive",
+      "In a public config.json file committed to the repository for easy team access",
+      "In a .env.local file, kept out of version control",
+      "In the browser's localStorage so the client app can retrieve it directly"
+    ],
+    "correct": 2,
+    "explain": "API keys belong in a .env.local file excluded from version control — hardcoding them in source is a common way they leak on platforms like GitHub."
+  },
+  {
+    "id": "api005",
+    "q": "Why should a client application never call the Anthropic API directly, and what's the correct request path instead?",
+    "options": [
+      "Because the Anthropic API rate-limits browser-originated traffic more aggressively than server traffic",
+      "Because the Anthropic API does not support CORS, so browser requests are silently dropped",
+      "Because calling directly exposes the API key to anyone inspecting the client; the client should instead send messages to your own backend server, which alone calls the Anthropic API",
+      "Because client apps are unable to parse the streaming response format the API returns"
+    ],
+    "correct": 2,
+    "explain": "A client app calling the API directly would expose the API key in devtools or a decompiled binary. The client should send requests to your own backend, and only that server — which keeps the key secret — calls Anthropic."
+  },
+  {
+    "id": "api006",
+    "q": "Which of the following correctly ranks the four model tiers from fastest/cheapest to most capable/expensive?",
+    "options": [
+      "Sonnet (fastest/cheapest) → Haiku (balanced) → Fable (deep reasoning) → Opus (most capable, highest cost)",
+      "Haiku (fastest/cheapest) → Opus (balanced) → Sonnet (deep reasoning) → Fable (most capable, highest cost)",
+      "Haiku (fastest/cheapest) → Sonnet (balanced) → Fable (deep reasoning) → Opus (most capable, highest cost)",
+      "Haiku (fastest/cheapest) → Sonnet (balanced) → Opus (deep reasoning) → Fable (most capable, highest cost)"
+    ],
+    "correct": 3,
+    "explain": "The tiers run Haiku (cheap/fast, high-volume tasks), Sonnet (balanced, most production work), Opus (deep reasoning, complex analysis), and Fable (most capable, reserved for the toughest problems at the highest cost)."
+  },
+  {
+    "id": "api007",
+    "q": "What's the recommended model-selection workflow before writing production code?",
+    "options": [
+      "Always start with Opus to establish a quality ceiling, then downgrade to a cheaper model only if it proves to be overkill",
+      "Set up a small eval (20–30 examples), test Haiku first, and step up to Sonnet or Opus only if quality falls short — pick the cheapest model whose output you'd actually ship",
+      "Run the task through all four models simultaneously and average their outputs to pick a middle-ground quality level",
+      "Choose the model tier based solely on how large the input context window needs to be"
+    ],
+    "correct": 1,
+    "explain": "The recommended workflow is to build a small eval (20–30 examples), test the cheapest model (Haiku) first, and only step up to Sonnet or Opus if quality genuinely requires it."
+  },
+  {
+    "id": "api008",
+    "q": "What does response.usage report, and why does it matter?",
+    "options": [
+      "The latency, in milliseconds, that the request took to complete",
+      "The model's confidence score for the generated response",
+      "Input and output token counts — the basis for your API bill",
+      "The number of tool calls Claude made during the turn"
+    ],
+    "correct": 2,
+    "explain": "response.usage reports input and output token counts, which is exactly what your API bill is calculated on."
+  },
+  {
+    "id": "api009",
+    "q": "What does stop_reason: \"tool_use\" signal in a Messages API response?",
+    "options": [
+      "That an error occurred while Claude was parsing the tool's JSON schema",
+      "That Claude has finished its turn and no further action is needed from your code",
+      "That the request exceeded max_tokens and the response was truncated mid-tool-call",
+      "That Claude wants to call a tool rather than finish its turn — your code should execute the tool and return the result"
+    ],
+    "correct": 3,
+    "explain": "stop_reason: tool_use means Claude is requesting a tool call, not ending its turn; your code must execute the tool and feed the result back, unlike end_turn which means Claude is done."
+  },
+  {
+    "id": "api010",
+    "q": "Which of the following correctly orders the four internal stages Claude's text generation process goes through for each response?",
+    "options": [
+      "Embedding → Tokenization → Generation → Contextualization",
+      "Tokenization → Contextualization → Embedding → Generation",
+      "Tokenization → Embedding → Contextualization → Generation",
+      "Parsing → Embedding → Contextualization → Sampling"
+    ],
+    "correct": 2,
+    "explain": "The four stages run in order: Tokenization (splitting input into tokens), Embedding (converting tokens to vectors), Contextualization (adjusting vectors based on neighboring tokens), and Generation (assigning probabilities and selecting the next token, repeated)."
+  },
+  {
+    "id": "api011",
+    "q": "Which of the following best describes what the temperature parameter controls?",
+    "options": [
+      "It controls how many output tokens Claude generates before automatically stopping",
+      "It controls the size of the context window available for the request",
+      "It controls randomness in token selection (0–1) — low values give deterministic, consistent output for factual tasks, high values favor more creative, varied output",
+      "It controls how many tool calls Claude is permitted to make within a single turn"
+    ],
+    "correct": 2,
+    "explain": "Temperature reshapes the probability distribution over next tokens: at 0, Claude deterministically picks the highest-probability token (good for factual/extraction tasks); near 1, lower-probability tokens get selected more often (good for creative tasks)."
+  },
+  {
+    "id": "api012",
+    "q": "Why must you manually resend the entire conversation history with every follow-up request to Claude?",
+    "options": [
+      "Because the context window automatically clears itself after every response is returned",
+      "Because the Anthropic API is stateless and stores no memory of previous messages between requests",
+      "Because Claude automatically discards messages older than ten turns for privacy reasons",
+      "Because resending history triggers a billing discount on the current request"
+    ],
+    "correct": 1,
+    "explain": "The API is stateless — each request is processed independently with no memory of prior turns, so the full message history must be resent for Claude to maintain context."
+  },
+  {
+    "id": "api013",
+    "q": "Which of the following correctly lists the five steps of the basic agent loop?",
+    "options": [
+      "Draft a prompt, create an eval dataset, feed inputs through Claude, grade outputs, and revise the prompt",
+      "Send a message with tools available, Claude responds with a final answer or tool-use request, your code executes the tool, you send the result back as a tool_result, and repeat until stop_reason is end_turn",
+      "Send a screenshot, Claude requests an action, your code executes it, you return a new screenshot, and repeat until done",
+      "Categorize the input, route to a specialized pipeline, execute the pipeline, evaluate the output, and repeat if it fails"
+    ],
+    "correct": 1,
+    "explain": "The basic agent loop is: send a message with tools, Claude responds with a final answer or a tool-use request, your code executes the tool, you return the result as a tool_result, and this repeats until stop_reason is end_turn."
+  },
+  {
+    "id": "api014",
+    "q": "What are the three parts of a tool definition?",
+    "options": [
+      "name, description, and output_schema",
+      "name, input_schema, and examples",
+      "name, description, and input_schema",
+      "description, input_schema, and tool_choice"
+    ],
+    "correct": 2,
+    "explain": "A tool definition consists of a name, a description (which Claude reads to decide whether/when to call it), and an input_schema."
+  },
+  {
+    "id": "api015",
+    "q": "What is the number one cause of an agent misfiring or failing to use an available tool?",
+    "options": [
+      "An input_schema that's overly strict about required fields",
+      "A vague tool description — Claude relies on it to decide whether and when to call the tool",
+      "Having too many tools available to Claude in a single request",
+      "A tool name that's too long for Claude to parse reliably"
+    ],
+    "correct": 1,
+    "explain": "Claude reads the tool description to decide whether and when to invoke a tool, so a vague description is the most common cause of an agent misfiring or ignoring an available tool."
+  },
+  {
+    "id": "api016",
+    "q": "What does the SDK's \"tool runner\" do for you?",
+    "options": [
+      "It automatically caches all tool results so future requests can skip re-execution",
+      "It validates that Claude's tool calls match a schema you wrote by hand, but leaves loop execution to you",
+      "It builds the JSON schema from your function's types/docs and runs the entire tool-use/tool-result loop internally, so you just call toolRunner(...) and .untilDone()",
+      "It only generates the tool's description text automatically, leaving the request/response loop for you to write"
+    ],
+    "correct": 2,
+    "explain": "The tool runner builds the JSON schema from your function's actual types/docs and runs the whole tool-use/tool-result loop internally, replacing a hand-written while loop and stop-reason switch."
+  },
+  {
+    "id": "api017",
+    "q": "Where does the effort parameter for extended thinking go, and what are its five levels?",
+    "options": [
+      "Inside the thinking block itself, with levels low, medium, high, and max",
+      "As a top-level request field, with levels off, low, medium, and high",
+      "Inside output_config, with levels low, medium, high (default), xhigh, and max",
+      "Inside output_config, with levels low, medium, high, and extreme"
+    ],
+    "correct": 2,
+    "explain": "The effort parameter for extended thinking lives inside output_config (not the thinking block) and has five levels: low, medium, high (the default), xhigh, and max."
+  },
+  {
+    "id": "api018",
+    "q": "When should you skip extended thinking?",
+    "options": [
+      "For simple classification, extraction, or boilerplate tasks, where thinking just adds latency and cost without improving results",
+      "For multi-step coding tasks that involve complex reasoning across many files",
+      "Whenever the temperature parameter is set close to zero",
+      "Whenever the context window is close to its token limit"
+    ],
+    "correct": 0,
+    "explain": "Extended thinking should be skipped for simple classification, extraction, or boilerplate tasks — it adds latency and cost without improving results on tasks that don't need deep reasoning."
+  },
+  {
+    "id": "api019",
+    "q": "What's the minimum thinking budget for extended thinking, and what is a \"redacted\" thinking block?",
+    "options": [
+      "Minimum 512 tokens; a redacted block is reasoning that was removed entirely, leaving no trace in the response",
+      "Minimum 1024 tokens, with max_tokens set higher than the budget; a redacted block is reasoning flagged by safety systems and encrypted — still returned with a cryptographic signature, but its content is hidden",
+      "Minimum 1024 tokens; a redacted block is a reasoning block that failed JSON parsing and was silently discarded",
+      "Minimum 2048 tokens; a redacted block is a short summary Claude generates in place of its full reasoning"
+    ],
+    "correct": 1,
+    "explain": "The thinking budget must be at least 1024 tokens (with max_tokens set higher to leave room for the answer). A redacted thinking block is reasoning flagged and encrypted by Anthropic's safety systems — still returned with a cryptographic signature to preserve continuity, but its content is hidden."
+  },
+  {
+    "id": "api020",
+    "q": "What's the key difference between a \"server tool\" and a \"client tool\"?",
+    "options": [
+      "Server tools run on your own infrastructure; client tools run on Anthropic's servers",
+      "Server tools require a full agent loop to get results; client tools return their results in the same response with no loop needed",
+      "Server tools are declared by you but executed by Anthropic server-side, with the result returned in the same response; client tools run where your own code runs",
+      "Server tools are only available as a beta feature; client tools are generally available to all accounts"
+    ],
+    "correct": 2,
+    "explain": "Server tools (web search, code execution, web fetch) are declared by you but run server-side by Anthropic, with results returned in the same response and no agent loop needed. Client tools (like memory or bash) run wherever your own code runs."
+  },
+  {
+    "id": "api021",
+    "q": "For the built-in text editor tool, what does Anthropic provide vs. what must you build?",
+    "options": [
+      "Anthropic provides both the schema and the working implementation; you only need to enable the tool",
+      "You provide the schema; Anthropic hosts and runs the implementation server-side",
+      "Anthropic provides the full implementation and sandbox; you only supply file paths to read",
+      "Anthropic provides the tool schema; you must write the actual implementation that performs the file reads/writes/edits"
+    ],
+    "correct": 3,
+    "explain": "For the built-in text editor tool, Anthropic provides the schema so Claude knows how to request file operations, but you must write the implementation that actually performs the reads, writes, and edits."
+  },
+  {
+    "id": "api022",
+    "q": "What does enabling fine_grained=True for tool streaming change, and what's the trade-off?",
+    "options": [
+      "It increases latency slightly in exchange for guaranteed, always-valid JSON chunks",
+      "It disables the API's server-side JSON validation so chunks stream immediately, but your code must now handle potentially malformed JSON",
+      "It enables automatic retries whenever Claude produces an invalid tool call",
+      "It disables tool-call streaming entirely to conserve bandwidth"
+    ],
+    "correct": 1,
+    "explain": "fine_grained=True disables the API's server-side JSON validation so tool-call chunks stream as soon as Claude generates them, trading that speed for the responsibility of handling potentially malformed JSON yourself."
+  },
+  {
+    "id": "api023",
+    "q": "What response block type indicates Claude called a server-side tool like web search or code execution?",
+    "options": [
+      "A client_tool_use block",
+      "A tool_result block",
+      "A server_tool_use block",
+      "A server_response block"
+    ],
+    "correct": 2,
+    "explain": "A server_tool_use block indicates Claude called a server-side tool like web search or code execution, paired with a corresponding tool-result block."
+  },
+  {
+    "id": "api024",
+    "q": "What does \"environment inspection\" mean as an agent-design concept, and why does it matter?",
+    "options": [
+      "Automatically logging every tool call the agent makes for later audit purposes",
+      "Validating a tool's input schema before the request is sent to Claude",
+      "Restricting an agent to only read-only tools so it can never cause harm",
+      "Explicitly checking the environment's state before and after acting, rather than assuming an action landed as expected — since Claude can only perceive effects through tool results"
+    ],
+    "correct": 3,
+    "explain": "Environment inspection means checking state before and after acting (e.g. reading a file before editing, screenshotting after a click) rather than assuming success — Claude can only perceive effects through tool results, so skipping this makes the agent fly blind."
+  },
+  {
+    "id": "api025",
+    "q": "What problem does the \"batch tool\" trick solve, and how does it work?",
+    "options": [
+      "It automatically retries failed tool calls in the background without involving Claude",
+      "It caches previous tool results so identical calls don't need to be re-executed",
+      "It collapses several independent tool calls into one round trip: Claude packs multiple calls into a single batch_tool request, and your code executes them all and returns combined results",
+      "It merges multiple system prompts into a single consolidated instruction block"
+    ],
+    "correct": 2,
+    "explain": "The batch tool trick gives Claude a single batch_tool whose input schema accepts an array of sub-tool calls, letting it pack several independent tool invocations into one round trip instead of issuing them one at a time across multiple turns."
+  },
+  {
+    "id": "api026",
+    "q": "What are the three fields of a tool_result block?",
+    "options": [
+      "tool_use_id, content, and timestamp",
+      "name, content, and is_error",
+      "tool_use_id, status, and content",
+      "tool_use_id, content, and is_error"
+    ],
+    "correct": 3,
+    "explain": "A tool_result block has tool_use_id (matching the original request), content (the tool's output), and is_error (a boolean flag indicating whether execution failed)."
+  },
+  {
+    "id": "api027",
+    "q": "How do you force Claude to always call a specific tool instead of letting it decide?",
+    "options": [
+      "Set temperature to 0 and include only one tool in the tools array",
+      "Use assistant message prefilling containing the tool's expected JSON output",
+      "Pass tool_choice: {\"type\": \"tool\", \"name\": \"your_tool_name\"} — this guarantees Claude calls that tool, which is more reliable than prefilling for structured extraction",
+      "Set max_tokens to exactly match the tool's expected input size"
+    ],
+    "correct": 2,
+    "explain": "Passing tool_choice with type 'tool' and a specific name forces Claude to call that tool, guaranteeing arguments matching its input_schema — more reliable for structured data extraction than prefilling plus stop sequences."
+  },
+  {
+    "id": "api028",
+    "q": "For Anthropic's built-in web search tool, what's the schema type, and what's the default cap on searches per request?",
+    "options": [
+      "web_search_20240620, with max_uses defaulting to 10 searches per request",
+      "web_search_20250305, with max_uses defaulting to 5 searches per request",
+      "websearch_tool_v1, with max_uses defaulting to 5 searches per request",
+      "web_search_20250305, with max_uses defaulting to 3 searches per request"
+    ],
+    "correct": 1,
+    "explain": "The built-in web search tool uses schema type web_search_20250305, and max_uses defaults to 5 searches per request (configurable, with an optional allowed_domains restriction)."
+  },
+  {
+    "id": "api029",
+    "q": "What's the one-line distinction between Tools, Skills, and MCP?",
+    "options": [
+      "Tools = third-party services, Skills = your systems, MCP = your processes",
+      "Tools = your processes and procedures, Skills = third-party services, MCP = your own systems",
+      "Tools = your systems (you own the code), Skills = your processes/procedures (instructions, not integrations), MCP = third-party services (the provider owns the integration)",
+      "Tools = your own systems, Skills = third-party services, MCP = your processes and procedures"
+    ],
+    "correct": 2,
+    "explain": "Tools are systems you own and code yourself, Skills are your own processes/procedures expressed as instructions (not integrations), and MCP connects to third-party services whose integration the provider owns."
+  },
+  {
+    "id": "api030",
+    "q": "What two things does a Claude API request need to connect to and use an MCP server?",
+    "options": [
+      "An mcp_servers entry and a manually written JSON schema for each of the server's tools",
+      "An mcp_servers entry declaring the connection (type, URL, name, optional auth token) and a tools entry of type mcp_toolset naming the server",
+      "A tools entry of type mcp_toolset and a separate OAuth app registration for every individual tool",
+      "An mcp_servers entry and an explicit input_schema written for the server's default tool"
+    ],
+    "correct": 1,
+    "explain": "You need an mcp_servers entry declaring the connection (type, URL, name, optional auth) plus a tools entry of type mcp_toolset naming that server, which grants access to its tools by default."
+  },
+  {
+    "id": "api031",
+    "q": "When calling an MCP server from the Claude API, do you need to write JSON schemas for its tools yourself?",
+    "options": [
+      "Yes, you must manually mirror each tool's JSON schema in your own request",
+      "Yes, but only for tools that accept file uploads or binary data",
+      "No — Claude introspects the MCP server and discovers its tools and schemas automatically",
+      "No, but you must still supply example input/output pairs for each tool by hand"
+    ],
+    "correct": 2,
+    "explain": "You don't write JSON schemas for an MCP server's tools yourself — Claude introspects the server and discovers its tools and schemas automatically."
+  },
+  {
+    "id": "api032",
+    "q": "How do you restrict an MCP toolset to read-only access (e.g., allow search but block posting)?",
+    "options": [
+      "Set the mcp_servers entry's auth token to a read-only API scope",
+      "List only the desired read tool names directly in the tools array instead of using mcp_toolset",
+      "Set default_config enabled: true, then explicitly disable each individual write tool in configs",
+      "Set default_config: {\"enabled\": false} to disable everything by default, then explicitly enable only the specific read tools you want in configs"
+    ],
+    "correct": 3,
+    "explain": "You disable everything by default with default_config: {enabled: false}, then explicitly enable only the read-only tools you want in configs — safer than trying to disable each write tool individually."
+  },
+  {
+    "id": "api033",
+    "q": "What tool-design principle does Claude Code's own toolset (bash, read, write, edit, glob, grep) illustrate?",
+    "options": [
+      "Give agents as many hyper-specialized tools as possible so every scenario has a dedicated action",
+      "Give agents abstract, combinable tools rather than hyper-specialized ones, letting Claude creatively combine primitives for situations the developer never anticipated",
+      "Restrict agents to a single all-purpose tool to minimize the surface area for errors",
+      "Give agents tools that mirror the exact steps of a known, predefined workflow"
+    ],
+    "correct": 1,
+    "explain": "Claude Code's toolset (bash, read, write, edit, glob, grep) illustrates giving agents abstract, combinable tools rather than hyper-specialized ones, so Claude can creatively combine primitives to handle unanticipated situations."
+  },
+  {
+    "id": "api034",
+    "q": "What's the difference between an MCP resource and an MCP tool?",
+    "options": [
+      "Resources are invoked reactively when Claude decides to call them; tools proactively expose data without Claude's involvement",
+      "Resources proactively expose data for direct client access via a URI; tools are invoked reactively, with Claude deciding when to call them to perform an action",
+      "Resources and tools are functionally identical — the terms are just different naming conventions used by different MCP servers",
+      "Resources always require authentication to access; tools never require authentication"
+    ],
+    "correct": 1,
+    "explain": "Resources proactively expose data (e.g., document contents) that a client fetches directly via a URI without Claude deciding anything; tools are invoked reactively, with Claude choosing when to call them to perform an action."
+  },
+  {
+    "id": "api035",
+    "q": "What are MCP prompts, and how do they typically appear to a user in a client application?",
+    "options": [
+      "System-level instructions that Anthropic automatically injects into every request using that server",
+      "Cached responses that let the client skip calling Claude entirely for frequently asked questions",
+      "Error messages returned to the user whenever a tool call fails schema validation",
+      "Pre-defined, pre-tested prompt templates an MCP server exposes for its domain, typically appearing as autocomplete/slash-command options that prompt the user for arguments"
+    ],
+    "correct": 3,
+    "explain": "MCP prompts are pre-defined, pre-tested templates a server exposes for its domain so users don't write ad-hoc prompts — commonly surfaced in clients as autocomplete or slash-command options that ask for required arguments."
+  },
+  {
+    "id": "api036",
+    "q": "Which of the following correctly names Anthropic's four context-management patterns?",
+    "options": [
+      "Just-in-time context, prompt caching, chunking, and reranking",
+      "Just-in-time context, server-side compaction, prompt caching, and the memory tool",
+      "Server-side compaction, prompt caching, the memory tool, and contextual retrieval",
+      "Just-in-time context, server-side compaction, hybrid search, and the memory tool"
+    ],
+    "correct": 1,
+    "explain": "Anthropic's four context-management patterns are just-in-time context, server-side compaction, prompt caching, and the memory tool."
+  },
+  {
+    "id": "api037",
+    "q": "Which of the four context-management patterns is a design pattern rather than an API feature?",
+    "options": [
+      "Server-side compaction",
+      "Prompt caching",
+      "The memory tool",
+      "Just-in-time context"
+    ],
+    "correct": 3,
+    "explain": "Just-in-time context is a design strategy (look up what you need when you need it) rather than an API feature you enable with a flag, unlike compaction, caching, or the memory tool."
+  },
+  {
+    "id": "api038",
+    "q": "How do you enable server-side compaction in an API request, and what does it do?",
+    "options": [
+      "Set compaction: true at the top level of the request body",
+      "Add context_management: {\"edits\": [{\"type\": \"compact\"}]} — the API automatically summarizes old turns into a single block once input crosses a trigger threshold",
+      "Add a system message instructing Claude to periodically summarize its own conversation history",
+      "It's enabled automatically for any conversation once it exceeds 1024 total tokens"
+    ],
+    "correct": 1,
+    "explain": "Server-side compaction is enabled by adding context_management: {edits: [{type: 'compact'}]} to the request; the API then automatically summarizes old turns once input crosses a trigger threshold, without you tracking conversation length."
+  },
+  {
+    "id": "api039",
+    "q": "For the memory tool, who implements the storage backend — Anthropic or you?",
+    "options": [
+      "Anthropic — the memory tool is fully managed server-side storage you never need to touch",
+      "You implement both the storage backend and the system instruction telling Claude to check memory",
+      "Anthropic provides the storage backend, but you must write your own instruction telling Claude to check memory first",
+      "You — Claude reads/writes to a memory directory via tool calls, but you own the actual storage; Anthropic auto-injects the instruction telling Claude to check memory first"
+    ],
+    "correct": 3,
+    "explain": "You implement the storage backend (file system, database, etc.) yourself; Claude just reads/writes to a memory directory via tool calls, while Anthropic automatically injects the system instruction telling Claude to check memory before starting."
+  },
+  {
+    "id": "api040",
+    "q": "How long does the prompt cache live, and what invalidates it?",
+    "options": [
+      "24 hours, invalidated only by changes to the system prompt",
+      "One hour, invalidated by any change to the content up to and including the cache breakpoint",
+      "One hour, invalidated only when the tools array changes",
+      "30 minutes, invalidated by any change anywhere in the request"
+    ],
+    "correct": 1,
+    "explain": "The prompt cache lives for one hour and is invalidated by any change to content up to and including the cache breakpoint — even adding a single word."
+  },
+  {
+    "id": "api041",
+    "q": "What's the minimum content size (in tokens) for something to be cacheable, and is it enabled automatically?",
+    "options": [
+      "512 tokens, and it's enabled automatically for system prompts only",
+      "1024 tokens, and it's enabled automatically once caching is turned on for the account",
+      "1024 tokens, and it's never automatic — you must manually add a cache breakpoint with cache_control: {\"type\": \"ephemeral\"}",
+      "2048 tokens, and it's never automatic — you must manually add a cache breakpoint"
+    ],
+    "correct": 2,
+    "explain": "Content must total at least 1024 tokens up to the breakpoint to be cacheable, and caching is never automatic — you must manually add a cache_control: {type: 'ephemeral'} breakpoint."
+  },
+  {
+    "id": "api042",
+    "q": "What two parts of a typical request are the best candidates for prompt caching, and why?",
+    "options": [
+      "User messages and tool results, since they repeat frequently across turns",
+      "System prompts and tool definitions, since they rarely change between requests",
+      "System prompts and the final assistant message, since they're reused for prefilling",
+      "Tool definitions and full conversation history, since they're the largest by token count"
+    ],
+    "correct": 1,
+    "explain": "System prompts and tool definitions are the best candidates for caching because they rarely change between requests, making them ideal for reuse."
+  },
+  {
+    "id": "api043",
+    "q": "What processing order does Claude use for a request (relevant to placing cache breakpoints), and how many breakpoints can you set?",
+    "options": [
+      "System prompt, then tools, then messages; up to 4 breakpoints",
+      "Tools, then messages, then system prompt; up to 2 breakpoints",
+      "Tools, then system prompt, then messages; up to 4 breakpoints",
+      "Tools, then system prompt, then messages; up to 2 breakpoints"
+    ],
+    "correct": 2,
+    "explain": "Claude processes a request in the order tools, then system prompt, then messages, and you can set up to 4 cache breakpoints total."
+  },
+  {
+    "id": "api044",
+    "q": "In a response's usage field, what's the difference between cache_creation_input_tokens and cache_read_input_tokens?",
+    "options": [
+      "cache_creation_input_tokens counts tokens read from an existing cache; cache_read_input_tokens counts tokens written to the cache for the first time",
+      "cache_creation_input_tokens counts tokens written to the cache on the first request (the write cost); cache_read_input_tokens counts tokens retrieved from an existing cache on a later matching request (the cheaper reuse)",
+      "Both fields measure the exact same token count, just reported at different stages of the response",
+      "cache_creation_input_tokens counts output tokens generated; cache_read_input_tokens counts input tokens sent"
+    ],
+    "correct": 1,
+    "explain": "cache_creation_input_tokens is the cost of first writing content to the cache; cache_read_input_tokens is the (cheaper) cost of retrieving that content from cache on a later matching request."
+  },
+  {
+    "id": "api045",
+    "q": "Why is the Files API paired with code execution, given the code execution sandbox has no network access?",
+    "options": [
+      "The Files API speeds up code execution by pre-compiling any uploaded scripts before running them",
+      "The Files API is required to authenticate the sandbox environment with Anthropic's servers",
+      "The Files API lets the sandbox persist its internal state between otherwise separate execution sessions",
+      "The sandbox has no network access, so the Files API is the only way to get data in (via container_upload) and get generated outputs back out"
+    ],
+    "correct": 3,
+    "explain": "Since the Docker code execution sandbox can't make external network calls, the Files API is the only channel to upload data in (referenced by file ID) and retrieve generated outputs back out."
+  },
+  {
+    "id": "api046",
+    "q": "When an image and text appear in the same message, which should come first, and why does it matter?",
+    "options": [
+      "The text describing the image should come first, so Claude has context before seeing it",
+      "The image block should come before the text describing it, helping Claude match descriptions to the right image",
+      "Order never matters as long as captions or labels are present somewhere in the message",
+      "Images must always be placed as the very last block in the message, after all text"
+    ],
+    "correct": 1,
+    "explain": "The image block should come before the text describing it — combined with clear labels for multiple images — so Claude can unambiguously match each description to the right image."
+  },
+  {
+    "id": "api047",
+    "q": "What can Claude read from a PDF document block that a plain OCR text dump would miss?",
+    "options": [
+      "Only the extracted plain text, identical to what a standard OCR tool would produce",
+      "Metadata such as the PDF's author and creation date, but not its actual content",
+      "The document's embedded fonts, but not the layout of tables or charts",
+      "The visual layout — tables, charts, and embedded images — not just the extracted text, since Claude processes the PDF as a structured document block"
+    ],
+    "correct": 3,
+    "explain": "Claude processes a PDF as a document block that preserves visual structure — tables, charts, embedded images — going beyond what a plain OCR text dump would capture."
+  },
+  {
+    "id": "api048",
+    "q": "What are the two citation location types, and when is each used?",
+    "options": [
+      "citation_page_location for plain text and citation_char_location for PDFs",
+      "citation_line_location for PDFs and citation_char_location for plain text",
+      "citation_page_location for PDFs and citation_char_location for plain text",
+      "citation_page_location for PDFs and citation_word_location for plain text"
+    ],
+    "correct": 2,
+    "explain": "citation_page_location (page start/end) is used for PDFs, and citation_char_location (character start/end index) is used for plain text — both require enabling citations on the source document block."
+  },
+  {
+    "id": "api049",
+    "q": "Which of the following correctly describes the Computer Use loop in order?",
+    "options": [
+      "Send Claude a screenshot, Claude requests a computer action as a tool call, your code executes it in a sandboxed environment, your code takes a new screenshot and returns it as the tool result, repeat until done",
+      "Claude requests a screenshot, your code takes and sends it, Claude analyzes it silently, then ends the turn with a summary",
+      "Send Claude the full DOM as text, Claude requests an action by element ID, your code executes it, repeat until the DOM stops changing",
+      "Take a screenshot, run OCR on it, send Claude the extracted text, Claude responds with the next click coordinates"
+    ],
+    "correct": 0,
+    "explain": "The Computer Use loop mirrors the standard agent loop: send a screenshot, Claude requests an action (click, type, key) as a tool call, your code executes it sandboxed, a new screenshot is returned as the tool result, and this repeats until done."
+  },
+  {
+    "id": "api050",
+    "q": "Why must Computer Use run against a sandboxed VM/container rather than a real production desktop?",
+    "options": [
+      "Because production desktops don't support the screenshot image format Claude's Computer Use tool requires",
+      "Because sandboxing is a prerequisite for enabling prompt caching on Computer Use requests",
+      "Because Claude can take arbitrary UI actions to accomplish a goal, and an unsandboxed environment gives no containment if it does something unintended",
+      "Because unsandboxed environments are technically unable to return tool_result blocks to the API"
+    ],
+    "correct": 2,
+    "explain": "Computer Use lets Claude take arbitrary clicks, keystrokes, and shell commands to accomplish a goal, so it must run in a sandboxed VM/container — an unsandboxed production desktop offers no containment if something goes wrong."
+  },
+  {
+    "id": "api051",
+    "q": "What's the maximum number of images allowed in a single Claude request, and how does Claude charge for image tokens?",
+    "options": [
+      "50 images max per request, charged by file size in kilobytes",
+      "100 images max per request, charged by file size in kilobytes rather than pixel dimensions",
+      "20 images max per request, charged based on pixel dimensions",
+      "100 images max per request, charged based on pixel dimensions (height × width) regardless of file format"
+    ],
+    "correct": 3,
+    "explain": "A request can include up to 100 images, and Claude charges for image tokens based on pixel dimensions (height × width) — larger images cost more tokens regardless of file format."
+  },
+  {
+    "id": "api052",
+    "q": "What are the five steps of the prompt-engineering iteration cycle?",
+    "options": [
+      "Draft a prompt, create an eval dataset, feed inputs through Claude, feed outputs through a grader, revise and repeat",
+      "Set a goal, write an initial prompt, evaluate it, apply a technique, re-evaluate (repeat the last two)",
+      "Write an initial prompt, add XML tags, add few-shot examples, add a system prompt, ship to production",
+      "Set a goal, choose a model, write a prompt, ship it, and monitor error rates in production"
+    ],
+    "correct": 1,
+    "explain": "The prompt-engineering iteration cycle runs: set a goal, write an initial prompt, evaluate it, apply a technique, then re-evaluate — repeating the apply/re-evaluate steps."
+  },
+  {
+    "id": "api053",
+    "q": "What's the difference between being \"clear\" and being \"direct\" in a prompt's opening line?",
+    "options": [
+      "Clear means phrasing the request as an instruction starting with an action verb; direct means using simple, unambiguous language",
+      "Clear and direct are two words for the same requirement — using plain English instead of jargon",
+      "Clear means using XML tags to separate instructions from data; direct means giving few-shot examples",
+      "Clear means simple, unambiguous language stating exactly what you want; direct means phrasing it as an instruction, starting with an action verb like 'Write' or 'Generate'"
+    ],
+    "correct": 3,
+    "explain": "Clear means stating exactly what you want in simple, unambiguous language; direct means phrasing that as an instruction (not a question), starting with an action verb like 'Write' or 'Generate'."
+  },
+  {
+    "id": "api054",
+    "q": "What are the two types of \"specificity\" you can add to a prompt, and when should each be used?",
+    "options": [
+      "Few-shot examples (use in every prompt) and XML tags (use only for complex tasks)",
+      "System prompts (use for persona) and user prompts (use for the actual request)",
+      "Output quality guidelines (use in almost every prompt) and process steps (use for complex/critical-thinking tasks, not simple requests)",
+      "Output quality guidelines (use only for creative tasks) and stop sequences (use for structured extraction)"
+    ],
+    "correct": 2,
+    "explain": "The two types of specificity are output quality guidelines (describing qualities like length, structure, tone — useful in almost every prompt) and process steps (explicit steps to follow, reserved for complex or critical-thinking tasks)."
+  },
+  {
+    "id": "api055",
+    "q": "When are XML tags most valuable in a prompt?",
+    "options": [
+      "Only when generating code, since XML tags aren't useful for natural-language tasks",
+      "Whenever extended thinking is enabled for the request",
+      "When including large amounts of context/data, mixing different content types, or interpolating multiple variables — they create clear boundaries between instructions and data",
+      "Whenever the temperature parameter is set above 0.5"
+    ],
+    "correct": 2,
+    "explain": "XML tags are most valuable when a prompt includes large amounts of context, mixes different content types (like code and documentation), or interpolates multiple variables — the tags create clear boundaries so Claude doesn't confuse instructions with data."
+  },
+  {
+    "id": "api056",
+    "q": "What's the difference between one-shot and multi-shot prompting?",
+    "options": [
+      "One-shot provides multiple examples covering edge cases; multi-shot provides a single canonical example",
+      "One-shot means zero examples with a detailed instruction; multi-shot means exactly one example",
+      "One-shot and multi-shot both refer to how many API calls the technique requires, not the number of examples",
+      "One-shot provides a single example to establish a pattern; multi-shot provides multiple examples, typically to cover different scenarios or edge cases"
+    ],
+    "correct": 3,
+    "explain": "One-shot prompting gives a single example to establish a pattern, while multi-shot gives multiple examples, typically to cover different scenarios or edge cases."
+  },
+  {
+    "id": "api057",
+    "q": "Where should you source your best few-shot examples from?",
+    "options": [
+      "Randomly sampled outputs from any prior production run, regardless of quality",
+      "Outputs generated by a cheaper model like Haiku, to keep example generation costs low",
+      "Hand-written hypothetical examples, since real outputs may contain unwanted artifacts",
+      "Your highest-scoring outputs from a prompt evaluation run, used as real input/output pairs along with context on why they're good"
+    ],
+    "correct": 3,
+    "explain": "The best few-shot examples come from your highest-scoring outputs in a prompt evaluation run — real input/output pairs, paired with context explaining why each one is good."
+  },
+  {
+    "id": "api058",
+    "q": "A meal-plan-generation prompt scored 2.32 as a naive request. Which single technique bumped it to 3.92, and which technique bumped it further to 7.86?",
+    "options": [
+      "Adding process steps got it to 3.92; adding XML tags got it further to 7.86",
+      "Being clear and direct got it to 7.86; adding specific output guidelines got it to 3.92",
+      "Adding few-shot examples got it to 3.92; chaining the prompt into two steps got it to 7.86",
+      "Being clear and direct got it to 3.92; adding specific output guidelines (calorie totals, macros, meal timing, portion sizes) got it to 7.86"
+    ],
+    "correct": 3,
+    "explain": "The naive prompt scored 2.32; making it clear and direct raised it to 3.92, and then adding specific output guidelines (calories, macros, timing, portions) raised it further to 7.86."
+  },
+  {
+    "id": "api059",
+    "q": "What is \"assistant message prefilling,\" and how does Claude treat the pre-filled text?",
+    "options": [
+      "Adding a system message describing the desired first sentence, which Claude then rewrites from scratch",
+      "Manually adding an assistant-role message at the end of the conversation; Claude continues generating from that exact endpoint, so you must concatenate the prefill with the generated continuation",
+      "A technique that only works when combined with a stop sequence — it has no effect used alone",
+      "Claude treating the prefilled text as a suggestion it may rewrite before continuing"
+    ],
+    "correct": 1,
+    "explain": "Assistant message prefilling means manually adding an assistant-role message before sending the request; Claude treats it as text it already wrote and continues from that exact point, so the full response requires concatenating the prefill with Claude's continuation."
+  },
+  {
+    "id": "api060",
+    "q": "How do stop sequences work, and is the matched stop-sequence text included in the final output?",
+    "options": [
+      "The matched stop-sequence text is included in the final output, appended right before generation halts",
+      "Stop sequences only take effect if they appear as the very first tokens of the response",
+      "You supply exact strings; the moment Claude generates one, generation halts immediately, and the matched text itself is excluded from the returned output",
+      "Stop sequences pause generation temporarily, allowing it to resume later in the same request"
+    ],
+    "correct": 2,
+    "explain": "Stop sequences are exact strings that immediately halt generation the moment Claude produces them — and the matched text itself is excluded from the returned output."
+  },
+  {
+    "id": "api061",
+    "q": "What's the difference between prompt engineering and prompt evaluation?",
+    "options": [
+      "Prompt engineering is measuring performance through automated testing; prompt evaluation is the toolkit of techniques for writing prompts",
+      "The two terms are interchangeable and refer to the same activity in this material",
+      "Prompt engineering is the toolkit of techniques for writing better prompts; prompt evaluation is measuring how well a prompt actually performs through automated/objective testing",
+      "Prompt evaluation always happens before prompt engineering begins, never after"
+    ],
+    "correct": 2,
+    "explain": "Prompt engineering is the set of techniques used to write better prompts, while prompt evaluation is the practice of measuring how well a prompt performs through automated, objective testing."
+  },
+  {
+    "id": "api062",
+    "q": "Which of the following correctly lists the five steps of a typical eval workflow?",
+    "options": [
+      "Set a goal, write an initial prompt, evaluate it, apply a technique, and re-evaluate",
+      "Draft a prompt, create an eval dataset, feed inputs through Claude, feed outputs through a grader, then change the prompt and repeat",
+      "Draft a prompt, run it once manually, ship it, then monitor production error rates",
+      "Create an eval dataset, feed it through a grader directly, skip Claude entirely, and score the dataset itself"
+    ],
+    "correct": 1,
+    "explain": "The eval workflow is: draft a prompt, create an eval dataset, feed the inputs through Claude, feed the outputs through a grader, then change the prompt and repeat."
+  },
+  {
+    "id": "api063",
+    "q": "Why use Haiku (rather than the model you're actually testing) to generate your eval dataset?",
+    "options": [
+      "Because only Haiku supports the JSON-prefill technique required to generate a clean dataset",
+      "Because using the same model you're testing to generate its own eval data would bias the results",
+      "Because Haiku has a larger context window that's better suited to bulk data generation",
+      "Because dataset generation isn't the task being evaluated, so a faster, cheaper model is appropriate and saves cost and time"
+    ],
+    "correct": 3,
+    "explain": "Generating the eval dataset isn't itself the task under evaluation, so it's fine — and cheaper/faster — to use Haiku rather than the model you're actually testing."
+  },
+  {
+    "id": "api064",
+    "q": "What API technique ensures clean JSON parsing when generating a dataset from Claude?",
+    "options": [
+      "Set response_format: \"json\" in the request body, with no need for prefilling or stop sequences",
+      "Prefill the assistant's response with an opening like ```json and set a stop sequence of [\"```\"], then json.loads() the returned text",
+      "Force a dedicated json_output tool with tool_choice instead of using prefill or stop sequences",
+      "Lower temperature to 0 and manually strip markdown code fences from the response after the fact"
+    ],
+    "correct": 1,
+    "explain": "Prefilling the response with an opening fence like ```json and setting a stop sequence of [\"```\"] ensures the returned text is clean JSON ready for json.loads()."
+  },
+  {
+    "id": "api065",
+    "q": "Which of the following correctly names the three types of graders and their use cases?",
+    "options": [
+      "Code grader (syntax, length, keyword checks), model grader (quality, instruction-following, safety), and cost grader (token spend per response)",
+      "Syntax grader, semantic grader, and human grader",
+      "Code grader (syntax validation, length checks, keyword presence), model grader (response quality, instruction-following, safety), and human grader (comprehensiveness, depth, nuanced relevance)",
+      "Model grader (quality), human grader (nuance), and latency grader (response speed)"
+    ],
+    "correct": 2,
+    "explain": "The three grader types are code graders (syntax, length, keyword checks), model graders (quality, instruction-following, safety), and human graders (comprehensiveness, depth, nuanced relevance)."
+  },
+  {
+    "id": "api066",
+    "q": "What critical piece of information should you ask a model grader for beyond just a numeric score, and why?",
+    "options": [
+      "A confidence percentage — without it, model graders tend to default to the maximum score regardless of quality",
+      "The exact model checkpoint that produced the response — without it, scores can't be reproduced",
+      "A simple pass/fail flag — without it, model graders always return a numeric pass",
+      "Strengths, weaknesses, and reasoning alongside the score — without that context, model graders tend to default to middling scores around 6 regardless of actual output quality"
+    ],
+    "correct": 3,
+    "explain": "Beyond a bare number, you should ask the model grader for strengths, weaknesses, and reasoning — without that context, model graders tend to cluster around a middling score (around 6) regardless of true quality."
+  },
+  {
+    "id": "api067",
+    "q": "Roughly how many test cases should you use during active prompt-development iteration vs. final validation?",
+    "options": [
+      "10–15 cases during active development, scaling to 20–30 for final validation",
+      "Hundreds of cases during active development, narrowing to 2–3 for final validation",
+      "Small, 2–3 cases during active development for fast iteration, scaling up to tens or hundreds for final validation",
+      "Exactly 5 cases at both stages, to keep the evaluation process consistent"
+    ],
+    "correct": 2,
+    "explain": "During active prompt-development iteration, a small set (2–3 cases) is enough for fast iteration; final validation should scale up to tens or hundreds of cases."
+  },
+  {
+    "id": "api068",
+    "q": "What are the three paths an engineer can take after writing a first draft of a prompt, and which two are considered traps?",
+    "options": [
+      "Paths 2 and 3 are traps; testing once or twice and shipping directly (path 1) is the only recommended approach",
+      "Path 3 — running a proper evaluation pipeline — is the trap, since it's too slow for most real projects",
+      "Testing once or twice then shipping, and testing a few custom inputs then tweaking and shipping, are both traps; only running the prompt through a proper evaluation pipeline for objective scoring is recommended",
+      "All three paths are equally valid, and the choice should depend only on the team's available time"
+    ],
+    "correct": 2,
+    "explain": "Of the three paths — ship after minimal testing, tweak for a few custom inputs then ship, or run a full evaluation pipeline — the first two are traps because they feel like validation but give no objective measure across the input space; only the evaluation pipeline is recommended."
+  },
+  {
+    "id": "api069",
+    "q": "What problem does RAG solve, and how, at a high level?",
+    "options": [
+      "Claude's inability to access the internet for up-to-date information",
+      "The need to fine-tune a model on an organization's private data",
+      "Documents too large to fit in a single prompt — RAG preprocesses documents into chunks and retrieves only the chunks relevant to the query at query time",
+      "Slow response times caused by having too many tools available in a request"
+    ],
+    "correct": 2,
+    "explain": "RAG solves the problem of documents too large to fit in a single prompt by preprocessing documents into chunks and retrieving, at query time, only the chunks most relevant to the user's question."
+  },
+  {
+    "id": "api070",
+    "q": "Which of the following correctly names the four text-chunking strategies and a trade-off for each?",
+    "options": [
+      "Size-based, keyword-based, sentence-based, and semantic-based",
+      "Size-based, structure-based, paragraph-based, and embedding-based",
+      "Token-based, structure-based, sentence-based, and semantic-based",
+      "Size-based (simple but can cut mid-sentence), structure-based (clean but needs document structure), sentence-based (practical middle ground), and semantic-based (most relevant but expensive)"
+    ],
+    "correct": 3,
+    "explain": "The four chunking strategies are size-based (simple/reliable, can cut mid-sentence), structure-based (clean chunks, needs reliable structure), sentence-based (a practical middle ground), and semantic-based (most relevant, computationally expensive)."
+  },
+  {
+    "id": "api071",
+    "q": "Which chunking strategy is the common production default, and why?",
+    "options": [
+      "Semantic-based chunking, because it produces the most relevant chunks regardless of cost",
+      "Structure-based chunking, because most production documents have reliable headings",
+      "Sentence-based chunking, because it guarantees chunks never cut mid-sentence",
+      "Size-based chunking with overlap, because it's simple, reliable, and works with any content type including code"
+    ],
+    "correct": 3,
+    "explain": "Size-based chunking with overlap is the common production default because it's simple, reliable, and works across any content type, including code — the overlap prevents sentences from being lost at chunk boundaries."
+  },
+  {
+    "id": "api072",
+    "q": "Which of the following best describes a text embedding?",
+    "options": [
+      "A compressed copy of the original text that remains individually human-readable",
+      "A keyword frequency table used for exact lexical matching",
+      "A hash of the text used purely to detect exact duplicate documents",
+      "A numerical vector representation of a text's meaning, where each dimension is a value between -1 and +1 and isn't individually human-interpretable"
+    ],
+    "correct": 3,
+    "explain": "A text embedding is a numerical vector representation of meaning, with each dimension a value between -1 and +1 — individual dimensions aren't directly interpretable by humans, but nearby meanings land near each other in the vector space."
+  },
+  {
+    "id": "api073",
+    "q": "Does Anthropic provide an embeddings API? What's the recommended alternative?",
+    "options": [
+      "Yes, via a dedicated embeddings endpoint on the Messages API",
+      "No — the recommended provider is OpenAI's embeddings API",
+      "No — the recommended provider is VoyageAI, which requires its own separate account and API key",
+      "No, and there is no recommended alternative — you must train your own embedding model"
+    ],
+    "correct": 2,
+    "explain": "Anthropic doesn't provide an embeddings API; the recommended alternative is VoyageAI, which requires its own separate account and VOYAGE_API_KEY."
+  },
+  {
+    "id": "api074",
+    "q": "Why does semantic search alone sometimes fail for queries like a specific incident ID (e.g., \"INC-2023-Q4-011\")?",
+    "options": [
+      "Because embedding models are mathematically unable to represent numbers or alphanumeric strings",
+      "Because semantic search only indexes the first sentence of each chunk, ignoring the rest",
+      "Because incident IDs are automatically stripped out during the chunking preprocessing step",
+      "Because semantic search optimizes for conceptual/meaning similarity, not exact term matching, so it can miss the chunk that literally contains the specific ID"
+    ],
+    "correct": 3,
+    "explain": "Semantic search ranks by conceptual similarity rather than exact string matching, so it can fail to surface the one chunk that literally contains a specific incident ID."
+  },
+  {
+    "id": "api075",
+    "q": "Which of the following correctly lists the four steps of the BM25 algorithm?",
+    "options": [
+      "Embed the query → compute cosine similarity → weight by document length → return the top-K nearest vectors",
+      "Tokenize the query → count term frequency across documents → weight rarer terms more heavily than common ones → return documents containing the most instances of the highest-weighted terms",
+      "Tokenize the query → weight all terms equally → count document length → return the shortest matching documents",
+      "Chunk the documents → embed each chunk → tokenize the query → return documents with the closest embedding"
+    ],
+    "correct": 1,
+    "explain": "BM25 works by tokenizing the query, counting term frequency across documents, weighting rarer terms more heavily than common ones, and returning documents with the most instances of the highest-weighted terms."
+  },
+  {
+    "id": "api076",
+    "q": "What is \"hybrid search\" in a RAG pipeline, and why use it?",
+    "options": [
+      "Running semantic search twice with two different embedding models and averaging the results",
+      "Running semantic search and BM25 (lexical) search in parallel and merging results, combining conceptual understanding with precision on exact terms",
+      "Running BM25 first, then using its output purely as an initial candidate set for a second BM25 pass",
+      "Running semantic search alone with a larger top-K to compensate for weak recall"
+    ],
+    "correct": 1,
+    "explain": "Hybrid search runs semantic search and BM25 (lexical) search in parallel and merges their results, combining conceptual understanding with precision on exact terms or IDs."
+  },
+  {
+    "id": "api077",
+    "q": "What is \"reranking\" in a RAG pipeline, and how does it differ from the initial retrieval step?",
+    "options": [
+      "A first pass that happens before initial retrieval, narrowing the full document set into an initial candidate pool",
+      "The same step as initial retrieval, just described with different terminology",
+      "A second pass after initial retrieval that reorders a wider candidate set with a more discriminating method (often an LLM call); initial retrieval optimizes for recall, reranking optimizes for precision",
+      "A technique that replaces initial retrieval entirely by scoring every document in the corpus directly"
+    ],
+    "correct": 2,
+    "explain": "Reranking is a second pass, after initial retrieval, that reorders a wider candidate set (e.g. top 20-50) using a more discriminating method like an LLM scoring call — initial retrieval optimizes for recall, reranking for precision, before truncating to the final top-K."
+  },
+  {
+    "id": "api078",
+    "q": "What problem does \"contextual retrieval\" solve, and when in the pipeline does it happen?",
+    "options": [
+      "Ambiguous ranking order among top retrieval results; it happens at query time, right before results are sent to Claude",
+      "Slow query latency caused by large embedding indexes; it happens at query time by caching embeddings",
+      "Duplicate chunks appearing across multiple documents; it happens after embedding, as a deduplication pass",
+      "An isolated chunk losing the surrounding context that makes it findable; it happens before embedding/indexing, when an LLM generates a short situating sentence prepended to each chunk"
+    ],
+    "correct": 3,
+    "explain": "Contextual retrieval solves the problem of an isolated chunk losing context needed to find it (e.g. which company/quarter a stat refers to). It happens before embedding/indexing: an LLM generates a short situating sentence from the full document and prepends it to each chunk."
+  },
+  {
+    "id": "api079",
+    "q": "What's the difference between cosine similarity and cosine distance, and how do you read their values?",
+    "options": [
+      "Cosine similarity ranges 0 to 1 with higher meaning more similar; cosine distance ranges -1 to 1 with higher meaning more similar",
+      "Cosine similarity is the cosine of the angle between two vectors (-1 to 1, closer to 1 = more similar); cosine distance = 1 − cosine similarity, so closer to 0 means more similar",
+      "Cosine distance is calculated first, and cosine similarity = 1 − cosine distance, with closer to 1 meaning more similar for distance",
+      "Cosine similarity and cosine distance are two names for the exact same computed value"
+    ],
+    "correct": 1,
+    "explain": "Cosine similarity is the cosine of the angle between two vectors, ranging -1 to 1 where closer to 1 is more similar. Cosine distance equals 1 minus cosine similarity, so it runs inversely — closer to 0 means more similar, which is what vector search typically returns."
+  },
+  {
+    "id": "api080",
+    "q": "What's the fundamental difference between a \"workflow\" and an \"agent\"?",
+    "options": [
+      "A workflow is given a goal and a set of tools and figures out its own steps; an agent follows a predefined series of calls for a known problem",
+      "A workflow and an agent describe the same architecture, differing only in naming convention",
+      "A workflow always orchestrates multiple different models; an agent is always restricted to a single model",
+      "A workflow is a predefined series of Claude calls for a known problem where you can picture the exact steps ahead of time; an agent is given a goal and a set of tools and figures out its own steps"
+    ],
+    "correct": 3,
+    "explain": "A workflow follows a predefined series of steps you can picture in advance for a known problem, while an agent is handed a goal and tools and determines its own steps along the way."
+  },
+  {
+    "id": "api081",
+    "q": "What's the general recommendation for choosing between workflows and agents, and why?",
+    "options": [
+      "Prefer agents wherever possible, since they represent more architecturally sophisticated solutions users appreciate",
+      "Always combine both patterns in every application, regardless of the specific problem",
+      "Prefer workflows wherever possible, and only use agents when truly required — workflows give higher reliability and predictability",
+      "Prefer whichever pattern requires fewer total API calls, since that minimizes cost"
+    ],
+    "correct": 2,
+    "explain": "The general recommendation is to prefer workflows wherever possible and reach for agents only when truly needed, since workflows offer higher reliability and predictability — and users care about consistent results, not architectural sophistication."
+  },
+  {
+    "id": "api082",
+    "q": "Which of the following best describes the \"parallelization\" workflow pattern and its benefit?",
+    "options": [
+      "Run the same sub-task multiple times in parallel and take a majority vote on the result",
+      "Split one complex decision into multiple independent sub-tasks, run them simultaneously, then aggregate results into a final decision — giving each sub-task more focused, accurate attention",
+      "Split a complex decision into sequential steps run one after another, each building on the last",
+      "Run one Claude call that lists all sub-tasks together in a single prompt for efficiency"
+    ],
+    "correct": 1,
+    "explain": "Parallelization splits one complex decision into independent sub-tasks that run simultaneously and are then aggregated — the benefit is that focused attention per sub-task produces more thorough, accurate analysis than one call juggling everything."
+  },
+  {
+    "id": "api083",
+    "q": "What problem does \"chaining\" solve, and what's the two-step fix for a prompt with many constraints Claude keeps partially ignoring?",
+    "options": [
+      "The cost problem of overly large prompts; fixed by caching the system prompt and batching requests",
+      "The latency problem of long conversations; fixed by server-side compaction followed by summarization",
+      "The 'long prompt problem' where a single prompt with many rules gets partially violated; fixed by generating a first draft, then a focused revision step addressing only the violated constraints",
+      "The ambiguity problem of vague instructions; fixed by adding XML tags followed by few-shot examples"
+    ],
+    "correct": 2,
+    "explain": "Chaining solves the 'long prompt problem,' where a single prompt with many constraints gets partially violated — the fix is a two-step process: generate a first draft, then run a focused revision step that addresses only the constraints that were violated."
+  },
+  {
+    "id": "api084",
+    "q": "Which of the following correctly describes the \"routing\" workflow pattern in two steps?",
+    "options": [
+      "Step 1: run every specialized pipeline on the input in parallel. Step 2: pick whichever pipeline's output scores highest",
+      "Step 1: a Claude call categorizes the input into one of your predefined categories. Step 2: forward the input to the one specialized pipeline built for that category",
+      "Step 1: a Claude call categorizes the input. Step 2: a grader evaluates the categorization and loops back for revision if needed",
+      "Step 1: chunk the input into smaller pieces. Step 2: embed each chunk and retrieve the closest match"
+    ],
+    "correct": 1,
+    "explain": "Routing works in two steps: a Claude call first categorizes the input into one of your predefined categories, then the input is forwarded to the single specialized pipeline built for that category."
+  },
+  {
+    "id": "api085",
+    "q": "Which of the following best describes the \"Evaluator-Optimizer\" pattern?",
+    "options": [
+      "A producer and a grader run simultaneously, and their two outputs are merged into a final answer",
+      "A single Claude call both produces the output and grades it against criteria in one pass, with no feedback loop",
+      "A producer creates output, a grader evaluates it against criteria, and if it doesn't pass, feedback loops back to the producer for revision — repeating until the grader accepts the output",
+      "A grader creates a draft output first, and a separate producer checks that draft against defined criteria"
+    ],
+    "correct": 2,
+    "explain": "In the Evaluator-Optimizer pattern, a producer creates output, a grader checks it against criteria, and if it fails, feedback loops back to the producer for revision — repeating until the grader accepts it."
+  },
+  {
+    "id": "api086",
+    "q": "In the datetime-tools example, how does Claude handle a request like \"When does my 90-day warranty expire?\" when it doesn't yet have enough information?",
+    "options": [
+      "It assumes today's date is the purchase date and calculates the expiration immediately",
+      "It returns a hard error and refuses to proceed until a developer supplies the missing field",
+      "It recognizes it's missing required information and asks the user when the item was purchased before it can calculate the expiration — a capability a rigid workflow would struggle to replicate without an explicit branch",
+      "It calls a default lookup tool that guesses the purchase date from the user's order history"
+    ],
+    "correct": 2,
+    "explain": "Rather than guessing or failing, Claude recognizes the missing purchase date and asks the user for it before calculating — an agentic capability that a rigid, pre-defined workflow would need an explicit branch to replicate."
+  },
+  {
+    "id": "api087",
+    "q": "Given a scenario where you know a user will only ever submit an image and need a STEP file back through fixed steps (describe → model → render → grade → fix), which pattern is this, specifically?",
+    "options": [
+      "A pure agent, since the system must decide its own steps at each stage",
+      "Routing, since the image must first be categorized into a type before further processing",
+      "Evaluator-Optimizer, implemented as a workflow — the steps are fully known in advance, and it includes a producer → grader → feedback loop",
+      "Parallelization, since multiple candidate STEP models can be rendered and compared simultaneously"
+    ],
+    "correct": 2,
+    "explain": "Because the steps (describe, model, render, grade, fix) are fully known in advance and include a producer/grader feedback loop, this is Evaluator-Optimizer implemented as a workflow rather than a general-purpose agent."
+  },
+  {
+    "id": "api088",
+    "q": "What are the four primitives of managed agents, in order?",
+    "options": [
+      "Environment → Agent → Session → Events",
+      "Agent → Session → Environment → Events",
+      "Agent → Environment → Session → Events",
+      "Agent → Environment → Events → Session"
+    ],
+    "correct": 2,
+    "explain": "The four managed-agent primitives, in order, are Agent (the reusable persona: model/system prompt/tools), Environment (where it runs), Session (a single run — the unit of work), and Events (the messages flowing in/out)."
+  },
+  {
+    "id": "api089",
+    "q": "Is managed agents a special-access feature you need to request?",
+    "options": [
+      "Yes, it requires filling out an access request form before use",
+      "Yes, it's currently limited to enterprise-tier accounts only",
+      "No, but every request must include a special beta header to enable it",
+      "No — it's enabled by default for every API account"
+    ],
+    "correct": 3,
+    "explain": "Managed agents are not a gated feature — they're enabled by default for every API account, with no special access request needed."
+  },
+  {
+    "id": "api090",
+    "q": "What's the correct order of operations: open the event stream, or send the kickoff message, first? Why?",
+    "options": [
+      "Send the kickoff message first, then open the event stream, so you don't miss the initial acknowledgment",
+      "Open the event stream first, then send the kickoff message — the stream only delivers events that occur after it opens",
+      "Order doesn't matter, since all events are buffered server-side indefinitely regardless of when the stream opens",
+      "Open the event stream and send the kickoff message simultaneously in a single combined API call"
+    ],
+    "correct": 1,
+    "explain": "You must open the event stream before sending the kickoff message, because the stream only delivers events that occur after it's opened — otherwise the earliest events would be missed."
+  },
+  {
+    "id": "api091",
+    "q": "Which of the following correctly names the three key event types to watch for when consuming a managed-agent session stream?",
+    "options": [
+      "agent.message, agent.tool_result, and session.status_complete",
+      "agent.start, agent.tool_use, and session.status_idle",
+      "agent.message (Claude's text), agent.tool_use (which tool was picked), and session.status_idle (the agent is done)",
+      "agent.message, agent.tool_use, and session.status_error"
+    ],
+    "correct": 2,
+    "explain": "The three key event types to watch for are agent.message (Claude's text output), agent.tool_use (which tool was called), and session.status_idle (signaling the agent has finished)."
+  },
+  {
+    "id": "api092",
+    "q": "In a managed-agent workflow with rubrics, what does the \"grader\" do?",
+    "options": [
+      "The same agent evaluates its own output within the same context window before finishing",
+      "The grader runs only once at the very end of the session and cannot request further revisions",
+      "A separate component, running in its own context window, evaluates the agent's output against a rubric and gives feedback; the agent iterates and resubmits until it passes",
+      "The grader directly rewrites the agent's output rather than returning feedback for revision"
+    ],
+    "correct": 2,
+    "explain": "The grader is a separate component with its own context window that evaluates the agent's output against defined success criteria and provides feedback, with the agent iterating and resubmitting until the rubric passes."
+  },
+  {
+    "id": "api093",
+    "q": "When should you reach for managed agents instead of writing your own agent loop?",
+    "options": [
+      "When the task is simple and short-lived, to avoid the overhead of writing a hand-rolled loop",
+      "Whenever more than one tool is involved, regardless of how long the task runs",
+      "Only when the task requires extended thinking to be enabled on every call",
+      "When the loop would run too long (minutes to hours), touch too many tools/files, or needs to survive interruptions (resumability)"
+    ],
+    "correct": 3,
+    "explain": "Managed agents make sense when a loop would run for a long time (minutes to hours), touch many tools or files, or needs to be resumable after interruptions — situations a simple hand-written loop struggles with."
+  },
+  {
+    "id": "api094",
+    "q": "What does the system parameter control in a Messages API request?",
+    "options": [
+      "The maximum number of tokens Claude is allowed to generate",
+      "Which tools are available to Claude for the request",
+      "It sets Claude's persona and behavior, such as instructing it to act as a terse senior code reviewer",
+      "The temperature and other sampling parameters used during generation"
+    ],
+    "correct": 2,
+    "explain": "The system parameter sets Claude's persona and behavior for the request — for example, instructing it to act as a terse senior code reviewer."
+  },
+  {
+    "id": "api095",
+    "q": "Why might a production application route different task types to different Claude models?",
+    "options": [
+      "Because each model has a hard context-window limit that determines which tasks it's technically able to handle",
+      "Because Anthropic requires applications to load-balance traffic across models to stay within rate limits",
+      "Because only certain model tiers support the extended thinking parameter for complex tasks",
+      "Routing lets the application match each task to the cheapest model that meets its quality needs — e.g. Haiku for classification, Sonnet for drafting, Opus for complex reasoning — balancing quality, latency, and cost"
+    ],
+    "correct": 3,
+    "explain": "Routing tasks to different models lets an application match each task type to the cheapest model that still meets its quality bar, balancing overall quality, latency, and cost across the system."
+  },
+  {
+    "id": "api096",
+    "q": "What changes are needed when adding another client-side tool to a hand-written agent loop?",
+    "options": [
+      "You must rewrite the entire agent loop from scratch, since each additional tool changes the control flow",
+      "You only need to mention the new tool in the system prompt — no code changes are required",
+      "You must register the new tool with Anthropic support before your account is permitted to use it",
+      "Add the tool definition to the tools array and add a corresponding dispatch case in the tool-execution function; the rest of the loop stays the same"
+    ],
+    "correct": 3,
+    "explain": "Adding a new client-side tool just requires adding its definition to the tools array and a dispatch case in the tool-execution function — the surrounding agent loop doesn't need to change."
+  },
+  {
+    "id": "api097",
+    "q": "Why combine code graders with model graders in a prompt evaluation pipeline?",
+    "options": [
+      "Because code graders are inherently more accurate, and model graders exist only as a backup when code graders fail",
+      "Because code graders provide objective checks like syntax or keyword validation, while model graders assess qualities like completeness and instruction-following — combining them covers both format correctness and response quality",
+      "Because model graders are unable to process structured JSON output, so code graders must handle all format validation",
+      "Because running both grader types together roughly halves the total token cost of evaluation"
+    ],
+    "correct": 1,
+    "explain": "Code graders catch objective, mechanical issues like syntax or keyword presence, while model graders assess subjective qualities like completeness and instruction-following — combining both covers format correctness and response quality together."
+  },
+  {
+    "id": "api098",
+    "q": "How does reciprocal rank fusion help a hybrid search system?",
+    "options": [
+      "It averages the raw similarity scores returned by semantic search and BM25 directly",
+      "It discards any result that doesn't appear in both the semantic search and BM25 result lists",
+      "It combines the rank positions from different retrieval methods, such as semantic search and BM25, rewarding results that appear near the top across multiple ranked lists",
+      "It reranks results using a single LLM scoring call, replacing the need for a separate ranked list from each method"
+    ],
+    "correct": 2,
+    "explain": "Reciprocal rank fusion merges the rank positions (not raw scores) from different retrieval methods, giving a boost to results that consistently rank near the top across multiple methods like semantic search and BM25."
+  },
+  {
+    "id": "api099",
+    "q": "How does Claude Code avoid conflicts when you want to run multiple instances on the same project in parallel?",
+    "options": [
+      "Each instance locks the entire repository so that only one instance can run at any given time",
+      "Instances share a single working directory but are restricted to editing different file extensions",
+      "Instances communicate over a shared socket to negotiate file access with each other in real time",
+      "Each instance works inside its own Git work tree — a complete, isolated copy of the project on its own branch — so edits never collide; instances commit and get merged back into the main branch"
+    ],
+    "correct": 3,
+    "explain": "Claude Code runs each parallel instance in its own Git work tree, a fully isolated copy of the project on a separate branch, so simultaneous edits never collide — changes are committed and later merged back into the main branch."
+  },
+  {
+    "id": "api100",
+    "q": "What does Claude Code's init command do, and what file does it produce?",
+    "options": [
+      "It runs the project's test suite and generates a coverage.md report summarizing results",
+      "It installs a set of recommended MCP servers and writes an mcp.json configuration file",
+      "It scans the codebase to learn its architecture and coding style, then generates a CLAUDE.md file that's automatically loaded as context for future requests",
+      "It creates a new git repository for the project along with an initial commit"
+    ],
+    "correct": 2,
+    "explain": "The init command scans the codebase to learn its architecture and style, producing a CLAUDE.md file that's automatically loaded as context for every future Claude Code request in that project."
+  },
+  {
+    "id": "api101",
+    "q": "Which of the following correctly describes the automated production-debugging workflow that combines Claude Code, GitHub Actions, and CloudWatch?",
+    "options": [
+      "Claude Code polls CloudWatch logs directly in real time and auto-deploys fixes to production without human review",
+      "A GitHub Action runs on every push, pulling logs since the last commit, and Claude Code merges fixes automatically without a PR",
+      "CloudWatch triggers Claude Code directly via a webhook, bypassing GitHub Actions entirely, and pushes straight to main",
+      "A GitHub Action runs on a schedule, pulls the last 24 hours of CloudWatch logs, and hands them to Claude Code, which deduplicates errors, analyzes root causes, generates fixes, and opens a pull request for human review"
+    ],
+    "correct": 3,
+    "explain": "The workflow has a scheduled GitHub Action pull the last 24 hours of CloudWatch logs and hand them to Claude Code, which identifies and deduplicates errors, analyzes root causes, generates fixes, and opens a PR for human review — not an automatic deploy."
+  },
+  {
+    "id": "api102",
+    "q": "What are the two effective prompting workflows recommended for working with Claude Code on a new feature?",
+    "options": [
+      "A single one-shot workflow: describe the feature once in detail and let Claude implement it directly with no planning step",
+      "Three-step workflow: analyze relevant files, plan the solution without writing code yet, then implement the approved plan. Test-driven workflow: give Claude context, have it suggest tests, select/implement the tests, then write code until those tests pass",
+      "Three-step workflow: write the code, then write tests for it, then refactor based on results",
+      "A single workflow: give Claude context, have it implement the feature, then write tests afterward to confirm correctness"
+    ],
+    "correct": 1,
+    "explain": "The two recommended workflows are: (1) a three-step process where Claude analyzes files, plans without coding, then implements the approved plan; and (2) a test-driven process where Claude is given context, suggests tests, and then writes code until those tests pass."
+  }
+];
+
+/* ---------- STATE / PERSISTENCE ---------- */
+const STORAGE_KEY = "ccaf_quiz_03_v1";
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return { q: {}, totalAnswers: 0, totalCorrect: 0 };
+}
+function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+let state = loadState();
+
+function getStat(id) {
+  if (!state.q[id]) state.q[id] = { seen: 0, correct: 0, wrong: 0, mastery: 0, lastResult: null };
+  return state.q[id];
+}
+function recordAnswer(id, wasCorrect) {
+  const s = getStat(id);
+  s.seen += 1;
+  if (wasCorrect) { s.correct += 1; s.mastery = Math.min(3, s.mastery + 1); s.lastResult = "correct"; }
+  else { s.wrong += 1; s.mastery = 0; s.lastResult = "wrong"; }
+  state.totalAnswers = (state.totalAnswers||0) + 1;
+  if (wasCorrect) state.totalCorrect = (state.totalCorrect||0) + 1;
+  saveState();
+}
+
+/* ---------- TABS ---------- */
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
+    if (tab.dataset.tab === "progress") renderProgress();
+  });
+});
+
+/* ---------- QUIZ ---------- */
+let quizQueue = [];
+let quizIndex = 0;
+let quizScore = 0;
+
+function pickQuizQuestions(len, mode) {
+  let pool = QUESTIONS.slice();
+  if (mode === "weak") {
+    pool.sort((a,b) => {
+      const ma = getStat(a.id).mastery, mb = getStat(b.id).mastery;
+      if (ma !== mb) return ma - mb;
+      return Math.random() - 0.5;
+    });
+  } else if (mode === "random") {
+    pool.sort(() => Math.random() - 0.5);
+  }
+  return pool.slice(0, Math.min(len, pool.length));
+}
+
+function startQuiz(pool) {
+  quizQueue = pool;
+  quizIndex = 0;
+  quizScore = 0;
+  renderQuizQuestion();
+}
+
+document.getElementById("startQuizBtn").addEventListener("click", () => {
+  const len = parseInt(document.getElementById("quizLen").value, 10);
+  const mode = document.getElementById("quizMode").value;
+  startQuiz(pickQuizQuestions(len, mode));
+});
+
+document.getElementById("reviewMissedBtn").addEventListener("click", () => {
+  const missed = QUESTIONS.filter(q => getStat(q.id).lastResult === "wrong");
+  if (!missed.length) {
+    alert("No questions are currently marked wrong. Take a quiz first, or nice work — you're clean!");
+    return;
+  }
+  missed.sort(() => Math.random() - 0.5);
+  startQuiz(missed);
+});
+
+function renderQuizQuestion() {
+  const area = document.getElementById("quizArea");
+  if (quizIndex >= quizQueue.length) {
+    area.innerHTML = `<div class="card">
+      <div class="qtext">Session complete: ${quizScore} / ${quizQueue.length} correct</div>
+      <div class="small sys">Progress has been saved. Check "My progress" for what's still missed, or start another round above.</div>
+    </div>`;
+    return;
+  }
+  const q = quizQueue[quizIndex];
+  const letters = ["A","B","C","D"];
+  const optHtml = q.options.map((opt, i) =>
+    `<button class="option" data-idx="${i}"><span class="optkey">${letters[i]}.</span>${opt}</button>`
+  ).join("");
+  area.innerHTML = `<div class="card">
+    <div class="qmeta">
+      <span>Question ${quizIndex+1} of ${quizQueue.length}</span>
+      <span class="badge">Section 3 · Claude API</span>
+    </div>
+    <div class="qtext">${q.q}</div>
+    <div id="quizOptions">${optHtml}</div>
+    <div id="quizFeedback"></div>
+    <div id="quizNextWrap"></div>
+  </div>`;
+  document.querySelectorAll("#quizOptions .option").forEach(btn => {
+    btn.addEventListener("click", () => handleQuizAnswer(q, parseInt(btn.dataset.idx,10)));
+  });
+}
+
+function handleQuizAnswer(q, idx) {
+  const correct = idx === q.correct;
+  if (correct) quizScore += 1;
+  recordAnswer(q.id, correct);
+  document.querySelectorAll("#quizOptions .option").forEach((btn, i) => {
+    btn.classList.add("disabled");
+    btn.disabled = true;
+    if (i === q.correct) btn.classList.add("correct");
+    else if (i === idx) btn.classList.add("wrong");
+  });
+  document.getElementById("quizFeedback").innerHTML =
+    `<div class="feedback ${correct ? "good" : "bad"}">${correct ? "Correct." : "Not quite."}</div>
+     <div class="explain"><strong>Why:</strong> ${q.explain}</div>`;
+  document.getElementById("quizNextWrap").innerHTML = `<button class="primary" id="nextQBtn" style="margin-top:12px;">${quizIndex+1 < quizQueue.length ? "Next question" : "See results"}</button>`;
+  document.getElementById("nextQBtn").addEventListener("click", () => { quizIndex += 1; renderQuizQuestion(); });
+}
+
+/* ---------- PROGRESS ---------- */
+function masteryColor(mastery) {
+  if (mastery >= 3) return "#3d7a4a";
+  if (mastery === 2) return "#8bc34a";
+  if (mastery === 1) return "#e0a34a";
+  return "#cfcfd4";
+}
+function renderProgress() {
+  const total = QUESTIONS.length;
+  let masteredCount = 0, sumMastery = 0, missedCount = 0;
+  QUESTIONS.forEach(q => {
+    const s = getStat(q.id);
+    sumMastery += s.mastery;
+    if (s.mastery >= 3) masteredCount += 1;
+    if (s.lastResult === "wrong") missedCount += 1;
+  });
+  const pct = Math.round((sumMastery / (total * 3)) * 100);
+  const acc = state.totalAnswers ? Math.round((state.totalCorrect / state.totalAnswers) * 100) : 0;
+
+  document.getElementById("statGrid").innerHTML = `
+    <div class="stat-box"><div class="stat-num">${masteredCount}/${total}</div><div class="stat-label">Mastered</div></div>
+    <div class="stat-box"><div class="stat-num">${missedCount}</div><div class="stat-label">Currently missed</div></div>
+    <div class="stat-box"><div class="stat-num">${state.totalAnswers||0}</div><div class="stat-label">Answers given</div></div>
+    <div class="stat-box"><div class="stat-num">${acc}%</div><div class="stat-label">Accuracy</div></div>
+  `;
+  document.getElementById("masteryBar").style.width = pct + "%";
+  document.getElementById("masteryLabel").textContent = pct + "% overall mastery across " + total + " questions";
+
+  const missed = QUESTIONS.filter(q => getStat(q.id).lastResult === "wrong")
+    .sort((a,b) => getStat(b.id).wrong - getStat(a.id).wrong);
+  let html;
+  if (!missed.length) {
+    html = `<div class="small sys">Nothing currently marked wrong. Take the quiz to build up a review queue.</div>`;
+  } else {
+    html = `<table><thead><tr><th></th><th>Question</th><th>Times wrong</th><th>Seen</th></tr></thead><tbody>`;
+    missed.forEach(q => {
+      const s = getStat(q.id);
+      const qtext = q.q.length > 90 ? q.q.slice(0,87) + "…" : q.q;
+      html += `<tr><td><span class="mastery-dot" style="background:${masteryColor(s.mastery)}"></span></td><td>${qtext}</td><td>${s.wrong}</td><td>${s.seen}</td></tr>`;
+    });
+    html += `</tbody></table>`;
+  }
+  document.getElementById("weakTable").innerHTML = html;
+}
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (confirm("Reset all quiz progress for this section? This can't be undone.")) {
+    state = { q: {}, totalAnswers: 0, totalCorrect: 0 };
+    saveState();
+    renderProgress();
+  }
+});
+
+/* ---------- INIT ---------- */
+renderProgress();
+</script>
+</body>
+</html>

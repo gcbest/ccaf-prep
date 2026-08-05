@@ -1,0 +1,1274 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Claude Code in Action Quiz — CCA-F Quiz</title>
+  <style>
+    :root {
+      --ink: #242321;
+      --muted: #706b63;
+      --paper: #f7f3ec;
+      --paper-deep: #ece4d7;
+      --rust: #a84e31;
+      --rust-dark: #7d3825;
+      --line: #d6ccbd;
+      --white: #fffdfa;
+      --accent: #8f3f3f;
+      --good: #3d7a4a;
+      --good-bg: #e6f0e4;
+      --bad: #a13a2e;
+      --bad-bg: #f7e6e2;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.7 Georgia, 'Times New Roman', serif;
+    }
+    main { max-width: 720px; margin: 0 auto; padding: 40px 22px 80px; }
+    .masthead {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+      border-bottom: 1px solid var(--line); padding-bottom: 10px;
+      color: var(--muted); font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .13em; text-transform: uppercase;
+    }
+    .masthead a { color: var(--muted); }
+    .kicker { display: block; margin: 22px 0 6px; color: var(--accent); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    h1 { max-width: 680px; margin: 0 0 10px; font: 700 clamp(1.8rem, 6vw, 2.7rem)/1.08 Georgia, serif; letter-spacing: -.02em; }
+    .dek { max-width: 640px; margin: 0 0 24px; color: var(--muted); font-size: 1.02rem; }
+    p { max-width: 70ch; margin: 0 0 13px; }
+    a { color: var(--rust-dark); }
+    code { background: var(--paper-deep); padding: .08em .28em; border-radius: 3px; }
+
+    nav.crumbs { font: 600 12px/1.5 system-ui, sans-serif; color: var(--muted); margin-bottom: 6px; }
+    nav.crumbs a { color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--line); }
+    nav.crumbs a:hover { color: var(--rust-dark); border-color: var(--rust-dark); }
+
+    .tabs { display: flex; gap: 4px; margin: 26px 0 18px; border-bottom: 1px solid var(--line); }
+    .tab {
+      padding: 9px 14px; cursor: pointer; font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .04em;
+      color: var(--muted); border-bottom: 2px solid transparent; user-select: none; background: none; border-top: none; border-left: none; border-right: none;
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .card {
+      background: var(--white); border: 1px solid var(--line); border-radius: 3px;
+      padding: 20px 22px; margin-bottom: 14px;
+    }
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+    select, button {
+      font: 600 13px/1.3 system-ui, sans-serif; padding: 8px 13px; border-radius: 3px; border: 1px solid var(--line);
+      background: var(--white); color: var(--ink); cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: var(--white); border-color: var(--accent); }
+    button.primary:hover { filter: brightness(1.08); }
+    button.ghost { background: var(--white); color: var(--accent); border-color: var(--line); }
+    button.ghost:hover { background: var(--paper-deep); }
+    .small { font: 400 13px/1.5 Georgia, serif; color: var(--muted); }
+    .small.sys { font: 400 12.5px/1.5 system-ui, sans-serif; color: var(--muted); }
+
+    .qmeta { display: flex; justify-content: space-between; align-items: center; font: 600 12px/1.4 system-ui, sans-serif; color: var(--muted); margin-bottom: 10px; }
+    .badge { font: 700 10.5px/1.4 system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: var(--paper-deep); color: var(--rust-dark); }
+    .qtext { font: 700 1.18rem/1.4 Georgia, serif; margin-bottom: 16px; }
+    .option {
+      display: block; width: 100%; text-align: left; padding: 11px 14px; margin-bottom: 9px;
+      border: 1px solid var(--line); border-radius: 3px; background: var(--white);
+      font: 400 15px/1.5 Georgia, serif; color: var(--ink); cursor: pointer;
+    }
+    .option:hover:not(.disabled) { border-color: var(--accent); background: var(--paper); }
+    .option .optkey { display: inline-block; width: 20px; font-weight: 700; color: var(--muted); }
+    .option.correct { background: var(--good-bg); border-color: var(--good); }
+    .option.wrong { background: var(--bad-bg); border-color: var(--bad); }
+    .option.disabled { cursor: default; }
+    .feedback { font: 700 13px/1.5 system-ui, sans-serif; margin: 12px 0 4px; padding: 10px 13px; border-radius: 3px; }
+    .feedback.good { background: var(--good-bg); color: var(--good); }
+    .feedback.bad { background: var(--bad-bg); color: var(--bad); }
+    .explain { font: 400 15px/1.6 Georgia, serif; color: var(--ink); margin-top: 8px; padding: 12px 14px; background: var(--paper-deep); border-radius: 3px; }
+    .explain strong { color: var(--rust-dark); }
+
+    .progress-bar-outer { width: 100%; height: 8px; background: var(--paper-deep); border-radius: 999px; overflow: hidden; margin: 6px 0 2px; }
+    .progress-bar-inner { height: 100%; border-radius: 999px; background: var(--accent); }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 10px; margin-bottom: 14px; }
+    .stat-box { background: var(--white); border: 1px solid var(--line); border-radius: 3px; padding: 13px 14px; text-align: center; }
+    .stat-num { font: 700 1.5rem/1.2 Georgia, serif; color: var(--rust-dark); }
+    .stat-label { font: 600 10.5px/1.4 system-ui, sans-serif; color: var(--muted); margin-top: 3px; letter-spacing: .03em; text-transform: uppercase; }
+    table { width: 100%; border-collapse: collapse; font: 400 13.5px/1.5 Georgia, serif; }
+    th, td { text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font: 600 10.5px/1.4 system-ui, sans-serif; text-transform: uppercase; letter-spacing: .03em; }
+    .row-between { display: flex; justify-content: space-between; align-items: center; }
+    .mastery-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+
+    footer { margin-top: 34px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: .88rem; }
+    @media (max-width: 560px) {
+      main { padding: 26px 16px 60px; }
+      .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
+      .card { padding: 16px 16px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <div class="masthead"><a href="../index.html">CCA-F Study System</a><span>Section 7 · Claude Code</span></div>
+
+  <nav class="crumbs"><a href="../index.html">Home</a> › <a href="index.html">Quizzes</a> › Section 7 · Claude Code</nav>
+  <span class="kicker">Section 7 · Claude Code in Action</span>
+  <h1>Claude Code in Action Quiz</h1>
+  <p class="dek">76 multiple-choice questions on CLAUDE.md hierarchy, rules, skills, hooks, subagents, plan mode, and using Claude Code safely and effectively in CI.</p>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="quiz">Quiz</button>
+    <button class="tab" data-tab="progress">My progress</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="panel active" id="panel-quiz">
+    <div class="card" id="quizSetup">
+      <div class="controls">
+        <select id="quizLen">
+          <option value="10">10 questions</option>
+          <option value="20">20 questions</option>
+          <option value="999" selected>All 76 questions</option>
+        </select>
+        <select id="quizMode">
+          <option value="weak" selected>Missed &amp; new first (recommended)</option>
+          <option value="random">Fully random</option>
+          <option value="sequential">In order</option>
+        </select>
+        <button class="primary" id="startQuizBtn">Start quiz</button>
+        <button class="ghost" id="reviewMissedBtn">Review only missed</button>
+      </div>
+      <div class="small sys">"Missed &amp; new first" weights questions you've gotten wrong or haven't seen, so review sessions target real gaps. "Review only missed" quizzes you exclusively on questions currently marked wrong.</div>
+    </div>
+    <div id="quizArea"></div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="panel" id="panel-progress">
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="card">
+      <div class="row-between"><strong style="font:700 13px/1.4 system-ui, sans-serif; color:var(--rust-dark);">Mastery</strong></div>
+      <div class="progress-bar-outer"><div class="progress-bar-inner" id="masteryBar" style="width:0%"></div></div>
+      <div class="small sys" id="masteryLabel" style="margin-top:6px;"></div>
+    </div>
+    <div class="card">
+      <div class="row-between"><strong style="font:700 13px/1.4 system-ui, sans-serif; color:var(--rust-dark);">Questions currently missed</strong></div>
+      <div id="weakTable" style="margin-top:8px;"></div>
+    </div>
+    <div class="card">
+      <div class="row-between">
+        <span class="small sys">Progress is saved in this browser and persists across visits.</span>
+        <button class="ghost" id="resetBtn">Reset progress</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>Source questions: <code>07-claude-code-in-action/quiz.md</code> · <a href="../07-claude-code-in-action/notes.md">section notes</a> · <a href="../lessons/0009-claude-code-in-action.html">read the lesson</a></p>
+    <p><a href="index.html">← All section quizzes</a></p>
+  </footer>
+</main>
+
+<script>
+/* ---------- QUESTION BANK ---------- */
+const QUESTIONS = [
+  {
+    "id": "cc001",
+    "q": "Which of the following best describes what fundamentally separates Claude Code from Claude.ai chat?",
+    "options": [
+      "It uses a larger context window, allowing longer conversations before compaction is needed",
+      "It has direct access to your files, terminal, and codebase, acting as an agent that edits and executes directly instead of requiring copy-paste",
+      "It restricts code execution to a browser-based sandbox for safety, unlike Claude.ai chat",
+      "It requires an enterprise subscription, whereas Claude.ai chat is available to all users for free"
+    ],
+    "correct": 1,
+    "explain": "Claude Code is an agent with direct access to your files, terminal, and codebase, so it edits and executes changes itself rather than making you copy-paste code back and forth like in Claude.ai chat."
+  },
+  {
+    "id": "cc002",
+    "q": "Per Claude Code 101, which of the following best describes an 'AI Agent'?",
+    "options": [
+      "A chatbot that answers user questions but cannot take any actions on its own",
+      "A fixed script that executes a predetermined sequence of commands without any model reasoning",
+      "Software that interacts with its environment and performs actions to complete a defined goal, an LLM operating in a real-time loop with potential access to tools, services, or other agents",
+      "A subagent whose sole purpose is running verification checks after code has already been written"
+    ],
+    "correct": 2,
+    "explain": "An AI agent is software that interacts with its environment and takes actions toward a defined goal, essentially an LLM running in a real-time loop with access to tools, services, or other agents, not just a passive question-answerer."
+  },
+  {
+    "id": "cc003",
+    "q": "Which of the following best walks through Claude Code's agentic loop?",
+    "options": [
+      "Prompt in, Claude gathers context and gets a text or tool-call response from the model, takes an action, verifies the result against the original intent, then stops or loops back until it's achieved",
+      "Prompt in, Claude writes code, commits the change immediately, then waits for the next prompt without checking the result",
+      "Explore the codebase, draft a plan, write code, and commit it, repeating the four steps for every request",
+      "Prompt in, Claude takes an action, logs the result, and always pauses for explicit user confirmation before proceeding further"
+    ],
+    "correct": 0,
+    "explain": "The agentic loop starts with a prompt, gathers context and gets a response from the model, takes an action, then verifies that action against the original intent, looping back and retrying until the goal is achieved."
+  },
+  {
+    "id": "cc004",
+    "q": "Which of the following correctly lists the four steps of the core Claude Code workflow?",
+    "options": [
+      "Explore, Design, Build, Deploy",
+      "Explore, Plan, Code, Commit",
+      "Plan, Code, Test, Commit",
+      "Research, Plan, Code, Review"
+    ],
+    "correct": 1,
+    "explain": "The core workflow taught in the course is Explore, Plan, Code, Commit, moving from understanding the codebase to a reviewed plan, then to implementation and a finished commit."
+  },
+  {
+    "id": "cc005",
+    "q": "Which of the following best explains why Plan Mode is described as 'the best place to course-correct'?",
+    "options": [
+      "Because Plan Mode automatically runs the full test suite before allowing any code to be written",
+      "Because Plan Mode locks the file system, preventing any accidental edits while reviewing the approach",
+      "Because it happens before any code is written, so revising a plan is far cheaper than reviewing and undoing code that's already been written",
+      "Because Plan Mode delegates to a subagent with a fresh, unbiased context window"
+    ],
+    "correct": 2,
+    "explain": "Plan Mode happens before any code exists, so catching a wrong approach there is a cheap revision, whereas catching the same mistake after code is written means undoing real work."
+  },
+  {
+    "id": "cc006",
+    "q": "Which of the following best explains why you should run a subagent code review before committing, rather than relying on the main session's own review?",
+    "options": [
+      "A subagent runs with a fresh, unbiased context, so it doesn't carry the same-session bias the main agent has from having just written the code itself",
+      "A subagent has access to a larger context window than the main session, letting it inspect more files at once",
+      "A subagent can automatically fix any issues it finds, while the main session can only report them",
+      "A subagent runs with elevated permissions, allowing it to perform deeper security scans than the main session"
+    ],
+    "correct": 0,
+    "explain": "A subagent starts with a clean, unbiased context, so it doesn't share the main session's bias from having just written the code, making it more likely to notice real problems."
+  },
+  {
+    "id": "cc007",
+    "q": "Which of the following best describes what `claude --from-pr <PR_NUMBER>` does?",
+    "options": [
+      "Opens the specified pull request in a browser tab for manual review",
+      "Resumes a Claude Code session that was linked to that PR, picking back up with full context",
+      "Creates a brand-new pull request from whatever branch is currently checked out",
+      "Automatically merges the pull request once all CI checks pass"
+    ],
+    "correct": 1,
+    "explain": "This command resumes the Claude Code session that was originally linked to that PR, restoring full context so you can address review comments or fix a failing build later."
+  },
+  {
+    "id": "cc008",
+    "q": "Which of the following best explains why it's recommended to start a project WITHOUT a CLAUDE.md file initially?",
+    "options": [
+      "Because CLAUDE.md files noticeably slow down Claude Code's startup performance",
+      "Because CLAUDE.md can only be generated automatically after the first commit is made",
+      "Because Claude Code ignores CLAUDE.md files until a project reaches a certain size",
+      "So you can observe where you actually have to keep course-correcting Claude, keeping the eventual file compact and focused on what's genuinely necessary"
+    ],
+    "correct": 3,
+    "explain": "Starting without CLAUDE.md lets you observe the specific spots where Claude actually needs correcting, so the file you eventually write stays compact and targeted instead of exhaustive."
+  },
+  {
+    "id": "cc009",
+    "q": "Which of the following best describes a subagent and its key context-management benefit?",
+    "options": [
+      "A background process that automatically executes hooks without needing a prompt",
+      "A delegated task that runs in its own isolated context window in parallel with the main agent, returning only a summary so the exploration trail doesn't clutter the main context",
+      "A duplicate of the main session that shares the same context window and history",
+      "A plugin component whose only job is managing MCP server connections"
+    ],
+    "correct": 1,
+    "explain": "A subagent is a delegated task with its own isolated context window, and because it reports back only a summary, the main session's context isn't cluttered by every step of the exploration."
+  },
+  {
+    "id": "cc010",
+    "q": "When preloading a skill into a subagent via the `skill` key, which of the following correctly describes how the skill content loads?",
+    "options": [
+      "Immediately and fully, unlike skills in the main conversation which load progressively (name and description first)",
+      "Progressively, in exactly the same way skills load in the main conversation",
+      "Only the name and description ever load, regardless of preloading, to conserve context",
+      "It loads fully on the first turn only, then automatically unloads for subsequent turns"
+    ],
+    "correct": 0,
+    "explain": "Preloading a skill via the `skill` key loads its full content immediately, which is different from the main conversation's progressive loading where only the name and description load first."
+  },
+  {
+    "id": "cc011",
+    "q": "Which of the following best describes how to steer what `/compact` keeps, and the risk if you don't?",
+    "options": [
+      "You steer it by editing `.claude/settings.json` before running the command; without it, the command fails to run",
+      "`/compact` cannot be steered; without intervention it always keeps only the last five messages",
+      "You add instructions right after the command, e.g. `/compact Focus on the --version flag implementation`; without steering, something important might get dropped",
+      "You steer it with a tagged rule in CLAUDE.md; without it, the summary duplicates itself"
+    ],
+    "correct": 2,
+    "explain": "You steer `/compact` by adding instructions right after the command, telling it what to focus on; without that steering, the summarization might drop something important."
+  },
+  {
+    "id": "cc012",
+    "q": "Which of the following correctly describes the difference between `/compact` and `/clear`, and when to use each?",
+    "options": [
+      "`/compact` wipes the conversation entirely, while `/clear` summarizes it and retains a memory of what happened",
+      "Both commands wipe the conversation entirely, but `/clear` additionally resets the active permission mode",
+      "`/compact` only works in headless runs, while `/clear` only works in interactive sessions",
+      "`/compact` summarizes the conversation so far while retaining a memory of it (use mid-feature); `/clear` wipes everything (use when starting a new feature, to avoid old bias)"
+    ],
+    "correct": 3,
+    "explain": "`/compact` frees up context by summarizing while retaining a memory of the conversation, useful mid-feature, while `/clear` wipes everything, which is better when starting a new feature so old context doesn't bias the new work."
+  },
+  {
+    "id": "cc013",
+    "q": "Which of the following correctly describes the rewind menu and how to open it?",
+    "options": [
+      "Double-tap Escape on an empty prompt, opening options to restore code+conversation, conversation only, code only, or summarize from/up to a checkpoint",
+      "Triple-tap Escape, opening options to undo the last edit, redo the last edit, or restart the session entirely",
+      "Type `/rewind` at the prompt, opening options to restore code only or restore conversation only",
+      "Double-tap Escape on an empty prompt, opening options to restore code, restore conversation, or delete a checkpoint"
+    ],
+    "correct": 0,
+    "explain": "The rewind menu opens with a double-tap of Escape on an empty prompt and offers restoring code and conversation together, conversation only, code only, or summarizing from or up to a checkpoint."
+  },
+  {
+    "id": "cc014",
+    "q": "Which of the following best describes `/goal` and its key constraint?",
+    "options": [
+      "Sets a time limit for how long Claude may keep working; the constraint is it can only be configured once per session",
+      "Sets a completion condition that Claude keeps working toward until a fast evaluator confirms it's met; the constraint is the evaluator only reads the transcript, so the condition must be checkable from Claude's own output, not external state",
+      "Defines a hook that blocks every tool call until a goal file appears on disk; the constraint is it requires bypass permission mode",
+      "Sets a completion condition checked against live file-system state after each turn; the constraint is it slows down every tool call"
+    ],
+    "correct": 1,
+    "explain": "`/goal` sets a completion condition that Claude works toward until a fast evaluator confirms it's met, but since that evaluator only reads the transcript, the condition must be verifiable from Claude's own output rather than external state."
+  },
+  {
+    "id": "cc015",
+    "q": "Which of the following best explains why worktrees are used when running multiple parallel Claude Code sessions on the same repo?",
+    "options": [
+      "Worktrees give each session its own permission mode, so one session can safely run bypass mode while another stays in manual mode",
+      "Worktrees automatically merge changes from all parallel sessions back into main once each finishes",
+      "Each session gets its own independent file tree, so parallel agents can't clobber each other's changes",
+      "Worktrees isolate context windows so that parallel sessions can't see each other's conversation history"
+    ],
+    "correct": 2,
+    "explain": "Worktrees give each parallel session its own independent copy of the file tree, which prevents two agents working at the same time from overwriting each other's changes."
+  },
+  {
+    "id": "cc016",
+    "q": "Which of the following best explains why a vague prompt can actually cost MORE context than a specific one?",
+    "options": [
+      "Vague prompts trigger additional MCP server tool definitions to load, which is what inflates the context",
+      "Vague prompts disable progressive skill loading, forcing every skill to load fully upfront",
+      "Vague prompts trigger more permission prompts, and each prompt itself consumes a large amount of context",
+      "A vague prompt forces Claude to explore the codebase more and do more of its own reasoning to fill in gaps, consuming far more context than a detailed, specific prompt would have"
+    ],
+    "correct": 3,
+    "explain": "A vague prompt leaves Claude to explore the codebase and reason its way to the missing details, and that extra exploration and reasoning consumes far more context than a precise, detailed prompt would have."
+  },
+  {
+    "id": "cc017",
+    "q": "Which of the following best describes what happens to a worktree automatically when its session ends?",
+    "options": [
+      "Any worktree is automatically deleted after 24 hours, regardless of whether it has uncommitted changes",
+      "Clean worktrees, ones with no uncommitted changes, are automatically removed when the session exits",
+      "Worktrees with uncommitted changes are removed automatically, while clean ones are kept for future reuse",
+      "Worktrees are never removed automatically; they must always be deleted manually with `git worktree remove`"
+    ],
+    "correct": 1,
+    "explain": "A worktree with no uncommitted changes is automatically cleaned up when its session exits, while a worktree with pending changes is left in place instead of being silently deleted."
+  },
+  {
+    "id": "cc018",
+    "q": "Which of the following best describes whether CLAUDE.md is enforced configuration, and the practical consequence for file length?",
+    "options": [
+      "Yes, it's strictly enforced like a hook, so file length has no effect on how reliably rules are followed",
+      "No, it's guidance, but longer files are always more reliable because they cover more edge cases",
+      "No, it's guidance, and every line competes with every other line for attention, so longer files mean lower reliability per rule, keep it lean",
+      "Yes, but only while Plan Mode is active; outside Plan Mode, length only affects load time"
+    ],
+    "correct": 2,
+    "explain": "CLAUDE.md is guidance, not enforcement, and because every line competes for Claude's attention, a longer file lowers the reliability of each individual rule, so the goal is to keep it lean."
+  },
+  {
+    "id": "cc019",
+    "q": "Which of the following best describes where a genuinely hard rule, such as 'never push to main,' should live instead of CLAUDE.md, and why?",
+    "options": [
+      "A skill, because skills are checked into version control and automatically shared with the whole team",
+      "The managed-policy CLAUDE.md tier, because org-level rules can't be excluded by any project",
+      "A SessionStart hook, because it runs before any tool call becomes possible in the session",
+      "A PreToolUse hook, because a hook is code that can actually block the action, whereas CLAUDE.md is just a request Claude usually follows"
+    ],
+    "correct": 3,
+    "explain": "A truly hard rule belongs in a PreToolUse hook because a hook is code that can actually stop the action from happening, while CLAUDE.md is only guidance that Claude usually, but not always, follows."
+  },
+  {
+    "id": "cc020",
+    "q": "Which of the following correctly lists the four CLAUDE.md locations (fuller model) with a distinguishing fact about each?",
+    "options": [
+      "Managed policy (org-level, can't be excluded), User (personal, all projects), Project (team-shared, committed to repo), Local (git-ignored, personal notes for this repo only)",
+      "User, Project, Skill, Hook, each representing a different instruction surface within a repo",
+      "Global, Local, Shared, and Private, four folders distinguished only by git-ignore status",
+      "Managed policy, Project, Skill, and Local, with Skill replacing personal user-level settings"
+    ],
+    "correct": 0,
+    "explain": "The four CLAUDE.md locations are managed policy (org-level and non-excludable), User (personal, applies across all projects), Project (team-shared and committed), and Local (git-ignored, personal notes scoped to one repo)."
+  },
+  {
+    "id": "cc021",
+    "q": "Which of the following correctly describes whether CLAUDE.md imports (`@path/to/file.md`) reduce the context Claude loads?",
+    "options": [
+      "Yes, imported files only load into context when Claude explicitly references them by name during the conversation",
+      "No, imports are expanded inline at launch so everything still loads; they only help with organizing a large file",
+      "Yes, imports load progressively like skills do, meaningfully reducing upfront context usage",
+      "No, imports actually double the context cost because both the import statement and the target file load separately"
+    ],
+    "correct": 1,
+    "explain": "Imports are expanded inline at launch, so all the imported content still loads into context; the benefit is purely organizational, letting you split a large file into labeled pieces."
+  },
+  {
+    "id": "cc022",
+    "q": "Which of the following best captures what 'emphasis is a budget' means for writing CLAUDE.md rules?",
+    "options": [
+      "It means CLAUDE.md has a hard word-count limit that Claude Code enforces automatically",
+      "It means only the first three rules listed in a file receive extra weight from the model",
+      "Words like 'IMPORTANT' or 'YOU MUST' only stand out relative to quieter surrounding text, so if every rule shouts, none of them do",
+      "It means emphasis words such as 'IMPORTANT' are automatically stripped out before the file loads into context"
+    ],
+    "correct": 2,
+    "explain": "Emphasis words like 'IMPORTANT' only work by contrast with quieter text around them, so if every rule in the file is marked as urgent, none of them actually stand out anymore."
+  },
+  {
+    "id": "cc023",
+    "q": "Besides the emphasis budget, which of the following correctly lists two other phrasing rules that make a CLAUDE.md rule more likely to be followed?",
+    "options": [
+      "Use bullet points for every rule, and keep each rule under ten words",
+      "Write every rule in the imperative mood, and place the most important rule last in the file",
+      "Bold every rule for visibility, and repeat critical rules twice in the file",
+      "Be specific and checkable (e.g. 'put new API routes in src/api/handlers' instead of 'follow best practices'), and name the replacement (e.g. 'use named exports, not default exports' instead of 'don't use default exports')"
+    ],
+    "correct": 3,
+    "explain": "The two rules are to be specific and checkable rather than vague, and to name the actual replacement behavior instead of only stating what not to do."
+  },
+  {
+    "id": "cc024",
+    "q": "Which of the following best describes the recommended workflow for keeping CLAUDE.md accurate over time, and the standard each line should meet?",
+    "options": [
+      "Treat a wrong Claude action as a bug report against the file, tell Claude to add the rule; treat the file like production code, if you can't justify a line, delete it",
+      "Review the file on a fixed quarterly schedule; each line must stay under ten words",
+      "Let Claude auto-rewrite the file after every session ends; each line must include a memory hook",
+      "Only update the file when onboarding a new teammate; each line must cite a specific pull request"
+    ],
+    "correct": 0,
+    "explain": "The recommended approach treats a wrong Claude action as a bug report against CLAUDE.md, letting you tell Claude to add the rule, and treats the file itself like production code where any line you can't justify should be deleted."
+  },
+  {
+    "id": "cc025",
+    "q": "Which of the following best identifies the recommended first skill to build, and why?",
+    "options": [
+      "A documentation skill, because it keeps CLAUDE.md automatically synchronized with the codebase",
+      "A deployment skill, because deployment is the highest-risk action in most workflows",
+      "A verification skill, because manual checking depends on remembering to ask for it every time, and skipping that check even once can let bad code through",
+      "A code-review skill, because subagents cannot be invoked without one already installed"
+    ],
+    "correct": 2,
+    "explain": "A verification skill is recommended first because manual verification depends on you remembering to ask for it every single time, and one missed check can let bad code slip through."
+  },
+  {
+    "id": "cc026",
+    "q": "Which of the following best describes what a verification skill must check beyond just 'tests pass,' to avoid a false positive?",
+    "options": [
+      "That the test suite completes within a fixed time limit",
+      "That no test was quietly weakened just to make it pass, by reading the diff and confirming the tests themselves weren't loosened",
+      "That overall code coverage percentage increased compared to the previous run",
+      "That every function in the change has an accompanying docstring"
+    ],
+    "correct": 1,
+    "explain": "A good verification skill reads the diff itself to confirm that no test was quietly weakened or loosened just to make it pass, since a passing test suite alone can hide that kind of false positive."
+  },
+  {
+    "id": "cc027",
+    "q": "Which of the following correctly matches each instruction surface to its role: (a) an always-true convention, (b) a task-specific procedure, (c) a rule that must never be skippable?",
+    "options": [
+      "(a) CLAUDE.md, (b) a skill, (c) a hook",
+      "(a) a skill, (b) CLAUDE.md, (c) a hook",
+      "(a) CLAUDE.md, (b) a hook, (c) a skill",
+      "(a) a hook, (b) a skill, (c) CLAUDE.md"
+    ],
+    "correct": 0,
+    "explain": "Always-true conventions belong in CLAUDE.md, task-specific procedures belong in a skill, and rules that must never be skippable belong in a hook, since only a hook can actually block an action."
+  },
+  {
+    "id": "cc028",
+    "q": "Inside a skill folder, which of the following correctly describes the division of labor between skill.md, reference.md, and any scripts, and why it matters for context?",
+    "options": [
+      "skill.md holds all the detailed material; reference.md is a lean summary that always loads; scripts are loaded into context so Claude can review them",
+      "skill.md and reference.md both load fully upfront regardless of need; scripts only run when in bypass permission mode",
+      "reference.md is the lean entry point; skill.md holds detail only read when depth is needed; scripts load into context as plain text",
+      "skill.md stays lean as the entry point; reference.md holds detailed material read only when needed; scripts are executed rather than loaded into context, so a skill can carry its own tooling without bloating the conversation"
+    ],
+    "correct": 3,
+    "explain": "skill.md is the lean entry point, reference.md holds deeper detail that's only pulled in when needed, and scripts are executed rather than read into context, letting a skill carry real tooling without bloating the conversation."
+  },
+  {
+    "id": "cc029",
+    "q": "Which of the following correctly lists all six permission modes with an accurate fact about each?",
+    "options": [
+      "Manual, Auto, Plan, Bypass, Sandbox, and Review",
+      "Manual (reads only, asks for everything else), Accept edits (reads/edits/common bash run freely), Plan (read-only, proposes without editing), Auto (a classifier reviews each action for danger), Don't ask (only pre-approved tools run), Bypass permissions (skips all checks, isolated container only)",
+      "Accept edits, Plan, Auto, Don't ask, Bypass permissions, and Verify",
+      "Manual, Accept edits, Plan, Bypass permissions, CI mode, and Read-only"
+    ],
+    "correct": 1,
+    "explain": "The six modes are Manual (asks for everything beyond reads), Accept edits (edits and common bash run freely), Plan (read-only, proposes a plan), Auto (a danger/intent classifier reviews each action), Don't ask (only pre-approved tools run, for unattended CI), and Bypass permissions (skips all checks, only safe inside an isolated container)."
+  },
+  {
+    "id": "cc030",
+    "q": "Which of the following best describes what Auto mode's classifier checks, and what it explicitly does NOT catch?",
+    "options": [
+      "It checks the correctness of code logic; it does not catch dangerous actions like force pushes or production deploys",
+      "It checks both intent and correctness equally; the one thing it doesn't catch is minor style violations",
+      "It checks intent, blocking things like production deploys, force pushes, piping downloaded code into a shell, or exfiltrating sensitive data; it does not check correctness, so broken-but-safe code passes through unflagged",
+      "It checks only for hardcoded secrets in the code; it does not catch dangerous shell commands"
+    ],
+    "correct": 2,
+    "explain": "Auto mode's classifier evaluates intent, blocking dangerous actions like production deploys, force pushes, piping downloaded code into a shell, or data exfiltration, but it does not evaluate whether the code is actually correct."
+  },
+  {
+    "id": "cc031",
+    "q": "Which of the following should you pair with Auto mode to catch correctness issues the classifier misses?",
+    "options": [
+      "A Stop hook that runs your tests",
+      "A PreToolUse hook that blocks all bash commands from running",
+      "A second classifier configured specifically to check code style",
+      "A SessionStart hook that loads the entire test suite into context"
+    ],
+    "correct": 0,
+    "explain": "Since Auto mode's classifier only checks for danger, not correctness, pairing it with a Stop hook that runs your tests catches the correctness issues the classifier would otherwise miss."
+  },
+  {
+    "id": "cc032",
+    "q": "Which of the following correctly describes how to switch between permission modes during a session, and how to tell which is active?",
+    "options": [
+      "Ctrl+P cycles through modes; a popup dialog confirms the current mode",
+      "Typing `/mode <name>` switches modes; the terminal title bar displays the current mode",
+      "Shift-tab cycles through modes; the current mode only appears in the session's JSON output, not on screen",
+      "Shift-tab cycles through the everyday modes; the status bar shows the current mode"
+    ],
+    "correct": 3,
+    "explain": "Shift-tab cycles through the everyday permission modes, and the status bar always displays which mode is currently active."
+  },
+  {
+    "id": "cc033",
+    "q": "Which of the following correctly lists the values `permissionDecision` can take in a PreToolUse hook's JSON response?",
+    "options": [
+      "allow, deny, ask, plus the rare fourth value defer, which only applies to non-interactive `-p` runs",
+      "allow, block, warn, plus a rare fourth value retry",
+      "accept, reject, review, plus a rare fourth value pause",
+      "allow, deny, escalate, plus a rare fourth value timeout"
+    ],
+    "correct": 0,
+    "explain": "The three normal values are allow, deny, and ask, with a rare fourth value, defer, that only applies to non-interactive `-p` runs."
+  },
+  {
+    "id": "cc034",
+    "q": "Which of the following best describes what the `updatedInput` field in a PreToolUse hook response lets you do, and the catch?",
+    "options": [
+      "It lets you append extra arguments to a tool call; the catch is it only works for bash commands",
+      "It lets you rewrite a tool call instead of blocking it; the catch is it replaces the whole input object, so you must echo back unchanged fields or lose them",
+      "It lets you block a tool call and log the reason; the catch is it requires an exit code of 2",
+      "It lets you rewrite only the single field that triggered the hook; the catch is it can't touch file paths"
+    ],
+    "correct": 1,
+    "explain": "`updatedInput` lets a hook rewrite a tool call, such as redacting a secret, instead of blocking it outright, but since it replaces the entire input object, unchanged fields must be echoed back or they're lost."
+  },
+  {
+    "id": "cc035",
+    "q": "Which of the following correctly describes what exit codes 0, 2, and any other code (including 1) mean for a hook, and the common mistake?",
+    "options": [
+      "0 = blocking, 1 = success, 2 = non-blocking; the common mistake is assuming 0 blocks the action",
+      "0 = success, 1 = blocking error, 2 = non-blocking; the common mistake is assuming exit code 2 blocks when it doesn't",
+      "0 = success, 2 = blocking error with stderr fed back as context, and any other code including 1 is non-blocking; the common mistake is assuming exit 1 blocks when it doesn't",
+      "0 = success, 2 = non-blocking warning, 1 = blocking error; the common mistake is assuming 2 blocks the action"
+    ],
+    "correct": 2,
+    "explain": "Exit code 0 means success, exit code 2 is the blocking error whose stderr gets fed back as context, and any other code including 1 is non-blocking, the common mistake is assuming exit code 1 blocks the action when it actually doesn't."
+  },
+  {
+    "id": "cc036",
+    "q": "To re-inject context right after a compaction event, which hook/matcher should you use, and which should you NOT use?",
+    "options": [
+      "Use PostCompact; do not use SessionStart, because SessionStart only fires on brand-new sessions",
+      "Use a PreToolUse hook matched to the `/compact` command; do not use SessionStart",
+      "Use PostToolUse with a Bash matcher; do not use PostCompact",
+      "Use SessionStart with the \"compact\" matcher; do not use PostCompact, since its output doesn't get fed back into the conversation"
+    ],
+    "correct": 3,
+    "explain": "You should use SessionStart with the 'compact' matcher, because PostCompact's output never actually gets fed back into the conversation, making it ineffective for re-injecting context."
+  },
+  {
+    "id": "cc037",
+    "q": "Which of the following correctly describes roughly how many hook events Claude Code fires, and what the InstructionsLoaded event lets you do?",
+    "options": [
+      "Around 10 hook events fire; InstructionsLoaded fires whenever a skill loads into context",
+      "Around 30 hook events fire across the loop; InstructionsLoaded fires whenever a CLAUDE.md or rule file loads, letting you audit exactly what made it into context",
+      "Around 30 hook events fire; InstructionsLoaded fires whenever a tool call gets blocked by a hook",
+      "Around 5 hook events fire; InstructionsLoaded fires whenever a subagent finishes and returns its summary"
+    ],
+    "correct": 1,
+    "explain": "Roughly 30 hook events fire across Claude Code's loop, and InstructionsLoaded specifically fires whenever a CLAUDE.md or rule file loads, letting you audit exactly what instructions made it into context."
+  },
+  {
+    "id": "cc038",
+    "q": "For a SessionStart hook, which of the following correctly describes the check that ensures it only runs on brand-new sessions rather than every resume or compaction?",
+    "options": [
+      "Checking that `mode=fresh` is set on the event payload",
+      "Checking that `resume=false` is present in the hook input",
+      "Checking that `source=startup`, which scopes the hook to fresh starts only",
+      "Checking that `context_size=0` before the hook runs"
+    ],
+    "correct": 2,
+    "explain": "Checking that `source=startup` scopes the SessionStart hook to only fire on genuinely fresh session starts, not on resumes or compactions."
+  },
+  {
+    "id": "cc039",
+    "q": "Which of the following correctly identifies the hook events that ignore the normal blocking rules, and what happens on a non-zero exit for them?",
+    "options": [
+      "PreToolUse, PostToolUse, and Stop; a non-zero exit halts execution immediately for these",
+      "Notification, SessionStart, and FileChange; a non-zero exit just shows stderr while execution carries on regardless",
+      "Notification, Stop, and PreCompact; a non-zero exit causes the hook to retry automatically",
+      "SessionStart, PostToolUse, and FileChange; a non-zero exit blocks the next tool call from running"
+    ],
+    "correct": 1,
+    "explain": "Notification, SessionStart, and FileChange all ignore the normal blocking rules, so a non-zero exit from one of them just displays stderr while execution continues regardless."
+  },
+  {
+    "id": "cc040",
+    "q": "Which of the following correctly identifies the two MCP server transport types in Claude Code, and what each is for?",
+    "options": [
+      "WebSocket, for remote services, and gRPC, for local processes",
+      "REST, for remote services, and HTTP, for local processes",
+      "HTTP, for remote services hosted by the provider, and Stdio, for local processes running on your machine",
+      "Stdio, for remote services, and TCP, for local processes"
+    ],
+    "correct": 2,
+    "explain": "The two transport types are HTTP, used for remote services hosted by a provider, and Stdio, used for local processes running on your own machine."
+  },
+  {
+    "id": "cc041",
+    "q": "Which of the following best describes how to make sure your whole team automatically gets the same MCP servers in a Claude Code project?",
+    "options": [
+      "Use Project-scoped servers defined in a `.mcp.json` file checked into version control",
+      "Use User-scoped servers that each teammate configures individually on their own machine",
+      "Publish a plugin marketplace that every teammate must separately install",
+      "List servers in each person's local, git-ignored CLAUDE.local.md file"
+    ],
+    "correct": 0,
+    "explain": "Defining Project-scoped MCP servers in a `.mcp.json` file that's checked into version control ensures every teammate automatically gets the same shared server configuration."
+  },
+  {
+    "id": "cc042",
+    "q": "Which of the following correctly describes what happens to Claude Code's context budget with many configured MCP servers, and the automatic mitigation and its threshold?",
+    "options": [
+      "Only servers that are actually used during the session load their tool definitions; the mitigation kicks in at a 25% threshold",
+      "All configured servers' definitions load, and the mitigation is disabling Auto mode's classifier once MCP tools exceed 50% of context",
+      "Unused servers load only their name into context, not full definitions; the mitigation kicks in at a 5% threshold",
+      "Every configured server's tool definitions load into context regardless of use; if MCP tools exceed 10% of the context window, Claude Code automatically switches to \"tool search mode,\" discovering tools on demand"
+    ],
+    "correct": 3,
+    "explain": "Every configured MCP server's tool definitions load into context whether or not they're used, and once MCP tools exceed 10% of the context window, Claude Code automatically switches to a tool search mode that discovers tools on demand instead."
+  },
+  {
+    "id": "cc043",
+    "q": "Besides disabling unused servers, which of the following correctly names two other ways to reduce MCP's context cost in Claude Code?",
+    "options": [
+      "Increase the context window size, or switch the session into bypass permission mode",
+      "Prefer a CLI tool if one exists, since it carries no persistent tool definitions, or use a Skill instead, since only its name and description load until needed",
+      "Manually enable tool search mode, or disable progressive skill loading entirely",
+      "Use only Stdio transport instead of HTTP, or preload every skill upfront into context"
+    ],
+    "correct": 1,
+    "explain": "Two other ways to cut MCP's context cost are preferring an existing CLI tool, which carries no persistent tool definitions, or using a Skill instead, since only its name and description load until it's actually needed."
+  },
+  {
+    "id": "cc044",
+    "q": "Which of the following best describes what a 'Routine' is, and its three trigger types?",
+    "options": [
+      "A saved bundle of prompt, repo, and connectors that runs on Anthropic's managed cloud infrastructure, triggered by a cron schedule, an HTTP POST to its API endpoint, or a GitHub event",
+      "A local script bundle run entirely by the Claude Code CLI, triggered by a file save, a git commit, or a terminal command",
+      "A saved bundle that runs on Anthropic's cloud, triggered by a cron schedule, a Slack mention, or an incoming email",
+      "A plugin component triggered only by a PR being opened, a push, or a manual button press"
+    ],
+    "correct": 0,
+    "explain": "A Routine is a saved bundle of prompt, repo, and connectors that runs on Anthropic's managed cloud infrastructure, and it can be triggered by a cron schedule, an HTTP POST to its API endpoint, or a GitHub event."
+  },
+  {
+    "id": "cc045",
+    "q": "Which of the following correctly names two constraints on Routines as of this course?",
+    "options": [
+      "It's generally available, not a preview, and its schedule can run as often as every minute",
+      "It's a research preview; a recurring schedule runs at most daily; pushes are allowed to any branch by default",
+      "It's a research preview; each run reuses the previous run's clone rather than starting fresh, and can push to main by default",
+      "It's a research preview; a recurring schedule runs at most hourly; each run starts from a fresh clone of the default branch and can only push to `claude/`-prefixed branches by default"
+    ],
+    "correct": 3,
+    "explain": "Routines are currently a research preview where a recurring schedule can run at most hourly, and each run starts from a fresh clone of the default branch, only pushing to `claude/`-prefixed branches by default."
+  },
+  {
+    "id": "cc046",
+    "q": "Which of the following correctly describes what headless mode's `-p` flag skips auto-discovering, and the trade-off?",
+    "options": [
+      "Skips only CLAUDE.md; the trade-off is reduced accuracy on repo-specific conventions",
+      "Skips all permission checks entirely; the trade-off is a less safe but faster run",
+      "Skips auto-discovery of hooks, skills, plugins, MCP servers, and CLAUDE.md, giving Claude plus only explicitly allowed tools; the trade-off is much faster startup",
+      "Skips subagent delegation entirely; the trade-off is everything runs in a single context window"
+    ],
+    "correct": 2,
+    "explain": "The `-p` flag skips auto-discovering hooks, skills, plugins, MCP servers, and CLAUDE.md, leaving Claude with only explicitly allowed tools, and the trade-off for that leaner setup is a much faster startup."
+  },
+  {
+    "id": "cc047",
+    "q": "Which of the following correctly describes how to get structured, schema-constrained output from a headless Claude Code run?",
+    "options": [
+      "Pair `--output-format json` with `--json-schema '<your schema>'`; the matching object lands in `structured_output`, extractable with `jq`",
+      "Use `--strict-mode` with a separate `.schema` file; the output is written automatically to a `strict_output.json` file",
+      "Pair `--output-format yaml` with `--schema-file`; extract the result with `grep`",
+      "Use `--json-schema` alone; Claude Code validates the output against it but doesn't include the object in the run's output"
+    ],
+    "correct": 0,
+    "explain": "Pairing `--output-format json` with `--json-schema '<your schema>'` produces a matching object in `structured_output`, which can then be cleanly extracted using `jq`."
+  },
+  {
+    "id": "cc048",
+    "q": "Which of the following best describes what `--bare` mode provides, and when you'd use it?",
+    "options": [
+      "A minimal-output mode that suppresses all logging; useful when debugging silently",
+      "The fastest-startup mode, skipping CLAUDE.md entirely; useful for quick one-off queries",
+      "A sandboxed mode that disables all file writes; useful for read-only audits",
+      "Deterministic mode, giving repeatable, predictable output run to run; use it in CI pipelines that need identical results every time"
+    ],
+    "correct": 3,
+    "explain": "`--bare` mode produces deterministic, repeatable output from run to run, which makes it the right choice for CI pipelines that need identical results every time."
+  },
+  {
+    "id": "cc049",
+    "q": "Which of the following best describes the Agent SDK, and when you should reach for it over Routines or headless mode?",
+    "options": [
+      "A hosted dashboard for managing Routines visually; reach for it when you need a graphical scheduling interface",
+      "A library (TypeScript/Python) that embeds Claude Code inside your own application; reach for it when the automated work needs to live inside your own product, not run as an external job",
+      "A CLI wrapper around headless mode that starts faster than `-p`; reach for it purely for speed",
+      "A GitHub Action package specifically for automating pull request reviews"
+    ],
+    "correct": 1,
+    "explain": "The Agent SDK is a TypeScript/Python library that embeds Claude Code directly inside your own application, and it's the right choice when the automated work needs to live inside your product rather than run as an external job."
+  },
+  {
+    "id": "cc050",
+    "q": "Which of the following correctly describes where you can create a Routine?",
+    "options": [
+      "Only from the web dashboard; Routines cannot be created from the CLI",
+      "From the web at claude.ai/code/routines, or inside Claude Code itself, e.g. `/schedule daily dependency audit at 9am`",
+      "Only inside Claude Code via the `/routine create` command; the web dashboard cannot create them",
+      "Exclusively from a GitHub Action workflow file committed to the repo"
+    ],
+    "correct": 1,
+    "explain": "You can create a Routine either from the web at claude.ai/code/routines or from inside Claude Code itself, for example by typing a `/schedule` command describing the recurring task."
+  },
+  {
+    "id": "cc051",
+    "q": "Which of the following correctly describes how to turn a single headless run into a multi-step automation?",
+    "options": [
+      "Capture the session ID from the JSON output of a headless run, then resume that session later with full context",
+      "Chain multiple `-p` flags together in a single command to queue several prompts",
+      "Save the run's transcript file and replay it later with a `--replay` flag",
+      "Set `--output-format json` and pipe the result directly into a brand-new `claude` invocation"
+    ],
+    "correct": 0,
+    "explain": "Capturing the session ID from a headless run's JSON output lets you resume that exact session later with full context, effectively chaining a single run into a multi-step automation."
+  },
+  {
+    "id": "cc052",
+    "q": "Which of the following correctly describes what the Agent SDK's `query` function exposes, and how you consume its output?",
+    "options": [
+      "Only a prompt string with no configurable options; output is returned as a single JSON blob",
+      "Prompt plus options, but the output must be polled via a separate status endpoint",
+      "The same primitives as the CLI, prompt plus options like allowed tools, system prompt, and permission mode, and you iterate the streamed messages it returns",
+      "A REST API wrapper around Claude Code; output is consumed only via webhook callbacks"
+    ],
+    "correct": 2,
+    "explain": "The `query` function exposes the same primitives as the CLI, a prompt plus options such as allowed tools, system prompt, and permission mode, and you consume its output by iterating the streamed messages it returns."
+  },
+  {
+    "id": "cc053",
+    "q": "Which of the following best describes what the managed \"Code Review\" service does, and what it explicitly does NOT do?",
+    "options": [
+      "It automatically approves or blocks PRs based on severity, and applies autofixes for minor issues",
+      "It posts inline PR comments tagged by severity with a summary table, analyzed against the full codebase; it never approves or blocks a PR, and there's no managed autofix",
+      "It posts a single overall comment without severity tags, and can block merges on critical findings",
+      "It runs only when triggered by an \"@claude review\" comment, and automatically fixes lint errors it finds"
+    ],
+    "correct": 1,
+    "explain": "Managed Code Review posts inline PR comments tagged by severity along with a summary table, analyzed against the full codebase, but it never approves or blocks a PR and offers no managed autofix, it only reports findings."
+  },
+  {
+    "id": "cc054",
+    "q": "Which of the following best describes when you should reach for the DIY GitHub Action instead of the managed Code Review service?",
+    "options": [
+      "When you need inline PR comments tagged by severity with a summary table",
+      "When the repository is specifically on the Enterprise plan",
+      "When you only need read-only analysis with no code changes involved",
+      "When the job is more than review, such as implementing changes from a comment, running scheduled reports, or any custom CI task where Claude needs to actually take action"
+    ],
+    "correct": 3,
+    "explain": "The DIY GitHub Action is the right tool when the job goes beyond review, such as implementing changes from a comment, running scheduled reports, or handling any custom CI task where Claude must actually take action."
+  },
+  {
+    "id": "cc055",
+    "q": "Which of the following correctly describes who enables managed Code Review, and a limit on its availability?",
+    "options": [
+      "Any repo collaborator can enable it directly from the repository's settings page; it's available on all plans",
+      "Only Anthropic support can enable it upon request; it's available only on the Enterprise plan",
+      "An org admin enables it, and it's generally available on all paid plans with no preview restriction",
+      "An org admin enables it from Claude Code admin settings, installs the GitHub app, and picks repos plus when it runs; it's a research preview currently available on Team and Enterprise plans only"
+    ],
+    "correct": 3,
+    "explain": "An org admin enables managed Code Review from Claude Code admin settings, installs the GitHub app, and chooses repos and triggers, and it's currently a research preview limited to Team and Enterprise plans."
+  },
+  {
+    "id": "cc056",
+    "q": "Which of the following correctly identifies the command that walks you through installing the Claude Code GitHub Action, and the action's identifier in a workflow file?",
+    "options": [
+      "`/install-github-app`, which requires repo admin and sets up the API key secret; the action itself is `anthropics/claude-code-action@v1`",
+      "`/setup-action`, which requires org admin; the action itself is `anthropics/claude-action@latest`",
+      "`/install-github-app`, which requires no special permissions; the action itself is `claude/code-review-action@v2`",
+      "`/github-connect`, which requires repo admin; the action itself is `anthropics/claude-review@v1`"
+    ],
+    "correct": 0,
+    "explain": "`/install-github-app` walks you through the setup, including the API key secret, and requires repo admin access, while the action itself is referenced in workflow files as `anthropics/claude-code-action@v1`."
+  },
+  {
+    "id": "cc057",
+    "q": "Besides trigger_phrase, prompt, and claude_args, which of the following correctly names other inputs the Claude Code GitHub Action takes for authentication and hosting provider?",
+    "options": [
+      "`workflow_dispatch`, `cron_schedule`, and `repo_name`",
+      "`anthropic_api_key`, `github_token` (defaulting to `secrets.GITHUB_TOKEN`), and provider switches for routing through Bedrock or Vertex instead of the direct API",
+      "`anthropic_api_key` only, with no option to route through an alternate hosting provider",
+      "`github_token` and `slack_webhook`, for sending notifications when the run completes"
+    ],
+    "correct": 1,
+    "explain": "The action also takes `anthropic_api_key` for authentication, `github_token` which defaults to `secrets.GITHUB_TOKEN`, and provider switches that let it route through Bedrock or Vertex instead of the direct API."
+  },
+  {
+    "id": "cc058",
+    "q": "Besides an @claude mention in a PR/issue comment, which of the following correctly names other ways to trigger the Claude Code GitHub Action?",
+    "options": [
+      "A webhook from an external service, and a Slack slash command",
+      "Only `workflow_dispatch`; cron schedules aren't supported for this action",
+      "A cron schedule, and `workflow_dispatch`, which allows manual runs triggered from the Actions tab",
+      "A push to any branch, and a new issue being opened"
+    ],
+    "correct": 2,
+    "explain": "The action can also be triggered by a cron schedule, such as a daily rollup report, or by `workflow_dispatch`, which allows someone to trigger a manual run from the Actions tab."
+  },
+  {
+    "id": "cc059",
+    "q": "Which of the following best captures what 'verify in proportion to how little you watched' means in practice?",
+    "options": [
+      "The less supervision a run had, the more rigorous your post-hoc verification needs to be, a quick glance for a watched session, a full reconstructed check for an unattended/CI run",
+      "Verify every run identically regardless of supervision level, using one fixed checklist",
+      "Verify more rigorously for watched sessions, since you already have context to check the result against",
+      "Skip verification for CI runs entirely, since they're automatically covered by the test suite"
+    ],
+    "correct": 0,
+    "explain": "The less you personally watched a run happen, the more rigorous the post-hoc verification needs to be, a quick glance suffices for a supervised session, but an unattended or CI run needs a full reconstructed check."
+  },
+  {
+    "id": "cc060",
+    "q": "Which of the following best explains why you should read `git diff` yourself instead of trusting Claude's summary of an unsupervised run?",
+    "options": [
+      "Because Claude's summaries are generated by a less capable model than the one that wrote the code",
+      "Because summaries are only available in headless mode, not in interactive sessions",
+      "Because reading `git diff` is required for the Stop hook to register the run as complete",
+      "Because a tidy, well-written summary can still omit or gloss over an unexpectedly touched file, reading the actual diff is the only way to catch that"
+    ],
+    "correct": 3,
+    "explain": "Even a well-written, tidy summary can quietly omit or gloss over a file that was unexpectedly touched, so reading the actual `git diff` yourself is the only reliable way to catch that."
+  },
+  {
+    "id": "cc061",
+    "q": "Which of the following correctly describes what permission mode unattended/CI runs should stay in, and why not bypass mode?",
+    "options": [
+      "Manual mode, so a human must approve remotely; bypass mode is fine as long as tests exist",
+      "Auto mode, the classifier still reviews each action for danger even though nobody's watching; bypass mode skips all checks, so it should only run inside an isolated container/VM, not as a default unattended setting",
+      "Don't ask mode, since only pre-approved tools run; bypass mode is fine for scheduled Routines specifically",
+      "Plan mode, since it never edits files; bypass mode should actually be the default for unattended runs, for speed"
+    ],
+    "correct": 1,
+    "explain": "Unattended and CI runs should stay in Auto mode so the danger classifier keeps reviewing each action even without a human watching, while bypass mode skips all checks and should only ever run inside an isolated container or VM."
+  },
+  {
+    "id": "cc062",
+    "q": "When making tests 'the real gate' on an unsupervised run, which of the following correctly identifies the actual question you need answered, not just 'did tests pass'?",
+    "options": [
+      "Whether tests passed and whether Claude actually ran them or only claimed to, don't leave that to trust; wire it as a hook (a Stop hook running tests, or a PostToolUse hook linting/type-checking) so it fires on every run",
+      "Whether the tests involved are newly written or pre-existing; wire it into CLAUDE.md as a strict instruction",
+      "Whether the tests passed on the first attempt without any retries; wire it as a PreToolUse hook that blocks commits",
+      "Whether test coverage percentage sits above a fixed threshold; wire it via a scheduled Routine"
+    ],
+    "correct": 0,
+    "explain": "The real question is whether tests passed AND whether Claude actually ran them rather than just claiming to, and the reliable way to guarantee that is wiring it as a hook, such as a Stop hook running tests, so it fires automatically every run."
+  },
+  {
+    "id": "cc063",
+    "q": "Which of the following best describes a 'cold second opinion' when verifying an unsupervised run, and why it's valuable?",
+    "options": [
+      "Re-running the same session's own review a second time for extra confirmation",
+      "Opening a fresh session or subagent, with no memory of how the change was built, to review the changed code; it has no stake in the original approach and catches what the original run talked itself past",
+      "Asking a human teammate to skim only the PR title, without reading the diff",
+      "Running the same test suite twice in a row to rule out flakiness"
+    ],
+    "correct": 1,
+    "explain": "A cold second opinion is a fresh session or subagent with no memory of how the change was built reviewing the code, and because it has no investment in the original approach, it can catch things the original run reasoned itself past."
+  },
+  {
+    "id": "cc064",
+    "q": "Which of the following correctly describes how to verify a headless run specifically?",
+    "options": [
+      "By its JSON result and exit code",
+      "By reading its full terminal transcript line by line",
+      "By asking it, in a follow-up prompt, whether it succeeded",
+      "By checking which permission mode it ran under"
+    ],
+    "correct": 0,
+    "explain": "A headless run has no one to interview about what happened, so the reliable way to verify it is by checking its JSON result and exit code."
+  },
+  {
+    "id": "cc065",
+    "q": "Which of the following best describes what a 'plugin' is in Claude Code, and the problem it solves?",
+    "options": [
+      "A single skill file shareable via a URL, solving the problem of slow skill loading times",
+      "A hosted service that reviews code automatically, solving the problem of manual code review",
+      "A CLAUDE.md template, solving the problem of inconsistent instruction files across repos",
+      "One installable unit bundling skills, subagents, hooks, and MCP server configs, solving the problem of manually copying a working `.claude` setup between machines or teammates"
+    ],
+    "correct": 3,
+    "explain": "A plugin bundles skills, subagents, hooks, and MCP server configs into one installable unit, which solves the tedious problem of manually copying a working `.claude` setup between machines or teammates."
+  },
+  {
+    "id": "cc066",
+    "q": "Which of the following best explains why 'the plugin passed automated community review' is not the same as 'safe to install'?",
+    "options": [
+      "Because automated review only checks license compliance, not whether the plugin functions correctly",
+      "Because automated review catches some issues but not everything, and a plugin still runs code on your machine with your privileges, its hooks fire on every matching tool call whether or not you've read them",
+      "Because automated review is performed by Claude itself and can be biased toward approving submissions",
+      "Because automated review only applies to plugins listed on the official marketplace, not third-party ones"
+    ],
+    "correct": 1,
+    "explain": "Automated review catches some issues but not everything, and a plugin still executes with your machine's privileges, its hooks fire on every matching tool call regardless of whether you've actually read them yourself."
+  },
+  {
+    "id": "cc067",
+    "q": "Which of the following correctly describes whether an installed plugin's hooks replace yours or run alongside them?",
+    "options": [
+      "Alongside; hooks stack",
+      "They replace your existing hooks entirely for any matching event",
+      "They run alongside yours only if you explicitly merge them in settings.json",
+      "They disable your existing hooks temporarily until the plugin is uninstalled"
+    ],
+    "correct": 0,
+    "explain": "A plugin's hooks stack on top of your existing hooks rather than replacing them, so both sets keep running alongside each other."
+  },
+  {
+    "id": "cc068",
+    "q": "Which of the following correctly identifies the only required field in a plugin manifest (`.claude-plugin/plugin.json`), and what it does?",
+    "options": [
+      "`version`, which tracks the installed release for update checks",
+      "`author`, which identifies who published the plugin for trust review",
+      "`name`, which namespaces the plugin's skills as `company-name:skill-name`, preventing collisions with other plugins or skills",
+      "`description`, which is shown to users before they install the plugin"
+    ],
+    "correct": 2,
+    "explain": "The only required manifest field is `name`, and it namespaces the plugin's skills as `company-name:skill-name`, which prevents naming collisions between different plugins or skills."
+  },
+  {
+    "id": "cc069",
+    "q": "Which of the following correctly describes what `/loop` does, and how you stop it?",
+    "options": [
+      "It repeats the last tool call indefinitely until it succeeds; Ctrl+C stops it",
+      "It runs a given prompt once per session start; typing `/stop` stops it",
+      "It loops through all configured subagents in sequence; closing the terminal stops it",
+      "It runs a prompt at an interval between turns, useful for polling external state; pressing Escape stops it"
+    ],
+    "correct": 3,
+    "explain": "`/loop` re-runs a prompt at an interval between turns, which is handy for polling external state, and pressing Escape is how you stop it."
+  },
+  {
+    "id": "cc070",
+    "q": "Which of the following correctly describes what `.worktreeinclude` controls?",
+    "options": [
+      "It lists files to exclude from a worktree entirely, even if they're tracked in git",
+      "It lists git-ignored files, such as local environment or configuration files, that should be copied into each new worktree",
+      "It lists which branches are allowed to create new worktrees",
+      "It lists MCP servers that need to be re-authenticated for each new worktree"
+    ],
+    "correct": 1,
+    "explain": "`.worktreeinclude` lists git-ignored files, like local environment or configuration files, that should still be copied into every new worktree even though they're not tracked in the repo."
+  },
+  {
+    "id": "cc071",
+    "q": "Which of the following best explains why project-level hook scripts should use `$CLAUDE_PROJECT_DIR` in their paths?",
+    "options": [
+      "It makes paths portable across clones and worktrees, while project-level hooks in `.claude/settings.json` can be shared with the team through version control",
+      "It grants the hook script elevated permissions automatically when it runs",
+      "It ensures the hook only executes while the session is in bypass permission mode",
+      "It caches the hook's output between sessions to speed up repeated runs"
+    ],
+    "correct": 0,
+    "explain": "`$CLAUDE_PROJECT_DIR` makes hook script paths portable across different clones and worktrees, which matters because project-level hooks defined in `.claude/settings.json` are meant to be shared with the whole team through version control."
+  },
+  {
+    "id": "cc072",
+    "q": "Which of the following correctly describes the enforcement difference between `PreToolUse` and `PostToolUse` hooks?",
+    "options": [
+      "PreToolUse runs after the tool call completes, while PostToolUse runs before it and can block it",
+      "Both can block the tool call, but only PostToolUse can modify its input beforehand",
+      "PreToolUse can only warn and never actually block; PostToolUse can block any subsequent tool calls",
+      "PreToolUse runs before a tool call and can block it; PostToolUse runs after the tool has already run, so it's too late to prevent that call"
+    ],
+    "correct": 3,
+    "explain": "PreToolUse runs before the tool call happens and can actually block it, while PostToolUse only runs after the tool has already executed, so it can observe but no longer prevent that particular call."
+  },
+  {
+    "id": "cc073",
+    "q": "Which of the following correctly describes what the main custom GitHub Action inputs trigger_phrase, prompt, and claude_args control?",
+    "options": [
+      "`trigger_phrase` defines the phrase that starts the action, `prompt` supplies the task for Claude, and `claude_args` passes raw CLI arguments such as a turn limit",
+      "`trigger_phrase` sets the branch name to work on, `prompt` sets the commit message, and `claude_args` sets the reviewer list",
+      "`trigger_phrase` authenticates the action, `prompt` defines its cron schedule, and `claude_args` sets the output format",
+      "`trigger_phrase` names the workflow file, `prompt` sets the API key, and `claude_args` lists allowed repositories"
+    ],
+    "correct": 0,
+    "explain": "`trigger_phrase` defines the phrase that starts the action, `prompt` supplies the task description for Claude, and `claude_args` passes raw CLI arguments such as a turn limit."
+  },
+  {
+    "id": "cc074",
+    "q": "Which of the following correctly identifies the commands to install a single plugin versus rolling out a shared marketplace for a whole team?",
+    "options": [
+      "`/plugin add org-name/plugin-name`; `/marketplace init your-org/claude-plugins`",
+      "`/install-plugin plugin-name`, with no reload needed; `/plugin marketplace create your-org/claude-plugins`",
+      "`/plugin install org-name@plugin-name` (then `/reload-plugins`) installs one plugin directly; `/plugin marketplace add your-org/claude-plugins` registers a private marketplace so every install resolves through it",
+      "`/plugin install org-name@plugin-name`; a marketplace can only be added through the web dashboard, not the CLI"
+    ],
+    "correct": 2,
+    "explain": "`/plugin install org-name@plugin-name` followed by `/reload-plugins` installs a single plugin directly, while `/plugin marketplace add your-org/claude-plugins` registers a private marketplace so future installs resolve through it with centralized tracking."
+  },
+  {
+    "id": "cc075",
+    "q": "Which of the following correctly describes which keys in a plugin's own settings.json are actually honored, and what the `agent` key lets a plugin do?",
+    "options": [
+      "All keys are honored just like a project's own settings.json; the `agent` key lists which MCP servers are allowed",
+      "Only the `agent` and subagent status line keys are honored; the `agent` key promotes one of the plugin's subagents to the main thread, its system prompt, tool restrictions, and model",
+      "Only the `hooks` key is honored; the `agent` key sets the default permission mode for the session",
+      "Only `permissions` and `env` keys are honored; the `agent` key restricts which files the plugin can touch"
+    ],
+    "correct": 1,
+    "explain": "Only the `agent` key and the subagent status line keys are actually honored in a plugin's settings.json, and the `agent` key can promote one of the plugin's subagents to the main thread, meaning it takes over the system prompt, tool restrictions, and model."
+  },
+  {
+    "id": "cc076",
+    "q": "Which of the following correctly describes how Claude Code discovers a plugin's components on disk, and where its hooks and MCP servers live?",
+    "options": [
+      "By directory convention using the same `.claude` shape as a normal project, one folder per skill, one markdown file per subagent under `agents/`, and `hooks/hooks.json` plus `.mcp.json` at the plugin root",
+      "By a central `registry.json` that lists every component; hooks and MCP servers live in a single `manifest.json`",
+      "By scanning file extensions only; hooks live in `hooks.js` and MCP servers live in `mcp.config`",
+      "By directory convention, but subagents live under `skills/` and hooks live in `.claude/settings.json`"
+    ],
+    "correct": 0,
+    "explain": "Claude Code discovers a plugin's components by directory convention, mirroring a normal `.claude` project shape, with one folder per skill, one markdown file per subagent under `agents/`, and `hooks/hooks.json` plus `.mcp.json` sitting at the plugin's root."
+  }
+];
+
+/* ---------- STATE / PERSISTENCE ---------- */
+const STORAGE_KEY = "ccaf_quiz_07_v1";
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return { q: {}, totalAnswers: 0, totalCorrect: 0 };
+}
+function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+let state = loadState();
+
+function getStat(id) {
+  if (!state.q[id]) state.q[id] = { seen: 0, correct: 0, wrong: 0, mastery: 0, lastResult: null };
+  return state.q[id];
+}
+function recordAnswer(id, wasCorrect) {
+  const s = getStat(id);
+  s.seen += 1;
+  if (wasCorrect) { s.correct += 1; s.mastery = Math.min(3, s.mastery + 1); s.lastResult = "correct"; }
+  else { s.wrong += 1; s.mastery = 0; s.lastResult = "wrong"; }
+  state.totalAnswers = (state.totalAnswers||0) + 1;
+  if (wasCorrect) state.totalCorrect = (state.totalCorrect||0) + 1;
+  saveState();
+}
+
+/* ---------- TABS ---------- */
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
+    if (tab.dataset.tab === "progress") renderProgress();
+  });
+});
+
+/* ---------- QUIZ ---------- */
+let quizQueue = [];
+let quizIndex = 0;
+let quizScore = 0;
+
+function pickQuizQuestions(len, mode) {
+  let pool = QUESTIONS.slice();
+  if (mode === "weak") {
+    pool.sort((a,b) => {
+      const ma = getStat(a.id).mastery, mb = getStat(b.id).mastery;
+      if (ma !== mb) return ma - mb;
+      return Math.random() - 0.5;
+    });
+  } else if (mode === "random") {
+    pool.sort(() => Math.random() - 0.5);
+  }
+  return pool.slice(0, Math.min(len, pool.length));
+}
+
+function startQuiz(pool) {
+  quizQueue = pool;
+  quizIndex = 0;
+  quizScore = 0;
+  renderQuizQuestion();
+}
+
+document.getElementById("startQuizBtn").addEventListener("click", () => {
+  const len = parseInt(document.getElementById("quizLen").value, 10);
+  const mode = document.getElementById("quizMode").value;
+  startQuiz(pickQuizQuestions(len, mode));
+});
+
+document.getElementById("reviewMissedBtn").addEventListener("click", () => {
+  const missed = QUESTIONS.filter(q => getStat(q.id).lastResult === "wrong");
+  if (!missed.length) {
+    alert("No questions are currently marked wrong. Take a quiz first, or nice work — you're clean!");
+    return;
+  }
+  missed.sort(() => Math.random() - 0.5);
+  startQuiz(missed);
+});
+
+function renderQuizQuestion() {
+  const area = document.getElementById("quizArea");
+  if (quizIndex >= quizQueue.length) {
+    area.innerHTML = `<div class="card">
+      <div class="qtext">Session complete: ${quizScore} / ${quizQueue.length} correct</div>
+      <div class="small sys">Progress has been saved. Check "My progress" for what's still missed, or start another round above.</div>
+    </div>`;
+    return;
+  }
+  const q = quizQueue[quizIndex];
+  const letters = ["A","B","C","D"];
+  const optHtml = q.options.map((opt, i) =>
+    `<button class="option" data-idx="${i}"><span class="optkey">${letters[i]}.</span>${opt}</button>`
+  ).join("");
+  area.innerHTML = `<div class="card">
+    <div class="qmeta">
+      <span>Question ${quizIndex+1} of ${quizQueue.length}</span>
+      <span class="badge">Section 7 · Claude Code</span>
+    </div>
+    <div class="qtext">${q.q}</div>
+    <div id="quizOptions">${optHtml}</div>
+    <div id="quizFeedback"></div>
+    <div id="quizNextWrap"></div>
+  </div>`;
+  document.querySelectorAll("#quizOptions .option").forEach(btn => {
+    btn.addEventListener("click", () => handleQuizAnswer(q, parseInt(btn.dataset.idx,10)));
+  });
+}
+
+function handleQuizAnswer(q, idx) {
+  const correct = idx === q.correct;
+  if (correct) quizScore += 1;
+  recordAnswer(q.id, correct);
+  document.querySelectorAll("#quizOptions .option").forEach((btn, i) => {
+    btn.classList.add("disabled");
+    btn.disabled = true;
+    if (i === q.correct) btn.classList.add("correct");
+    else if (i === idx) btn.classList.add("wrong");
+  });
+  document.getElementById("quizFeedback").innerHTML =
+    `<div class="feedback ${correct ? "good" : "bad"}">${correct ? "Correct." : "Not quite."}</div>
+     <div class="explain"><strong>Why:</strong> ${q.explain}</div>`;
+  document.getElementById("quizNextWrap").innerHTML = `<button class="primary" id="nextQBtn" style="margin-top:12px;">${quizIndex+1 < quizQueue.length ? "Next question" : "See results"}</button>`;
+  document.getElementById("nextQBtn").addEventListener("click", () => { quizIndex += 1; renderQuizQuestion(); });
+}
+
+/* ---------- PROGRESS ---------- */
+function masteryColor(mastery) {
+  if (mastery >= 3) return "#3d7a4a";
+  if (mastery === 2) return "#8bc34a";
+  if (mastery === 1) return "#e0a34a";
+  return "#cfcfd4";
+}
+function renderProgress() {
+  const total = QUESTIONS.length;
+  let masteredCount = 0, sumMastery = 0, missedCount = 0;
+  QUESTIONS.forEach(q => {
+    const s = getStat(q.id);
+    sumMastery += s.mastery;
+    if (s.mastery >= 3) masteredCount += 1;
+    if (s.lastResult === "wrong") missedCount += 1;
+  });
+  const pct = Math.round((sumMastery / (total * 3)) * 100);
+  const acc = state.totalAnswers ? Math.round((state.totalCorrect / state.totalAnswers) * 100) : 0;
+
+  document.getElementById("statGrid").innerHTML = `
+    <div class="stat-box"><div class="stat-num">${masteredCount}/${total}</div><div class="stat-label">Mastered</div></div>
+    <div class="stat-box"><div class="stat-num">${missedCount}</div><div class="stat-label">Currently missed</div></div>
+    <div class="stat-box"><div class="stat-num">${state.totalAnswers||0}</div><div class="stat-label">Answers given</div></div>
+    <div class="stat-box"><div class="stat-num">${acc}%</div><div class="stat-label">Accuracy</div></div>
+  `;
+  document.getElementById("masteryBar").style.width = pct + "%";
+  document.getElementById("masteryLabel").textContent = pct + "% overall mastery across " + total + " questions";
+
+  const missed = QUESTIONS.filter(q => getStat(q.id).lastResult === "wrong")
+    .sort((a,b) => getStat(b.id).wrong - getStat(a.id).wrong);
+  let html;
+  if (!missed.length) {
+    html = `<div class="small sys">Nothing currently marked wrong. Take the quiz to build up a review queue.</div>`;
+  } else {
+    html = `<table><thead><tr><th></th><th>Question</th><th>Times wrong</th><th>Seen</th></tr></thead><tbody>`;
+    missed.forEach(q => {
+      const s = getStat(q.id);
+      const qtext = q.q.length > 90 ? q.q.slice(0,87) + "…" : q.q;
+      html += `<tr><td><span class="mastery-dot" style="background:${masteryColor(s.mastery)}"></span></td><td>${qtext}</td><td>${s.wrong}</td><td>${s.seen}</td></tr>`;
+    });
+    html += `</tbody></table>`;
+  }
+  document.getElementById("weakTable").innerHTML = html;
+}
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (confirm("Reset all quiz progress for this section? This can't be undone.")) {
+    state = { q: {}, totalAnswers: 0, totalCorrect: 0 };
+    saveState();
+    renderProgress();
+  }
+});
+
+/* ---------- INIT ---------- */
+renderProgress();
+</script>
+</body>
+</html>
