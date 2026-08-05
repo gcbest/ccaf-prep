@@ -1,1 +1,24 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Claude 101 Quick Reference</title><style>body{max-width:720px;margin:40px auto;padding:0 20px;font:16px/1.55 system-ui,sans-serif;color:#202124}h1{font-family:Georgia,serif}table{border-collapse:collapse;width:100%}td,th{padding:10px;border-bottom:1px solid #ddd;text-align:left;vertical-align:top}th{background:#f3eee8}</style></head><body><h1>Claude 101: quick reference</h1><table><tr><th>Need</th><th>Use</th><th>Signature cue</th></tr><tr><td>Interactive thinking</td><td>Chat</td><td>Turn-by-turn</td></tr><tr><td>Delegated deliverable</td><td>Cowork</td><td>Files, tools, schedules, subagents</td></tr><tr><td>Software repository work</td><td>Code</td><td>Inspect → edit → test → review</td></tr><tr><td>Persistent knowledge</td><td>Project</td><td>The “what”</td></tr><tr><td>Repeatable procedure</td><td>Skill</td><td>The “how”</td></tr></table><h2>Prompt recipe</h2><p><strong>Stage</strong> (role/context) → <strong>Task</strong> (action) → <strong>Rules</strong> (format/tone/constraints/examples).</p></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><script>(function(){try{var t=localStorage.getItem('ccaf-theme');if(!t){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script><title>Claude 101 Quick Reference</title><style>
+body{max-width:720px;margin:40px auto;padding:0 20px;font:16px/1.55 system-ui,sans-serif;color:#202124;background:#fff}
+h1{font-family:Georgia,serif}
+table{border-collapse:collapse;width:100%}
+td,th{padding:10px;border-bottom:1px solid #ddd;text-align:left;vertical-align:top}
+th{background:#f3eee8}
+.theme-toggle{flex:none;width:28px;height:28px;padding:0;margin:0;border-radius:999px;border:1px solid #ddd;background:#fff;color:#666;font-size:13px;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.theme-toggle:hover{background:#f3eee8}
+.topbar{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+:root[data-theme="dark"]{color-scheme:dark}
+:root[data-theme="dark"] body{background:#17161a;color:#e8e6e2}
+:root[data-theme="dark"] td,:root[data-theme="dark"] th{border-bottom-color:#34333a}
+:root[data-theme="dark"] th{background:#241f16}
+:root[data-theme="dark"] .theme-toggle{border-color:#3a393f;background:#201f24;color:#9b98a3}
+:root[data-theme="dark"] .theme-toggle:hover{background:#2a292e}
+</style></head><body>
+<div class="topbar"><h1>Claude 101: quick reference</h1><button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button></div>
+<table><tr><th>Need</th><th>Use</th><th>Signature cue</th></tr><tr><td>Interactive thinking</td><td>Chat</td><td>Turn-by-turn</td></tr><tr><td>Delegated deliverable</td><td>Cowork</td><td>Files, tools, schedules, subagents</td></tr><tr><td>Software repository work</td><td>Code</td><td>Inspect → edit → test → review</td></tr><tr><td>Persistent knowledge</td><td>Project</td><td>The “what”</td></tr><tr><td>Repeatable procedure</td><td>Skill</td><td>The “how”</td></tr></table>
+<h2>Prompt recipe</h2><p><strong>Stage</strong> (role/context) → <strong>Task</strong> (action) → <strong>Rules</strong> (format/tone/constraints/examples).</p>
+<script>
+function toggleTheme(){var html=document.documentElement;var next=html.getAttribute('data-theme')==='dark'?'light':'dark';html.setAttribute('data-theme',next);try{localStorage.setItem('ccaf-theme',next);}catch(e){}var btn=document.getElementById('themeToggle');if(btn)btn.textContent=next==='dark'?'☀️':'🌙';}
+(function(){var btn=document.getElementById('themeToggle');if(btn)btn.textContent=document.documentElement.getAttribute('data-theme')==='dark'?'☀️':'🌙';})();
+</script>
+</body></html>

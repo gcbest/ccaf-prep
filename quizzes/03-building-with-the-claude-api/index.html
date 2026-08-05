@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>(function(){try{var t=localStorage.getItem('ccaf-theme');if(!t){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <title>Building with the Claude API Quiz — CCA-F Quiz</title>
   <style>
     :root {
@@ -15,10 +16,25 @@
       --line: #d6ccbd;
       --white: #fffdfa;
       --accent: #96652a;
+      --accent-text: #96652a;
       --good: #3d7a4a;
       --good-bg: #e6f0e4;
       --bad: #a13a2e;
       --bad-bg: #f7e6e2;
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --ink: #ece7de;
+      --muted: #a89d8f;
+      --paper: #17140f;
+      --paper-deep: #221e17;
+      --line: #3a3327;
+      --white: #211d16;
+      --accent-text: #ae7531;
+      --good: #77c57b;
+      --good-bg: #172b19;
+      --bad: #cf786e;
+      --bad-bg: #2b1917;
     }
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
@@ -35,7 +51,13 @@
       color: var(--muted); font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .13em; text-transform: uppercase;
     }
     .masthead a { color: var(--muted); }
-    .kicker { display: block; margin: 22px 0 6px; color: var(--accent); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    .theme-toggle {
+      flex: none; width: 28px; height: 28px; padding: 0; margin: 0; border-radius: 999px;
+      border: 1px solid var(--line); background: none; color: var(--muted);
+      font-size: 13px; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    }
+    .theme-toggle:hover, .theme-toggle:focus-visible { background: var(--paper-deep); outline: none; }
+    .kicker { display: block; margin: 22px 0 6px; color: var(--accent-text); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
     h1 { max-width: 680px; margin: 0 0 10px; font: 700 clamp(1.8rem, 6vw, 2.7rem)/1.08 Georgia, serif; letter-spacing: -.02em; }
     .dek { max-width: 640px; margin: 0 0 24px; color: var(--muted); font-size: 1.02rem; }
     p { max-width: 70ch; margin: 0 0 13px; }
@@ -51,7 +73,7 @@
       padding: 9px 14px; cursor: pointer; font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .04em;
       color: var(--muted); border-bottom: 2px solid transparent; user-select: none; background: none; border-top: none; border-left: none; border-right: none;
     }
-    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab.active { color: var(--accent-text); border-bottom-color: var(--accent-text); }
     .panel { display: none; }
     .panel.active { display: block; }
 
@@ -64,9 +86,9 @@
       font: 600 13px/1.3 system-ui, sans-serif; padding: 8px 13px; border-radius: 3px; border: 1px solid var(--line);
       background: var(--white); color: var(--ink); cursor: pointer;
     }
-    button.primary { background: var(--accent); color: var(--white); border-color: var(--accent); }
+    button.primary { background: var(--accent); color: #fffdfa; border-color: var(--accent); }
     button.primary:hover { filter: brightness(1.08); }
-    button.ghost { background: var(--white); color: var(--accent); border-color: var(--line); }
+    button.ghost { background: var(--white); color: var(--accent-text); border-color: var(--line); }
     button.ghost:hover { background: var(--paper-deep); }
     .small { font: 400 13px/1.5 Georgia, serif; color: var(--muted); }
     .small.sys { font: 400 12.5px/1.5 system-ui, sans-serif; color: var(--muted); }
@@ -79,7 +101,7 @@
       border: 1px solid var(--line); border-radius: 3px; background: var(--white);
       font: 400 15px/1.5 Georgia, serif; color: var(--ink); cursor: pointer;
     }
-    .option:hover:not(.disabled) { border-color: var(--accent); background: var(--paper); }
+    .option:hover:not(.disabled) { border-color: var(--accent-text); background: var(--paper); }
     .option .optkey { display: inline-block; width: 20px; font-weight: 700; color: var(--muted); }
     .option.correct { background: var(--good-bg); border-color: var(--good); }
     .option.wrong { background: var(--bad-bg); border-color: var(--bad); }
@@ -112,7 +134,7 @@
 </head>
 <body>
 <main>
-  <div class="masthead"><a href="../index.html">CCA-F Study System</a><span>Section 3 · Claude API</span></div>
+  <div class="masthead"><a href="../index.html">CCA-F Study System</a><span>Section 3 · Claude API</span><button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button></div>
 
   <nav class="crumbs"><a href="../index.html">Home</a> › <a href="index.html">Quizzes</a> › Section 3 · Claude API</nav>
   <span class="kicker">Section 3 · Building with the Claude API</span>
@@ -1578,6 +1600,20 @@ document.getElementById("resetBtn").addEventListener("click", () => {
     renderProgress();
   }
 });
+
+/* ---------- THEME TOGGLE ---------- */
+function toggleTheme() {
+  var html = document.documentElement;
+  var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  try { localStorage.setItem('ccaf-theme', next); } catch(e) {}
+  var btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = next === 'dark' ? '☀️' : '🌙';
+}
+(function() {
+  var btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+})();
 
 /* ---------- INIT ---------- */
 renderProgress();

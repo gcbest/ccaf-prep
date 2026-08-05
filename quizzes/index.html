@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>(function(){try{var t=localStorage.getItem('ccaf-theme');if(!t){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <title>CCA-F Section Quizzes</title>
   <style>
     :root {
@@ -14,6 +15,16 @@
       --rust-dark: #7d3825;
       --line: #d6ccbd;
       --white: #fffdfa;
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --ink: #ece7de;
+      --muted: #a89d8f;
+      --paper: #17140f;
+      --paper-deep: #221e17;
+      --line: #3a3327;
+      --white: #211d16;
+      --rust-dark: #c96549;
     }
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
@@ -49,12 +60,20 @@
     }
     .card::before { content: ''; position: absolute; left: -1px; top: 0; bottom: 0; width: 4px; background: var(--accent, var(--rust)); }
     .card:hover, .card:focus-visible { background: #fffaf3; outline: none; box-shadow: 0 0 0 3px rgba(168, 78, 49, .16); }
+    :root[data-theme="dark"] .card:hover, :root[data-theme="dark"] .card:focus-visible { background: #2a251c; }
     .card .kicker { display: block; margin: 0 0 5px; color: var(--accent, var(--rust-dark)); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    :root[data-theme="dark"] .card .kicker { color: var(--accent-dark, var(--rust-dark)); }
     .card .title { display: block; margin: 0 0 6px; font: 700 1.25rem/1.25 Georgia, serif; }
     .card .blurb { display: block; max-width: 66ch; color: var(--muted); font-size: .95rem; }
     .card .count { display: inline-block; margin-top: 9px; padding: 3px 9px; background: var(--paper-deep); color: var(--rust-dark); border-radius: 3px; font: 600 11px/1.5 system-ui, sans-serif; letter-spacing: .05em; }
 
     footer { margin-top: 34px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; }
+    .theme-toggle {
+      flex: none; width: 28px; height: 28px; padding: 0; margin: 0; border-radius: 999px;
+      border: 1px solid var(--line); background: none; color: var(--muted);
+      font-size: 13px; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    }
+    .theme-toggle:hover, .theme-toggle:focus-visible { background: var(--paper-deep); outline: none; }
     @media (max-width: 560px) {
       main { padding: 28px 18px 60px; }
       .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
@@ -64,7 +83,7 @@
 </head>
 <body>
   <main>
-    <div class="masthead"><a href="../index.html">CCA-F Study System</a><span>Section quizzes</span></div>
+    <div class="masthead"><a href="../index.html">CCA-F Study System</a><span>Section quizzes</span><button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button></div>
     <nav class="crumbs"><a href="../index.html">Home</a> › Quizzes</nav>
     <h1>Section quizzes</h1>
     <p class="dek">344 multiple-choice questions across all 7 official prep courses, four options each, mimicking the Claude Certified Architect – Foundations exam format.</p>
@@ -73,49 +92,49 @@
       <p><strong>Right/wrong tracking is automatic.</strong> Each quiz saves your answers in this browser. Use "Missed &amp; new first" to weight questions you've gotten wrong or haven't seen yet, or "Review only missed" to drill exclusively on your current weak spots. Each quiz's "My progress" tab shows accuracy and a live list of what's still missed.</p>
     </div>
 
-    <a class="card" href="01-ai-fluency-framework-foundations/index.html" style="--accent:#4f6d5a">
+    <a class="card" href="01-ai-fluency-framework-foundations/index.html" style="--accent:#4f6d5a; --accent-dark:#648b72">
       <span class="kicker">Section 1</span>
       <span class="title">AI Fluency: Framework &amp; Foundations</span>
       <span class="blurb">The 4D Framework (Delegation, Description, Discernment, Diligence), the three modes of AI engagement, and effective prompting techniques.</span>
       <span class="count">14 questions</span>
     </a>
 
-    <a class="card" href="02-claude-101/index.html" style="--accent:#a84e31">
+    <a class="card" href="02-claude-101/index.html" style="--accent:#a84e31; --accent-dark:#c86444">
       <span class="kicker">Section 2</span>
       <span class="title">Claude 101</span>
       <span class="blurb">Chat vs. Cowork vs. Code, Projects, Skills, Artifacts, connectors, and the lightweight eval loop.</span>
       <span class="count">23 questions</span>
     </a>
 
-    <a class="card" href="03-building-with-the-claude-api/index.html" style="--accent:#96652a">
+    <a class="card" href="03-building-with-the-claude-api/index.html" style="--accent:#96652a; --accent-dark:#ae7531">
       <span class="kicker">Section 3 · Heaviest domain</span>
       <span class="title">Building with the Claude API</span>
       <span class="blurb">The Messages API, tool use and the agent loop, structured output, RAG and context management, and workflow vs. agent orchestration.</span>
       <span class="count">102 questions</span>
     </a>
 
-    <a class="card" href="04-claude-with-amazon-bedrock/index.html" style="--accent:#3f6b86">
+    <a class="card" href="04-claude-with-amazon-bedrock/index.html" style="--accent:#3f6b86; --accent-dark:#4f87a9">
       <span class="kicker">Section 4</span>
       <span class="title">Claude with Amazon Bedrock</span>
       <span class="blurb">What changes, and what provably doesn't, when Claude moves behind Amazon Bedrock.</span>
       <span class="count">28 questions</span>
     </a>
 
-    <a class="card" href="05-claude-on-google-cloud/index.html" style="--accent:#55578f">
+    <a class="card" href="05-claude-on-google-cloud/index.html" style="--accent:#55578f; --accent-dark:#7b7db0">
       <span class="kicker">Section 5</span>
       <span class="title">Claude on Google Cloud</span>
       <span class="blurb">Deploying Claude through Vertex AI, and how it compares to the direct API and Bedrock.</span>
       <span class="count">70 questions</span>
     </a>
 
-    <a class="card" href="06-introduction-to-mcp/index.html" style="--accent:#5f6b3a">
+    <a class="card" href="06-introduction-to-mcp/index.html" style="--accent:#5f6b3a; --accent-dark:#7c8c4c">
       <span class="kicker">Section 6</span>
       <span class="title">Introduction to MCP</span>
       <span class="blurb">The Model Context Protocol's three primitives — tools, resources, and prompts — and who controls each.</span>
       <span class="count">31 questions</span>
     </a>
 
-    <a class="card" href="07-claude-code-in-action/index.html" style="--accent:#8f3f3f">
+    <a class="card" href="07-claude-code-in-action/index.html" style="--accent:#8f3f3f; --accent-dark:#be6c6c">
       <span class="kicker">Section 7</span>
       <span class="title">Claude Code in Action</span>
       <span class="blurb">CLAUDE.md hierarchy, rules, skills, hooks, subagents, plan mode, and using Claude Code safely in CI.</span>
@@ -126,5 +145,19 @@
       <p>Each quiz is self-contained and stores progress in this browser's <code>localStorage</code> only — nothing is sent anywhere. See also the <a href="../glossary/ccaf_glossary_quiz_tracker.html">glossary quiz tracker</a> (64 terms + 12 official-style scenario questions) and the <a href="../lessons/index.html">narrative lessons</a>.</p>
     </footer>
   </main>
+  <script>
+    function toggleTheme() {
+      var html = document.documentElement;
+      var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      try { localStorage.setItem('ccaf-theme', next); } catch(e) {}
+      var btn = document.getElementById('themeToggle');
+      if (btn) btn.textContent = next === 'dark' ? '☀️' : '🌙';
+    }
+    (function() {
+      var btn = document.getElementById('themeToggle');
+      if (btn) btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+    })();
+  </script>
 </body>
 </html>

@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>(function(){try{var t=localStorage.getItem('ccaf-theme');if(!t){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <title>AI Fluency — The Week Northstar Decided How to Work</title>
   <style>
     :root {
@@ -12,6 +13,7 @@
       --paper-deep: #ece4d7;
       --rust: #4f6d5a;
       --rust-dark: #35503f;
+      --rust-deep: #35503f;
       --sage: #dfe9df;
       --blue: #dce8ee;
       --line: #d6ccbd;
@@ -71,7 +73,7 @@
     .mini-table { width: 100%; margin: 17px 0; border-collapse: collapse; font-size: .95rem; }
     .mini-table th, .mini-table td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
     .mini-table th { background: var(--paper-deep); color: var(--rust-dark); font: 700 12px/1.25 system-ui, sans-serif; letter-spacing: .05em; text-transform: uppercase; }
-    .end { margin-top: 39px; padding: 27px 28px; background: var(--rust-dark); color: #fff8f1; }
+    .end { margin-top: 39px; padding: 27px 28px; background: var(--rust-deep); color: #fff8f1; }
     .end h2 { color: #fff; }
     .end p { color: #f6dfd1; }
     .source, footer { color: var(--muted); font-size: .9rem; }
@@ -86,12 +88,33 @@
       button { text-align: left; }
       .mini-table { font-size: .88rem; }
     }
+      .theme-toggle {
+      flex: none; width: 28px; height: 28px; padding: 0; margin: 0; border-radius: 999px;
+      border: 1px solid var(--line); background: none; color: var(--muted);
+      font-size: 13px; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    }
+    .theme-toggle:hover, .theme-toggle:focus-visible { background: var(--paper-deep); outline: none; }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --ink: #ece7de;
+      --muted: #a89d8f;
+      --paper: #17140f;
+      --paper-deep: #221e17;
+      --line: #3a3327;
+      --white: #211d16;
+      --sage: #426142;
+      --rust-dark: #5e8d6f;
+    }
+    :root[data-theme="dark"] .opening { background: #292114; }
+    :root[data-theme="dark"] .outcome { background: #1b2716; }
+    :root[data-theme="dark"] .blue-note { background: #142329; border-left-color: #88a6b4; }
+    :root[data-theme="dark"] .prompt { background: #291e14; }
   </style>
 </head>
 <body>
   <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
   <main>
-    <div class="masthead"><span>CCA-F · Section 1</span><span>Northstar Dispatch · The week before</span></div>
+    <div class="masthead"><span>CCA-F · Section 1</span><span>Northstar Dispatch · The week before</span><button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button></div>
     <h1>The week Northstar decided how to work</h1>
     <p class="dek">You are the architect. Before anyone at Northstar picks a tool, the company has to answer a harder question: what work belongs to a person, what belongs to an AI, and how will anyone know the result is good?</p>
 
@@ -393,6 +416,20 @@
       var bar = document.getElementById('progressBar');
       if (bar && progress) bar.style.width = progress + '%';
     }
+  </script>
+  <script>
+    function toggleTheme() {
+      var html = document.documentElement;
+      var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      try { localStorage.setItem('ccaf-theme', next); } catch(e) {}
+      var btn = document.getElementById('themeToggle');
+      if (btn) btn.textContent = next === 'dark' ? '\u2600\ufe0f' : '\ud83c\udf19';
+    }
+    (function() {
+      var btn = document.getElementById('themeToggle');
+      if (btn) btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '\u2600\ufe0f' : '\ud83c\udf19';
+    })();
   </script>
 </body>
 </html>

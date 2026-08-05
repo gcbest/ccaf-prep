@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>(function(){try{var t=localStorage.getItem('ccaf-theme');if(!t){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <title>CCA-F Terminology Quiz & Progress Tracker</title>
 <style>
   :root { color-scheme: light; }
@@ -79,12 +80,54 @@
   .small { font-size: 12px; color: #777; }
   .row-between { display: flex; justify-content: space-between; align-items: center; }
   .badge { font-size: 11px; padding: 2px 7px; border-radius: 999px; background: #eee; color: #555; }
+  .theme-toggle {
+    flex: none; width: 30px; height: 30px; padding: 0; margin: 0; border-radius: 999px;
+    border: 1px solid #d8d8dd; background: #fff; color: #666;
+    font-size: 13px; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+  }
+  .theme-toggle:hover { background: #f0f0f3; }
+
+  :root[data-theme="dark"] { color-scheme: dark; }
+  :root[data-theme="dark"] body { background: #17161a; color: #e8e6e2; }
+  :root[data-theme="dark"] .subtitle { color: #9b98a3; }
+  :root[data-theme="dark"] .tabs { border-bottom-color: #34333a; }
+  :root[data-theme="dark"] .tab { color: #9b98a3; }
+  :root[data-theme="dark"] .tab.active { color: #c76f20; border-bottom-color: #c76f20; }
+  :root[data-theme="dark"] .card { background: #201f24; border-color: #34333a; }
+  :root[data-theme="dark"] .term-row { border-bottom-color: #302f35; }
+  :root[data-theme="dark"] .term-def { color: #c9c6c0; }
+  :root[data-theme="dark"] select, :root[data-theme="dark"] button { border-color: #3a393f; background: #201f24; color: #e8e6e2; }
+  :root[data-theme="dark"] button.primary { background: #b5651d; color: #fff; border-color: #b5651d; }
+  :root[data-theme="dark"] button.primary:hover { background: #c76f20; }
+  :root[data-theme="dark"] button.ghost { background: #201f24; color: #c76f20; border-color: #4a3f30; }
+  :root[data-theme="dark"] .theme-toggle { border-color: #3a393f; background: #201f24; color: #9b98a3; }
+  :root[data-theme="dark"] .theme-toggle:hover { background: #2a292e; }
+  :root[data-theme="dark"] input[type=text] { border-color: #3a393f; background: #201f24; color: #e8e6e2; }
+  :root[data-theme="dark"] .option { border-color: #3a393f; background: #201f24; color: #e8e6e2; }
+  :root[data-theme="dark"] .option:hover { border-color: #c76f20; }
+  :root[data-theme="dark"] .option.correct { background: #172b19; border-color: #4caf50; }
+  :root[data-theme="dark"] .option.wrong { background: #2b1917; border-color: #e57373; }
+  :root[data-theme="dark"] .feedback.good { background: #172b19; color: #77c57b; }
+  :root[data-theme="dark"] .feedback.bad { background: #2b1917; color: #cf786e; }
+  :root[data-theme="dark"] .progress-bar-outer { background: #2a292e; }
+  :root[data-theme="dark"] .stat-box { background: #201f24; border-color: #34333a; }
+  :root[data-theme="dark"] th, :root[data-theme="dark"] td { border-bottom-color: #302f35; }
+  :root[data-theme="dark"] th { color: #9b98a3; }
+  :root[data-theme="dark"] .explain { color: #c9c6c0; background: #241f16; }
+  :root[data-theme="dark"] .small { color: #9b98a3; }
+  :root[data-theme="dark"] .stat-label { color: #9b98a3; }
+  :root[data-theme="dark"] .badge { background: #2a292e; color: #b5b2ac; }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Claude Certified Architect – Foundations</h1>
-  <div class="subtitle">Terminology glossary, quizzes, and progress tracking · from the CCAR-F Exam Guide (v1.0, effective July 2026)</div>
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+    <div>
+      <h1>Claude Certified Architect – Foundations</h1>
+      <div class="subtitle">Terminology glossary, quizzes, and progress tracking · from the CCAR-F Exam Guide (v1.0, effective July 2026)</div>
+    </div>
+    <button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button>
+  </div>
 
   <div class="tabs">
     <div class="tab active" data-tab="glossary">Glossary</div>
@@ -517,6 +560,20 @@ document.getElementById("resetBtn").addEventListener("click", () => {
     renderGlossary();
   }
 });
+
+/* ---------- THEME TOGGLE ---------- */
+function toggleTheme() {
+  var html = document.documentElement;
+  var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  try { localStorage.setItem('ccaf-theme', next); } catch(e) {}
+  var btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = next === 'dark' ? '☀️' : '🌙';
+}
+(function() {
+  var btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+})();
 
 /* ---------- INIT ---------- */
 initDomainFilters();

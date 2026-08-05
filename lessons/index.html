@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>(function(){try{var t=localStorage.getItem('ccaf-theme');if(!t){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <title>CCA-F Lessons — The Northstar Dispatch</title>
   <style>
     :root {
@@ -14,6 +15,16 @@
       --rust-dark: #7d3825;
       --line: #d6ccbd;
       --white: #fffdfa;
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --ink: #ece7de;
+      --muted: #a89d8f;
+      --paper: #17140f;
+      --paper-deep: #221e17;
+      --line: #3a3327;
+      --white: #211d16;
+      --rust-dark: #c96549;
     }
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
@@ -40,13 +51,16 @@
     }
     .card::before { content: ''; position: absolute; left: -1px; top: 0; bottom: 0; width: 4px; background: var(--accent, var(--rust)); }
     .card:hover, .card:focus-within { background: #fffaf3; }
+    :root[data-theme="dark"] .card:hover, :root[data-theme="dark"] .card:focus-within { background: #2a251c; }
     .card a.card-link { display: block; color: inherit; text-decoration: none; }
     .card a.card-link:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(168, 78, 49, .16); }
     .card .kicker { display: block; margin: 0 0 6px; color: var(--accent, var(--rust-dark)); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    :root[data-theme="dark"] .card .kicker { color: var(--accent-dark, var(--rust-dark)); }
     .card .title { display: block; margin: 0 0 7px; font: 700 1.3rem/1.25 Georgia, serif; }
     .card .blurb { display: block; max-width: 66ch; color: var(--muted); font-size: .97rem; }
     .weight { display: inline-block; margin-top: 10px; padding: 3px 9px; background: var(--paper-deep); color: var(--rust-dark); border-radius: 3px; font: 600 11px/1.5 system-ui, sans-serif; letter-spacing: .05em; }
     .quiz-pill { display: inline-block; margin-top: 10px; margin-left: 6px; padding: 3px 9px; border: 1px solid var(--line); color: var(--accent, var(--rust-dark)); border-radius: 3px; font: 600 11px/1.5 system-ui, sans-serif; letter-spacing: .05em; text-decoration: none; }
+    :root[data-theme="dark"] .quiz-pill { color: var(--accent-dark, var(--rust-dark)); }
     .quiz-pill:hover, .quiz-pill:focus-visible { background: var(--paper-deep); outline: none; }
     .lesson-note { margin: 25px 0 0; padding: 17px 18px; background: var(--paper-deep); }
     .lesson-note p:last-child { margin-bottom: 0; }
@@ -56,6 +70,12 @@
     footer { margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; }
     a { color: var(--rust-dark); }
     code { background: var(--paper-deep); padding: .08em .28em; border-radius: 3px; }
+    .theme-toggle {
+      flex: none; width: 28px; height: 28px; padding: 0; margin: 0; border-radius: 999px;
+      border: 1px solid var(--line); background: none; color: var(--muted);
+      font-size: 13px; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    }
+    .theme-toggle:hover, .theme-toggle:focus-visible { background: var(--paper-deep); outline: none; }
     @media (max-width: 560px) {
       main { padding-top: 28px; }
       .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
@@ -65,7 +85,7 @@
 </head>
 <body>
   <main>
-    <div class="masthead"><span>CCA-F · Study system</span><span>The Northstar Dispatch</span></div>
+    <div class="masthead"><span>CCA-F · Study system</span><span>The Northstar Dispatch</span><button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button></div>
     <h1>The Northstar dispatch</h1>
     <p class="dek">Nine lessons, one company, one continuous story. You are the architect at Northstar, and each lesson is a day where a decision has to be made before the work can continue.</p>
 
@@ -75,7 +95,7 @@
 
     <h2>The lessons</h2>
 
-    <div class="card" style="--accent:#4f6d5a">
+    <div class="card" style="--accent:#4f6d5a; --accent-dark:#648b72">
       <a class="card-link" href="0002-ai-fluency-the-four-d-framework.html">
       <span class="kicker">Section 1 · AI Fluency</span>
       <span class="title">The week Northstar decided how to work</span>
@@ -85,7 +105,7 @@
       <a class="quiz-pill" href="../quizzes/01-ai-fluency-framework-foundations/index.html">Take the practice quiz →</a>
     </div>
 
-    <div class="card" style="--accent:#a84e31">
+    <div class="card" style="--accent:#a84e31; --accent-dark:#c86444">
       <a class="card-link" href="0001-claude-101-choose-the-right-surface.html">
       <span class="kicker">Section 2 · Claude 101</span>
       <span class="title">The Northstar launch</span>
@@ -95,7 +115,7 @@
       <a class="quiz-pill" href="../quizzes/02-claude-101/index.html">Take the practice quiz →</a>
     </div>
 
-    <div class="card" style="--accent:#96652a">
+    <div class="card" style="--accent:#96652a; --accent-dark:#ae7531">
       <a class="card-link" href="0003-claude-api-the-first-integration.html">
       <span class="kicker">Section 3 · Part 1 of 3</span>
       <span class="title">The first integration</span>
@@ -105,7 +125,7 @@
       <a class="quiz-pill" href="../quizzes/03-building-with-the-claude-api/index.html">Take the practice quiz →</a>
     </div>
 
-    <div class="card" style="--accent:#7b4a6e">
+    <div class="card" style="--accent:#7b4a6e; --accent-dark:#a86f99">
       <a class="card-link" href="0004-claude-api-tools-retrieval-and-context.html">
       <span class="kicker">Section 3 · Part 2 of 3</span>
       <span class="title">The day Northstar grew hands</span>
@@ -115,7 +135,7 @@
       <a class="quiz-pill" href="../quizzes/03-building-with-the-claude-api/index.html">Take the practice quiz →</a>
     </div>
 
-    <div class="card" style="--accent:#2f6b6b">
+    <div class="card" style="--accent:#2f6b6b; --accent-dark:#3f8e8e">
       <a class="card-link" href="0005-claude-api-agentic-orchestration.html">
       <span class="kicker">Section 3 · Part 3 of 3</span>
       <span class="title">The shape of the system</span>
@@ -125,7 +145,7 @@
       <a class="quiz-pill" href="../quizzes/03-building-with-the-claude-api/index.html">Take the practice quiz →</a>
     </div>
 
-    <div class="card" style="--accent:#3f6b86">
+    <div class="card" style="--accent:#3f6b86; --accent-dark:#4f87a9">
       <a class="card-link" href="0006-claude-with-amazon-bedrock.html">
       <span class="kicker">Section 4 · Amazon Bedrock</span>
       <span class="title">The Cascade Mutual migration</span>
@@ -135,7 +155,7 @@
       <a class="quiz-pill" href="../quizzes/04-claude-with-amazon-bedrock/index.html">Take the practice quiz →</a>
     </div>
 
-    <div class="card" style="--accent:#55578f">
+    <div class="card" style="--accent:#55578f; --accent-dark:#7b7db0">
       <a class="card-link" href="0007-claude-on-google-cloud.html">
       <span class="kicker">Section 5 · Google Cloud</span>
       <span class="title">The Meridian port</span>
@@ -145,7 +165,7 @@
       <a class="quiz-pill" href="../quizzes/05-claude-on-google-cloud/index.html">Take the practice quiz →</a>
     </div>
 
-    <div class="card" style="--accent:#5f6b3a">
+    <div class="card" style="--accent:#5f6b3a; --accent-dark:#7c8c4c">
       <a class="card-link" href="0008-model-context-protocol.html">
       <span class="kicker">Section 6 · MCP</span>
       <span class="title">The Northstar adapter</span>
@@ -155,7 +175,7 @@
       <a class="quiz-pill" href="../quizzes/06-introduction-to-mcp/index.html">Take the practice quiz →</a>
     </div>
 
-    <div class="card" style="--accent:#8f3f3f">
+    <div class="card" style="--accent:#8f3f3f; --accent-dark:#be6c6c">
       <a class="card-link" href="0009-claude-code-in-action.html">
       <span class="kicker">Section 7 · Claude Code</span>
       <span class="title">The keys to the repo</span>
@@ -172,5 +192,19 @@
       <p>Question banks live in each course folder's <code>quiz.md</code>. When you have read a lesson, ask your teacher to quiz you on it one decision at a time, and record the result in <code>PROGRESS.md</code>.</p>
     </footer>
   </main>
+  <script>
+    function toggleTheme() {
+      var html = document.documentElement;
+      var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      try { localStorage.setItem('ccaf-theme', next); } catch(e) {}
+      var btn = document.getElementById('themeToggle');
+      if (btn) btn.textContent = next === 'dark' ? '☀️' : '🌙';
+    }
+    (function() {
+      var btn = document.getElementById('themeToggle');
+      if (btn) btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+    })();
+  </script>
 </body>
 </html>
