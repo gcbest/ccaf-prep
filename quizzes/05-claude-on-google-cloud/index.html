@@ -136,9 +136,9 @@
 </head>
 <body>
 <main>
-  <div class="masthead"><a href="../index.html">CCA-F Study System</a><span>Section 5 · Google Cloud</span><button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button></div>
+  <div class="masthead"><a href="../../index.html">CCA-F Study System</a><span>Section 5 · Google Cloud</span><button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button></div>
 
-  <nav class="crumbs"><a href="../index.html">Home</a> › <a href="index.html">Quizzes</a> › Section 5 · Google Cloud</nav>
+  <nav class="crumbs"><a href="../../index.html">Home</a> › <a href="../index.html">Quizzes</a> › Section 5 · Google Cloud</nav>
   <span class="kicker">Section 5 · Claude on Google Cloud</span>
   <h1>Claude on Google Cloud Quiz</h1>
   <p class="dek">70 multiple-choice questions on deploying Claude through Vertex AI on Google Cloud, and how it compares to the direct API and Bedrock.</p>
@@ -191,8 +191,8 @@
   </div>
 
   <footer>
-    <p>Source questions: <code>05-claude-on-google-cloud/quiz.md</code> · <a href="../05-claude-on-google-cloud/notes.md">section notes</a> · <a href="../lessons/0007-claude-on-google-cloud.html">read the lesson</a></p>
-    <p><a href="index.html">← All section quizzes</a></p>
+    <p>Source questions: <code>05-claude-on-google-cloud/quiz.md</code> · <a href="../../05-claude-on-google-cloud/notes.md">section notes</a> · <a href="../../lessons/0007-claude-on-google-cloud.html">read the lesson</a></p>
+    <p><a href="../index.html">← All section quizzes</a></p>
   </footer>
 </main>
 
@@ -210,7 +210,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Credentials embedded in client-side code are visible to anyone who inspects it, so requests must be routed through your own server, which acts as a secure intermediary that keeps the credentials hidden.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene2"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene2"
   },
   {
     "id": "gcp02",
@@ -223,7 +223,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Claude tokenizes input into tokens, converts each token to a numeric embedding, contextualizes those embeddings using surrounding context to resolve meaning, and finally generates next-token probabilities to produce output.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene2"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene2"
   },
   {
     "id": "gcp03",
@@ -236,7 +236,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Generation halts when the response hits the max_tokens budget, when Claude naturally produces an end-of-sequence token, or when a configured stop sequence appears in the output.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene9"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene9"
   },
   {
     "id": "gcp04",
@@ -249,7 +249,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "The setup flow is: enable the Anthropic model in Vertex AI's Model Garden, install the gcloud CLI, authenticate with gcloud init/auth login, then set the project and run gcloud auth application-default login.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene3"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene3"
   },
   {
     "id": "gcp05",
@@ -262,7 +262,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "On Vertex, the SDK picks up the credentials established by gcloud auth application-default login automatically, so there is no manual API key wiring needed.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene4"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene4"
   },
   {
     "id": "gcp06",
@@ -275,7 +275,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Vertex calls use the AnthropicVertex client class, which requires a region and a project_id to know which GCP region and project to route requests through.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene5"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene5"
   },
   {
     "id": "gcp07",
@@ -288,7 +288,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "Vertex appends a dated @ version suffix like @20250514 to the model name, whereas the direct Anthropic API just uses a plain model name string.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene6"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene6"
   },
   {
     "id": "gcp08",
@@ -301,7 +301,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "max_tokens acts as a hard ceiling on response length; Claude stops generating whenever it judges the response complete, but it will never exceed that budget.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene9"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene9"
   },
   {
     "id": "gcp09",
@@ -314,7 +314,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Vertex's AnthropicVertex client uses messages.create, closely matching the direct Anthropic API, while Bedrock uses its own differently-structured converse(modelId=..., messages=[...]) call.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene8"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene8"
   },
   {
     "id": "gcp10",
@@ -327,7 +327,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "The plumbing differs by provider (auth, client class, call shape, model-ID format), but the underlying thinking layer — prompting, tool schemas, RAG strategy, evaluation, and agent orchestration — stays the same everywhere.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene7"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene7"
   },
   {
     "id": "gcp11",
@@ -340,7 +340,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "The Vertex SDK relies on Google Cloud application-default credentials, which are established by running gcloud auth application-default login; the SDK then picks these up automatically.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene4"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene4"
   },
   {
     "id": "gcp12",
@@ -353,7 +353,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "A Vertex response includes the generated message, usage info, and a stop reason; the stop reason tells the application whether the response ended naturally, hit max_tokens, or matched a configured stop sequence, which can affect logging and retry logic.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene9"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene9"
   },
   {
     "id": "gcp13",
@@ -366,7 +366,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "The recommended approach is prefilling the assistant response plus a stop sequence for the delimiter, or using a dedicated tool schema for stricter contracts — with the application still parsing and validating the result afterward.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene10"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene10"
   },
   {
     "id": "gcp14",
@@ -379,7 +379,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "The follow-up request must keep the full assistant content, include a properly validated tool result matched to its tool_use_id, and retain the original tool definitions so Claude has everything it needs to continue.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene11"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene11"
   },
   {
     "id": "gcp15",
@@ -392,7 +392,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "Debugging RAG requires separating the pipeline stages: confirm the right chunk was retrieved, confirm Claude read the supplied context correctly, and confirm it synthesized the final answer accurately.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene12"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene12"
   },
   {
     "id": "gcp16",
@@ -405,7 +405,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "The framework matches model to priority: Opus for the hardest reasoning, Haiku for fast/cheap high-volume work, and Sonnet as the balanced general-purpose choice — and teams commonly combine all three within a single application rather than picking just one.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene5"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene5"
   },
   {
     "id": "gcp17",
@@ -418,7 +418,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "The Anthropic API is stateless and stores no messages between requests, so the application must manually maintain and resend the entire conversation history (alternating user/assistant entries) with every call.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene7"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene7"
   },
   {
     "id": "gcp18",
@@ -431,7 +431,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "system cannot be passed as None — it must only be included in the API call when a real system prompt exists, and best practice is to make system prompts configurable so the same calling code can be reused.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene7"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene7"
   },
   {
     "id": "gcp19",
@@ -444,7 +444,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Prefilling lets you steer what Claude argues or how it responds by writing the start of its message, which Claude then continues; stop sequences instead control when generation halts, shaping length and format rather than content.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene10"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene10"
   },
   {
     "id": "gcp20",
@@ -457,7 +457,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "The stop sequence text itself is excluded from the final output — generation stops the instant it is produced, and the returned content ends right before the trigger text.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene10"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene10"
   },
   {
     "id": "gcp21",
@@ -470,7 +470,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Temperature 0 makes generation deterministic, since Claude always selects the highest-probability token at each step; if left unset, the parameter defaults to 1.0, which favors more variation.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene9"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene9"
   },
   {
     "id": "gcp22",
@@ -483,7 +483,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Low temperature near 0 suits factual, repeatable tasks like data extraction, while high temperature near 1 suits creative tasks like brainstorming, jokes, or marketing copy where variation is desirable.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene9"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene9"
   },
   {
     "id": "gcp23",
@@ -496,7 +496,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "The six event types are message_start, content_block_start, content_block_delta, content_block_stop, message_delta, and message_stop, and it's specifically content_block_delta that carries the actual visible text chunks.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene7"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene7"
   },
   {
     "id": "gcp24",
@@ -509,7 +509,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "Basic streaming with stream=True hands you a raw event iterator to parse yourself, while .messages.stream() as a context manager exposes stream.text_stream for clean text access; get_final_message() reassembles all the chunks into one complete message object, useful for saving the full response afterward.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene7"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene7"
   },
   {
     "id": "gcp25",
@@ -522,7 +522,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Testing once and shipping, or testing a handful of custom inputs with minor tweaks, are both traps that most engineers fall into; only running the prompt through a full evaluation pipeline gives objective scoring before production.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene7"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene7"
   },
   {
     "id": "gcp26",
@@ -535,7 +535,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "The workflow is: write an initial prompt draft, build an evaluation dataset of test inputs, run each input through the prompt and send to Claude, grade each output on a 1-10 scale and average the scores, then iterate on the prompt and repeat, comparing scores across versions.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene7"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene7"
   },
   {
     "id": "gcp27",
@@ -548,7 +548,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "The three grader types are code graders (programmatic checks), model graders (an LLM judging quality), and human graders; the gotcha is that a model grader asked only for a number tends to default to a middling score around 6, unless the prompt explicitly requires it to state strengths, weaknesses, and reasoning first.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene7"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene7"
   },
   {
     "id": "gcp28",
@@ -561,7 +561,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Code grading dispatches to a format-specific validator (JSON parsing, AST parsing, regex compilation) that returns 10 for a clean parse and 0 for an error, and the final score merges this with the model grader's score by simple averaging.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene7"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene7"
   },
   {
     "id": "gcp29",
@@ -574,7 +574,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "The technique is about tightening the prompt's opening line with an action verb and direct, unambiguous language describing the task and expected output — the course example showed this alone raised the score from 2.32 to 3.92.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene7"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene7"
   },
   {
     "id": "gcp30",
@@ -587,7 +587,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Type A guidelines shape output attributes like length and structure and should almost always be included, while Type B guidelines give step-by-step instructions reserved for complex problems requiring broader consideration — adding these guidelines lifted the example score from 3.92 to 7.86.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene7"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene7"
   },
   {
     "id": "gcp31",
@@ -600,7 +600,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "XML tags help the model tell apart different chunks of interpolated content, reducing ambiguity and improving comprehension, and the best practice is to use specific, descriptive tag names rather than generic ones like 'data.'",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene7"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene7"
   },
   {
     "id": "gcp32",
@@ -613,7 +613,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "One-shot prompting includes a single example while multi-shot includes several, and multi-shot is specifically useful for corner and edge cases — such as sarcasm detection — where extra examples help the model generalize correctly.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene7"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene7"
   },
   {
     "id": "gcp33",
@@ -626,7 +626,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "Because Claude's knowledge is frozen at training time with no access to real-time information, the flow lets Claude request external data, have the server fetch it, send it back to Claude, and have Claude produce a final answer combining the original prompt with the retrieved data.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene11"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene11"
   },
   {
     "id": "gcp34",
@@ -639,7 +639,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Best practice is descriptive function/argument names plus input validation with meaningful error messages, because Claude itself reads the exact error text when a tool call fails and can use it to self-correct on a retry.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene11"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene11"
   },
   {
     "id": "gcp35",
@@ -652,7 +652,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "A tool schema consists of name, description, and input_schema, and best practice is writing 3-4 sentence descriptions for both the tool and its individual arguments so Claude fully understands purpose and usage.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene7"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene7"
   },
   {
     "id": "gcp36",
@@ -665,7 +665,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "A tool_result block includes tool_use_id, content, and is_error; the tool_use_id must match the ID from the original tool_use block, which matters especially when Claude makes several tool calls at once so each gets the correct matched result.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene11"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene11"
   },
   {
     "id": "gcp37",
@@ -678,7 +678,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "stop_reason equal to 'tool_use' signals Claude wants to call a tool; the loop executes the requested tool(s), appends results, and calls Claude again, repeating until stop_reason is no longer 'tool_use' and the final answer can be returned.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene11"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene11"
   },
   {
     "id": "gcp38",
@@ -691,7 +691,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Since Claude tends to send separate sequential single-tool-use messages instead of batching them naturally, the batch tool lets Claude submit a list of invocations that the server runs together, cutting request rounds from N+1 down to just 2.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene11"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene11"
   },
   {
     "id": "gcp39",
@@ -704,7 +704,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "The alternative is to define a tool whose input schema matches the desired output structure and force Claude to call it using tool_choice, then read the structured data from the tool_use block's input field — more reliable than prefill/stop-sequence but requiring more setup.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene10"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene10"
   },
   {
     "id": "gcp40",
@@ -717,7 +717,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Unlike other tools, the Text Editor tool ships with a built-in schema stub from Anthropic, but developers still have to implement the actual functionality themselves, such as view, string_replace, and create_file methods.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene7"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene7"
   },
   {
     "id": "gcp41",
@@ -730,7 +730,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Web Search uses a minimal schema (type, name, max_uses) with no custom implementation since Claude runs the search itself; max_uses limits how many searches Claude can perform, not how many results a single search can return.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene7"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene7"
   },
   {
     "id": "gcp42",
@@ -743,7 +743,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Feeding an entire large document into the prompt hits token limits, decreases model effectiveness, and increases cost and latency; RAG instead chunks the document and retrieves only the most relevant pieces for a given question.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene12"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene12"
   },
   {
     "id": "gcp43",
@@ -756,7 +756,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "The three strategies are size-based (equal-length chunks), structure-based (split by headers/sections), and semantic-based (NLP-grouped); size-based is the recommended default because it's the most reliable across arbitrary document types, even though results are suboptimal.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene12"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene12"
   },
   {
     "id": "gcp44",
@@ -769,7 +769,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "Overlap includes some characters from the neighboring chunk on each side to prevent context from being cut off mid-thought at chunk boundaries, at the cost of duplicating text across chunks.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene12"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene12"
   },
   {
     "id": "gcp45",
@@ -782,7 +782,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "An embedding is a numeric vector, each value conceptually a score on some semantic feature, representing the meaning of the text; Google's text-embedding-005 was named as the specific model available on Vertex AI for generating these vectors.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene12"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene12"
   },
   {
     "id": "gcp46",
@@ -795,7 +795,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Cosine similarity measures the angle between two vectors on a -1 to 1 scale where 1 means most similar; cosine distance is 1 minus similarity; normalization, scaling vectors to unit length, happens as a preprocessing step right after embedding generation and before storage.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene12"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene12"
   },
   {
     "id": "gcp47",
@@ -808,7 +808,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Semantic search can surface conceptually nearby but wrong results that miss exact identifiers; BM25 is a lexical search algorithm that counts term frequency and assigns higher weight to rare, specific terms while down-weighting common words.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene12"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene12"
   },
   {
     "id": "gcp48",
@@ -821,7 +821,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "RRF merges ranked lists from different search methods by summing 1/(1+rank) for each document across every method it appears in, then sorting by the combined score, so a document that ranks well in multiple methods beats one that ranks only moderately in a single method.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene12"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene12"
   },
   {
     "id": "gcp49",
@@ -834,7 +834,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Passing document IDs instead of full text is more efficient since Claude only needs to return an ordered list of IDs that the application looks up afterward; the main trade-off is that reranking adds latency because it requires an extra LLM call on top of the initial retrieval.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene12"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene12"
   },
   {
     "id": "gcp50",
@@ -847,7 +847,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Contextual retrieval fixes chunks losing meaning in isolation by using an LLM to generate a brief description situating each chunk within the document before it's indexed; for documents too large for one prompt, it selectively includes starter chunks for overall summary plus chunks immediately preceding the target chunk for local context.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene12"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene12"
   },
   {
     "id": "gcp51",
@@ -860,7 +860,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "Extended thinking requires a minimum 1024-token budget and max_tokens greater than the thinking_budget with a buffer; the course recommends running prompt evals first and enabling extended thinking only when accuracy remains insufficient, since it adds real cost and latency.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene7"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene7"
   },
   {
     "id": "gcp52",
@@ -873,7 +873,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "A redacted thinking block is Claude's internal reasoning flagged by safety systems and returned encrypted rather than in the clear, preserving conversational context; separately, every normal thinking block carries a cryptographic signature that Claude verifies to ensure it hasn't been tampered with.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene7"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene7"
   },
   {
     "id": "gcp53",
@@ -886,7 +886,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Claude can analyze up to 100 images per request, with token cost based on each image's pixel dimensions; the key takeaway is that accuracy hinges on prompt-engineering quality — simple prompts typically fail even on clear images.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene7"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene7"
   },
   {
     "id": "gcp54",
@@ -899,7 +899,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Adding PDF support only requires swapping the content block's type from 'image' to 'document', changing the media type to something like 'application/pdf', and renaming the variable — Claude can then extract text, images, charts, and tables directly.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene7"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene7"
   },
   {
     "id": "gcp55",
@@ -912,7 +912,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Citation page location applies to PDF documents and includes cited text plus document index, title, and start/end page numbers, while citation char location applies to plain text sources and includes the character position within the text block; both require enabling citations on the source document.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene7"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene7"
   },
   {
     "id": "gcp56",
@@ -925,7 +925,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "For a cache to be reused, the input text must be exactly identical to the previously cached content through the cache breakpoint — any change forces a fresh cache_creation — and the cache itself only lasts 5 minutes.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene10"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene10"
   },
   {
     "id": "gcp57",
@@ -938,7 +938,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "Caching is off by default and requires a manually set cache breakpoint; a text block must use the longhand object format with a cache_control field instead of the plain shorthand string assignment.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene10"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene10"
   },
   {
     "id": "gcp58",
@@ -951,7 +951,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "At least 1024 tokens of content is required for caching, up to 4 breakpoints are allowed per request, and content must be cached in the order: tools, then system prompt, then messages.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene10"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene10"
   },
   {
     "id": "gcp59",
@@ -964,7 +964,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "cache_creation_input_tokens counts tokens newly written to the cache on this request, while cache_read_input_tokens counts tokens reused from an existing cache; any modification to the cached content forces a new cache_creation instead of a cache_read.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene10"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene10"
   },
   {
     "id": "gcp60",
@@ -977,7 +977,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "MCP moves the work of authoring tool schemas and implementations onto a pre-built MCP server instead of your own codebase; it's complementary to tool use rather than a replacement — tool use is the general mechanism, MCP is about who builds the tools.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene13"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene13"
   },
   {
     "id": "gcp61",
@@ -990,7 +990,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Transport agnostic means MCP doesn't dictate the wire format — it can run over stdin/stdout, HTTP, WebSockets, etc.; the core message pairs are the client asking what tools exist (list tools) and asking to run a specific tool (call tool).",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene13"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene13"
   },
   {
     "id": "gcp62",
@@ -1003,7 +1003,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "Tools are model-controlled since Claude itself decides when to invoke them; Resources are app-controlled since the application code decides when to fetch data; Prompts are user-controlled since users trigger them explicitly through the UI.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene13"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene13"
   },
   {
     "id": "gcp63",
@@ -1016,7 +1016,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Direct/static resources always use the same fixed URI, while templated resources use a parameterized URI with wildcards that become keyword arguments at call time; the declared MIME type simply hints at the data format so the client knows how to parse the content.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene13"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene13"
   },
   {
     "id": "gcp64",
@@ -1029,7 +1029,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "A defined MCP prompt returns a list of user/assistant messages that get fed directly to the LLM, letting server authors ship high-quality, tested, domain-specific prompt templates that users can invoke instead of writing their own generic prompts.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene13"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene13"
   },
   {
     "id": "gcp65",
@@ -1042,7 +1042,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "A workflow fits when the exact sequence of steps is predetermined and plannable, while an agent fits when the steps are uncertain and Claude needs to dynamically figure out how to combine available tools to complete the task.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene13"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene13"
   },
   {
     "id": "gcp66",
@@ -1055,7 +1055,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "In the evaluator-optimizer pattern, a producer generates output and an evaluator judges quality by comparing a rendering back against the original image, feeding corrective feedback into another producer pass until the result is accurate, at which point the final output is returned.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene13"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene13"
   },
   {
     "id": "gcp67",
@@ -1068,7 +1068,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Chaining is a sequence of steps where each step's output feeds the next; routing first classifies the input and forwards it to a specialized pipeline for that category; parallelization splits one analysis into independent sub-requests that get combined by a final aggregator step.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene13"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene13"
   },
   {
     "id": "gcp68",
@@ -1081,7 +1081,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "The principle favors a small set of abstract, general-purpose tools that Claude can combine creatively over many narrow specialized ones — Claude Code exemplifies this by relying on primitives like bash, web fetch, and file write instead of dedicated refactor or install tools.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene13"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene13"
   },
   {
     "id": "gcp69",
@@ -1094,7 +1094,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Since agents often can't predict exactly how an action changes the environment, they need feedback on the actual outcome; the computer-use example is Claude taking a screenshot after every click or keystroke to reveal the real resulting state before planning its next move.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene13"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene13"
   },
   {
     "id": "gcp70",
@@ -1107,7 +1107,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Workflows offer higher accuracy, easier testability, and more reliable completion because their steps are known and focused, while agents trade some reliability for flexibility; the course recommends prioritizing workflows whenever possible and reaching for agents only when genuine flexibility is needed.",
-    "reviewHref": "../lessons/0007-claude-on-google-cloud.html#scene13"
+    "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene13"
   }
 ];
 

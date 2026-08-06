@@ -136,9 +136,9 @@
 </head>
 <body>
 <main>
-  <div class="masthead"><a href="../index.html">CCA-F Study System</a><span>Section 3 · Claude API</span><button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button></div>
+  <div class="masthead"><a href="../../index.html">CCA-F Study System</a><span>Section 3 · Claude API</span><button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button></div>
 
-  <nav class="crumbs"><a href="../index.html">Home</a> › <a href="index.html">Quizzes</a> › Section 3 · Claude API</nav>
+  <nav class="crumbs"><a href="../../index.html">Home</a> › <a href="../index.html">Quizzes</a> › Section 3 · Claude API</nav>
   <span class="kicker">Section 3 · Building with the Claude API</span>
   <h1>Building with the Claude API Quiz</h1>
   <p class="dek">102 multiple-choice questions covering the Messages API, tool use and the agent loop, structured output, RAG and context management, and workflow vs. agent orchestration patterns — the single heaviest-weighted section on the exam.</p>
@@ -191,8 +191,8 @@
   </div>
 
   <footer>
-    <p>Source questions: <code>03-building-with-the-claude-api/quiz.md</code> · <a href="../03-building-with-the-claude-api/notes.md">section notes</a> · <a href="../lessons/0005-claude-api-agentic-orchestration.html">read the lesson</a></p>
-    <p><a href="index.html">← All section quizzes</a></p>
+    <p>Source questions: <code>03-building-with-the-claude-api/quiz.md</code> · <a href="../../03-building-with-the-claude-api/notes.md">section notes</a> · <a href="../../lessons/0005-claude-api-agentic-orchestration.html">read the lesson</a></p>
+    <p><a href="../index.html">← All section quizzes</a></p>
   </footer>
 </main>
 
@@ -210,7 +210,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "The Claude Platform's three layers are Primitives (Messages API, tool use, MCP, etc.), Infrastructure (managed agents, retries, observability), and Controls (dashboards, evals) — summarized as build with primitives, scale on infrastructure, run with control.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene0"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene0"
   },
   {
     "id": "api002",
@@ -223,7 +223,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Every basic Messages API call requires a model, a max_tokens ceiling, and a messages array containing the conversation's role/content turns.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene4"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene4"
   },
   {
     "id": "api003",
@@ -236,7 +236,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "response.content is an array, not a plain string — a single turn can include several block types (text, tool_use, thinking) that your code must handle individually.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene2"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene2"
   },
   {
     "id": "api004",
@@ -249,7 +249,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "API keys belong in a .env.local file excluded from version control — hardcoding them in source is a common way they leak on platforms like GitHub.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene2"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene2"
   },
   {
     "id": "api005",
@@ -262,7 +262,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "A client app calling the API directly would expose the API key in devtools or a decompiled binary. The client should send requests to your own backend, and only that server — which keeps the key secret — calls Anthropic.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene2"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene2"
   },
   {
     "id": "api006",
@@ -275,7 +275,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "The tiers run Haiku (cheap/fast, high-volume tasks), Sonnet (balanced, most production work), Opus (deep reasoning, complex analysis), and Fable (most capable, reserved for the toughest problems at the highest cost).",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene1"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene1"
   },
   {
     "id": "api007",
@@ -288,7 +288,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "The recommended workflow is to build a small eval (20–30 examples), test the cheapest model (Haiku) first, and only step up to Sonnet or Opus if quality genuinely requires it.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene1"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene1"
   },
   {
     "id": "api008",
@@ -301,7 +301,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "response.usage reports input and output token counts, which is exactly what your API bill is calculated on.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene3"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene3"
   },
   {
     "id": "api009",
@@ -314,7 +314,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "stop_reason: tool_use means Claude is requesting a tool call, not ending its turn; your code must execute the tool and feed the result back, unlike end_turn which means Claude is done.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene9"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene9"
   },
   {
     "id": "api010",
@@ -327,7 +327,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "The four stages run in order: Tokenization (splitting input into tokens), Embedding (converting tokens to vectors), Contextualization (adjusting vectors based on neighboring tokens), and Generation (assigning probabilities and selecting the next token, repeated).",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene3"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene3"
   },
   {
     "id": "api011",
@@ -340,7 +340,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Temperature reshapes the probability distribution over next tokens: at 0, Claude deterministically picks the highest-probability token (good for factual/extraction tasks); near 1, lower-probability tokens get selected more often (good for creative tasks).",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene7"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene7"
   },
   {
     "id": "api012",
@@ -353,7 +353,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "The API is stateless — each request is processed independently with no memory of prior turns, so the full message history must be resent for Claude to maintain context.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene5"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene5"
   },
   {
     "id": "api013",
@@ -366,7 +366,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "The basic agent loop is: send a message with tools, Claude responds with a final answer or a tool-use request, your code executes the tool, you return the result as a tool_result, and this repeats until stop_reason is end_turn.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene0"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene0"
   },
   {
     "id": "api014",
@@ -379,7 +379,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "A tool definition consists of a name, a description (which Claude reads to decide whether/when to call it), and an input_schema.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene1"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene1"
   },
   {
     "id": "api015",
@@ -392,7 +392,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Claude reads the tool description to decide whether and when to invoke a tool, so a vague description is the most common cause of an agent misfiring or ignoring an available tool.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene1"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene1"
   },
   {
     "id": "api016",
@@ -405,7 +405,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "The tool runner builds the JSON schema from your function's actual types/docs and runs the whole tool-use/tool-result loop internally, replacing a hand-written while loop and stop-reason switch.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene3"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene3"
   },
   {
     "id": "api017",
@@ -418,7 +418,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "The effort parameter for extended thinking lives inside output_config (not the thinking block) and has five levels: low, medium, high (the default), xhigh, and max.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene11"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene11"
   },
   {
     "id": "api018",
@@ -431,7 +431,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "Extended thinking should be skipped for simple classification, extraction, or boilerplate tasks — it adds latency and cost without improving results on tasks that don't need deep reasoning.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene11"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene11"
   },
   {
     "id": "api019",
@@ -444,7 +444,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "The thinking budget must be at least 1024 tokens (with max_tokens set higher to leave room for the answer). A redacted thinking block is reasoning flagged and encrypted by Anthropic's safety systems — still returned with a cryptographic signature to preserve continuity, but its content is hidden.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene11"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene11"
   },
   {
     "id": "api020",
@@ -457,7 +457,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Server tools (web search, code execution, web fetch) are declared by you but run server-side by Anthropic, with results returned in the same response and no agent loop needed. Client tools (like memory or bash) run wherever your own code runs.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene6"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene6"
   },
   {
     "id": "api021",
@@ -470,7 +470,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "For the built-in text editor tool, Anthropic provides the schema so Claude knows how to request file operations, but you must write the implementation that actually performs the reads, writes, and edits.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene7"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene7"
   },
   {
     "id": "api022",
@@ -483,7 +483,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "fine_grained=True disables the API's server-side JSON validation so tool-call chunks stream as soon as Claude generates them, trading that speed for the responsibility of handling potentially malformed JSON yourself.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene8"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene8"
   },
   {
     "id": "api023",
@@ -496,7 +496,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "A server_tool_use block indicates Claude called a server-side tool like web search or code execution, paired with a corresponding tool-result block.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene6"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene6"
   },
   {
     "id": "api024",
@@ -509,7 +509,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Environment inspection means checking state before and after acting (e.g. reading a file before editing, screenshotting after a click) rather than assuming success — Claude can only perceive effects through tool results, so skipping this makes the agent fly blind.",
-    "reviewHref": "../lessons/0005-claude-api-agentic-orchestration.html#scene9"
+    "reviewHref": "../../lessons/0005-claude-api-agentic-orchestration.html#scene9"
   },
   {
     "id": "api025",
@@ -522,7 +522,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "The batch tool trick gives Claude a single batch_tool whose input schema accepts an array of sub-tool calls, letting it pack several independent tool invocations into one round trip instead of issuing them one at a time across multiple turns.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene4"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene4"
   },
   {
     "id": "api026",
@@ -535,7 +535,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "A tool_result block has tool_use_id (matching the original request), content (the tool's output), and is_error (a boolean flag indicating whether execution failed).",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene2"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene2"
   },
   {
     "id": "api027",
@@ -548,7 +548,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Passing tool_choice with type 'tool' and a specific name forces Claude to call that tool, guaranteeing arguments matching its input_schema — more reliable for structured data extraction than prefilling plus stop sequences.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene5"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene5"
   },
   {
     "id": "api028",
@@ -561,7 +561,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "The built-in web search tool uses schema type web_search_20250305, and max_uses defaults to 5 searches per request (configurable, with an optional allowed_domains restriction).",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene6"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene6"
   },
   {
     "id": "api029",
@@ -574,7 +574,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Tools are systems you own and code yourself, Skills are your own processes/procedures expressed as instructions (not integrations), and MCP connects to third-party services whose integration the provider owns.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene11"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene11"
   },
   {
     "id": "api030",
@@ -587,7 +587,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "You need an mcp_servers entry declaring the connection (type, URL, name, optional auth) plus a tools entry of type mcp_toolset naming that server, which grants access to its tools by default.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene12"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene12"
   },
   {
     "id": "api031",
@@ -600,7 +600,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "You don't write JSON schemas for an MCP server's tools yourself — Claude introspects the server and discovers its tools and schemas automatically.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene12"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene12"
   },
   {
     "id": "api032",
@@ -613,7 +613,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "You disable everything by default with default_config: {enabled: false}, then explicitly enable only the read-only tools you want in configs — safer than trying to disable each write tool individually.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene12"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene12"
   },
   {
     "id": "api033",
@@ -626,7 +626,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Claude Code's toolset (bash, read, write, edit, glob, grep) illustrates giving agents abstract, combinable tools rather than hyper-specialized ones, so Claude can creatively combine primitives to handle unanticipated situations.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene9"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene9"
   },
   {
     "id": "api034",
@@ -639,7 +639,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Resources proactively expose data (e.g., document contents) that a client fetches directly via a URI without Claude deciding anything; tools are invoked reactively, with Claude choosing when to call them to perform an action.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene11"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene11"
   },
   {
     "id": "api035",
@@ -652,7 +652,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "MCP prompts are pre-defined, pre-tested templates a server exposes for its domain so users don't write ad-hoc prompts — commonly surfaced in clients as autocomplete or slash-command options that ask for required arguments.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene11"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene11"
   },
   {
     "id": "api036",
@@ -665,7 +665,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Anthropic's four context-management patterns are just-in-time context, server-side compaction, prompt caching, and the memory tool.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene17"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene17"
   },
   {
     "id": "api037",
@@ -678,7 +678,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Just-in-time context is a design strategy (look up what you need when you need it) rather than an API feature you enable with a flag, unlike compaction, caching, or the memory tool.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene17"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene17"
   },
   {
     "id": "api038",
@@ -691,7 +691,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Server-side compaction is enabled by adding context_management: {edits: [{type: 'compact'}]} to the request; the API then automatically summarizes old turns once input crosses a trigger threshold, without you tracking conversation length.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene17"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene17"
   },
   {
     "id": "api039",
@@ -704,7 +704,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "You implement the storage backend (file system, database, etc.) yourself; Claude just reads/writes to a memory directory via tool calls, while Anthropic automatically injects the system instruction telling Claude to check memory before starting.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene17"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene17"
   },
   {
     "id": "api040",
@@ -717,7 +717,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "The prompt cache lives for one hour and is invalidated by any change to content up to and including the cache breakpoint — even adding a single word.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene18"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene18"
   },
   {
     "id": "api041",
@@ -730,7 +730,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Content must total at least 1024 tokens up to the breakpoint to be cacheable, and caching is never automatic — you must manually add a cache_control: {type: 'ephemeral'} breakpoint.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene18"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene18"
   },
   {
     "id": "api042",
@@ -743,7 +743,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "System prompts and tool definitions are the best candidates for caching because they rarely change between requests, making them ideal for reuse.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene18"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene18"
   },
   {
     "id": "api043",
@@ -756,7 +756,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Claude processes a request in the order tools, then system prompt, then messages, and you can set up to 4 cache breakpoints total.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene18"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene18"
   },
   {
     "id": "api044",
@@ -769,7 +769,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "cache_creation_input_tokens is the cost of first writing content to the cache; cache_read_input_tokens is the (cheaper) cost of retrieving that content from cache on a later matching request.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene18"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene18"
   },
   {
     "id": "api045",
@@ -782,7 +782,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Since the Docker code execution sandbox can't make external network calls, the Files API is the only channel to upload data in (referenced by file ID) and retrieve generated outputs back out.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene19"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene19"
   },
   {
     "id": "api046",
@@ -795,7 +795,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "The image block should come before the text describing it — combined with clear labels for multiple images — so Claude can unambiguously match each description to the right image.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene12"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene12"
   },
   {
     "id": "api047",
@@ -808,7 +808,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Claude processes a PDF as a document block that preserves visual structure — tables, charts, embedded images — going beyond what a plain OCR text dump would capture.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene12"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene12"
   },
   {
     "id": "api048",
@@ -821,7 +821,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "citation_page_location (page start/end) is used for PDFs, and citation_char_location (character start/end index) is used for plain text — both require enabling citations on the source document block.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene12"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene12"
   },
   {
     "id": "api049",
@@ -834,7 +834,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "The Computer Use loop mirrors the standard agent loop: send a screenshot, Claude requests an action (click, type, key) as a tool call, your code executes it sandboxed, a new screenshot is returned as the tool result, and this repeats until done.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene10"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene10"
   },
   {
     "id": "api050",
@@ -847,7 +847,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Computer Use lets Claude take arbitrary clicks, keystrokes, and shell commands to accomplish a goal, so it must run in a sandboxed VM/container — an unsandboxed production desktop offers no containment if something goes wrong.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene10"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene10"
   },
   {
     "id": "api051",
@@ -860,7 +860,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "A request can include up to 100 images, and Claude charges for image tokens based on pixel dimensions (height × width) — larger images cost more tokens regardless of file format.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene12"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene12"
   },
   {
     "id": "api052",
@@ -873,7 +873,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "The prompt-engineering iteration cycle runs: set a goal, write an initial prompt, evaluate it, apply a technique, then re-evaluate — repeating the apply/re-evaluate steps.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene13"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene13"
   },
   {
     "id": "api053",
@@ -886,7 +886,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Clear means stating exactly what you want in simple, unambiguous language; direct means phrasing that as an instruction (not a question), starting with an action verb like 'Write' or 'Generate'.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene13"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene13"
   },
   {
     "id": "api054",
@@ -899,7 +899,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "The two types of specificity are output quality guidelines (describing qualities like length, structure, tone — useful in almost every prompt) and process steps (explicit steps to follow, reserved for complex or critical-thinking tasks).",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene13"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene13"
   },
   {
     "id": "api055",
@@ -912,7 +912,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "XML tags are most valuable when a prompt includes large amounts of context, mixes different content types (like code and documentation), or interpolates multiple variables — the tags create clear boundaries so Claude doesn't confuse instructions with data.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene14"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene14"
   },
   {
     "id": "api056",
@@ -925,7 +925,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "One-shot prompting gives a single example to establish a pattern, while multi-shot gives multiple examples, typically to cover different scenarios or edge cases.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene14"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene14"
   },
   {
     "id": "api057",
@@ -938,7 +938,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "The best few-shot examples come from your highest-scoring outputs in a prompt evaluation run — real input/output pairs, paired with context explaining why each one is good.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene14"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene14"
   },
   {
     "id": "api058",
@@ -951,7 +951,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "The naive prompt scored 2.32; making it clear and direct raised it to 3.92, and then adding specific output guidelines (calories, macros, timing, portions) raised it further to 7.86.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene13"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene13"
   },
   {
     "id": "api059",
@@ -964,7 +964,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Assistant message prefilling means manually adding an assistant-role message before sending the request; Claude treats it as text it already wrote and continues from that exact point, so the full response requires concatenating the prefill with Claude's continuation.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene9"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene9"
   },
   {
     "id": "api060",
@@ -977,7 +977,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Stop sequences are exact strings that immediately halt generation the moment Claude produces them — and the matched text itself is excluded from the returned output.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene9"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene9"
   },
   {
     "id": "api061",
@@ -990,7 +990,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Prompt engineering is the set of techniques used to write better prompts, while prompt evaluation is the practice of measuring how well a prompt performs through automated, objective testing.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene15"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene15"
   },
   {
     "id": "api062",
@@ -1003,7 +1003,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "The eval workflow is: draft a prompt, create an eval dataset, feed the inputs through Claude, feed the outputs through a grader, then change the prompt and repeat.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene15"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene15"
   },
   {
     "id": "api063",
@@ -1016,7 +1016,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Generating the eval dataset isn't itself the task under evaluation, so it's fine — and cheaper/faster — to use Haiku rather than the model you're actually testing.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene15"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene15"
   },
   {
     "id": "api064",
@@ -1029,7 +1029,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Prefilling the response with an opening fence like ```json and setting a stop sequence of [\"```\"] ensures the returned text is clean JSON ready for json.loads().",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene15"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene15"
   },
   {
     "id": "api065",
@@ -1042,7 +1042,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "The three grader types are code graders (syntax, length, keyword checks), model graders (quality, instruction-following, safety), and human graders (comprehensiveness, depth, nuanced relevance).",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene16"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene16"
   },
   {
     "id": "api066",
@@ -1055,7 +1055,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Beyond a bare number, you should ask the model grader for strengths, weaknesses, and reasoning — without that context, model graders tend to cluster around a middling score (around 6) regardless of true quality.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene16"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene16"
   },
   {
     "id": "api067",
@@ -1068,7 +1068,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "During active prompt-development iteration, a small set (2–3 cases) is enough for fast iteration; final validation should scale up to tens or hundreds of cases.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene15"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene15"
   },
   {
     "id": "api068",
@@ -1081,7 +1081,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Of the three paths — ship after minimal testing, tweak for a few custom inputs then ship, or run a full evaluation pipeline — the first two are traps because they feel like validation but give no objective measure across the input space; only the evaluation pipeline is recommended.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene15"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene15"
   },
   {
     "id": "api069",
@@ -1094,7 +1094,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "RAG solves the problem of documents too large to fit in a single prompt by preprocessing documents into chunks and retrieving, at query time, only the chunks most relevant to the user's question.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene13"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene13"
   },
   {
     "id": "api070",
@@ -1107,7 +1107,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "The four chunking strategies are size-based (simple/reliable, can cut mid-sentence), structure-based (clean chunks, needs reliable structure), sentence-based (a practical middle ground), and semantic-based (most relevant, computationally expensive).",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene13"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene13"
   },
   {
     "id": "api071",
@@ -1120,7 +1120,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Size-based chunking with overlap is the common production default because it's simple, reliable, and works across any content type, including code — the overlap prevents sentences from being lost at chunk boundaries.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene13"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene13"
   },
   {
     "id": "api072",
@@ -1133,7 +1133,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "A text embedding is a numerical vector representation of meaning, with each dimension a value between -1 and +1 — individual dimensions aren't directly interpretable by humans, but nearby meanings land near each other in the vector space.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene14"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene14"
   },
   {
     "id": "api073",
@@ -1146,7 +1146,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Anthropic doesn't provide an embeddings API; the recommended alternative is VoyageAI, which requires its own separate account and VOYAGE_API_KEY.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene14"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene14"
   },
   {
     "id": "api074",
@@ -1159,7 +1159,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Semantic search ranks by conceptual similarity rather than exact string matching, so it can fail to surface the one chunk that literally contains a specific incident ID.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene15"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene15"
   },
   {
     "id": "api075",
@@ -1172,7 +1172,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "BM25 works by tokenizing the query, counting term frequency across documents, weighting rarer terms more heavily than common ones, and returning documents with the most instances of the highest-weighted terms.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene15"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene15"
   },
   {
     "id": "api076",
@@ -1185,7 +1185,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Hybrid search runs semantic search and BM25 (lexical) search in parallel and merges their results, combining conceptual understanding with precision on exact terms or IDs.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene15"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene15"
   },
   {
     "id": "api077",
@@ -1198,7 +1198,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Reranking is a second pass, after initial retrieval, that reorders a wider candidate set (e.g. top 20-50) using a more discriminating method like an LLM scoring call — initial retrieval optimizes for recall, reranking for precision, before truncating to the final top-K.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene16"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene16"
   },
   {
     "id": "api078",
@@ -1211,7 +1211,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Contextual retrieval solves the problem of an isolated chunk losing context needed to find it (e.g. which company/quarter a stat refers to). It happens before embedding/indexing: an LLM generates a short situating sentence from the full document and prepends it to each chunk.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene16"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene16"
   },
   {
     "id": "api079",
@@ -1224,7 +1224,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Cosine similarity is the cosine of the angle between two vectors, ranging -1 to 1 where closer to 1 is more similar. Cosine distance equals 1 minus cosine similarity, so it runs inversely — closer to 0 means more similar, which is what vector search typically returns.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene14"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene14"
   },
   {
     "id": "api080",
@@ -1237,7 +1237,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "A workflow follows a predefined series of steps you can picture in advance for a known problem, while an agent is handed a goal and tools and determines its own steps along the way.",
-    "reviewHref": "../lessons/0005-claude-api-agentic-orchestration.html#scene1"
+    "reviewHref": "../../lessons/0005-claude-api-agentic-orchestration.html#scene1"
   },
   {
     "id": "api081",
@@ -1250,7 +1250,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "The general recommendation is to prefer workflows wherever possible and reach for agents only when truly needed, since workflows offer higher reliability and predictability — and users care about consistent results, not architectural sophistication.",
-    "reviewHref": "../lessons/0005-claude-api-agentic-orchestration.html#scene1"
+    "reviewHref": "../../lessons/0005-claude-api-agentic-orchestration.html#scene1"
   },
   {
     "id": "api082",
@@ -1263,7 +1263,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Parallelization splits one complex decision into independent sub-tasks that run simultaneously and are then aggregated — the benefit is that focused attention per sub-task produces more thorough, accurate analysis than one call juggling everything.",
-    "reviewHref": "../lessons/0005-claude-api-agentic-orchestration.html#scene4"
+    "reviewHref": "../../lessons/0005-claude-api-agentic-orchestration.html#scene4"
   },
   {
     "id": "api083",
@@ -1276,7 +1276,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Chaining solves the 'long prompt problem,' where a single prompt with many constraints gets partially violated — the fix is a two-step process: generate a first draft, then run a focused revision step that addresses only the constraints that were violated.",
-    "reviewHref": "../lessons/0005-claude-api-agentic-orchestration.html#scene3"
+    "reviewHref": "../../lessons/0005-claude-api-agentic-orchestration.html#scene3"
   },
   {
     "id": "api084",
@@ -1289,7 +1289,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Routing works in two steps: a Claude call first categorizes the input into one of your predefined categories, then the input is forwarded to the single specialized pipeline built for that category.",
-    "reviewHref": "../lessons/0005-claude-api-agentic-orchestration.html#scene5"
+    "reviewHref": "../../lessons/0005-claude-api-agentic-orchestration.html#scene5"
   },
   {
     "id": "api085",
@@ -1302,7 +1302,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "In the Evaluator-Optimizer pattern, a producer creates output, a grader checks it against criteria, and if it fails, feedback loops back to the producer for revision — repeating until the grader accepts it.",
-    "reviewHref": "../lessons/0005-claude-api-agentic-orchestration.html#scene6"
+    "reviewHref": "../../lessons/0005-claude-api-agentic-orchestration.html#scene6"
   },
   {
     "id": "api086",
@@ -1315,7 +1315,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Rather than guessing or failing, Claude recognizes the missing purchase date and asks the user for it before calculating — an agentic capability that a rigid, pre-defined workflow would need an explicit branch to replicate.",
-    "reviewHref": "../lessons/0005-claude-api-agentic-orchestration.html#scene8"
+    "reviewHref": "../../lessons/0005-claude-api-agentic-orchestration.html#scene8"
   },
   {
     "id": "api087",
@@ -1328,7 +1328,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Because the steps (describe, model, render, grade, fix) are fully known in advance and include a producer/grader feedback loop, this is Evaluator-Optimizer implemented as a workflow rather than a general-purpose agent.",
-    "reviewHref": "../lessons/0005-claude-api-agentic-orchestration.html#scene6"
+    "reviewHref": "../../lessons/0005-claude-api-agentic-orchestration.html#scene6"
   },
   {
     "id": "api088",
@@ -1341,7 +1341,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "The four managed-agent primitives, in order, are Agent (the reusable persona: model/system prompt/tools), Environment (where it runs), Session (a single run — the unit of work), and Events (the messages flowing in/out).",
-    "reviewHref": "../lessons/0005-claude-api-agentic-orchestration.html#scene10"
+    "reviewHref": "../../lessons/0005-claude-api-agentic-orchestration.html#scene10"
   },
   {
     "id": "api089",
@@ -1354,7 +1354,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Managed agents are not a gated feature — they're enabled by default for every API account, with no special access request needed.",
-    "reviewHref": "../lessons/0005-claude-api-agentic-orchestration.html#scene10"
+    "reviewHref": "../../lessons/0005-claude-api-agentic-orchestration.html#scene10"
   },
   {
     "id": "api090",
@@ -1367,7 +1367,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "You must open the event stream before sending the kickoff message, because the stream only delivers events that occur after it's opened — otherwise the earliest events would be missed.",
-    "reviewHref": "../lessons/0005-claude-api-agentic-orchestration.html#scene11"
+    "reviewHref": "../../lessons/0005-claude-api-agentic-orchestration.html#scene11"
   },
   {
     "id": "api091",
@@ -1380,7 +1380,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "The three key event types to watch for are agent.message (Claude's text output), agent.tool_use (which tool was called), and session.status_idle (signaling the agent has finished).",
-    "reviewHref": "../lessons/0005-claude-api-agentic-orchestration.html#scene11"
+    "reviewHref": "../../lessons/0005-claude-api-agentic-orchestration.html#scene11"
   },
   {
     "id": "api092",
@@ -1393,7 +1393,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "The grader is a separate component with its own context window that evaluates the agent's output against defined success criteria and provides feedback, with the agent iterating and resubmitting until the rubric passes.",
-    "reviewHref": "../lessons/0005-claude-api-agentic-orchestration.html#scene12"
+    "reviewHref": "../../lessons/0005-claude-api-agentic-orchestration.html#scene12"
   },
   {
     "id": "api093",
@@ -1406,7 +1406,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Managed agents make sense when a loop would run for a long time (minutes to hours), touch many tools or files, or needs to be resumable after interruptions — situations a simple hand-written loop struggles with.",
-    "reviewHref": "../lessons/0005-claude-api-agentic-orchestration.html#scene13"
+    "reviewHref": "../../lessons/0005-claude-api-agentic-orchestration.html#scene13"
   },
   {
     "id": "api094",
@@ -1419,7 +1419,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "The system parameter sets Claude's persona and behavior for the request — for example, instructing it to act as a terse senior code reviewer.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene6"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene6"
   },
   {
     "id": "api095",
@@ -1432,7 +1432,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Routing tasks to different models lets an application match each task type to the cheapest model that still meets its quality bar, balancing overall quality, latency, and cost across the system.",
-    "reviewHref": "../lessons/0005-claude-api-agentic-orchestration.html#scene5"
+    "reviewHref": "../../lessons/0005-claude-api-agentic-orchestration.html#scene5"
   },
   {
     "id": "api096",
@@ -1445,7 +1445,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Adding a new client-side tool just requires adding its definition to the tools array and a dispatch case in the tool-execution function — the surrounding agent loop doesn't need to change.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene3"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene3"
   },
   {
     "id": "api097",
@@ -1458,7 +1458,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Code graders catch objective, mechanical issues like syntax or keyword presence, while model graders assess subjective qualities like completeness and instruction-following — combining both covers format correctness and response quality together.",
-    "reviewHref": "../lessons/0003-claude-api-the-first-integration.html#scene16"
+    "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene16"
   },
   {
     "id": "api098",
@@ -1471,7 +1471,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Reciprocal rank fusion merges the rank positions (not raw scores) from different retrieval methods, giving a boost to results that consistently rank near the top across multiple methods like semantic search and BM25.",
-    "reviewHref": "../lessons/0004-claude-api-tools-retrieval-and-context.html#scene15"
+    "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene15"
   },
   {
     "id": "api099",
@@ -1484,7 +1484,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Claude Code runs each parallel instance in its own Git work tree, a fully isolated copy of the project on a separate branch, so simultaneous edits never collide — changes are committed and later merged back into the main branch.",
-    "reviewHref": "../lessons/0005-claude-api-agentic-orchestration.html#scene8"
+    "reviewHref": "../../lessons/0005-claude-api-agentic-orchestration.html#scene8"
   },
   {
     "id": "api100",
@@ -1497,7 +1497,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "The init command scans the codebase to learn its architecture and style, producing a CLAUDE.md file that's automatically loaded as context for every future Claude Code request in that project.",
-    "reviewHref": "../lessons/0005-claude-api-agentic-orchestration.html#scene8"
+    "reviewHref": "../../lessons/0005-claude-api-agentic-orchestration.html#scene8"
   },
   {
     "id": "api101",
@@ -1510,7 +1510,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "The workflow has a scheduled GitHub Action pull the last 24 hours of CloudWatch logs and hand them to Claude Code, which identifies and deduplicates errors, analyzes root causes, generates fixes, and opens a PR for human review — not an automatic deploy.",
-    "reviewHref": "../lessons/0005-claude-api-agentic-orchestration.html#scene8"
+    "reviewHref": "../../lessons/0005-claude-api-agentic-orchestration.html#scene8"
   },
   {
     "id": "api102",
@@ -1523,7 +1523,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "The two recommended workflows are: (1) a three-step process where Claude analyzes files, plans without coding, then implements the approved plan; and (2) a test-driven process where Claude is given context, suggests tests, and then writes code until those tests pass.",
-    "reviewHref": "../lessons/0005-claude-api-agentic-orchestration.html#scene8"
+    "reviewHref": "../../lessons/0005-claude-api-agentic-orchestration.html#scene8"
   }
 ];
 

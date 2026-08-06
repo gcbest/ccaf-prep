@@ -136,9 +136,9 @@
 </head>
 <body>
 <main>
-  <div class="masthead"><a href="../index.html">CCA-F Study System</a><span>Section 7 · Claude Code</span><button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button></div>
+  <div class="masthead"><a href="../../index.html">CCA-F Study System</a><span>Section 7 · Claude Code</span><button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button></div>
 
-  <nav class="crumbs"><a href="../index.html">Home</a> › <a href="index.html">Quizzes</a> › Section 7 · Claude Code</nav>
+  <nav class="crumbs"><a href="../../index.html">Home</a> › <a href="../index.html">Quizzes</a> › Section 7 · Claude Code</nav>
   <span class="kicker">Section 7 · Claude Code in Action</span>
   <h1>Claude Code in Action Quiz</h1>
   <p class="dek">76 multiple-choice questions on CLAUDE.md hierarchy, rules, skills, hooks, subagents, plan mode, and using Claude Code safely and effectively in CI.</p>
@@ -191,8 +191,8 @@
   </div>
 
   <footer>
-    <p>Source questions: <code>07-claude-code-in-action/quiz.md</code> · <a href="../07-claude-code-in-action/notes.md">section notes</a> · <a href="../lessons/0009-claude-code-in-action.html">read the lesson</a></p>
-    <p><a href="index.html">← All section quizzes</a></p>
+    <p>Source questions: <code>07-claude-code-in-action/quiz.md</code> · <a href="../../07-claude-code-in-action/notes.md">section notes</a> · <a href="../../lessons/0009-claude-code-in-action.html">read the lesson</a></p>
+    <p><a href="../index.html">← All section quizzes</a></p>
   </footer>
 </main>
 
@@ -210,7 +210,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Claude Code is an agent with direct access to your files, terminal, and codebase, so it edits and executes changes itself rather than making you copy-paste code back and forth like in Claude.ai chat.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene0"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene0"
   },
   {
     "id": "cc002",
@@ -223,7 +223,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "An AI agent is software that interacts with its environment and takes actions toward a defined goal, essentially an LLM running in a real-time loop with access to tools, services, or other agents, not just a passive question-answerer.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene0"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene0"
   },
   {
     "id": "cc003",
@@ -236,7 +236,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "The agentic loop starts with a prompt, gathers context and gets a response from the model, takes an action, then verifies that action against the original intent, looping back and retrying until the goal is achieved.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene0"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene0"
   },
   {
     "id": "cc004",
@@ -249,7 +249,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "The core workflow taught in the course is Explore, Plan, Code, Commit, moving from understanding the codebase to a reviewed plan, then to implementation and a finished commit.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene1"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene1"
   },
   {
     "id": "cc005",
@@ -262,7 +262,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Plan Mode happens before any code exists, so catching a wrong approach there is a cheap revision, whereas catching the same mistake after code is written means undoing real work.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene1"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene1"
   },
   {
     "id": "cc006",
@@ -275,7 +275,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "A subagent starts with a clean, unbiased context, so it doesn't share the main session's bias from having just written the code, making it more likely to notice real problems.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene1"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene1"
   },
   {
     "id": "cc007",
@@ -288,7 +288,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "This command resumes the Claude Code session that was originally linked to that PR, restoring full context so you can address review comments or fix a failing build later.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene1"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene1"
   },
   {
     "id": "cc008",
@@ -301,7 +301,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Starting without CLAUDE.md lets you observe the specific spots where Claude actually needs correcting, so the file you eventually write stays compact and targeted instead of exhaustive.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene5"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene5"
   },
   {
     "id": "cc009",
@@ -314,7 +314,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "A subagent is a delegated task with its own isolated context window, and because it reports back only a summary, the main session's context isn't cluttered by every step of the exploration.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene13"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene13"
   },
   {
     "id": "cc010",
@@ -327,7 +327,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "Preloading a skill via the `skill` key loads its full content immediately, which is different from the main conversation's progressive loading where only the name and description load first.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene13"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene13"
   },
   {
     "id": "cc011",
@@ -340,7 +340,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "You steer `/compact` by adding instructions right after the command, telling it what to focus on; without that steering, the summarization might drop something important.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene14"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene14"
   },
   {
     "id": "cc012",
@@ -353,7 +353,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "`/compact` frees up context by summarizing while retaining a memory of the conversation, useful mid-feature, while `/clear` wipes everything, which is better when starting a new feature so old context doesn't bias the new work.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene14"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene14"
   },
   {
     "id": "cc013",
@@ -366,7 +366,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "The rewind menu opens with a double-tap of Escape on an empty prompt and offers restoring code and conversation together, conversation only, code only, or summarizing from or up to a checkpoint.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene14"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene14"
   },
   {
     "id": "cc014",
@@ -379,7 +379,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "`/goal` sets a completion condition that Claude works toward until a fast evaluator confirms it's met, but since that evaluator only reads the transcript, the condition must be verifiable from Claude's own output rather than external state.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene14"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene14"
   },
   {
     "id": "cc015",
@@ -392,7 +392,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Worktrees give each parallel session its own independent copy of the file tree, which prevents two agents working at the same time from overwriting each other's changes.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene13"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene13"
   },
   {
     "id": "cc016",
@@ -405,7 +405,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "A vague prompt leaves Claude to explore the codebase and reason its way to the missing details, and that extra exploration and reasoning consumes far more context than a precise, detailed prompt would have.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene14"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene14"
   },
   {
     "id": "cc017",
@@ -418,7 +418,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "A worktree with no uncommitted changes is automatically cleaned up when its session exits, while a worktree with pending changes is left in place instead of being silently deleted.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene13"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene13"
   },
   {
     "id": "cc018",
@@ -431,7 +431,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "CLAUDE.md is guidance, not enforcement, and because every line competes for Claude's attention, a longer file lowers the reliability of each individual rule, so the goal is to keep it lean.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene5"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene5"
   },
   {
     "id": "cc019",
@@ -444,7 +444,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "A truly hard rule belongs in a PreToolUse hook because a hook is code that can actually stop the action from happening, while CLAUDE.md is only guidance that Claude usually, but not always, follows.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene6"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene6"
   },
   {
     "id": "cc020",
@@ -457,7 +457,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "The four CLAUDE.md locations are managed policy (org-level and non-excludable), User (personal, applies across all projects), Project (team-shared and committed), and Local (git-ignored, personal notes scoped to one repo).",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene5"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene5"
   },
   {
     "id": "cc021",
@@ -470,7 +470,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Imports are expanded inline at launch, so all the imported content still loads into context; the benefit is purely organizational, letting you split a large file into labeled pieces.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene5"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene5"
   },
   {
     "id": "cc022",
@@ -483,7 +483,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Emphasis words like 'IMPORTANT' only work by contrast with quieter text around them, so if every rule in the file is marked as urgent, none of them actually stand out anymore.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene5"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene5"
   },
   {
     "id": "cc023",
@@ -496,7 +496,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "The two rules are to be specific and checkable rather than vague, and to name the actual replacement behavior instead of only stating what not to do.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene5"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene5"
   },
   {
     "id": "cc024",
@@ -509,7 +509,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "The recommended approach treats a wrong Claude action as a bug report against CLAUDE.md, letting you tell Claude to add the rule, and treats the file itself like production code where any line you can't justify should be deleted.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene5"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene5"
   },
   {
     "id": "cc025",
@@ -522,7 +522,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "A verification skill is recommended first because manual verification depends on you remembering to ask for it every single time, and one missed check can let bad code slip through.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene11"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene11"
   },
   {
     "id": "cc026",
@@ -535,7 +535,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "A good verification skill reads the diff itself to confirm that no test was quietly weakened or loosened just to make it pass, since a passing test suite alone can hide that kind of false positive.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene11"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene11"
   },
   {
     "id": "cc027",
@@ -548,7 +548,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "Always-true conventions belong in CLAUDE.md, task-specific procedures belong in a skill, and rules that must never be skippable belong in a hook, since only a hook can actually block an action.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene12"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene12"
   },
   {
     "id": "cc028",
@@ -561,7 +561,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "skill.md is the lean entry point, reference.md holds deeper detail that's only pulled in when needed, and scripts are executed rather than read into context, letting a skill carry real tooling without bloating the conversation.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene11"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene11"
   },
   {
     "id": "cc029",
@@ -574,7 +574,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "The six modes are Manual (asks for everything beyond reads), Accept edits (edits and common bash run freely), Plan (read-only, proposes a plan), Auto (a danger/intent classifier reviews each action), Don't ask (only pre-approved tools run, for unattended CI), and Bypass permissions (skips all checks, only safe inside an isolated container).",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene3"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene3"
   },
   {
     "id": "cc030",
@@ -587,7 +587,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Auto mode's classifier evaluates intent, blocking dangerous actions like production deploys, force pushes, piping downloaded code into a shell, or data exfiltration, but it does not evaluate whether the code is actually correct.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene4"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene4"
   },
   {
     "id": "cc031",
@@ -600,7 +600,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "Since Auto mode's classifier only checks for danger, not correctness, pairing it with a Stop hook that runs your tests catches the correctness issues the classifier would otherwise miss.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene3"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene3"
   },
   {
     "id": "cc032",
@@ -613,7 +613,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Shift-tab cycles through the everyday permission modes, and the status bar always displays which mode is currently active.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene3"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene3"
   },
   {
     "id": "cc033",
@@ -626,7 +626,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "The three normal values are allow, deny, and ask, with a rare fourth value, defer, that only applies to non-interactive `-p` runs.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene10"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene10"
   },
   {
     "id": "cc034",
@@ -639,7 +639,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "`updatedInput` lets a hook rewrite a tool call, such as redacting a secret, instead of blocking it outright, but since it replaces the entire input object, unchanged fields must be echoed back or they're lost.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene10"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene10"
   },
   {
     "id": "cc035",
@@ -652,7 +652,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Exit code 0 means success, exit code 2 is the blocking error whose stderr gets fed back as context, and any other code including 1 is non-blocking, the common mistake is assuming exit code 1 blocks the action when it actually doesn't.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene8"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene8"
   },
   {
     "id": "cc036",
@@ -665,7 +665,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "You should use SessionStart with the 'compact' matcher, because PostCompact's output never actually gets fed back into the conversation, making it ineffective for re-injecting context.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene9"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene9"
   },
   {
     "id": "cc037",
@@ -678,7 +678,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Roughly 30 hook events fire across Claude Code's loop, and InstructionsLoaded specifically fires whenever a CLAUDE.md or rule file loads, letting you audit exactly what instructions made it into context.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene7"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene7"
   },
   {
     "id": "cc038",
@@ -691,7 +691,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "Checking that `source=startup` scopes the SessionStart hook to only fire on genuinely fresh session starts, not on resumes or compactions.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene7"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene7"
   },
   {
     "id": "cc039",
@@ -704,7 +704,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Notification, SessionStart, and FileChange all ignore the normal blocking rules, so a non-zero exit from one of them just displays stderr while execution continues regardless.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene8"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene8"
   },
   {
     "id": "cc040",
@@ -717,7 +717,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "The two transport types are HTTP, used for remote services hosted by a provider, and Stdio, used for local processes running on your own machine.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene15"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene15"
   },
   {
     "id": "cc041",
@@ -730,7 +730,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "Defining Project-scoped MCP servers in a `.mcp.json` file that's checked into version control ensures every teammate automatically gets the same shared server configuration.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene15"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene15"
   },
   {
     "id": "cc042",
@@ -743,7 +743,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Every configured MCP server's tool definitions load into context whether or not they're used, and once MCP tools exceed 10% of the context window, Claude Code automatically switches to a tool search mode that discovers tools on demand instead.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene15"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene15"
   },
   {
     "id": "cc043",
@@ -756,7 +756,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Two other ways to cut MCP's context cost are preferring an existing CLI tool, which carries no persistent tool definitions, or using a Skill instead, since only its name and description load until it's actually needed.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene15"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene15"
   },
   {
     "id": "cc044",
@@ -769,7 +769,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "A Routine is a saved bundle of prompt, repo, and connectors that runs on Anthropic's managed cloud infrastructure, and it can be triggered by a cron schedule, an HTTP POST to its API endpoint, or a GitHub event.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene17"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene17"
   },
   {
     "id": "cc045",
@@ -782,7 +782,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Routines are currently a research preview where a recurring schedule can run at most hourly, and each run starts from a fresh clone of the default branch, only pushing to `claude/`-prefixed branches by default.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene17"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene17"
   },
   {
     "id": "cc046",
@@ -795,7 +795,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "The `-p` flag skips auto-discovering hooks, skills, plugins, MCP servers, and CLAUDE.md, leaving Claude with only explicitly allowed tools, and the trade-off for that leaner setup is a much faster startup.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene17"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene17"
   },
   {
     "id": "cc047",
@@ -808,7 +808,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "Pairing `--output-format json` with `--json-schema '<your schema>'` produces a matching object in `structured_output`, which can then be cleanly extracted using `jq`.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene17"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene17"
   },
   {
     "id": "cc048",
@@ -821,7 +821,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "`--bare` mode produces deterministic, repeatable output from run to run, which makes it the right choice for CI pipelines that need identical results every time.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene17"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene17"
   },
   {
     "id": "cc049",
@@ -834,7 +834,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "The Agent SDK is a TypeScript/Python library that embeds Claude Code directly inside your own application, and it's the right choice when the automated work needs to live inside your product rather than run as an external job.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene17"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene17"
   },
   {
     "id": "cc050",
@@ -847,7 +847,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "You can create a Routine either from the web at claude.ai/code/routines or from inside Claude Code itself, for example by typing a `/schedule` command describing the recurring task.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene17"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene17"
   },
   {
     "id": "cc051",
@@ -860,7 +860,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "Capturing the session ID from a headless run's JSON output lets you resume that exact session later with full context, effectively chaining a single run into a multi-step automation.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene17"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene17"
   },
   {
     "id": "cc052",
@@ -873,7 +873,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "The `query` function exposes the same primitives as the CLI, a prompt plus options such as allowed tools, system prompt, and permission mode, and you consume its output by iterating the streamed messages it returns.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene17"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene17"
   },
   {
     "id": "cc053",
@@ -886,7 +886,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Managed Code Review posts inline PR comments tagged by severity along with a summary table, analyzed against the full codebase, but it never approves or blocks a PR and offers no managed autofix, it only reports findings.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene18"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene18"
   },
   {
     "id": "cc054",
@@ -899,7 +899,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "The DIY GitHub Action is the right tool when the job goes beyond review, such as implementing changes from a comment, running scheduled reports, or handling any custom CI task where Claude must actually take action.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene18"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene18"
   },
   {
     "id": "cc055",
@@ -912,7 +912,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "An org admin enables managed Code Review from Claude Code admin settings, installs the GitHub app, and chooses repos and triggers, and it's currently a research preview limited to Team and Enterprise plans.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene18"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene18"
   },
   {
     "id": "cc056",
@@ -925,7 +925,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "`/install-github-app` walks you through the setup, including the API key secret, and requires repo admin access, while the action itself is referenced in workflow files as `anthropics/claude-code-action@v1`.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene18"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene18"
   },
   {
     "id": "cc057",
@@ -938,7 +938,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "The action also takes `anthropic_api_key` for authentication, `github_token` which defaults to `secrets.GITHUB_TOKEN`, and provider switches that let it route through Bedrock or Vertex instead of the direct API.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene18"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene18"
   },
   {
     "id": "cc058",
@@ -951,7 +951,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "The action can also be triggered by a cron schedule, such as a daily rollup report, or by `workflow_dispatch`, which allows someone to trigger a manual run from the Actions tab.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene18"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene18"
   },
   {
     "id": "cc059",
@@ -964,7 +964,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "The less you personally watched a run happen, the more rigorous the post-hoc verification needs to be, a quick glance suffices for a supervised session, but an unattended or CI run needs a full reconstructed check.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene19"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene19"
   },
   {
     "id": "cc060",
@@ -977,7 +977,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "Even a well-written, tidy summary can quietly omit or gloss over a file that was unexpectedly touched, so reading the actual `git diff` yourself is the only reliable way to catch that.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene19"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene19"
   },
   {
     "id": "cc061",
@@ -990,7 +990,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Unattended and CI runs should stay in Auto mode so the danger classifier keeps reviewing each action even without a human watching, while bypass mode skips all checks and should only ever run inside an isolated container or VM.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene19"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene19"
   },
   {
     "id": "cc062",
@@ -1003,7 +1003,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "The real question is whether tests passed AND whether Claude actually ran them rather than just claiming to, and the reliable way to guarantee that is wiring it as a hook, such as a Stop hook running tests, so it fires automatically every run.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene19"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene19"
   },
   {
     "id": "cc063",
@@ -1016,7 +1016,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "A cold second opinion is a fresh session or subagent with no memory of how the change was built reviewing the code, and because it has no investment in the original approach, it can catch things the original run reasoned itself past.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene19"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene19"
   },
   {
     "id": "cc064",
@@ -1029,7 +1029,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "A headless run has no one to interview about what happened, so the reliable way to verify it is by checking its JSON result and exit code.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene19"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene19"
   },
   {
     "id": "cc065",
@@ -1042,7 +1042,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "A plugin bundles skills, subagents, hooks, and MCP server configs into one installable unit, which solves the tedious problem of manually copying a working `.claude` setup between machines or teammates.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene16"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene16"
   },
   {
     "id": "cc066",
@@ -1055,7 +1055,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Automated review catches some issues but not everything, and a plugin still executes with your machine's privileges, its hooks fire on every matching tool call regardless of whether you've actually read them yourself.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene16"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene16"
   },
   {
     "id": "cc067",
@@ -1068,7 +1068,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "A plugin's hooks stack on top of your existing hooks rather than replacing them, so both sets keep running alongside each other.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene16"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene16"
   },
   {
     "id": "cc068",
@@ -1081,7 +1081,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "The only required manifest field is `name`, and it namespaces the plugin's skills as `company-name:skill-name`, which prevents naming collisions between different plugins or skills.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene16"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene16"
   },
   {
     "id": "cc069",
@@ -1094,7 +1094,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "`/loop` re-runs a prompt at an interval between turns, which is handy for polling external state, and pressing Escape is how you stop it.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene14"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene14"
   },
   {
     "id": "cc070",
@@ -1107,7 +1107,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "`.worktreeinclude` lists git-ignored files, like local environment or configuration files, that should still be copied into every new worktree even though they're not tracked in the repo.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene13"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene13"
   },
   {
     "id": "cc071",
@@ -1120,7 +1120,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "`$CLAUDE_PROJECT_DIR` makes hook script paths portable across different clones and worktrees, which matters because project-level hooks defined in `.claude/settings.json` are meant to be shared with the whole team through version control.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene7"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene7"
   },
   {
     "id": "cc072",
@@ -1133,7 +1133,7 @@ const QUESTIONS = [
     ],
     "correct": 3,
     "explain": "PreToolUse runs before the tool call happens and can actually block it, while PostToolUse only runs after the tool has already executed, so it can observe but no longer prevent that particular call.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene8"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene8"
   },
   {
     "id": "cc073",
@@ -1146,7 +1146,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "`trigger_phrase` defines the phrase that starts the action, `prompt` supplies the task description for Claude, and `claude_args` passes raw CLI arguments such as a turn limit.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene18"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene18"
   },
   {
     "id": "cc074",
@@ -1159,7 +1159,7 @@ const QUESTIONS = [
     ],
     "correct": 2,
     "explain": "`/plugin install org-name@plugin-name` followed by `/reload-plugins` installs a single plugin directly, while `/plugin marketplace add your-org/claude-plugins` registers a private marketplace so future installs resolve through it with centralized tracking.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene16"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene16"
   },
   {
     "id": "cc075",
@@ -1172,7 +1172,7 @@ const QUESTIONS = [
     ],
     "correct": 1,
     "explain": "Only the `agent` key and the subagent status line keys are actually honored in a plugin's settings.json, and the `agent` key can promote one of the plugin's subagents to the main thread, meaning it takes over the system prompt, tool restrictions, and model.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene16"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene16"
   },
   {
     "id": "cc076",
@@ -1185,7 +1185,7 @@ const QUESTIONS = [
     ],
     "correct": 0,
     "explain": "Claude Code discovers a plugin's components by directory convention, mirroring a normal `.claude` project shape, with one folder per skill, one markdown file per subagent under `agents/`, and `hooks/hooks.json` plus `.mcp.json` sitting at the plugin's root.",
-    "reviewHref": "../lessons/0009-claude-code-in-action.html#scene16"
+    "reviewHref": "../../lessons/0009-claude-code-in-action.html#scene16"
   }
 ];
 
