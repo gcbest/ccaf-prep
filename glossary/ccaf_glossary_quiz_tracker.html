@@ -13,6 +13,8 @@
     background: #f7f7f8; color: #1f1f23;
   }
   .wrap { max-width: 900px; margin: 0 auto; padding: 20px 20px 60px; }
+  .home-link { display: inline-block; margin-bottom: 10px; color: #666; font-size: 12.5px; font-weight: 600; text-decoration: none; border-bottom: 1px solid #d8d8dd; }
+  .home-link:hover { color: #b5651d; border-color: #b5651d; }
   h1 { font-size: 20px; margin: 0 0 4px; }
   .subtitle { color: #666; font-size: 13px; margin-bottom: 18px; }
   .tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid #e2e2e6; flex-wrap: wrap; }
@@ -117,12 +119,15 @@
   :root[data-theme="dark"] .small { color: #9b98a3; }
   :root[data-theme="dark"] .stat-label { color: #9b98a3; }
   :root[data-theme="dark"] .badge { background: #2a292e; color: #b5b2ac; }
+  :root[data-theme="dark"] .home-link { color: #9b98a3; border-color: #3a393f; }
+  :root[data-theme="dark"] .home-link:hover { color: #c76f20; border-color: #c76f20; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
     <div>
+      <a class="home-link" href="../index.html">&larr; Home</a>
       <h1>Claude Certified Architect – Foundations</h1>
       <div class="subtitle">Terminology glossary, quizzes, and progress tracking · from the CCAR-F Exam Guide (v1.0, effective July 2026)</div>
     </div>

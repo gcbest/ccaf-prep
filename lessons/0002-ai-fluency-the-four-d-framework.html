@@ -33,6 +33,7 @@
       border-bottom: 1px solid var(--line); padding-bottom: 10px;
       color: var(--muted); font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .13em; text-transform: uppercase;
     }
+    .masthead a { color: var(--muted); }
     h1 { max-width: 680px; margin: 28px 0 12px; font: 700 clamp(2.5rem, 8vw, 5.2rem)/.98 Georgia, serif; letter-spacing: -.04em; }
     .dek { max-width: 670px; margin: 0 0 34px; color: var(--muted); font-size: 1.2rem; }
     .progress { position: sticky; top: 0; z-index: 2; height: 4px; background: var(--paper-deep); }
@@ -114,7 +115,7 @@
 <body>
   <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
   <main>
-    <div class="masthead"><span>CCA-F · Section 1</span><span>Northstar Dispatch · The week before</span><button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button></div>
+    <div class="masthead"><a href="../index.html">CCA-F · Section 1</a><span>Northstar Dispatch · The week before</span><button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button></div>
     <h1>The week Northstar decided how to work</h1>
     <p class="dek">You are the architect. Before anyone at Northstar picks a tool, the company has to answer a harder question: what work belongs to a person, what belongs to an AI, and how will anyone know the result is good?</p>
 
