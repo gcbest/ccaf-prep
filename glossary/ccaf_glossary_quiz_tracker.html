@@ -203,9 +203,11 @@
         <button class="ghost" id="resetBtn">Reset all progress</button>
       </div>
     </div>
+    <div class="card" id="syncPanel"></div>
   </div>
 </div>
 
+<script src="../assets/js/gist-sync.js"></script>
 <script>
 /* ---------- DOMAINS ---------- */
 const DOMAINS = {
@@ -313,8 +315,24 @@ function loadState() {
   } catch(e) {}
   return { terms: {}, scenarios: {}, totalQuizAnswers: 0, totalQuizCorrect: 0 };
 }
-function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+function saveState() {
+  state._updatedAt = Date.now();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (sync) sync.schedulePush();
+}
 let state = loadState();
+
+/* ---------- CROSS-DEVICE SYNC ---------- */
+const sync = window.GistSync ? window.GistSync.create(STORAGE_KEY, {
+  getState: () => state,
+  getUpdatedAt: () => state._updatedAt || 0,
+  setState: (remote) => {
+    state = remote;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    renderProgress();
+    renderGlossary();
+  }
+}) : null;
 
 function getTermStat(id) {
   if (!state.terms[id]) state.terms[id] = { seen: 0, correct: 0, mastery: 0, lastResult: null };
@@ -585,6 +603,7 @@ initDomainFilters();
 renderGlossary();
 renderScenarios();
 renderProgress();
+if (sync) { sync.mountUI(document.getElementById("syncPanel")); sync.syncOnLoad(); }
 </script>
 </body>
 </html>

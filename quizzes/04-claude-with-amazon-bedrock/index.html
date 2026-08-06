@@ -188,6 +188,7 @@
         <button class="ghost" id="resetBtn">Reset progress</button>
       </div>
     </div>
+    <div class="card" id="syncPanel"></div>
   </div>
 
   <footer>
@@ -196,6 +197,7 @@
   </footer>
 </main>
 
+<script src="../../assets/js/gist-sync.js"></script>
 <script>
 /* ---------- QUESTION BANK ---------- */
 const QUESTIONS = [
@@ -574,8 +576,23 @@ function loadState() {
   } catch(e) {}
   return { q: {}, totalAnswers: 0, totalCorrect: 0 };
 }
-function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+function saveState() {
+  state._updatedAt = Date.now();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (sync) sync.schedulePush();
+}
 let state = loadState();
+
+/* ---------- CROSS-DEVICE SYNC ---------- */
+const sync = window.GistSync ? window.GistSync.create(STORAGE_KEY, {
+  getState: () => state,
+  getUpdatedAt: () => state._updatedAt || 0,
+  setState: (remote) => {
+    state = remote;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    renderProgress();
+  }
+}) : null;
 
 function getStat(id) {
   if (!state.q[id]) state.q[id] = { seen: 0, correct: 0, wrong: 0, mastery: 0, lastResult: null };
@@ -763,6 +780,7 @@ function toggleTheme() {
 
 /* ---------- INIT ---------- */
 renderProgress();
+if (sync) { sync.mountUI(document.getElementById("syncPanel")); sync.syncOnLoad(); }
 </script>
 </body>
 </html>
