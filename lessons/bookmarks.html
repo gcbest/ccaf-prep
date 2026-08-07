@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>(function(){try{var t=localStorage.getItem('ccaf-theme');if(!t){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <title>Flagged for later — CCA-F Lessons</title>
+  <style>
+    :root {
+      --ink: #242321;
+      --muted: #706b63;
+      --paper: #f7f3ec;
+      --paper-deep: #ece4d7;
+      --rust: #a84e31;
+      --rust-dark: #7d3825;
+      --line: #d6ccbd;
+      --white: #fffdfa;
+      --sf-flag: #b8792b;
+      --sf-flag-dark: #8f5c1f;
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --ink: #ece7de;
+      --muted: #a89d8f;
+      --paper: #17140f;
+      --paper-deep: #221e17;
+      --line: #3a3327;
+      --white: #211d16;
+      --rust-dark: #c96549;
+      --sf-flag: #dba54a;
+      --sf-flag-dark: #c98f38;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.7 Georgia, 'Times New Roman', serif;
+    }
+    main { max-width: 780px; margin: 0 auto; padding: 44px 24px 80px; }
+    .masthead {
+      position: sticky; top: 0; z-index: 5; background: var(--paper);
+      display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+      border-bottom: 1px solid var(--line); padding-bottom: 10px;
+      color: var(--muted); font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .13em; text-transform: uppercase;
+    }
+    .masthead a { color: var(--muted); }
+    h1 { max-width: 680px; margin: 28px 0 12px; font: 700 clamp(2.2rem, 8vw, 4rem)/1.02 Georgia, serif; letter-spacing: -.03em; }
+    .dek { max-width: 670px; margin: 0 0 8px; color: var(--muted); font-size: 1.15rem; }
+    .bm-count { margin: 0 0 30px; color: var(--sf-flag); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+    p { max-width: 70ch; margin: 0 0 13px; }
+    h2 { margin: 0 0 4px; font: 700 1.5rem/1.2 Georgia, serif; }
+    .bm-group { margin: 34px 0 0; }
+    .bm-group:first-child { margin-top: 0; }
+    .bm-kicker { margin: 0 0 4px; color: var(--rust-dark); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    .card {
+      position: relative; display: flex; align-items: center; gap: 14px;
+      margin: 12px 0 0; padding: 16px 18px; background: var(--white);
+      border: 1px solid var(--line); border-radius: 3px; color: inherit;
+    }
+    .card::before { content: ''; position: absolute; left: -1px; top: 0; bottom: 0; width: 4px; background: var(--sf-flag); }
+    .card:hover, .card:focus-within { background: #fffaf3; }
+    :root[data-theme="dark"] .card:hover, :root[data-theme="dark"] .card:focus-within { background: #2a251c; }
+    .card-link { flex: 1; min-width: 0; display: block; color: inherit; text-decoration: none; }
+    .card-link:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(168, 78, 49, .16); }
+    .card .kicker { display: block; margin: 0 0 4px; color: var(--muted); font: 700 11px/1.2 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+    .card .title { display: block; font: 700 1.05rem/1.3 Georgia, serif; }
+    .bm-unflag {
+      flex: none; border: 1px solid var(--line); border-radius: 3px; background: none;
+      color: var(--muted); padding: 7px 11px; font: 600 11px/1.2 system-ui, sans-serif;
+      letter-spacing: .05em; text-transform: uppercase; cursor: pointer;
+    }
+    .bm-unflag:hover, .bm-unflag:focus-visible { background: var(--paper-deep); color: var(--rust-dark); outline: none; }
+    .bm-empty {
+      margin: 30px 0 0; padding: 24px 26px; border: 1px solid var(--line); border-radius: 3px;
+      background: var(--paper-deep); color: var(--muted);
+    }
+    .bm-empty[hidden] { display: none; }
+    .bm-empty strong { color: var(--ink); }
+    footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; }
+    a { color: var(--rust-dark); }
+    .theme-toggle {
+      flex: none; width: 28px; height: 28px; padding: 0; margin: 0; border-radius: 999px;
+      border: 1px solid var(--line); background: none; color: var(--muted);
+      font-size: 13px; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    }
+    .theme-toggle:hover, .theme-toggle:focus-visible { background: var(--paper-deep); outline: none; }
+    @media (max-width: 560px) {
+      main { padding-top: 28px; }
+      .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
+      .card { flex-wrap: wrap; }
+    }
+    .autohide-header { transition: transform .28s ease; will-change: transform; }
+    .autohide-header--hidden { transform: translateY(-100%); }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="masthead"><a href="index.html">CCA-F · Lessons</a><span>Flagged for later</span><button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button></div>
+    <h1>Flagged for later</h1>
+    <p class="dek">Every section you tapped 🔖 on across all nine lessons, in one place — so you can work through them without re-reading everything else.</p>
+    <p class="bm-count" id="bmCount"></p>
+
+    <p class="bm-empty" id="bmEmpty" hidden>Nothing flagged yet. Open any lesson and click the <strong>🔖</strong> icon in the top-right corner of a section to add it here.</p>
+
+    <div id="bmList"></div>
+
+    <footer>
+      <p>Flags are saved on this device (and sync across devices once you connect a gist from any <a href="../quizzes/index.html">quiz page</a>). Unflagging here just removes it from this list — it doesn't touch your answers.</p>
+    </footer>
+  </main>
+  <script>
+    function toggleTheme() {
+      var html = document.documentElement;
+      var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      try { localStorage.setItem('ccaf-theme', next); } catch(e) {}
+      var btn = document.getElementById('themeToggle');
+      if (btn) btn.textContent = next === 'dark' ? '☀️' : '🌙';
+    }
+    (function() {
+      var btn = document.getElementById('themeToggle');
+      if (btn) btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+    })();
+  </script>
+  <script src="../assets/js/bookmarks.js"></script>
+  <script src="../assets/js/header-scroll.js"></script>
+</body>
+</html>
