@@ -154,7 +154,7 @@
       <p>Ines describes the first job: every returns email must be turned into a customer reply through the same four moves — read the policy, compute the warranty window, draft the reply, check it against tone rules. Every email. Every time.</p>
       <p class="choice">Your call</p>
       <div class="choices" role="group" aria-label="Workflow or agent for the returns reply">
-        <button type="button" onclick="choose('shape','workflow', 8)">Build a workflow</button>
+        <button type="button" data-correct onclick="choose('shape','workflow', 8)">Build a workflow</button>
         <button type="button" onclick="choose('shape','agent', 8)">Build an agent</button>
         <button type="button" onclick="choose('shape','both', 8)">Agent now, workflow later if it misbehaves</button>
       </div>
@@ -173,7 +173,7 @@
       <p>There is no purchase date. There is no product name. There may or may not be a shipping question. Toby cannot draw a fixed set of boxes for it, because he does not know how many boxes there will be.</p>
       <p class="choice">Your call</p>
       <div class="choices" role="group" aria-label="Shape for the open-ended message">
-        <button type="button" onclick="choose('rule','agent', 15)">Agent with an abstract toolset</button>
+        <button type="button" data-correct onclick="choose('rule','agent', 15)">Agent with an abstract toolset</button>
         <button type="button" onclick="choose('rule','chain', 15)">A longer workflow with more steps</button>
         <button type="button" onclick="choose('rule','branch', 15)">A workflow with a branch for every possible question</button>
       </div>
@@ -193,7 +193,7 @@
       <p>Step one generates the content and is allowed to be imperfect. Step two is a focused revision pass that targets specific fixes only. Each call juggles fewer constraints, so each call gets more of them right.</p>
       <p class="choice">Toby asks which fix to try first</p>
       <div class="choices" role="group" aria-label="Fix for the constraint-heavy prompt">
-        <button type="button" onclick="choose('chain','two', 22)">Two calls: draft, then a revision pass naming the violations</button>
+        <button type="button" data-correct onclick="choose('chain','two', 22)">Two calls: draft, then a revision pass naming the violations</button>
         <button type="button" onclick="choose('chain','repeat', 22)">Repeat every constraint twice in the same prompt</button>
         <button type="button" onclick="choose('chain','agent', 22)">Hand Claude the rules as tools and let an agent sort it out</button>
         <button type="button" onclick="choose('chain','parallel', 22)">Run eleven parallel calls, one per constraint</button>
@@ -218,7 +218,7 @@ input ────────┤                          ├──▶ [ aggreg
       <p>The sub-tasks do not have to be identical — they only have to be meaningfully independent. The payoff is focus (each call analyses one thing thoroughly), modularity (each sub-prompt can be improved and evaluated on its own), and scalability (adding a fifth material does not disturb the first four).</p>
       <p class="choice">Callum asks what makes this pattern legal here</p>
       <div class="choices" role="group" aria-label="Why parallelization applies">
-        <button type="button" onclick="choose('parallel','independent', 30)">The four evaluations don’t depend on each other’s output</button>
+        <button type="button" data-correct onclick="choose('parallel','independent', 30)">The four evaluations don’t depend on each other’s output</button>
         <button type="button" onclick="choose('parallel','speed', 30)">It’s always faster than doing things one at a time</button>
         <button type="button" onclick="choose('parallel','same', 30)">All four sub-tasks use the identical prompt</button>
       </div>
@@ -242,7 +242,7 @@ input ──▶ [ categorize ] ─┼─▶ [ outage pipeline  ] ──▶ outpu
       <div class="blue-note"><p><strong>Routing has a second, cheaper payoff.</strong> The same shape lets a production application send each task type to the cheapest model that meets its quality bar — classify with Haiku, draft with Sonnet, escalate only the genuinely hard reasoning to Opus — inside one endpoint. Routing is a quality pattern and a cost pattern at the same time.</p></div>
       <p class="choice">Rosa wants to know how routing differs from parallelization</p>
       <div class="choices" role="group" aria-label="Routing versus parallelization">
-        <button type="button" onclick="choose('route','one', 38)">Routing sends the input down one branch; parallelization sends it down all of them</button>
+        <button type="button" data-correct onclick="choose('route','one', 38)">Routing sends the input down one branch; parallelization sends it down all of them</button>
         <button type="button" onclick="choose('route','order', 38)">Routing runs its branches in order; parallelization runs them at once</button>
         <button type="button" onclick="choose('route','tools', 38)">Routing uses tools; parallelization uses prompts</button>
       </div>
@@ -262,7 +262,7 @@ input ──▶ [ categorize ] ─┼─▶ [ outage pipeline  ] ──▶ outpu
                └─── feedback ◀──┘  (rejected)</code></pre>
       <p class="choice">Callum asks what this system <em>is</em>, architecturally</p>
       <div class="choices" role="group" aria-label="Classify the CAD pipeline">
-        <button type="button" onclick="choose('evalopt','workflow', 46)">A workflow, using the Evaluator-Optimizer pattern</button>
+        <button type="button" data-correct onclick="choose('evalopt','workflow', 46)">A workflow, using the Evaluator-Optimizer pattern</button>
         <button type="button" onclick="choose('evalopt','agent', 46)">An agent, because it loops until it’s satisfied</button>
         <button type="button" onclick="choose('evalopt','chain', 46)">A chain, because the steps are sequential</button>
       </div>
@@ -284,7 +284,7 @@ input ──▶ [ categorize ] ─┼─▶ [ outage pipeline  ] ──▶ outpu
       <p>Ines describes a new job to test the board: incoming supplier contracts must be scanned for risk. Each contract is checked for payment-terms risk, liability risk, and termination risk — three separate assessments, no one of which depends on the others — and then a final call weighs all three into a single go/no-go recommendation.</p>
       <p class="choice">Which pattern is that?</p>
       <div class="choices" role="group" aria-label="Identify the pattern for contract risk scanning">
-        <button type="button" onclick="choose('drill','parallel', 53)">Parallelization</button>
+        <button type="button" data-correct onclick="choose('drill','parallel', 53)">Parallelization</button>
         <button type="button" onclick="choose('drill','chain', 53)">Chaining</button>
         <button type="button" onclick="choose('drill','route', 53)">Routing</button>
         <button type="button" onclick="choose('drill','evalopt', 53)">Evaluator-Optimizer</button>
@@ -304,7 +304,7 @@ input ──▶ [ categorize ] ─┼─▶ [ outage pipeline  ] ──▶ outpu
       <p>Concretely: <code>get_current_datetime</code>, <code>add_duration_to_datetime</code> and <code>set_reminder</code> can be recombined into a dozen different time-related tasks. <code>calculate_90_day_warranty_expiry</code> can do exactly one.</p>
       <p class="choice">Toby proposes a toolset. Which one do you approve?</p>
       <div class="choices" role="group" aria-label="Choose a toolset design">
-        <button type="button" onclick="choose('agenttools','abstract', 60)">Four generic tools: look up policy, read order, compute a date, send a reply</button>
+        <button type="button" data-correct onclick="choose('agenttools','abstract', 60)">Four generic tools: look up policy, read order, compute a date, send a reply</button>
         <button type="button" onclick="choose('agenttools','specific', 60)">Twenty named tools, one per known return scenario</button>
         <button type="button" onclick="choose('agenttools','one', 60)">One tool: handle_return, which does everything internally</button>
       </div>
@@ -327,7 +327,7 @@ input ──▶ [ categorize ] ─┼─▶ [ outage pipeline  ] ──▶ outpu
       <p>Skipping this step is a common source of agent failure. The agent flies blind and repeats or compounds an action that silently failed.</p>
       <p class="choice">Ines’s video agent posts clips that are sometimes silent. What do you add?</p>
       <div class="choices" role="group" aria-label="Fix the blind agent">
-        <button type="button" onclick="choose('inspect','verify', 66)">Tools that let it inspect the rendered file — extract frames, generate timestamped captions — before it posts</button>
+        <button type="button" data-correct onclick="choose('inspect','verify', 66)">Tools that let it inspect the rendered file — extract frames, generate timestamped captions — before it posts</button>
         <button type="button" onclick="choose('inspect','retry', 66)">A retry: if the post fails, run the whole pipeline again</button>
         <button type="button" onclick="choose('inspect','prompt', 66)">A system-prompt line saying “make sure the audio is correct”</button>
       </div>
@@ -380,7 +380,7 @@ session = client.beta.sessions.create(agent=agent.id,
 # 5. read events: agent.message / agent.tool_use / session.status_idle</code></pre>
       <p class="choice">Toby sends the kickoff message and then opens the stream. What happens?</p>
       <div class="choices" role="group" aria-label="Stream ordering consequence">
-        <button type="button" onclick="choose('stream','missed', 72)">He misses the events that already occurred</button>
+        <button type="button" data-correct onclick="choose('stream','missed', 72)">He misses the events that already occurred</button>
         <button type="button" onclick="choose('stream','replay', 72)">Nothing — the stream replays everything from the start of the session</button>
         <button type="button" onclick="choose('stream','error', 72)">The session refuses to start without an open stream</button>
       </div>
@@ -404,7 +404,7 @@ session = client.beta.sessions.create(agent=agent.id,
       <p>Ines raises the one that scares her: the agent will eventually want to post a refund decision into the customer’s Slack channel.</p>
       <p class="choice">Your call</p>
       <div class="choices" role="group" aria-label="Handle the sensitive action">
-        <button type="button" onclick="choose('blocks','policy', 78)">A permissions policy that pauses the action for human approval</button>
+        <button type="button" data-correct onclick="choose('blocks','policy', 78)">A permissions policy that pauses the action for human approval</button>
         <button type="button" onclick="choose('blocks','rubric', 78)">A rubric, so the grader can judge whether the message was appropriate</button>
         <button type="button" onclick="choose('blocks','remove', 78)">Remove the Slack tool and have a human copy the text over manually</button>
       </div>
@@ -424,7 +424,7 @@ session = client.beta.sessions.create(agent=agent.id,
       <p>Two jobs land on the desk at once. Job A: classify 400 support emails into three buckets, one short call each. Job B: audit an entire supplier document archive overnight — hundreds of files, bash, web lookups, roughly two hours of work that must not be lost if the connection drops.</p>
       <p class="choice">Which goes where?</p>
       <div class="choices" role="group" aria-label="Managed agents or manual loop">
-        <button type="button" onclick="choose('versus','split', 84)">A: manual loop (or a plain workflow). B: managed agents.</button>
+        <button type="button" data-correct onclick="choose('versus','split', 84)">A: manual loop (or a plain workflow). B: managed agents.</button>
         <button type="button" onclick="choose('versus','both', 84)">Both on managed agents — it’s hosted, so it’s always the safer default</button>
         <button type="button" onclick="choose('versus','manual', 84)">Both on a manual loop — you keep full control</button>
       </div>
@@ -449,7 +449,7 @@ session = client.beta.sessions.create(agent=agent.id,
       <p>Then the trade-offs, stated plainly. More autonomy means <em>lower</em> success rates and less predictability; it means testing gets harder because you cannot enumerate the execution path; and it means cost and latency become variable, because you no longer control how many turns the system takes. A workflow’s bill is roughly knowable in advance. An agent’s is a distribution.</p>
       <p class="choice">Callum will sign off on exactly one condition first. Which do you insist on?</p>
       <div class="choices" role="group" aria-label="Prerequisite for more autonomy">
-        <button type="button" onclick="choose('autonomy','all', 96)">Stop conditions, timeouts, permissions, observability, and an approval path for consequential actions</button>
+        <button type="button" data-correct onclick="choose('autonomy','all', 96)">Stop conditions, timeouts, permissions, observability, and an approval path for consequential actions</button>
         <button type="button" onclick="choose('autonomy','model', 96)">Upgrade to the most capable model available</button>
         <button type="button" onclick="choose('autonomy','prompt', 96)">A longer system prompt telling it to be careful and efficient</button>
         <button type="button" onclick="choose('autonomy','cache', 96)">Turn on prompt caching to keep the cost down</button>
@@ -484,15 +484,6 @@ session = client.beta.sessions.create(agent=agent.id,
     <footer>Agentic Architecture &amp; Orchestration is the exam’s highest-weighted domain at 27% — more than any other, and the one most likely to show up inside the scenario-based question sets. If a pattern name still feels interchangeable with another, go back and re-read the topology, not the label. Ask your teacher to hand you scenarios one at a time and make you name the shape before you name the fix.<br><a href="../quizzes/03-building-with-the-claude-api/index.html">Take the Section 3 practice quiz (102 questions) →</a></footer>
   </main>
   <script>
-    function choose(scene, answer, progress) {
-      document.querySelectorAll('[id^="' + scene + '-"]').forEach(function (el) { el.classList.remove('visible'); });
-      var selected = document.getElementById(scene + '-' + answer);
-      if (selected) selected.classList.add('visible');
-      var bar = document.getElementById('progressBar');
-      if (bar && progress) bar.style.width = progress + '%';
-    }
-  </script>
-  <script>
     function toggleTheme() {
       var html = document.documentElement;
       var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
@@ -509,8 +500,10 @@ session = client.beta.sessions.create(agent=agent.id,
   <script src="../assets/js/ask-claude.js"></script>
   <script src="../assets/js/lesson-search.js"></script>
   <script src="../assets/js/gist-sync.js"></script>
+  <script src="../assets/js/lesson-progress.js"></script>
   <script src="../assets/js/checks/0005.js"></script>
   <script src="../assets/js/section-check.js"></script>
+  <script src="../assets/js/review-mode.js"></script>
   <script src="../assets/js/header-scroll.js"></script>
 </body>
 </html>

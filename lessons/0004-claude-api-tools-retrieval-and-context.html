@@ -168,7 +168,7 @@
       <p>By ten past nine, Assist has the tools and still answers date questions from thin air.</p>
       <p class="choice">Your call</p>
       <div class="choices" role="group" aria-label="Diagnose the unused tool">
-        <button type="button" onclick="choose('one','desc', 8)">Rewrite the description</button>
+        <button type="button" data-correct onclick="choose('one','desc', 8)">Rewrite the description</button>
         <button type="button" onclick="choose('one','temp', 8)">Lower the temperature</button>
         <button type="button" onclick="choose('one','model', 8)">Upgrade to a bigger model</button>
         <button type="button" onclick="choose('one','tokens', 8)">Raise max_tokens</button>
@@ -198,7 +198,7 @@
         <button type="button" onclick="choose('two','textonly', 15)">Only the text block was appended</button>
         <button type="button" onclick="choose('two','assistant', 15)">Result sent as an assistant message</button>
         <button type="button" onclick="choose('two','noschema', 15)">Tool schemas dropped from the follow-up</button>
-        <button type="button" onclick="choose('two','all', 15)">All three are real failure modes</button>
+        <button type="button" data-correct onclick="choose('two','all', 15)">All three are real failure modes</button>
       </div>
       <div class="outcome" id="two-textonly" aria-live="polite"><strong>A real failure — but not the only one.</strong> You must append the <em>entire</em> <code>response.content</code> array, every block, not just the visible text; drop the <code>tool_use</code> block and the id your result references no longer exists. The other two options break it as well.</div>
       <div class="outcome" id="two-assistant" aria-live="polite"><strong>A real failure — but not the only one.</strong> <code>tool_result</code> blocks belong in a user message. Still, the other two options are equally fatal, so the complete answer is “all three.”</div>
@@ -231,7 +231,7 @@
       <p>Dara traces it. Claude <em>can</em> emit several <code>tool_use</code> blocks in one assistant message — but in practice it usually plays it safe and calls one tool per turn, so five independent lookups become five full request/response cycles.</p>
       <p class="choice">Your call</p>
       <div class="choices" role="group" aria-label="Choose a fix for serial tool calls">
-        <button type="button" onclick="choose('four','batch', 23)">Add a batch tool</button>
+        <button type="button" data-correct onclick="choose('four','batch', 23)">Add a batch tool</button>
         <button type="button" onclick="choose('four','five', 23)">Write one tool per city</button>
         <button type="button" onclick="choose('four','stream', 23)">Turn on fine-grained streaming</button>
         <button type="button" onclick="choose('four','cache', 23)">Enable prompt caching</button>
@@ -254,7 +254,7 @@ record = response.content[0].input   # the structured data</code></pre>
       <p>Because the data lives in the <code>tool_use</code> block's <code>input</code> field, you read it straight off the response — <strong>no tool execution and no <code>tool_result</code> required</strong>. The tool exists purely to shape the output.</p>
       <p class="choice">When is this worth the extra setup?</p>
       <div class="choices" role="group" aria-label="Choose when to use a tool for structured data">
-        <button type="button" onclick="choose('five','prod', 30)">Reliable production extraction</button>
+        <button type="button" data-correct onclick="choose('five','prod', 30)">Reliable production extraction</button>
         <button type="button" onclick="choose('five','quick', 30)">Any time you want JSON</button>
         <button type="button" onclick="choose('five','never', 30)">Never — it wastes a tool slot</button>
       </div>
@@ -285,7 +285,7 @@ record = response.content[0].input   # the structured data</code></pre>
       <p>Northstar's wellness product answers exercise questions, and Kwame does not want generic web content behind medical claims.</p>
       <p class="choice">Your call</p>
       <div class="choices" role="group" aria-label="Constrain the web search tool">
-        <button type="button" onclick="choose('six','domains', 37)">Set allowed_domains to nih.gov</button>
+        <button type="button" data-correct onclick="choose('six','domains', 37)">Set allowed_domains to nih.gov</button>
         <button type="button" onclick="choose('six','maxuses', 37)">Set max_uses to 1</button>
         <button type="button" onclick="choose('six','prompt', 37)">Tell Claude in the system prompt</button>
         <button type="button" onclick="choose('six','wrap', 37)">Write your own search client tool</button>
@@ -314,7 +314,7 @@ record = response.content[0].input   # the structured data</code></pre>
       <p>Streaming a tool call adds <code>input_json_delta</code> events carrying a <code>partial_json</code> chunk and a cumulative <code>snapshot</code>. But by default the API <strong>buffers and validates</strong> that JSON, releasing only complete top-level key/value pairs at a time. Hence pause, burst, pause, burst.</p>
       <p class="choice">Your call</p>
       <div class="choices" role="group" aria-label="Choose a streaming fix">
-        <button type="button" onclick="choose('eight','fine', 44)">Enable fine-grained tool calling</button>
+        <button type="button" data-correct onclick="choose('eight','fine', 44)">Enable fine-grained tool calling</button>
         <button type="button" onclick="choose('eight','batch', 44)">Use the batch tool</button>
         <button type="button" onclick="choose('eight','nothing', 44)">Accept it — validation is worth it</button>
       </div>
@@ -331,7 +331,7 @@ record = response.content[0].input   # the structured data</code></pre>
       <p>Dara pulls up Claude Code's own toolset as the counterexample: <code>bash</code>, <code>read</code>, <code>write</code>, <code>edit</code>, <code>glob</code>, <code>grep</code>. Not <code>refactor_code</code>. Not <code>install_dependencies</code>.</p>
       <p class="choice">Your call</p>
       <div class="choices" role="group" aria-label="Choose a tool design direction">
-        <button type="button" onclick="choose('nine','abstract', 51)">Collapse to a few abstract tools</button>
+        <button type="button" data-correct onclick="choose('nine','abstract', 51)">Collapse to a few abstract tools</button>
         <button type="button" onclick="choose('nine','more', 51)">Keep adding one tool per scenario</button>
         <button type="button" onclick="choose('nine','router', 51)">Add a tool that picks tools</button>
       </div>
@@ -374,7 +374,7 @@ record = response.content[0].input   # the structured data</code></pre>
       <p class="voice">Tools are for your stuff. Skills are for your processes. MCP is for everyone else's stuff.</p>
       <p class="choice">Match the three asks</p>
       <div class="choices" role="group" aria-label="Assign tool, skill, or MCP">
-        <button type="button" onclick="choose('eleven','right', 58)">Tool · Skill · MCP</button>
+        <button type="button" data-correct onclick="choose('eleven','right', 58)">Tool · Skill · MCP</button>
         <button type="button" onclick="choose('eleven','allmcp', 58)">MCP for all three</button>
         <button type="button" onclick="choose('eleven','swap', 58)">Skill · Tool · MCP</button>
         <button type="button" onclick="choose('eleven','alltools', 58)">Write custom tools for all three</button>
@@ -401,7 +401,7 @@ record = response.content[0].input   # the structured data</code></pre>
       <p>There is a catch Kwame spots immediately: the default for an <code>mcp_toolset</code> entry is <em>all</em> tools on that server — including posting and deleting messages.</p>
       <p class="choice">Your call</p>
       <div class="choices" role="group" aria-label="Scope down MCP access">
-        <button type="button" onclick="choose('twelve','deny', 65)">Disable all, enable named tools</button>
+        <button type="button" data-correct onclick="choose('twelve','deny', 65)">Disable all, enable named tools</button>
         <button type="button" onclick="choose('twelve','block', 65)">List the dangerous tools as disabled</button>
         <button type="button" onclick="choose('twelve','prompt', 65)">Instruct Claude not to post</button>
         <button type="button" onclick="choose('twelve','fork', 65)">Fork the server and delete the write tools</button>
@@ -427,7 +427,7 @@ record = response.content[0].input   # the structured data</code></pre>
       <p>Lila's corpus is mixed: some clean Markdown, plenty of pasted email, a few code appendices. No formatting guarantee.</p>
       <p class="choice">Your call</p>
       <div class="choices" role="group" aria-label="Pick a chunking strategy">
-        <button type="button" onclick="choose('thirteen','size', 71)">Size-based with overlap</button>
+        <button type="button" data-correct onclick="choose('thirteen','size', 71)">Size-based with overlap</button>
         <button type="button" onclick="choose('thirteen','struct', 71)">Structure-based on headers</button>
         <button type="button" onclick="choose('thirteen','semantic', 71)">Semantic-based</button>
       </div>
@@ -470,7 +470,7 @@ record = response.content[0].input   # the structured data</code></pre>
       </tbody></table>
       <p class="choice">Your call</p>
       <div class="choices" role="group" aria-label="Choose a retrieval strategy">
-        <button type="button" onclick="choose('fifteen','hybrid', 78)">Run both and merge</button>
+        <button type="button" data-correct onclick="choose('fifteen','hybrid', 78)">Run both and merge</button>
         <button type="button" onclick="choose('fifteen','bm25', 78)">Replace semantic with BM25</button>
         <button type="button" onclick="choose('fifteen','rechunk', 78)">Re-chunk more finely</button>
       </div>
@@ -495,7 +495,7 @@ record = response.content[0].input   # the structured data</code></pre>
       <p>For reranking, pass document IDs rather than full text to keep the call cheap, and only the reordered top-K goes to Claude. When a source document is too large to fit in the context-generation prompt, use a selective strategy: include the first one to three chunks for the document's summary or abstract, plus the chunks immediately before the target for local context, and skip the middle.</p>
       <p class="choice">Match the fix to failure two</p>
       <div class="choices" role="group" aria-label="Choose a RAG refinement">
-        <button type="button" onclick="choose('sixteen','ctx', 84)">Contextual retrieval</button>
+        <button type="button" data-correct onclick="choose('sixteen','ctx', 84)">Contextual retrieval</button>
         <button type="button" onclick="choose('sixteen','rerank', 84)">Reranking</button>
         <button type="button" onclick="choose('sixteen','topk', 84)">Retrieve more chunks per query</button>
       </div>
@@ -521,7 +521,7 @@ record = response.content[0].input   # the structured data</code></pre>
       <p>Anthropic auto-injects an instruction telling Claude to check memory before starting work — but the file system or database behind it is yours to build and secure.</p>
       <p class="choice">Ines wants Assist to remember a customer's preferences next week. Which pattern?</p>
       <div class="choices" role="group" aria-label="Choose a context-management pattern">
-        <button type="button" onclick="choose('seventeen','memory', 91)">The memory tool</button>
+        <button type="button" data-correct onclick="choose('seventeen','memory', 91)">The memory tool</button>
         <button type="button" onclick="choose('seventeen','compact', 91)">Server-side compaction</button>
         <button type="button" onclick="choose('seventeen','cache', 91)">Prompt caching</button>
         <button type="button" onclick="choose('seventeen','jit', 91)">Just-in-time context</button>
@@ -554,7 +554,7 @@ record = response.content[0].input   # the structured data</code></pre>
       <p>Check the result in <code>usage</code>: <code>cache_creation_input_tokens</code> counts what was written on the first request, <code>cache_read_input_tokens</code> what was reused on later matching ones. Partial hits are possible when only later content changed.</p>
       <p class="choice">Which of these earns a breakpoint?</p>
       <div class="choices" role="group" aria-label="Choose what to cache">
-        <button type="button" onclick="choose('eighteen','sys', 96)">System prompt + tool definitions</button>
+        <button type="button" data-correct onclick="choose('eighteen','sys', 96)">System prompt + tool definitions</button>
         <button type="button" onclick="choose('eighteen','user', 96)">The user's latest message</button>
         <button type="button" onclick="choose('eighteen','greet', 96)">A 40-token greeting preamble</button>
         <button type="button" onclick="choose('eighteen','ts', 96)">A system prompt with today's timestamp in it</button>
@@ -574,7 +574,7 @@ record = response.content[0].input   # the structured data</code></pre>
       <p>The <strong>Files API</strong> is the airlock. Upload a file once, get back a file ID, and reference that ID in later requests instead of re-encoding the data every time.</p>
       <p class="choice">How does the CSV get in — and the chart get out?</p>
       <div class="choices" role="group" aria-label="Get data into and out of the sandbox">
-        <button type="button" onclick="choose('nineteen','files', 100)">Files API in, file IDs out</button>
+        <button type="button" data-correct onclick="choose('nineteen','files', 100)">Files API in, file IDs out</button>
         <button type="button" onclick="choose('nineteen','url', 100)">Have Claude fetch it from a URL</button>
         <button type="button" onclick="choose('nineteen','base64', 100)">Base64 the CSV into every request</button>
       </div>
@@ -595,15 +595,6 @@ record = response.content[0].input   # the structured data</code></pre>
     <footer>This is part 2 of 3 for Section 3. Part 1 covers models, API mechanics, prompt engineering, evals, and multimodal input; part 3 covers workflows versus agents, the four workflow patterns, environment inspection, and managed agents. Ask your teacher to quiz you on one Northstar decision at a time — the point is durable understanding, not speed.<br><a href="../quizzes/03-building-with-the-claude-api/index.html">Take the Section 3 practice quiz (102 questions) →</a></footer>
   </main>
   <script>
-    function choose(scene, answer, progress) {
-      document.querySelectorAll('[id^="' + scene + '-"]').forEach(function (el) { el.classList.remove('visible'); });
-      var selected = document.getElementById(scene + '-' + answer);
-      if (selected) selected.classList.add('visible');
-      var bar = document.getElementById('progressBar');
-      if (bar && progress) bar.style.width = progress + '%';
-    }
-  </script>
-  <script>
     function toggleTheme() {
       var html = document.documentElement;
       var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
@@ -620,8 +611,10 @@ record = response.content[0].input   # the structured data</code></pre>
   <script src="../assets/js/ask-claude.js"></script>
   <script src="../assets/js/lesson-search.js"></script>
   <script src="../assets/js/gist-sync.js"></script>
+  <script src="../assets/js/lesson-progress.js"></script>
   <script src="../assets/js/checks/0004.js"></script>
   <script src="../assets/js/section-check.js"></script>
+  <script src="../assets/js/review-mode.js"></script>
   <script src="../assets/js/header-scroll.js"></script>
 </body>
 </html>

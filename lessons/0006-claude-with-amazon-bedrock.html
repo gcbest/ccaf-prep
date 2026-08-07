@@ -151,7 +151,7 @@
       <p class="voice">“If it’s in my account, it should authenticate like everything else in my account.”</p>
       <p class="choice">Your call</p>
       <div class="choices" role="group" aria-label="Choose an authentication mechanism">
-        <button type="button" onclick="choose('auth','iam', 7)">Standard AWS credentials (IAM)</button>
+        <button type="button" data-correct onclick="choose('auth','iam', 7)">Standard AWS credentials (IAM)</button>
         <button type="button" onclick="choose('auth','secret', 7)">Anthropic API key in Secrets Manager</button>
         <button type="button" onclick="choose('auth','both', 7)">Both, and fail over between them</button>
       </div>
@@ -186,7 +186,7 @@ response["output"]["message"]["content"][0]["text"]</code></pre>
       <p class="voice">“The model obviously exists. I’m looking at it in the console.”</p>
       <p class="choice">What is actually wrong?</p>
       <div class="choices" role="group" aria-label="Diagnose the model-not-found failure">
-        <button type="button" onclick="choose('region','notregion', 16)">The model isn’t hosted in that region</button>
+        <button type="button" data-correct onclick="choose('region','notregion', 16)">The model isn’t hosted in that region</button>
         <button type="button" onclick="choose('region','retired', 16)">The model has been retired</button>
         <button type="button" onclick="choose('region','iam', 16)">Her IAM credentials lack permission</button>
         <button type="button" onclick="choose('region','converse', 16)">She should be calling <code>messages.create</code></button>
@@ -205,7 +205,7 @@ response["output"]["message"]["content"][0]["text"]</code></pre>
       <p>Rosa needs the profile ID. Kenji leans in, because “routes across regions” is exactly the sentence a compliance officer notices.</p>
       <p class="choice">Where does she find it?</p>
       <div class="choices" role="group" aria-label="Find the inference profile ID">
-        <button type="button" onclick="choose('profile','xregion', 24)">Console → “Cross-region inference”</button>
+        <button type="button" data-correct onclick="choose('profile','xregion', 24)">Console → “Cross-region inference”</button>
         <button type="button" onclick="choose('profile','catalog', 24)">Console → model catalog page</button>
         <button type="button" onclick="choose('profile','prefix', 24)">Prefix the model ID with the region herself</button>
       </div>
@@ -257,7 +257,7 @@ response["output"]["message"]["content"][0]["text"]</code></pre>
       <p>Cascade Mutual’s claims console has three workloads: a live “where is my claim?” widget in the customer portal, the main triage logic, and a small number of genuinely contested claims that need deep multi-step reasoning.</p>
       <p class="choice">Which model runs the portal widget?</p>
       <div class="choices" role="group" aria-label="Choose a model for the real-time widget">
-        <button type="button" onclick="choose('tier','haiku', 33)">Haiku</button>
+        <button type="button" data-correct onclick="choose('tier','haiku', 33)">Haiku</button>
         <button type="button" onclick="choose('tier','sonnet', 33)">Sonnet</button>
         <button type="button" onclick="choose('tier','opus', 33)">Opus</button>
         <button type="button" onclick="choose('tier','fable', 33)">Fable 5 everywhere</button>
@@ -275,7 +275,7 @@ response["output"]["message"]["content"][0]["text"]</code></pre>
       <p>Rosa wires up multi-turn. She asks “what’s 1+1?”, gets “2”, then asks “and three more”—and gets something unrelated.</p>
       <p class="choice">What did she forget?</p>
       <div class="choices" role="group" aria-label="Diagnose the multi-turn failure">
-        <button type="button" onclick="choose('state','history', 41)">Bedrock is stateless — she must resend the full history</button>
+        <button type="button" data-correct onclick="choose('state','history', 41)">Bedrock is stateless — she must resend the full history</button>
         <button type="button" onclick="choose('state','temp', 41)">Temperature is too high</button>
         <button type="button" onclick="choose('state','profile', 41)">She needs an inference profile</button>
         <button type="button" onclick="choose('state','system', 41)">She needs a system prompt</button>
@@ -319,7 +319,7 @@ response["output"]["message"]["content"][0]["text"]</code></pre>
       <p>Rosa ships it. The parser then complains that the payload starts mid-object.</p>
       <p class="choice">Why?</p>
       <div class="choices" role="group" aria-label="Diagnose the prefill output">
-        <button type="button" onclick="choose('prefill','concat', 50)">The prefill text isn’t in the response — concatenate it back on</button>
+        <button type="button" data-correct onclick="choose('prefill','concat', 50)">The prefill text isn’t in the response — concatenate it back on</button>
         <button type="button" onclick="choose('prefill','stopincl', 50)">The stop sequence ate the opening delimiter</button>
         <button type="button" onclick="choose('prefill','temp', 50)">Temperature is truncating the output</button>
       </div>
@@ -349,7 +349,7 @@ response["output"]["message"]["content"][0]["text"]</code></pre>
       <p>Rosa’s loop returns garbage on the second turn. She had grabbed the visible text from the first response and appended it as a plain assistant message.</p>
       <p class="choice">What must the follow-up request contain?</p>
       <div class="choices" role="group" aria-label="Choose what to send on the follow-up request">
-        <button type="button" onclick="choose('tools','blocks', 59)">Full assistant content blocks + matching toolResult IDs + the original schemas</button>
+        <button type="button" data-correct onclick="choose('tools','blocks', 59)">Full assistant content blocks + matching toolResult IDs + the original schemas</button>
         <button type="button" onclick="choose('tools','textonly', 59)">Just the assistant’s text and the tool output</button>
         <button type="button" onclick="choose('tools','noschema', 59)">The blocks and results, but drop the schemas to save tokens</button>
       </div>
@@ -373,7 +373,7 @@ response["output"]["message"]["content"][0]["text"]</code></pre>
       <p>The <strong>flexible</strong> variant defines a single generic tool—commonly named <code>toJSON</code>—whose input is an open-ended object accepting whatever properties Claude adds, with the desired fields and types described in the <em>prompt text</em> instead of the schema. Change the structure by editing prose; no schema rewrite.</p>
       <p class="choice">Which job gets which technique?</p>
       <div class="choices" role="group" aria-label="Choose an extraction technique">
-        <button type="button" onclick="choose('extract','split', 66)">Dedicated schema for the system of record, toJSON for the dashboard</button>
+        <button type="button" data-correct onclick="choose('extract','split', 66)">Dedicated schema for the system of record, toJSON for the dashboard</button>
         <button type="button" onclick="choose('extract','tojson', 66)">toJSON for both — one tool to maintain</button>
         <button type="button" onclick="choose('extract','schema', 66)">Dedicated schemas for both — accuracy always wins</button>
         <button type="button" onclick="choose('extract','prompt', 66)">Prefill + stop sequences for both</button>
@@ -410,7 +410,7 @@ tools = tool_specs + [{"cache_point": {"type": "default"}}]</code></pre>
       <p>The rules are strict and testable. A minimum of <strong>1024 tokens</strong> of content before the cache point is required. The content before the cache point must be <em>exactly</em> identical between requests—any difference invalidates the cache. The cache expires after five minutes of inactivity. And you can verify it is working: the response’s usage field reports <code>cache_write_input_tokens</code> on the first request and <code>cache_read_input_tokens</code> on the hits.</p>
       <p class="choice">Where does the cache point go?</p>
       <div class="choices" role="group" aria-label="Place the cache point">
-        <button type="button" onclick="choose('cache','stable', 75)">After the system prompt and tool schemas, before the user turn</button>
+        <button type="button" data-correct onclick="choose('cache','stable', 75)">After the system prompt and tool schemas, before the user turn</button>
         <button type="button" onclick="choose('cache','end', 75)">At the very end of the message list</button>
         <button type="button" onclick="choose('cache','userfirst', 75)">Before the system prompt, with the claim text first</button>
       </div>
@@ -438,7 +438,7 @@ tools = tool_specs + [{"cache_point": {"type": "default"}}]</code></pre>
       <p>Rosa builds exactly that, and the query “what did the engineering team do about incident 2023?” returns semantically adjacent but useless chunks.</p>
       <p class="choice">What do you add?</p>
       <div class="choices" role="group" aria-label="Fix the retrieval miss">
-        <button type="button" onclick="choose('rag','bm25', 84)">BM25 lexical search alongside the vectors, fused with RRF</button>
+        <button type="button" data-correct onclick="choose('rag','bm25', 84)">BM25 lexical search alongside the vectors, fused with RRF</button>
         <button type="button" onclick="choose('rag','more', 84)">Retrieve more chunks</button>
         <button type="button" onclick="choose('rag','embed', 84)">Switch embedding models</button>
         <button type="button" onclick="choose('rag','opus', 84)">Move the generation call to Opus</button>
@@ -478,7 +478,7 @@ tools = tool_specs + [{"cache_point": {"type": "default"}}]</code></pre>
       <p>The migration works. Kenji has one more question, and it is the right one: the claims agent can now look things up, write records, and take actions inside Cascade Mutual’s account. Whose problem is it when it does the wrong one?</p>
       <p class="choice">Your answer</p>
       <div class="choices" role="group" aria-label="Assign responsibility for side effects">
-        <button type="button" onclick="choose('gov','app', 96)">The application still owns authn/authz, validation, limits, logging, and approvals</button>
+        <button type="button" data-correct onclick="choose('gov','app', 96)">The application still owns authn/authz, validation, limits, logging, and approvals</button>
         <button type="button" onclick="choose('gov','bedrock', 96)">Bedrock’s managed service handles safety at the platform layer</button>
         <button type="button" onclick="choose('gov','prompt', 96)">A strict system prompt covers it</button>
         <button type="button" onclick="choose('gov','iamonly', 96)">IAM policy is the control — scope the role tightly and you’re done</button>
@@ -505,15 +505,6 @@ tools = tool_specs + [{"cache_point": {"type": "default"}}]</code></pre>
     <footer>When you are ready, ask your teacher to quiz you on one Cascade Mutual decision at a time—especially the identifier-and-region scenes, which is where the exam concentrates its Bedrock-specific questions. If a scene feels fuzzy, ask a follow-up; the point is durable understanding, not speed.<br><a href="../quizzes/04-claude-with-amazon-bedrock/index.html">Take the Section 4 practice quiz →</a></footer>
   </main>
   <script>
-    function choose(scene, answer, progress) {
-      document.querySelectorAll('[id^="' + scene + '-"]').forEach(function (el) { el.classList.remove('visible'); });
-      var selected = document.getElementById(scene + '-' + answer);
-      if (selected) selected.classList.add('visible');
-      var bar = document.getElementById('progressBar');
-      if (bar && progress) bar.style.width = progress + '%';
-    }
-  </script>
-  <script>
     function toggleTheme() {
       var html = document.documentElement;
       var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
@@ -530,8 +521,10 @@ tools = tool_specs + [{"cache_point": {"type": "default"}}]</code></pre>
   <script src="../assets/js/ask-claude.js"></script>
   <script src="../assets/js/lesson-search.js"></script>
   <script src="../assets/js/gist-sync.js"></script>
+  <script src="../assets/js/lesson-progress.js"></script>
   <script src="../assets/js/checks/0006.js"></script>
   <script src="../assets/js/section-check.js"></script>
+  <script src="../assets/js/review-mode.js"></script>
   <script src="../assets/js/header-scroll.js"></script>
 </body>
 </html>

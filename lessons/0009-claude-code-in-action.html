@@ -165,7 +165,7 @@
       <p class="voice">“If I write a detailed enough prompt, it can just do it. Detail is the same as planning, right?”</p>
       <p class="choice">Your call</p>
       <div class="choices" role="group" aria-label="Choose an opening approach for the restructure">
-        <button type="button" onclick="choose('plan','plan', 7)">Start in Plan mode</button>
+        <button type="button" data-correct onclick="choose('plan','plan', 7)">Start in Plan mode</button>
         <button type="button" onclick="choose('plan','detail', 7)">Direct execution, very detailed prompt</button>
         <button type="button" onclick="choose('plan','iterate', 7)">Accept edits and iterate live</button>
         <button type="button" onclick="choose('plan','later', 7)">Start coding, switch to Plan if it gets messy</button>
@@ -195,7 +195,7 @@
       <p class="choice">Your call</p>
       <div class="choices" role="group" aria-label="Choose a permission mode for the overnight run">
         <button type="button" onclick="choose('mode','bypass', 14)">Bypass permissions</button>
-        <button type="button" onclick="choose('mode','auto', 14)">Auto mode plus a Stop hook</button>
+        <button type="button" data-correct onclick="choose('mode','auto', 14)">Auto mode plus a Stop hook</button>
         <button type="button" onclick="choose('mode','accept', 14)">Accept edits</button>
         <button type="button" onclick="choose('mode','manual', 14)">Manual, and he can review in the morning</button>
       </div>
@@ -263,7 +263,7 @@ run and its result stated explicitly in the reply.
       <p class="choice">Where does this rule live?</p>
       <div class="choices" role="group" aria-label="Choose a mechanism for the never-push-to-main rule">
         <button type="button" onclick="choose('live','md', 21)">A line in CLAUDE.md, in caps</button>
-        <button type="button" onclick="choose('live','hook', 21)">A PreToolUse hook</button>
+        <button type="button" data-correct onclick="choose('live','hook', 21)">A PreToolUse hook</button>
         <button type="button" onclick="choose('live','skill', 21)">A verification skill</button>
         <button type="button" onclick="choose('live','cmd', 21)">A custom slash command</button>
       </div>
@@ -318,7 +318,7 @@ run and its result stated explicitly in the reply.
       <div class="choices" role="group" aria-label="Choose the blocking hook exit code">
         <button type="button" onclick="choose('exit','zero', 28)">0</button>
         <button type="button" onclick="choose('exit','one', 28)">1</button>
-        <button type="button" onclick="choose('exit','two', 28)">2</button>
+        <button type="button" data-correct onclick="choose('exit','two', 28)">2</button>
         <button type="button" onclick="choose('exit','any', 28)">Any non-zero code</button>
       </div>
       <div class="outcome" id="exit-zero" aria-live="polite"><strong>No.</strong> <code>0</code> is success. On exit 0, JSON on stdout is parsed; plain text is ignored on most events, though it is added to context on <code>SessionStart</code>, <code>UserPromptSubmit</code>, and prompt expansion. To block, use exit <code>2</code>.</div>
@@ -336,7 +336,7 @@ run and its result stated explicitly in the reply.
       <div class="choices" role="group" aria-label="Choose a hook event for re-injecting context after compaction">
         <button type="button" onclick="choose('event','post', 35)">PostCompact</button>
         <button type="button" onclick="choose('event','pre', 35)">PreCompact</button>
-        <button type="button" onclick="choose('event','session', 35)">SessionStart with the compact matcher</button>
+        <button type="button" data-correct onclick="choose('event','session', 35)">SessionStart with the compact matcher</button>
         <button type="button" onclick="choose('event','stop', 35)">Stop</button>
       </div>
       <div class="outcome" id="event-post" aria-live="polite"><strong>The trap answer.</strong> The name is perfect and the behaviour is wrong: <code>PostCompact</code>’s output does not get fed back into the conversation. It writes a note the players never read. Use <code>SessionStart</code> with the <code>compact</code> matcher.</div>
@@ -362,7 +362,7 @@ run and its result stated explicitly in the reply.
       <p class="choice">Your call</p>
       <div class="choices" role="group" aria-label="Choose a secret-handling strategy">
         <button type="button" onclick="choose('redact','deny', 42)">permissionDecision: deny</button>
-        <button type="button" onclick="choose('redact','update', 42)">updatedInput with the key swapped for a placeholder</button>
+        <button type="button" data-correct onclick="choose('redact','update', 42)">updatedInput with the key swapped for a placeholder</button>
         <button type="button" onclick="choose('redact','post', 42)">A PostToolUse hook that scrubs the transcript</button>
         <button type="button" onclick="choose('redact','md', 42)">A CLAUDE.md rule about never pasting keys</button>
       </div>
@@ -383,7 +383,7 @@ run and its result stated explicitly in the reply.
       <p>Rosa wants a <code>/review</code> command every developer gets automatically. Custom commands are markdown files holding prompts, with an <code>$ARGUMENTS</code> placeholder for dynamic values — the same mechanism the course uses to automate worktree creation.</p>
       <p class="choice">Where should the file live?</p>
       <div class="choices" role="group" aria-label="Choose where a shared slash command lives">
-        <button type="button" onclick="choose('cmd','project', 49)">.claude/commands/ in the repo</button>
+        <button type="button" data-correct onclick="choose('cmd','project', 49)">.claude/commands/ in the repo</button>
         <button type="button" onclick="choose('cmd','user', 49)">~/.claude/commands/ on each machine</button>
         <button type="button" onclick="choose('cmd','md', 49)">Defined inside CLAUDE.md</button>
         <button type="button" onclick="choose('cmd','settings', 49)">A commands array in a config file</button>
@@ -422,7 +422,7 @@ run and its result stated explicitly in the reply.
       <p class="choice">Your call</p>
       <div class="choices" role="group" aria-label="Choose how to answer a mid-session discovery question">
         <button type="button" onclick="choose('sub','main', 56)">Ask in the main session</button>
-        <button type="button" onclick="choose('sub','agent', 56)">Send a subagent</button>
+        <button type="button" data-correct onclick="choose('sub','agent', 56)">Send a subagent</button>
         <button type="button" onclick="choose('sub','clear', 56)">/clear and search from a clean slate</button>
         <button type="button" onclick="choose('sub','tree', 56)">Spin up a new worktree</button>
       </div>
@@ -450,7 +450,7 @@ run and its result stated explicitly in the reply.
       <p class="choice">Your call</p>
       <div class="choices" role="group" aria-label="Choose a context recovery move">
         <button type="button" onclick="choose('ctx','clear', 63)">/clear and restate the feature</button>
-        <button type="button" onclick="choose('ctx','compact', 63)">/compact with explicit instructions</button>
+        <button type="button" data-correct onclick="choose('ctx','compact', 63)">/compact with explicit instructions</button>
         <button type="button" onclick="choose('ctx','push', 63)">Push through and hope</button>
         <button type="button" onclick="choose('ctx','rewind', 63)">Rewind: restore code and conversation</button>
       </div>
@@ -471,7 +471,7 @@ run and its result stated explicitly in the reply.
       <p class="choice">Your call</p>
       <div class="choices" role="group" aria-label="Choose an MCP context mitigation">
         <button type="button" onclick="choose('mcp','nothing', 70)">Nothing — unused servers cost nothing</button>
-        <button type="button" onclick="choose('mcp','prune', 70)">Disable unused servers, prefer a CLI, or use a skill</button>
+        <button type="button" data-correct onclick="choose('mcp','prune', 70)">Disable unused servers, prefer a CLI, or use a skill</button>
         <button type="button" onclick="choose('mcp','search', 70)">Let tool search mode handle it</button>
         <button type="button" onclick="choose('mcp','md', 70)">List the servers in CLAUDE.md so Claude ignores the rest</button>
       </div>
@@ -494,7 +494,7 @@ run and its result stated explicitly in the reply.
       <p class="choice">Your call</p>
       <div class="choices" role="group" aria-label="Choose how to handle a community plugin">
         <button type="button" onclick="choose('plug','install', 77)">Install it — it passed review</button>
-        <button type="button" onclick="choose('plug','read', 77)">Read every hook, agent, and MCP server it adds first</button>
+        <button type="button" data-correct onclick="choose('plug','read', 77)">Read every hook, agent, and MCP server it adds first</button>
         <button type="button" onclick="choose('plug','market', 77)">Add it to the team marketplace so everyone gets it</button>
         <button type="button" onclick="choose('plug','never', 77)">Ban plugins outright</button>
       </div>
@@ -529,7 +529,7 @@ claude --resume "$(jq -r .session_id result.json)" \
       <p class="choice">Rosa needs machine-parseable review findings, identical run to run, inside the existing merge-queue pipeline. Your call</p>
       <div class="choices" role="group" aria-label="Choose an automation rung for the CI review job">
         <button type="button" onclick="choose('ci','interactive', 84)">An interactive session someone babysits</button>
-        <button type="button" onclick="choose('ci','headless', 84)">Headless: -p with --bare, --output-format json, --json-schema</button>
+        <button type="button" data-correct onclick="choose('ci','headless', 84)">Headless: -p with --bare, --output-format json, --json-schema</button>
         <button type="button" onclick="choose('ci','routine', 84)">A routine on a cron schedule</button>
         <button type="button" onclick="choose('ci','sdk', 84)">The Agent SDK</button>
       </div>
@@ -552,7 +552,7 @@ claude --resume "$(jq -r .session_id result.json)" \
       <p class="choice">Someone comments “@claude implement the spec in the linked issue.” Which path handles that?</p>
       <div class="choices" role="group" aria-label="Choose between managed code review and the GitHub Action">
         <button type="button" onclick="choose('gh','managed', 90)">Managed Code Review</button>
-        <button type="button" onclick="choose('gh','action', 90)">The GitHub Action</button>
+        <button type="button" data-correct onclick="choose('gh','action', 90)">The GitHub Action</button>
         <button type="button" onclick="choose('gh','routine', 90)">A routine</button>
         <button type="button" onclick="choose('gh','local', 90)">/code-review --fix locally</button>
       </div>
@@ -570,7 +570,7 @@ claude --resume "$(jq -r .session_id result.json)" \
       <p class="choice">First move</p>
       <div class="choices" role="group" aria-label="Choose the first verification move">
         <button type="button" onclick="choose('diff','summary', 96)">Read the summary and merge</button>
-        <button type="button" onclick="choose('diff','diff', 96)">Run /code-review, then read git diff yourself</button>
+        <button type="button" data-correct onclick="choose('diff','diff', 96)">Run /code-review, then read git diff yourself</button>
         <button type="button" onclick="choose('diff','rerun', 96)">Re-run the task and compare</button>
         <button type="button" onclick="choose('diff','tests', 96)">Ask Claude whether the tests passed</button>
       </div>
@@ -602,15 +602,6 @@ claude --resume "$(jq -r .session_id result.json)" \
     <footer>Claude Code Configuration &amp; Workflows is 20% of the exam and Claude Code carries part of the 15% Context Management &amp; Reliability domain, so this chapter is worth a second pass. When you are ready, ask your teacher to drill the two tables — permission modes, and where each instruction lives — one row at a time.<br><a href="../quizzes/07-claude-code-in-action/index.html">Take the Section 7 practice quiz →</a></footer>
   </main>
   <script>
-    function choose(scene, answer, progress) {
-      document.querySelectorAll('[id^="' + scene + '-"]').forEach(function (el) { el.classList.remove('visible'); });
-      var selected = document.getElementById(scene + '-' + answer);
-      if (selected) selected.classList.add('visible');
-      var bar = document.getElementById('progressBar');
-      if (bar && progress) bar.style.width = progress + '%';
-    }
-  </script>
-  <script>
     function toggleTheme() {
       var html = document.documentElement;
       var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
@@ -627,8 +618,10 @@ claude --resume "$(jq -r .session_id result.json)" \
   <script src="../assets/js/ask-claude.js"></script>
   <script src="../assets/js/lesson-search.js"></script>
   <script src="../assets/js/gist-sync.js"></script>
+  <script src="../assets/js/lesson-progress.js"></script>
   <script src="../assets/js/checks/0009.js"></script>
   <script src="../assets/js/section-check.js"></script>
+  <script src="../assets/js/review-mode.js"></script>
   <script src="../assets/js/header-scroll.js"></script>
 </body>
 </html>

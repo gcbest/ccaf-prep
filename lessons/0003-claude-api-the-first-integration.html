@@ -154,7 +154,7 @@
       <p>The selection framework is three words long: <strong>intelligence priority → Opus. Speed priority → Haiku. Balanced requirements → Sonnet.</strong></p>
       <p class="choice">Your call on the photo-type classifier</p>
       <div class="choices" role="group" aria-label="Choose a model for the classifier">
-        <button type="button" onclick="choose('model','haiku', 6)">Haiku</button>
+        <button type="button" data-correct onclick="choose('model','haiku', 6)">Haiku</button>
         <button type="button" onclick="choose('model','sonnet', 6)">Sonnet</button>
         <button type="button" onclick="choose('model','opus', 6)">Opus</button>
         <button type="button" onclick="choose('model','one', 6)">One model for all three jobs</button>
@@ -176,7 +176,7 @@
       <div class="choices" role="group" aria-label="Choose a request path">
         <button type="button" onclick="choose('path','direct', 12)">Ship it — fewer moving parts</button>
         <button type="button" onclick="choose('path','obfuscate', 12)">Ship it, but obfuscate the key</button>
-        <button type="button" onclick="choose('path','server', 12)">Route every call through Northstar's server</button>
+        <button type="button" data-correct onclick="choose('path','server', 12)">Route every call through Northstar's server</button>
       </div>
       <div class="outcome" id="path-direct" aria-live="polite"><strong>No.</strong> A client app is inspectable — browser devtools, a decompiled bundle, a proxy. Shipping the key ships your billing account to anyone who looks. Clients never access the Anthropic API directly.</div>
       <div class="outcome" id="path-obfuscate" aria-live="polite"><strong>Still no.</strong> Obfuscation delays discovery; it does not prevent it. The key must live somewhere the user cannot reach, which means your own server.</div>
@@ -233,7 +233,7 @@ print(message.content[0].text)</code></pre>
       <div class="choices" role="group" aria-label="Diagnose the lost context">
         <button type="button" onclick="choose('turns','maxtok', 20)">Raise max_tokens</button>
         <button type="button" onclick="choose('turns','temp', 20)">Lower the temperature</button>
-        <button type="button" onclick="choose('turns','history', 20)">Resend the whole conversation every time</button>
+        <button type="button" data-correct onclick="choose('turns','history', 20)">Resend the whole conversation every time</button>
         <button type="button" onclick="choose('turns','system', 20)">Add a system prompt</button>
       </div>
       <div class="outcome" id="turns-maxtok" aria-live="polite"><strong>Unrelated.</strong> max_tokens caps the length of the <em>output</em>. It has nothing to do with whether Claude can see earlier turns.</div>
@@ -272,7 +272,7 @@ def chat(messages):
       <p><strong>Temperature</strong> is a parameter from 0 to 1 that controls randomness in generation by influencing token-selection probabilities. At <strong>0</strong>, output is deterministic—the highest-probability token is always selected. Higher values increase the chance of selecting lower-probability tokens, producing more creative and unexpected output.</p>
       <p class="choice">Your call on the field extractor</p>
       <div class="choices" role="group" aria-label="Choose a temperature for the extractor">
-        <button type="button" onclick="choose('temp','zero', 27)">Near 0</button>
+        <button type="button" data-correct onclick="choose('temp','zero', 27)">Near 0</button>
         <button type="button" onclick="choose('temp','mid', 27)">Middle of the range</button>
         <button type="button" onclick="choose('temp','one', 27)">Near 1</button>
       </div>
@@ -315,7 +315,7 @@ def chat(messages):
       </tbody></table>
       <p class="choice">The response came back truncated. Your first move?</p>
       <div class="choices" role="group" aria-label="Diagnose a truncated response">
-        <button type="button" onclick="choose('stop','reason', 36)">Read stop_reason before changing anything</button>
+        <button type="button" data-correct onclick="choose('stop','reason', 36)">Read stop_reason before changing anything</button>
         <button type="button" onclick="choose('stop','retry', 36)">Retry the request and hope</button>
         <button type="button" onclick="choose('stop','model', 36)">Switch to a more capable model</button>
         <button type="button" onclick="choose('stop','temp', 36)">Drop the temperature to 0</button>
@@ -351,7 +351,7 @@ record = json.loads(message.content[0].text)</code></pre>
       <p class="choice">Rooftop writes these records straight to the claims database. Which technique ships?</p>
       <div class="choices" role="group" aria-label="Choose a structured output technique">
         <button type="button" onclick="choose('struct','prefill', 44)">Prefill + stop sequence</button>
-        <button type="button" onclick="choose('struct','tool', 44)">Dedicated tool schema, forced</button>
+        <button type="button" data-correct onclick="choose('struct','tool', 44)">Dedicated tool schema, forced</button>
         <button type="button" onclick="choose('struct','ask', 44)">Just ask firmly for JSON only</button>
         <button type="button" onclick="choose('struct','regex', 44)">Regex the JSON out of the prose</button>
       </div>
@@ -371,7 +371,7 @@ record = json.loads(message.content[0].text)</code></pre>
       <div class="choices" role="group" aria-label="Choose where to enable extended thinking">
         <button type="button" onclick="choose('think','everywhere', 52)">Enable it across the whole pipeline</button>
         <button type="button" onclick="choose('think','classifier', 52)">On the photo classifier</button>
-        <button type="button" onclick="choose('think','claims', 52)">On the multi-peril claims path, after prompt work stalls</button>
+        <button type="button" data-correct onclick="choose('think','claims', 52)">On the multi-peril claims path, after prompt work stalls</button>
       </div>
       <div class="outcome" id="think-everywhere" aria-live="polite"><strong>Costly reflex.</strong> Thinking increases accuracy on complex tasks but you are charged for thinking tokens and you pay in latency. Turning it on everywhere taxes the simple paths for no gain.</div>
       <div class="outcome" id="think-classifier" aria-live="polite"><strong>The clearest waste.</strong> Simple classification and extraction gain nothing from step-by-step reasoning — it only adds latency and cost. Do not summon a philosopher to sort photographs.</div>
@@ -422,7 +422,7 @@ record = json.loads(message.content[0].text)</code></pre>
       </ul>
       <p class="choice">Rooftop's homeowner note has a fixed shape but no tricky reasoning. What do you add?</p>
       <div class="choices" role="group" aria-label="Choose a specificity type">
-        <button type="button" onclick="choose('spec','guidelines', 66)">Output quality guidelines</button>
+        <button type="button" data-correct onclick="choose('spec','guidelines', 66)">Output quality guidelines</button>
         <button type="button" onclick="choose('spec','steps', 66)">Process steps</button>
         <button type="button" onclick="choose('spec','both', 66)">Both, always</button>
       </div>
@@ -464,7 +464,7 @@ record = json.loads(message.content[0].text)</code></pre>
       <div class="choices" role="group" aria-label="Choose a path after writing a prompt">
         <button type="button" onclick="choose('paths','once', 80)">Test once or twice, deploy</button>
         <button type="button" onclick="choose('paths','corner', 80)">Test custom inputs, patch corner cases, deploy</button>
-        <button type="button" onclick="choose('paths','pipeline', 80)">Run it through an evaluation pipeline and score it</button>
+        <button type="button" data-correct onclick="choose('paths','pipeline', 80)">Run it through an evaluation pipeline and score it</button>
       </div>
       <div class="outcome" id="paths-once" aria-live="polite"><strong>Path 1 — a trap.</strong> It feels like validation and gives no objective measure of performance across the input space. High risk of breaking on unexpected real-world input.</div>
       <div class="outcome" id="paths-corner" aria-live="polite"><strong>Path 2 — also a trap.</strong> Better than path 1, and still the place most engineers stop. Users will keep surprising you, because a handful of hand-picked inputs is not the input space.</div>
@@ -496,7 +496,7 @@ record = json.loads(message.content[0].text)</code></pre>
       <div class="choices" role="group" aria-label="Choose a grading approach">
         <button type="button" onclick="choose('grade','code', 92)">Code grader only</button>
         <button type="button" onclick="choose('grade','model', 92)">Model grader only</button>
-        <button type="button" onclick="choose('grade','both', 92)">Both, averaged</button>
+        <button type="button" data-correct onclick="choose('grade','both', 92)">Both, averaged</button>
         <button type="button" onclick="choose('grade','human', 92)">Human review only</button>
       </div>
       <div class="outcome" id="grade-code" aria-live="polite"><strong>Catches half the failures.</strong> A code grader will confirm the JSON parses, and cheerfully pass a perfectly-formed record with a cold, wrong-toned note attached. Syntax validity is not instruction-following.</div>
@@ -546,15 +546,6 @@ record = json.loads(message.content[0].text)</code></pre>
     <footer>This is Part 1 of 3 for Section 3. Part 2 covers tool use, the agent loop, RAG, context management, and prompt caching; Part 3 covers workflows versus agents and the four workflow patterns. When you are ready, ask your teacher to quiz you on one Rooftop decision at a time — the parameters are easy to recognize and hard to recall cold, which is exactly what the exam checks.<br><a href="../quizzes/03-building-with-the-claude-api/index.html">Take the Section 3 practice quiz (102 questions) →</a></footer>
   </main>
   <script>
-    function choose(scene, answer, progress) {
-      document.querySelectorAll('[id^="' + scene + '-"]').forEach(function (el) { el.classList.remove('visible'); });
-      var selected = document.getElementById(scene + '-' + answer);
-      if (selected) selected.classList.add('visible');
-      var bar = document.getElementById('progressBar');
-      if (bar && progress) bar.style.width = progress + '%';
-    }
-  </script>
-  <script>
     function toggleTheme() {
       var html = document.documentElement;
       var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
@@ -571,8 +562,10 @@ record = json.loads(message.content[0].text)</code></pre>
   <script src="../assets/js/ask-claude.js"></script>
   <script src="../assets/js/lesson-search.js"></script>
   <script src="../assets/js/gist-sync.js"></script>
+  <script src="../assets/js/lesson-progress.js"></script>
   <script src="../assets/js/checks/0003.js"></script>
   <script src="../assets/js/section-check.js"></script>
+  <script src="../assets/js/review-mode.js"></script>
   <script src="../assets/js/header-scroll.js"></script>
 </body>
 </html>

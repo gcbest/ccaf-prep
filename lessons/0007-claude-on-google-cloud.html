@@ -145,7 +145,7 @@
       <p class="voice">Kwame: “I need the inference call to be an API call inside my project, under my credentials, on my bill.”</p>
       <p class="choice">Your call</p>
       <div class="choices" role="group" aria-label="Choose a deployment surface for Meridian">
-        <button type="button" onclick="choose('surface','vertex', 7)">Vertex AI on Google Cloud</button>
+        <button type="button" data-correct onclick="choose('surface','vertex', 7)">Vertex AI on Google Cloud</button>
         <button type="button" onclick="choose('surface','direct', 7)">Keep the direct Anthropic API</button>
         <button type="button" onclick="choose('surface','bedrock', 7)">Amazon Bedrock</button>
         <button type="button" onclick="choose('surface','both', 7)">Direct API, but proxy it through their project</button>
@@ -173,7 +173,7 @@
       <p>Lena asks the question every on-call engineer asks: can the browser just call Vertex itself and save a hop?</p>
       <p class="choice">Your call</p>
       <div class="choices" role="group" aria-label="Choose where credentials live">
-        <button type="button" onclick="choose('creds','server', 14)">Server-side only, always</button>
+        <button type="button" data-correct onclick="choose('creds','server', 14)">Server-side only, always</button>
         <button type="button" onclick="choose('creds','browser', 14)">Ship a short-lived credential to the browser</button>
         <button type="button" onclick="choose('creds','obfuscate', 14)">Call from the browser, obfuscate the credential</button>
       </div>
@@ -205,7 +205,7 @@ gcloud auth application-default login</code></pre>
       <p>The last command is the one that matters for the SDK. It establishes <strong>application-default credentials</strong>, and the Anthropic SDK picks them up automatically—no manual API-key wiring at all.</p>
       <p class="choice">Aster asks how to give the SDK its credential. Your call</p>
       <div class="choices" role="group" aria-label="Choose an authentication path">
-        <button type="button" onclick="choose('auth','adc', 22)">gcloud auth application-default login</button>
+        <button type="button" data-correct onclick="choose('auth','adc', 22)">gcloud auth application-default login</button>
         <button type="button" onclick="choose('auth','apikey', 22)">Set ANTHROPIC_API_KEY</button>
         <button type="button" onclick="choose('auth','login', 22)">gcloud auth login is enough</button>
         <button type="button" onclick="choose('auth','paste', 22)">Paste a credential into the client constructor</button>
@@ -250,7 +250,7 @@ message.content[0].text</code></pre>
       <p>Lena is writing the config schema and wants to know what a valid model value looks like, so she can validate it before a deploy rather than after.</p>
       <p class="choice">Which identifier is a Vertex model name?</p>
       <div class="choices" role="group" aria-label="Choose the Vertex model identifier format">
-        <button type="button" onclick="choose('modelid','at', 31)">claude-sonnet-4@20250514</button>
+        <button type="button" data-correct onclick="choose('modelid','at', 31)">claude-sonnet-4@20250514</button>
         <button type="button" onclick="choose('modelid','plain', 31)">A plain model name string</button>
         <button type="button" onclick="choose('modelid','prefix', 31)">anthropic.&lt;model-name&gt;</button>
         <button type="button" onclick="choose('modelid','profile', 31)">An inference-profile ID</button>
@@ -303,7 +303,7 @@ message.content[0].text</code></pre>
       <p>Vertex is the <strong>more API-similar</strong> of the two cloud options. <code>AnthropicVertex</code> uses <code>.messages.create()</code>, exactly like <code>Anthropic()</code>. Bedrock instead uses a differently-shaped <code>converse()</code> call, reached through a boto3 client with AWS IAM credentials.</p>
       <p class="choice">A team has a working direct-API prototype and asks which cloud port requires the smallest change to the call itself. Your answer</p>
       <div class="choices" role="group" aria-label="Compare Vertex and Bedrock call shapes">
-        <button type="button" onclick="choose('shape','vertex', 40)">Vertex — same messages.create shape</button>
+        <button type="button" data-correct onclick="choose('shape','vertex', 40)">Vertex — same messages.create shape</button>
         <button type="button" onclick="choose('shape','bedrock', 40)">Bedrock — converse is a drop-in</button>
         <button type="button" onclick="choose('shape','same', 40)">Identical effort either way</button>
       </div>
@@ -320,7 +320,7 @@ message.content[0].text</code></pre>
       <p>Every Vertex response carries three things worth inspecting: the generated <strong>message</strong>, <strong>usage</strong> (input and output token counts), and a <strong>stop reason</strong>. And generation stops for exactly three reasons: <strong>max tokens reached</strong>, a <strong>natural end-of-sequence token</strong>, or a <strong>predefined stop sequence</strong>.</p>
       <p class="choice">The summary is cut off. What do you do first?</p>
       <div class="choices" role="group" aria-label="Diagnose a truncated response">
-        <button type="button" onclick="choose('stop','inspect', 49)">Read the stop reason</button>
+        <button type="button" data-correct onclick="choose('stop','inspect', 49)">Read the stop reason</button>
         <button type="button" onclick="choose('stop','raise', 49)">Raise max_tokens globally</button>
         <button type="button" onclick="choose('stop','temp', 49)">Lower the temperature</button>
         <button type="button" onclick="choose('stop','retry', 49)">Retry the request</button>
@@ -343,7 +343,7 @@ message.content[0].text</code></pre>
       <p>The <code>tool_choice</code> options are worth memorizing as a trio: <strong>automatic</strong> when Claude may answer normally, <strong>any</strong> when one of the available tools must be used, and a <strong>specific tool</strong> when a particular schema is mandatory.</p>
       <p class="choice">Manifests feed a downstream system that rejects malformed records. Your call</p>
       <div class="choices" role="group" aria-label="Choose a structured-output technique">
-        <button type="button" onclick="choose('struct','tool', 58)">Dedicated tool schema, forced</button>
+        <button type="button" data-correct onclick="choose('struct','tool', 58)">Dedicated tool schema, forced</button>
         <button type="button" onclick="choose('struct','prefill', 58)">Prefill plus stop sequence</button>
         <button type="button" onclick="choose('struct','ask', 58)">Ask firmly for JSON in the prompt</button>
         <button type="button" onclick="choose('struct','trust', 58)">Tool schema, and skip validation since the schema guarantees it</button>
@@ -364,7 +364,7 @@ message.content[0].text</code></pre>
       <p>That is the <strong>batch-tool pattern</strong>: give Claude one higher-level <code>batch_tool</code> whose schema takes an <code>invocations</code> list—each entry naming a tool and its arguments—rather than trusting it to emit several native tool-use blocks in one turn, which it rarely does in practice. Your code unpacks the list and runs each invocation, then returns one combined result. Done this way, six independent lookups collapse from six round-trips (or seven, counting the initial request) down to two: the request that returns the batch call, and the single response carrying all six results. It is appropriate for independent lookups or transformations—and inappropriate for a sequence where the second call depends on the first, or where concurrent execution could duplicate an unsafe action.</p>
       <p class="choice">Which of Lena’s requests is a good batch candidate?</p>
       <div class="choices" role="group" aria-label="Choose a batch-tool candidate">
-        <button type="button" onclick="choose('batch','lookups', 67)">Status for six unrelated shipment IDs</button>
+        <button type="button" data-correct onclick="choose('batch','lookups', 67)">Status for six unrelated shipment IDs</button>
         <button type="button" onclick="choose('batch','chain', 67)">Get current time, then compute an ETA from it</button>
         <button type="button" onclick="choose('batch','refund', 67)">Issue six shipping-credit refunds</button>
       </div>
@@ -390,7 +390,7 @@ message.content[0].text</code></pre>
       <p class="voice">Kwame: “It quoted a tariff rule that contradicts page 412. Is Claude wrong, or is the pipeline wrong?”</p>
       <p class="choice">How do you find out?</p>
       <div class="choices" role="group" aria-label="Diagnose a wrong RAG answer">
-        <button type="button" onclick="choose('rag','split', 76)">Evaluate retrieval separately from generation</button>
+        <button type="button" data-correct onclick="choose('rag','split', 76)">Evaluate retrieval separately from generation</button>
         <button type="button" onclick="choose('rag','model', 76)">Switch to a larger model</button>
         <button type="button" onclick="choose('rag','chunk', 76)">Shrink the chunk size and re-index</button>
         <button type="button" onclick="choose('rag','prompt', 76)">Add “be accurate” to the system prompt</button>
@@ -442,7 +442,7 @@ message.content[0].text</code></pre>
       <p class="voice">Lena: “And when a call fails at 3 a.m., where do I start?”</p>
       <p class="choice">A Vertex request fails with the model not found. Your first three checks, in order</p>
       <div class="choices" role="group" aria-label="Diagnose a Vertex model-not-found failure">
-        <button type="button" onclick="choose('debug','vertex', 95)">Model Garden enablement → project ID → model string format</button>
+        <button type="button" data-correct onclick="choose('debug','vertex', 95)">Model Garden enablement → project ID → model string format</button>
         <button type="button" onclick="choose('debug','key', 95)">Rotate the Anthropic API key</button>
         <button type="button" onclick="choose('debug','profile', 95)">Switch to a cross-region inference profile</button>
         <button type="button" onclick="choose('debug','tokens', 95)">Raise max_tokens and retry</button>
@@ -465,15 +465,6 @@ message.content[0].text</code></pre>
     <footer>When you are ready, ask your teacher to quiz you on one line of the porting checklist at a time—especially the auth command and the model-ID format, which are the two details a Vertex scenario question is most likely to hinge on. If a scene feels fuzzy, ask a follow-up; the point is durable understanding, not speed.<br><a href="../quizzes/05-claude-on-google-cloud/index.html">Take the Section 5 practice quiz →</a></footer>
   </main>
   <script>
-    function choose(scene, answer, progress) {
-      document.querySelectorAll('[id^="' + scene + '-"]').forEach(function (el) { el.classList.remove('visible'); });
-      var selected = document.getElementById(scene + '-' + answer);
-      if (selected) selected.classList.add('visible');
-      var bar = document.getElementById('progressBar');
-      if (bar && progress) bar.style.width = progress + '%';
-    }
-  </script>
-  <script>
     function toggleTheme() {
       var html = document.documentElement;
       var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
@@ -490,8 +481,10 @@ message.content[0].text</code></pre>
   <script src="../assets/js/ask-claude.js"></script>
   <script src="../assets/js/lesson-search.js"></script>
   <script src="../assets/js/gist-sync.js"></script>
+  <script src="../assets/js/lesson-progress.js"></script>
   <script src="../assets/js/checks/0007.js"></script>
   <script src="../assets/js/section-check.js"></script>
+  <script src="../assets/js/review-mode.js"></script>
   <script src="../assets/js/header-scroll.js"></script>
 </body>
 </html>

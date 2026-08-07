@@ -143,7 +143,7 @@
       <p class="voice">“I need a thinking partner, not a robot that disappears for ten minutes and comes back with a finished memo.”</p>
       <p class="choice">Your call</p>
       <div class="choices" role="group" aria-label="Choose a Claude surface for Maya">
-        <button type="button" onclick="choose('one','Chat', 14)">Open Chat</button>
+        <button type="button" data-correct onclick="choose('one','Chat', 14)">Open Chat</button>
         <button type="button" onclick="choose('one','Cowork', 14)">Hand it to Cowork</button>
         <button type="button" onclick="choose('one','Code', 14)">Open Code</button>
       </div>
@@ -161,7 +161,7 @@
       <p class="choice">Your call</p>
       <div class="choices" role="group" aria-label="Choose a Claude surface for Owen">
         <button type="button" onclick="choose('two','Chat', 24)">Open Chat</button>
-        <button type="button" onclick="choose('two','Cowork', 24)">Start Cowork</button>
+        <button type="button" data-correct onclick="choose('two','Cowork', 24)">Start Cowork</button>
         <button type="button" onclick="choose('two','Code', 24)">Open Code</button>
       </div>
       <div class="outcome" id="two-Chat" aria-live="polite"><strong>Possible, but awkward.</strong> Chat can draft from uploads, but it is not the best fit for a delegated workflow that must save work into a local folder and run on a schedule.</div>
@@ -179,7 +179,7 @@
       <div class="choices" role="group" aria-label="Choose a Claude surface for Priya">
         <button type="button" onclick="choose('three','Chat', 33)">Open Chat</button>
         <button type="button" onclick="choose('three','Cowork', 33)">Start Cowork</button>
-        <button type="button" onclick="choose('three','Code', 33)">Open Code</button>
+        <button type="button" data-correct onclick="choose('three','Code', 33)">Open Code</button>
       </div>
       <div class="outcome" id="three-Chat" aria-live="polite"><strong>Good for discussion, not the full workflow.</strong> Chat could help reason about the bug, but the repository, edits, tests, and diff belong in Code.</div>
       <div class="outcome" id="three-Cowork" aria-live="polite"><strong>Broader than necessary.</strong> Cowork can coordinate multi-step work, but Code is the purpose-built surface for repository inspection, editing, testing, and review.</div>
@@ -270,7 +270,7 @@
       <p>The COO asks for a sourced comparison across current pricing, support policies, and three years of analyst reports. You pause before choosing a tool.</p>
       <p class="choice">Which route matches the evidence needed?</p>
       <div class="choices" role="group" aria-label="Choose a research route">
-        <button type="button" onclick="choose('eleven','research', 78)">Research</button>
+        <button type="button" data-correct onclick="choose('eleven','research', 78)">Research</button>
         <button type="button" onclick="choose('eleven','web', 78)">Quick web search</button>
         <button type="button" onclick="choose('eleven','thinking', 78)">Thinking only</button>
         <button type="button" onclick="choose('eleven','enterprise', 78)">Enterprise Search</button>
@@ -305,15 +305,6 @@
     <footer>When you are ready, ask your teacher to quiz you on one Northstar decision at a time. If any scene feels fuzzy, ask a follow-up—the point is durable understanding, not speed.<br><a href="../quizzes/02-claude-101/index.html">Take the Section 2 practice quiz →</a></footer>
   </main>
   <script>
-    function choose(scene, answer, progress) {
-      document.querySelectorAll('[id^="' + scene + '-"]').forEach(function (el) { el.classList.remove('visible'); });
-      var selected = document.getElementById(scene + '-' + answer);
-      if (selected) selected.classList.add('visible');
-      var bar = document.getElementById('progressBar');
-      if (bar && progress) bar.style.width = progress + '%';
-    }
-  </script>
-  <script>
     function toggleTheme() {
       var html = document.documentElement;
       var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
@@ -330,8 +321,10 @@
   <script src="../assets/js/ask-claude.js"></script>
   <script src="../assets/js/lesson-search.js"></script>
   <script src="../assets/js/gist-sync.js"></script>
+  <script src="../assets/js/lesson-progress.js"></script>
   <script src="../assets/js/checks/0001.js"></script>
   <script src="../assets/js/section-check.js"></script>
+  <script src="../assets/js/review-mode.js"></script>
   <script src="../assets/js/header-scroll.js"></script>
 </body>
 </html>

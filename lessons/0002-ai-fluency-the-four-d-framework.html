@@ -145,7 +145,7 @@
       <p>Nadia has a task in hand: the weekly regional numbers arrive in the same spreadsheet format every Monday, and every Monday she reformats them into the same three tables. The process has not changed in two years and she can describe every step from memory.</p>
       <p class="choice">Which mode fits Nadia’s Monday spreadsheet?</p>
       <div class="choices" role="group" aria-label="Choose an engagement mode for the weekly reformat">
-        <button type="button" onclick="choose('modes','automation', 8)">Automation</button>
+        <button type="button" data-correct onclick="choose('modes','automation', 8)">Automation</button>
         <button type="button" onclick="choose('modes','augmentation', 8)">Augmentation</button>
         <button type="button" onclick="choose('modes','agency', 8)">Agency</button>
       </div>
@@ -208,7 +208,7 @@
       <div class="choices" role="group" aria-label="Choose a delegation for the funding recommendation">
         <button type="button" onclick="choose('deleg','ai', 18)">AI-led — let Claude rank and recommend</button>
         <button type="button" onclick="choose('deleg','human', 18)">Human-led — Nadia and the directors decide</button>
-        <button type="button" onclick="choose('deleg','collab', 18)">Collaborative — Claude structures the options, humans decide</button>
+        <button type="button" data-correct onclick="choose('deleg','collab', 18)">Collaborative — Claude structures the options, humans decide</button>
         <button type="button" onclick="choose('deleg','auto', 18)">Automate it — it happens every quarter anyway</button>
       </div>
       <div class="outcome" id="deleg-ai" aria-live="polite"><strong>Wrong side of the line.</strong> This task carries accountability and high-stakes judgment—a funding decision the directors must own. Work requiring domain expertise, values, accountability, or high-stakes judgment stays with the human. Collaborative is the strongest answer here.</div>
@@ -244,7 +244,7 @@
       <div class="choices" role="group" aria-label="Diagnose the missing description dimension">
         <button type="button" onclick="choose('desc','product', 30)">Product Description</button>
         <button type="button" onclick="choose('desc','process', 30)">Process Description</button>
-        <button type="button" onclick="choose('desc','performance', 30)">Performance Description</button>
+        <button type="button" data-correct onclick="choose('desc','performance', 30)">Performance Description</button>
       </div>
       <div class="outcome" id="desc-product" aria-live="polite"><strong>Already covered.</strong> Deliverable, audience, format, level of detail, tone, and an example are all Product Description—and Nadia supplied every one. The gap is in how Claude <em>collaborates</em>: that is Performance Description.</div>
       <div class="outcome" id="desc-process" aria-live="polite"><strong>Already covered.</strong> First-party data only (evidence standard), outline before drafting (order of operations), cite the source table (method) are Process Description, and she gave all three. What is missing is the collaboration behavior—Performance Description.</div>
@@ -274,7 +274,7 @@
       <p class="choice">Which kind of discernment did Hollis just apply?</p>
       <div class="choices" role="group" aria-label="Identify the discernment type">
         <button type="button" onclick="choose('disc','product', 44)">Product Discernment</button>
-        <button type="button" onclick="choose('disc','process', 44)">Process Discernment</button>
+        <button type="button" data-correct onclick="choose('disc','process', 44)">Process Discernment</button>
         <button type="button" onclick="choose('disc','performance', 44)">Performance Discernment</button>
         <button type="button" onclick="choose('disc','none', 44)">Not discernment — that’s a Delegation failure</button>
       </div>
@@ -326,7 +326,7 @@
       <p>Nadia is stuck on a request she cannot get right. She has been rewriting it herself for forty minutes. Hollis, of all people, suggests the thing that works.</p>
       <p class="choice">What is the “secret weapon” beyond the six techniques?</p>
       <div class="choices" role="group" aria-label="Identify the secret weapon technique">
-        <button type="button" onclick="choose('secret','improve', 58)">Ask the AI to improve your prompt before you use it</button>
+        <button type="button" data-correct onclick="choose('secret','improve', 58)">Ask the AI to improve your prompt before you use it</button>
         <button type="button" onclick="choose('secret','longer', 58)">Make the prompt as long and detailed as possible</button>
         <button type="button" onclick="choose('secret','regen', 58)">Send the same prompt several times and pick the best answer</button>
         <button type="button" onclick="choose('secret','fresh', 58)">Start a fresh conversation whenever an answer disappoints</button>
@@ -353,7 +353,7 @@
       <div class="choices" role="group" aria-label="Identify the diligence form">
         <button type="button" onclick="choose('dil','creation', 76)">Creation Diligence</button>
         <button type="button" onclick="choose('dil','transparency', 76)">Transparency Diligence</button>
-        <button type="button" onclick="choose('dil','deployment', 76)">Deployment Diligence</button>
+        <button type="button" data-correct onclick="choose('dil','deployment', 76)">Deployment Diligence</button>
       </div>
       <div class="outcome" id="dil-creation" aria-live="polite"><strong>It applies, but earlier.</strong> Creation Diligence governed the choice to put customer records into this platform in the first place—privacy, security, bias, copyright, safety, appropriateness. Signing the finished memo is Deployment Diligence.</div>
       <div class="outcome" id="dil-transparency" aria-live="polite"><strong>Also in play, but a different question.</strong> Transparency Diligence asks whether to disclose AI’s role to the directors, and the expectation differs across personal, academic, professional, and regulated settings. Owning the result is Deployment Diligence.</div>
@@ -381,7 +381,7 @@
       <p class="choice">Nadia asks what the very first move is. Which is it?</p>
       <div class="choices" role="group" aria-label="Choose the first step of the planning exercise">
         <button type="button" onclick="choose('plan','tasks', 94)">List every task and assign each one</button>
-        <button type="button" onclick="choose('plan','vision', 94)">Have Claude question you until the vision and success criteria are explicit</button>
+        <button type="button" data-correct onclick="choose('plan','vision', 94)">Have Claude question you until the vision and success criteria are explicit</button>
         <button type="button" onclick="choose('plan','desc', 94)">Write the Product, Process, and Performance descriptions</button>
         <button type="button" onclick="choose('plan','draft', 94)">Ask for a first draft and refine from there</button>
       </div>
@@ -414,15 +414,6 @@
     <footer>When you are ready, ask your teacher to quiz you one competency at a time — name the three parts before you name the label. If a scene feels fuzzy, ask a follow-up; the point is durable understanding, not speed.<br><a href="../quizzes/01-ai-fluency-framework-foundations/index.html">Take the Section 1 practice quiz →</a></footer>
   </main>
   <script>
-    function choose(scene, answer, progress) {
-      document.querySelectorAll('[id^="' + scene + '-"]').forEach(function (el) { el.classList.remove('visible'); });
-      var selected = document.getElementById(scene + '-' + answer);
-      if (selected) selected.classList.add('visible');
-      var bar = document.getElementById('progressBar');
-      if (bar && progress) bar.style.width = progress + '%';
-    }
-  </script>
-  <script>
     function toggleTheme() {
       var html = document.documentElement;
       var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
@@ -439,8 +430,10 @@
   <script src="../assets/js/ask-claude.js"></script>
   <script src="../assets/js/lesson-search.js"></script>
   <script src="../assets/js/gist-sync.js"></script>
+  <script src="../assets/js/lesson-progress.js"></script>
   <script src="../assets/js/checks/0002.js"></script>
   <script src="../assets/js/section-check.js"></script>
+  <script src="../assets/js/review-mode.js"></script>
   <script src="../assets/js/header-scroll.js"></script>
 </body>
 </html>

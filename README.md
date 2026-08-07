@@ -18,6 +18,16 @@ Three additional reference folders sit alongside the 7 course folders:
 
 See `EXAM-DOMAINS.md` for how these courses map to the five scored exam domains, and `PROGRESS.md` for a running log of what's been reviewed and how well you know it.
 
+### Working through a lesson
+
+Every section either puts a decision in front of you or ends in a "Check yourself" question, and your first answer to each is recorded — that's what drives the progress bar, the `✓ n/m` counter in the header, and the resume link on the index pages. A **Next →** button appears once a section is answered. On a keyboard, `j`/`k` move between sections, `1`–`6` answer the current one, `Enter` advances, `/` searches the lesson, and `?` lists the shortcuts.
+
+The header button cycling **Read → Review → Missed** is for the second pass. *Review* drops the narrative and keeps the takeaways, tables, notes, code and every question — and re-locks questions you have already answered so you can re-test yourself, without overwriting your original score. *Missed* goes further and hides the sections you got right first time, which usually collapses a lesson to a handful of scenes.
+
+### Keeping your progress
+
+Progress lives in the browser's `localStorage`, which is **not durable on mobile Safari** — iOS clears it after roughly a week without a visit, and Private Browsing refuses to write it at all. Connect gist sync from any quiz page to carry progress across devices and survive that eviction. Adding the site to the iOS Home Screen also gives it noticeably more durable storage than a plain Safari tab.
+
 ## Courses (in the official exam-page order)
 
 | # | Folder | Course | Level |

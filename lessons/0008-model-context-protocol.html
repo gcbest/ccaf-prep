@@ -142,7 +142,7 @@
       <p>Renata Cho, the product lead, wants Claude in the Northstar app to answer questions about the team’s GitHub activity. Tomás has three sketches on the whiteboard and wants your call before he writes a line.</p>
       <p class="choice">Your call</p>
       <div class="choices" role="group" aria-label="Choose how to give Claude GitHub access">
-        <button type="button" onclick="choose('one','mcp', 8)">Connect an MCP server</button>
+        <button type="button" data-correct onclick="choose('one','mcp', 8)">Connect an MCP server</button>
         <button type="button" onclick="choose('one','api', 8)">Hand-write tools against the GitHub API</button>
         <button type="button" onclick="choose('one','skill', 8)">Write a Skill</button>
       </div>
@@ -189,7 +189,7 @@
       <p>Ade’s first build is a CLI chatbot. The client and the server both run on his laptop, launched by the same command.</p>
       <p class="choice">Which transport fits Ade’s deployment?</p>
       <div class="choices" role="group" aria-label="Choose a transport">
-        <button type="button" onclick="choose('two','stdio', 18)">stdio</button>
+        <button type="button" data-correct onclick="choose('two','stdio', 18)">stdio</button>
         <button type="button" onclick="choose('two','http', 18)">HTTP</button>
         <button type="button" onclick="choose('two','ws', 18)">WebSockets</button>
         <button type="button" onclick="choose('two','none', 18)">MCP fixes one transport; there is no choice</button>
@@ -302,7 +302,7 @@ async def call_tool(self, tool_name: str, tool_input: dict) -> types.CallToolRes
       <p>Now the first drill. Ade wants an <code>@</code>-mention menu in the CLI: type <code>@</code>, see the list of available documents, pick one, and have its content go into the prompt.</p>
       <p class="choice">Which primitive?</p>
       <div class="choices" role="group" aria-label="Choose a primitive for the mention menu">
-        <button type="button" onclick="choose('three','resource', 30)">Resource</button>
+        <button type="button" data-correct onclick="choose('three','resource', 30)">Resource</button>
         <button type="button" onclick="choose('three','tool', 30)">Tool</button>
         <button type="button" onclick="choose('three','prompt', 30)">Prompt</button>
       </div>
@@ -331,7 +331,7 @@ def fetch_doc(doc_id: str) -> str:
       <p>Tomás asks whether he could collapse both into one URI that returns the list when called bare and a document when given an id.</p>
       <p class="choice">Should he?</p>
       <div class="choices" role="group" aria-label="Choose a resource layout">
-        <button type="button" onclick="choose('four','two', 42)">Keep two resources, one per read operation</button>
+        <button type="button" data-correct onclick="choose('four','two', 42)">Keep two resources, one per read operation</button>
         <button type="button" onclick="choose('four','one', 42)">Collapse into one clever URI</button>
         <button type="button" onclick="choose('four','tool', 42)">Drop resources; expose one read tool instead</button>
       </div>
@@ -379,7 +379,7 @@ Add in headers, bullet points, tables, etc as necessary."""
       <p>Renata now wants a one-click control under the chat input labelled “Reformat this document,” which runs Northstar’s tested markdown workflow.</p>
       <p class="choice">Which primitive?</p>
       <div class="choices" role="group" aria-label="Choose a primitive for the reformat button">
-        <button type="button" onclick="choose('five','prompt', 54)">Prompt</button>
+        <button type="button" data-correct onclick="choose('five','prompt', 54)">Prompt</button>
         <button type="button" onclick="choose('five','tool', 54)">Tool</button>
         <button type="button" onclick="choose('five','resource', 54)">Resource</button>
       </div>
@@ -411,7 +411,7 @@ async def get_prompt(self, prompt_name, args: dict[str, str]):
       <p>Hannah Whitlock, Northstar’s security reviewer, joins the room and does what security reviewers do: she asks you to classify things before she signs anything off. Northstar’s analytics team wants Claude to be able to run arbitrary arithmetic — square roots, regressions — by executing code in a sandbox, entirely on its own initiative, whenever a question needs it.</p>
       <p class="choice">Which primitive?</p>
       <div class="choices" role="group" aria-label="Choose a primitive for sandboxed calculation">
-        <button type="button" onclick="choose('six','tool', 66)">Tool</button>
+        <button type="button" data-correct onclick="choose('six','tool', 66)">Tool</button>
         <button type="button" onclick="choose('six','resource', 66)">Resource</button>
         <button type="button" onclick="choose('six','prompt', 66)">Prompt</button>
       </div>
@@ -434,7 +434,7 @@ async def get_prompt(self, prompt_name, args: dict[str, str]):
       <p class="voice">“I am not signing off on a configuration where the blast radius is ‘whatever the vendor decided to ship this quarter.’”</p>
       <p class="choice">How do you limit the blast radius?</p>
       <div class="choices" role="group" aria-label="Choose how to scope MCP tool access">
-        <button type="button" onclick="choose('seven','deny', 80)">Disable everything by default, then enable named tools</button>
+        <button type="button" data-correct onclick="choose('seven','deny', 80)">Disable everything by default, then enable named tools</button>
         <button type="button" onclick="choose('seven','allow', 80)">Leave the default and disable the dangerous ones by name</button>
         <button type="button" onclick="choose('seven','prompt', 80)">Tell Claude in the system prompt not to post or delete</button>
         <button type="button" onclick="choose('seven','fork', 80)">Fork the server and delete the tools you dislike</button>
@@ -461,7 +461,7 @@ async def get_prompt(self, prompt_name, args: dict[str, str]):
       <p>The backlog item: “Claude should produce Northstar’s quarterly incident report in our house format — the standard sections, the standard tone, the standard severity rubric — every time, without anyone re-explaining it.”</p>
       <p class="choice">Your call</p>
       <div class="choices" role="group" aria-label="Choose between tool, Skill, and MCP for the report format">
-        <button type="button" onclick="choose('eight','skill', 90)">A Skill</button>
+        <button type="button" data-correct onclick="choose('eight','skill', 90)">A Skill</button>
         <button type="button" onclick="choose('eight','mcp', 90)">An MCP server</button>
         <button type="button" onclick="choose('eight','tool', 90)">A custom tool</button>
       </div>
@@ -500,15 +500,6 @@ async def get_prompt(self, prompt_name, args: dict[str, str]):
     <footer>When you are ready, ask your teacher to quiz you on one primitive at a time — and insist on the <em>why</em>, not just the label. If you can name who controls each primitive without pausing, this section is done.<br><a href="../quizzes/06-introduction-to-mcp/index.html">Take the Section 6 practice quiz →</a></footer>
   </main>
   <script>
-    function choose(scene, answer, progress) {
-      document.querySelectorAll('[id^="' + scene + '-"]').forEach(function (el) { el.classList.remove('visible'); });
-      var selected = document.getElementById(scene + '-' + answer);
-      if (selected) selected.classList.add('visible');
-      var bar = document.getElementById('progressBar');
-      if (bar && progress) bar.style.width = progress + '%';
-    }
-  </script>
-  <script>
     function toggleTheme() {
       var html = document.documentElement;
       var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
@@ -525,8 +516,10 @@ async def get_prompt(self, prompt_name, args: dict[str, str]):
   <script src="../assets/js/ask-claude.js"></script>
   <script src="../assets/js/lesson-search.js"></script>
   <script src="../assets/js/gist-sync.js"></script>
+  <script src="../assets/js/lesson-progress.js"></script>
   <script src="../assets/js/checks/0008.js"></script>
   <script src="../assets/js/section-check.js"></script>
+  <script src="../assets/js/review-mode.js"></script>
   <script src="../assets/js/header-scroll.js"></script>
 </body>
 </html>

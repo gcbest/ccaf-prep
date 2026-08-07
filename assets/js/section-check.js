@@ -70,6 +70,10 @@
       ".sc-tally{flex:none;color:var(--muted);font:700 11px/1.2 system-ui,sans-serif;" +
       "letter-spacing:.1em;white-space:nowrap;}" +
       ".sc-sync-note{margin-top:10px;}" +
+      ".sc-sync-warn{margin:32px 0 0;padding:15px 17px;border:1px solid var(--line);" +
+      "border-left:3px solid var(--rust);border-radius:3px;background:var(--paper-deep);" +
+      "font:14px/1.6 system-ui,sans-serif;color:var(--muted);}" +
+      ".sc-sync-warn strong{color:var(--ink);}" +
       ":root[data-theme=\"dark\"] .sc-opt.is-correct{background:#1b2716;border-color:#5c8a5c;}" +
       ":root[data-theme=\"dark\"] .sc-opt.is-correct .sc-key{color:#8fbc8f;}" +
       ":root[data-theme=\"dark\"] .sc-opt.is-wrong{background:#2c1a14;}" +
@@ -130,6 +134,8 @@
           answersFor(lesson)[sectionId] = { choice: i, correct: i === item.correct, at: Date.now() };
           saveState();
           renderTally();
+          // lesson-progress.js owns the progress bar and the combined tally.
+          if (window.CCAF_LessonProgress) window.CCAF_LessonProgress.report(sectionId, i === item.correct);
         }
         reveal(i);
       });
@@ -176,6 +182,9 @@
     return {
       el: card,
       sectionId: sectionId,
+      // Re-locks the question without touching the recorded score, so review mode
+      // can re-test you on something you have already answered once.
+      clear: clear,
       restore: function () {
         var record = answersFor(lesson)[sectionId];
         clear();
@@ -197,6 +206,9 @@
   }
 
   function mountTally() {
+    // lesson-progress.js renders a combined tally over every section — decision
+    // points included — so a checks-only counter beside it would just be confusing.
+    if (window.CCAF_LessonProgress) return;
     var masthead = document.querySelector(".masthead");
     if (!masthead) return;
     tallyEl = document.createElement("span");
@@ -206,24 +218,52 @@
     else masthead.appendChild(tallyEl);
   }
 
+  function hasProgress() {
+    var answers = answersFor(window.CCAF_CHECKS.lesson);
+    return Object.keys(answers).length > 0;
+  }
+
   function mountSyncNote() {
-    var footer = document.querySelector("main footer");
-    if (!footer) return;
-    var note = document.createElement("p");
-    note.className = "sc-sync-note";
     var connected = false;
     try { connected = !!localStorage.getItem("ccaf_gist_token"); } catch (e) {}
-    if (connected) {
-      note.textContent = "Check answers sync across your devices.";
-    } else {
-      note.appendChild(document.createTextNode("Check answers are saved on this device. "));
-      var link = document.createElement("a");
-      link.href = "../quizzes/index.html";
-      link.textContent = "Connect sync from any quiz page";
-      note.appendChild(link);
-      note.appendChild(document.createTextNode(" to carry them between devices."));
+
+    var footer = document.querySelector("main footer");
+    if (footer) {
+      var note = document.createElement("p");
+      note.className = "sc-sync-note";
+      if (connected) {
+        note.textContent = "Check answers sync across your devices.";
+      } else {
+        note.appendChild(document.createTextNode("Check answers are saved on this device. "));
+        var link = document.createElement("a");
+        link.href = "../quizzes/index.html";
+        link.textContent = "Connect sync from any quiz page";
+        note.appendChild(link);
+        note.appendChild(document.createTextNode(" to carry them between devices."));
+      }
+      footer.appendChild(note);
     }
-    footer.appendChild(note);
+
+    // Local storage is not durable on mobile Safari — it is cleared after about a
+    // week without a visit, and answers vanish with it. Once there is progress worth
+    // losing, say so somewhere the reader will actually see it.
+    if (connected || !hasProgress()) return;
+    var end = document.querySelector("main section.end");
+    if (!end) return;
+
+    var warn = document.createElement("div");
+    warn.className = "sc-sync-warn";
+    var strong = document.createElement("strong");
+    strong.textContent = "Your progress only lives in this browser.";
+    warn.appendChild(strong);
+    warn.appendChild(document.createTextNode(
+      " Mobile Safari clears it after about a week without a visit. "));
+    var a = document.createElement("a");
+    a.href = "../quizzes/index.html";
+    a.textContent = "Connect sync";
+    warn.appendChild(a);
+    warn.appendChild(document.createTextNode(" to keep it across devices and reinstalls."));
+    end.parentNode.insertBefore(warn, end);
   }
 
   function setupSync() {
@@ -237,6 +277,7 @@
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
         cards.forEach(function (card) { card.restore(); });
         renderTally();
+        if (window.CCAF_LessonProgress) window.CCAF_LessonProgress.refresh();
       },
       getUpdatedAt: function () { return state.updatedAt || 0; }
     });
@@ -270,6 +311,13 @@
     renderTally();
     mountSyncNote();
     setupSync();
+
+    window.CCAF_SectionChecks = {
+      cards: cards,
+      recordFor: function (sectionId) { return answersFor(window.CCAF_CHECKS.lesson)[sectionId] || null; },
+      clearAll: function () { cards.forEach(function (card) { card.clear(); }); },
+      restoreAll: function () { cards.forEach(function (card) { card.restore(); }); }
+    };
   }
 
   injectStyles();
