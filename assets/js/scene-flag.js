@@ -91,7 +91,6 @@
       "letter-spacing:.1em;white-space:nowrap;text-decoration:none;}" +
       ".sf-tally:hover,.sf-tally:focus-visible{color:var(--sf-flag-dark);outline:none;" +
       "text-decoration:underline;}" +
-      ".sf-tally[hidden]{display:none;}" +
 
       "@media (hover:none) and (pointer:coarse){.sf-toggle{width:38px;height:38px;font-size:15px;}}";
     document.head.appendChild(style);
@@ -154,9 +153,12 @@
   function renderTally() {
     if (!tallyEl) return;
     var n = Object.keys(flagsFor()).length;
-    tallyEl.hidden = !n;
-    tallyEl.textContent = "🔖 " + n;
-    tallyEl.setAttribute("aria-label", n + " section" + (n === 1 ? "" : "s") + " flagged for later");
+    // Always visible — it's the only way to reach the bookmarks page from a
+    // lesson, so it can't hide itself away just because nothing is flagged yet.
+    tallyEl.textContent = n ? "🔖 " + n : "🔖";
+    tallyEl.setAttribute("aria-label",
+      n ? n + " section" + (n === 1 ? "" : "s") + " flagged for later — view bookmarks"
+        : "View bookmarks (none flagged yet)");
   }
 
   function mountTally() {
