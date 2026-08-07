@@ -490,7 +490,7 @@ tools = tool_specs + [{"cache_point": {"type": "default"}}]</code></pre>
       <p class="voice">Kenji signs. Fadumo asks for the caching numbers in writing. Rosa deletes the last <code>ANTHROPIC_API_KEY</code> reference from the repository.</p>
     </section>
 
-    <section class="end">
+    <section class="end" id="end">
       <h2>The architect’s pocket card</h2>
       <p>When you translate a direct-API design to Bedrock, change the access layer and preserve the reasoning:</p>
       <p><strong>Credentials come from AWS IAM/boto3 configuration, not an Anthropic API key.</strong> Create a <code>bedrock-runtime</code> client in a region where the model is available. Use Converse with <code>modelId</code>, <code>messages</code>, <code>inferenceConfig</code>, and <code>toolConfig</code> as appropriate. Use a cross-region inference profile when the model is routed across supported regions, and take the profile ID from the console’s cross-region inference area rather than guessing from the main model catalog. Read the returned output message and content blocks, then handle stop reasons and usage.</p>

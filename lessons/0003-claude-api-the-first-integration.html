@@ -532,7 +532,7 @@ record = json.loads(message.content[0].text)</code></pre>
 
     <div class="rule"><strong>Tomorrow: Claude stops answering and starts acting.</strong><span>Tool use, the agent loop, and everything Rooftop cannot do from a single request — Part 2.</span></div>
 
-    <section class="end">
+    <section class="end" id="end">
       <h2>The architect's pocket card</h2>
       <p>Ines asks how you knew which knob to turn each time. You answer:</p>
       <p><strong>Build with primitives, scale on infrastructure, run with control.</strong> Pick the model per task — Haiku for speed, Opus for intelligence, Sonnet for balance — and audition the cheapest first against 20–30 examples. Keep the API key on your server, never in a client. Every request needs model, max_tokens, and messages; the API is stateless, so you resend the history yourself. The system prompt governs <em>how</em>, not <em>what</em>. Temperature near 0 for extraction, near 1 for creative work. Stream long responses for time-to-first-token. Read <code>stop_reason</code> before you change anything; steer with prefills and stop sequences; force a tool schema when the output shape must hold. Put the image before the text, the PDF in a document block, and turn citations on when claims must be traceable. Then write the prompt properly: a clear, direct first line, output guidelines in almost every prompt, process steps only for hard reasoning, XML tags around interpolated content, and examples mined from your best real outputs.</p>

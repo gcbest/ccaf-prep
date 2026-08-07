@@ -585,7 +585,7 @@ claude --resume "$(jq -r .session_id result.json)" \
       <div class="lesson"><p><strong>A reliable workflow leaves evidence:</strong> state the goal and success criteria → inspect and plan the smallest change → make the change with the least privilege needed → run the build, tests, lint, or type checks → review the diff and confirm no test was weakened or deleted → report what was verified and what remains uncertain → ask for a cold second opinion when the change is risky or the session has accumulated too much context.</p></div>
     </section>
 
-    <section class="end">
+    <section class="end" id="end">
       <h2>The architect’s pocket card</h2>
       <p>At the end of the day Rosa asks how you kept making the same call so fast. You answer:</p>
       <p><strong>Match the control surface to the risk.</strong> Plan mode for anything architectural. Manual and Accept edits while you are watching. Auto plus a Stop hook when you are not. Don’t ask for unattended pipelines. Bypass only inside an isolated container or VM.</p>

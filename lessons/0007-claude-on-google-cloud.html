@@ -451,7 +451,7 @@ message.content[0].text</code></pre>
       <div class="lesson"><p><strong>The distinction the exam is testing:</strong> not “can you architect this?”—you already could—but “do you know which cloud’s vocabulary applies?” Model Garden, ADC, project ID, and <code>@version-date</code> are Vertex. Boto3, IAM, <code>converse</code>, and inference profiles are Bedrock.</p></div>
     </section>
 
-    <section class="end">
+    <section class="end" id="end">
       <h2>The architect’s pocket card</h2>
       <p>Meridian’s first production request lands at 5:12 p.m. Kwame asks what actually changed. You answer:</p>
       <p><strong>Auth, project, region, client, model ID.</strong> Enable the model in <strong>Model Garden</strong>. Authenticate with <code>gcloud init</code>, <code>gcloud auth login</code>, <code>gcloud config set project</code>, and <code>gcloud auth application-default login</code>—the SDK picks those application-default credentials up automatically, because there is no API key here. Install <code>anthropic[vertex]</code> and build <code>AnthropicVertex(region=..., project_id=...)</code>. Use <code>model-name@version-date</code>, never a plain name and never a Bedrock-style ID. Never call Vertex from client-side code. Then call <code>.messages.create(model, max_tokens, messages)</code> exactly as before, and read content, usage, and stop reason on the way back.</p>

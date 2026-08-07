@@ -468,7 +468,7 @@ session = client.beta.sessions.create(agent=agent.id,
       <div class="lesson"><p><strong>Real systems are not one shape.</strong> The architect’s job is to spend autonomy where the problem is genuinely open and spend structure everywhere else.</p></div>
     </section>
 
-    <section class="end">
+    <section class="end" id="end">
       <h2>The architect’s pocket card</h2>
       <p><strong>Workflow</strong> = a predefined series of Claude calls for a known problem. <strong>Agent</strong> = a goal plus a tool set, path chosen at runtime. Prefer workflows; reach for agents only when truly required. Decision rule: steps knowable in advance → workflow; steps genuinely unknowable → agent.</p>
       <p><strong>Four workflow patterns.</strong> Parallelization: independent sub-tasks run simultaneously, then aggregated. Chaining: sequential subtasks that build on each other, the fix for the long-prompt problem. Routing: categorize first, then forward to exactly one specialized pipeline. Evaluator-Optimizer: producer → grader → feedback → repeat until accepted.</p>

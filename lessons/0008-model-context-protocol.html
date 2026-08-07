@@ -485,7 +485,7 @@ async def get_prompt(self, prompt_name, args: dict[str, str]):
       <p class="voice">Hannah signs. Tomás takes the printout of seventeen hand-written integrations off the wall.</p>
     </section>
 
-    <section class="end">
+    <section class="end" id="end">
       <h2>The architect’s pocket card</h2>
       <p><strong>MCP moves integration work off your plate.</strong> A server wraps an outside service and exposes ready-made tools, resources, and prompts; a client is the messenger that lists and invokes them and never executes anything itself. The traffic is <code>ListToolsRequest</code>/<code>ListToolsResult</code> then <code>CallToolRequest</code>/<code>CallToolResult</code>, over any transport — stdio for the common same-machine case, HTTP or WebSockets otherwise.</p>
       <p><strong>Three primitives, three owners.</strong> Tools are model-controlled and serve the model. Resources are app-controlled, read-only, URI-addressed, MIME-typed, and serve your app. Prompts are user-controlled instruction templates that resolve to messages and serve your users. New capability → tool. Data for UI or prompt context → resource. User-triggered workflow → prompt.</p>
