@@ -139,7 +139,10 @@
       "align-items:flex-start;justify-content:center;padding:10vh 16px 16px;z-index:1100;" +
       "opacity:0;pointer-events:none;transition:opacity .15s ease;}" +
       ".gs-overlay.visible{opacity:1;pointer-events:auto;}" +
-      ".gs-panel{width:min(600px,100%);max-height:70vh;display:flex;flex-direction:column;" +
+      // dvh, not vh: on mobile Safari vh resolves against the large viewport, so with
+      // the toolbar showing the bottom of the panel sits underneath it.
+      ".gs-panel{width:min(600px,100%);max-height:70vh;max-height:70dvh;" +
+      "display:flex;flex-direction:column;" +
       "background:var(--white);border:1px solid var(--line);border-radius:7px;overflow:hidden;" +
       "box-shadow:0 18px 50px rgba(0,0,0,.32);}" +
       ".gs-input-row{display:flex;align-items:center;gap:9px;padding:12px 14px;" +
