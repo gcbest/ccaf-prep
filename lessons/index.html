@@ -83,7 +83,9 @@
       .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
       .card { padding: 17px 18px 19px; }
     }
-  </style>
+      .autohide-header { transition: transform .28s ease; will-change: transform; }
+    .autohide-header--hidden { transform: translateY(-100%); }
+</style>
 </head>
 <body>
   <main>
@@ -208,5 +210,6 @@
       if (btn) btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
     })();
   </script>
+  <script src="../assets/js/header-scroll.js"></script>
 </body>
 </html>

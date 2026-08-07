@@ -122,6 +122,8 @@
   :root[data-theme="dark"] .badge { background: #2a292e; color: #b5b2ac; }
   :root[data-theme="dark"] .home-link { color: #9b98a3; border-color: #3a393f; }
   :root[data-theme="dark"] .home-link:hover { color: #c76f20; border-color: #c76f20; }
+    .autohide-header { transition: transform .28s ease; will-change: transform; }
+    .autohide-header--hidden { transform: translateY(-100%); }
 </style>
 </head>
 <body>
@@ -606,5 +608,6 @@ renderScenarios();
 renderProgress();
 if (sync) { sync.mountUI(document.getElementById("syncPanel")); sync.syncOnLoad(); }
 </script>
+  <script src="../assets/js/header-scroll.js"></script>
 </body>
 </html>

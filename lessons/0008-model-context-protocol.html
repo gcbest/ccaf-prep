@@ -114,7 +114,9 @@
     :root[data-theme="dark"] .outcome { background: #1b2716; }
     :root[data-theme="dark"] .blue-note { background: #142329; border-left-color: #88a6b4; }
     :root[data-theme="dark"] .prompt { background: #291e14; }
-  </style>
+      .autohide-header { transition: transform .28s ease; will-change: transform; }
+    .autohide-header--hidden { transform: translateY(-100%); }
+</style>
 </head>
 <body>
   <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
@@ -525,5 +527,6 @@ async def get_prompt(self, prompt_name, args: dict[str, str]):
   <script src="../assets/js/gist-sync.js"></script>
   <script src="../assets/js/checks/0008.js"></script>
   <script src="../assets/js/section-check.js"></script>
+  <script src="../assets/js/header-scroll.js"></script>
 </body>
 </html>

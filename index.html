@@ -96,7 +96,9 @@
       .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
       .hub { padding: 18px 18px; }
     }
-  </style>
+      .autohide-header { transition: transform .28s ease; will-change: transform; }
+    .autohide-header--hidden { transform: translateY(-100%); }
+</style>
 </head>
 <body>
   <main>
@@ -164,5 +166,6 @@
     })();
   </script>
   <script src="assets/js/global-search.js"></script>
+  <script src="assets/js/header-scroll.js"></script>
 </body>
 </html>
