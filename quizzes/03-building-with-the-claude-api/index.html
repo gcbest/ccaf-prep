@@ -94,8 +94,9 @@
     .small { font: 400 13px/1.5 Georgia, serif; color: var(--muted); }
     .small.sys { font: 400 12.5px/1.5 system-ui, sans-serif; color: var(--muted); }
 
-    .qmeta { display: flex; justify-content: space-between; align-items: center; font: 600 12px/1.4 system-ui, sans-serif; color: var(--muted); margin-bottom: 10px; }
-    .badge { font: 700 10.5px/1.4 system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: var(--paper-deep); color: var(--rust-dark); }
+    .qmeta { display: flex; justify-content: space-between; align-items: center; gap: 10px; font: 600 12px/1.4 system-ui, sans-serif; color: var(--muted); margin-bottom: 10px; }
+    .qmeta > span:first-child { flex: none; }
+    .badge { flex: 0 1 auto; min-width: 0; text-align: right; font: 700 10.5px/1.4 system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: var(--paper-deep); color: var(--rust-dark); }
     .qtext { font: 700 1.18rem/1.4 Georgia, serif; margin-bottom: 16px; }
     .option {
       display: block; width: 100%; text-align: left; padding: 11px 14px; margin-bottom: 9px;
@@ -144,7 +145,7 @@
   <nav class="crumbs"><a href="../../index.html">Home</a> › <a href="../index.html">Quizzes</a> › Section 3 · Claude API</nav>
   <span class="kicker">Section 3 · Building with the Claude API</span>
   <h1>Building with the Claude API Quiz</h1>
-  <p class="dek">102 multiple-choice questions covering the Messages API, tool use and the agent loop, structured output, RAG and context management, and workflow vs. agent orchestration patterns — the single heaviest-weighted section on the exam.</p>
+  <p class="dek">102 multiple-choice questions covering the Messages API, tool use and the agent loop, structured output, RAG and context management, and workflow vs. agent orchestration patterns — the single heaviest-weighted section on the exam. Split into the same three parts as the lessons, so you can drill one at a time.</p>
 
   <div class="tabs">
     <button class="tab active" data-tab="quiz">Quiz</button>
@@ -155,10 +156,16 @@
   <div class="panel active" id="panel-quiz">
     <div class="card" id="quizSetup">
       <div class="controls">
+        <select id="quizPart">
+          <option value="all" selected>All parts</option>
+          <option value="1">Part 1 · The first integration</option>
+          <option value="2">Part 2 · Tools, retrieval &amp; context</option>
+          <option value="3">Part 3 · Agentic orchestration</option>
+        </select>
         <select id="quizLen">
           <option value="10">10 questions</option>
           <option value="20">20 questions</option>
-          <option value="999" selected>All 102 questions</option>
+          <option value="999" selected>All questions</option>
         </select>
         <select id="quizMode">
           <option value="weak" selected>Missed &amp; new first (recommended)</option>
@@ -168,7 +175,7 @@
         <button class="primary" id="startQuizBtn">Start quiz</button>
         <button class="ghost" id="reviewMissedBtn">Review only missed</button>
       </div>
-      <div class="small sys">"Missed &amp; new first" weights questions you've gotten wrong or haven't seen, so review sessions target real gaps. "Review only missed" quizzes you exclusively on questions currently marked wrong.</div>
+      <div class="small sys">This section spans three lessons — pick a part to drill just that lesson's material, or "All parts" for the full 102. "Missed &amp; new first" weights questions you've gotten wrong or haven't seen, so review sessions target real gaps. "Review only missed" quizzes you exclusively on questions currently marked wrong.</div>
     </div>
     <div id="quizArea"></div>
   </div>
@@ -180,6 +187,10 @@
       <div class="row-between"><strong style="font:700 13px/1.4 system-ui, sans-serif; color:var(--rust-dark);">Mastery</strong></div>
       <div class="progress-bar-outer"><div class="progress-bar-inner" id="masteryBar" style="width:0%"></div></div>
       <div class="small sys" id="masteryLabel" style="margin-top:6px;"></div>
+    </div>
+    <div class="card">
+      <div class="row-between"><strong style="font:700 13px/1.4 system-ui, sans-serif; color:var(--rust-dark);">By part</strong></div>
+      <div id="partBreakdown" style="margin-top:10px;"></div>
     </div>
     <div class="card">
       <div class="row-between"><strong style="font:700 13px/1.4 system-ui, sans-serif; color:var(--rust-dark);">Questions currently missed</strong></div>
@@ -206,6 +217,7 @@
 const QUESTIONS = [
   {
     "id": "api001",
+    "part": 1,
     "q": "Which of the following correctly identifies the three layers of the Claude Platform and their shorthand relationship?",
     "options": [
       "Models, Tools, and Agents — build with models, scale on tools, run with agents",
@@ -219,6 +231,7 @@ const QUESTIONS = [
   },
   {
     "id": "api002",
+    "part": 1,
     "q": "What three things must you specify in a basic messages.create call?",
     "options": [
       "A model, a temperature setting, and a system prompt",
@@ -232,6 +245,7 @@ const QUESTIONS = [
   },
   {
     "id": "api003",
+    "part": 2,
     "q": "Why should you always loop over response.content and check block types, rather than treating it as a plain string?",
     "options": [
       "Because response.content is always returned as a raw JSON string that must be parsed before use",
@@ -245,6 +259,7 @@ const QUESTIONS = [
   },
   {
     "id": "api004",
+    "part": 1,
     "q": "Where should you store your Anthropic API key, and why?",
     "options": [
       "Hardcoded directly in the source file, with a comment flagging it as sensitive",
@@ -258,6 +273,7 @@ const QUESTIONS = [
   },
   {
     "id": "api005",
+    "part": 1,
     "q": "Why should a client application never call the Anthropic API directly, and what's the correct request path instead?",
     "options": [
       "Because the Anthropic API rate-limits browser-originated traffic more aggressively than server traffic",
@@ -271,6 +287,7 @@ const QUESTIONS = [
   },
   {
     "id": "api006",
+    "part": 1,
     "q": "Which of the following correctly ranks the four model tiers from fastest/cheapest to most capable/expensive?",
     "options": [
       "Sonnet (fastest/cheapest) → Haiku (balanced) → Fable (deep reasoning) → Opus (most capable, highest cost)",
@@ -284,6 +301,7 @@ const QUESTIONS = [
   },
   {
     "id": "api007",
+    "part": 1,
     "q": "What's the recommended model-selection workflow before writing production code?",
     "options": [
       "Always start with Opus to establish a quality ceiling, then downgrade to a cheaper model only if it proves to be overkill",
@@ -297,6 +315,7 @@ const QUESTIONS = [
   },
   {
     "id": "api008",
+    "part": 1,
     "q": "What does response.usage report, and why does it matter?",
     "options": [
       "The latency, in milliseconds, that the request took to complete",
@@ -310,6 +329,7 @@ const QUESTIONS = [
   },
   {
     "id": "api009",
+    "part": 1,
     "q": "What does stop_reason: \"tool_use\" signal in a Messages API response?",
     "options": [
       "That an error occurred while Claude was parsing the tool's JSON schema",
@@ -323,6 +343,7 @@ const QUESTIONS = [
   },
   {
     "id": "api010",
+    "part": 1,
     "q": "Which of the following correctly orders the four internal stages Claude's text generation process goes through for each response?",
     "options": [
       "Embedding → Tokenization → Generation → Contextualization",
@@ -336,6 +357,7 @@ const QUESTIONS = [
   },
   {
     "id": "api011",
+    "part": 1,
     "q": "Which of the following best describes what the temperature parameter controls?",
     "options": [
       "It controls how many output tokens Claude generates before automatically stopping",
@@ -349,6 +371,7 @@ const QUESTIONS = [
   },
   {
     "id": "api012",
+    "part": 1,
     "q": "Why must you manually resend the entire conversation history with every follow-up request to Claude?",
     "options": [
       "Because the context window automatically clears itself after every response is returned",
@@ -362,6 +385,7 @@ const QUESTIONS = [
   },
   {
     "id": "api013",
+    "part": 2,
     "q": "Which of the following correctly lists the five steps of the basic agent loop?",
     "options": [
       "Draft a prompt, create an eval dataset, feed inputs through Claude, grade outputs, and revise the prompt",
@@ -375,6 +399,7 @@ const QUESTIONS = [
   },
   {
     "id": "api014",
+    "part": 2,
     "q": "What are the three parts of a tool definition?",
     "options": [
       "name, description, and output_schema",
@@ -388,6 +413,7 @@ const QUESTIONS = [
   },
   {
     "id": "api015",
+    "part": 2,
     "q": "What is the number one cause of an agent misfiring or failing to use an available tool?",
     "options": [
       "An input_schema that's overly strict about required fields",
@@ -401,6 +427,7 @@ const QUESTIONS = [
   },
   {
     "id": "api016",
+    "part": 2,
     "q": "What does the SDK's \"tool runner\" do for you?",
     "options": [
       "It automatically caches all tool results so future requests can skip re-execution",
@@ -414,6 +441,7 @@ const QUESTIONS = [
   },
   {
     "id": "api017",
+    "part": 1,
     "q": "Where does the effort parameter for extended thinking go, and what are its five levels?",
     "options": [
       "Inside the thinking block itself, with levels low, medium, high, and max",
@@ -427,6 +455,7 @@ const QUESTIONS = [
   },
   {
     "id": "api018",
+    "part": 1,
     "q": "When should you skip extended thinking?",
     "options": [
       "For simple classification, extraction, or boilerplate tasks, where thinking just adds latency and cost without improving results",
@@ -440,6 +469,7 @@ const QUESTIONS = [
   },
   {
     "id": "api019",
+    "part": 1,
     "q": "What's the minimum thinking budget for extended thinking, and what is a \"redacted\" thinking block?",
     "options": [
       "Minimum 512 tokens; a redacted block is reasoning that was removed entirely, leaving no trace in the response",
@@ -453,6 +483,7 @@ const QUESTIONS = [
   },
   {
     "id": "api020",
+    "part": 2,
     "q": "What's the key difference between a \"server tool\" and a \"client tool\"?",
     "options": [
       "Server tools run on your own infrastructure; client tools run on Anthropic's servers",
@@ -466,6 +497,7 @@ const QUESTIONS = [
   },
   {
     "id": "api021",
+    "part": 2,
     "q": "For the built-in text editor tool, what does Anthropic provide vs. what must you build?",
     "options": [
       "Anthropic provides both the schema and the working implementation; you only need to enable the tool",
@@ -479,6 +511,7 @@ const QUESTIONS = [
   },
   {
     "id": "api022",
+    "part": 2,
     "q": "What does enabling fine_grained=True for tool streaming change, and what's the trade-off?",
     "options": [
       "It increases latency slightly in exchange for guaranteed, always-valid JSON chunks",
@@ -492,6 +525,7 @@ const QUESTIONS = [
   },
   {
     "id": "api023",
+    "part": 2,
     "q": "What response block type indicates Claude called a server-side tool like web search or code execution?",
     "options": [
       "A client_tool_use block",
@@ -505,6 +539,7 @@ const QUESTIONS = [
   },
   {
     "id": "api024",
+    "part": 3,
     "q": "What does \"environment inspection\" mean as an agent-design concept, and why does it matter?",
     "options": [
       "Automatically logging every tool call the agent makes for later audit purposes",
@@ -518,6 +553,7 @@ const QUESTIONS = [
   },
   {
     "id": "api025",
+    "part": 2,
     "q": "What problem does the \"batch tool\" trick solve, and how does it work?",
     "options": [
       "It automatically retries failed tool calls in the background without involving Claude",
@@ -531,6 +567,7 @@ const QUESTIONS = [
   },
   {
     "id": "api026",
+    "part": 2,
     "q": "What are the three fields of a tool_result block?",
     "options": [
       "tool_use_id, content, and timestamp",
@@ -544,6 +581,7 @@ const QUESTIONS = [
   },
   {
     "id": "api027",
+    "part": 2,
     "q": "How do you force Claude to always call a specific tool instead of letting it decide?",
     "options": [
       "Set temperature to 0 and include only one tool in the tools array",
@@ -557,6 +595,7 @@ const QUESTIONS = [
   },
   {
     "id": "api028",
+    "part": 2,
     "q": "For Anthropic's built-in web search tool, what's the schema type, and what's the default cap on searches per request?",
     "options": [
       "web_search_20240620, with max_uses defaulting to 10 searches per request",
@@ -570,6 +609,7 @@ const QUESTIONS = [
   },
   {
     "id": "api029",
+    "part": 2,
     "q": "What's the one-line distinction between Tools, Skills, and MCP?",
     "options": [
       "Tools = third-party services, Skills = your systems, MCP = your processes",
@@ -583,6 +623,7 @@ const QUESTIONS = [
   },
   {
     "id": "api030",
+    "part": 2,
     "q": "What two things does a Claude API request need to connect to and use an MCP server?",
     "options": [
       "An mcp_servers entry and a manually written JSON schema for each of the server's tools",
@@ -596,6 +637,7 @@ const QUESTIONS = [
   },
   {
     "id": "api031",
+    "part": 2,
     "q": "When calling an MCP server from the Claude API, do you need to write JSON schemas for its tools yourself?",
     "options": [
       "Yes, you must manually mirror each tool's JSON schema in your own request",
@@ -609,6 +651,7 @@ const QUESTIONS = [
   },
   {
     "id": "api032",
+    "part": 2,
     "q": "How do you restrict an MCP toolset to read-only access (e.g., allow search but block posting)?",
     "options": [
       "Set the mcp_servers entry's auth token to a read-only API scope",
@@ -622,6 +665,7 @@ const QUESTIONS = [
   },
   {
     "id": "api033",
+    "part": 2,
     "q": "What tool-design principle does Claude Code's own toolset (bash, read, write, edit, glob, grep) illustrate?",
     "options": [
       "Give agents as many hyper-specialized tools as possible so every scenario has a dedicated action",
@@ -635,6 +679,7 @@ const QUESTIONS = [
   },
   {
     "id": "api034",
+    "part": 2,
     "q": "What's the difference between an MCP resource and an MCP tool?",
     "options": [
       "Resources are invoked reactively when Claude decides to call them; tools proactively expose data without Claude's involvement",
@@ -648,6 +693,7 @@ const QUESTIONS = [
   },
   {
     "id": "api035",
+    "part": 2,
     "q": "What are MCP prompts, and how do they typically appear to a user in a client application?",
     "options": [
       "System-level instructions that Anthropic automatically injects into every request using that server",
@@ -661,6 +707,7 @@ const QUESTIONS = [
   },
   {
     "id": "api036",
+    "part": 2,
     "q": "Which of the following correctly names Anthropic's four context-management patterns?",
     "options": [
       "Just-in-time context, prompt caching, chunking, and reranking",
@@ -674,6 +721,7 @@ const QUESTIONS = [
   },
   {
     "id": "api037",
+    "part": 2,
     "q": "Which of the four context-management patterns is a design pattern rather than an API feature?",
     "options": [
       "Server-side compaction",
@@ -687,6 +735,7 @@ const QUESTIONS = [
   },
   {
     "id": "api038",
+    "part": 2,
     "q": "How do you enable server-side compaction in an API request, and what does it do?",
     "options": [
       "Set compaction: true at the top level of the request body",
@@ -700,6 +749,7 @@ const QUESTIONS = [
   },
   {
     "id": "api039",
+    "part": 2,
     "q": "For the memory tool, who implements the storage backend — Anthropic or you?",
     "options": [
       "Anthropic — the memory tool is fully managed server-side storage you never need to touch",
@@ -713,6 +763,7 @@ const QUESTIONS = [
   },
   {
     "id": "api040",
+    "part": 2,
     "q": "How long does a prompt-cache entry live, and what invalidates it?",
     "options": [
       "24 hours, invalidated only by changes to the system prompt",
@@ -726,6 +777,7 @@ const QUESTIONS = [
   },
   {
     "id": "api041",
+    "part": 2,
     "q": "What's the minimum content size (in tokens) for something to be cacheable, and is it enabled automatically?",
     "options": [
       "512 tokens, and it's enabled automatically for system prompts only",
@@ -739,6 +791,7 @@ const QUESTIONS = [
   },
   {
     "id": "api042",
+    "part": 2,
     "q": "What two parts of a typical request are the best candidates for prompt caching, and why?",
     "options": [
       "User messages and tool results, since they repeat frequently across turns",
@@ -752,6 +805,7 @@ const QUESTIONS = [
   },
   {
     "id": "api043",
+    "part": 2,
     "q": "What processing order does Claude use for a request (relevant to placing cache breakpoints), and how many breakpoints can you set?",
     "options": [
       "System prompt, then tools, then messages; up to 4 breakpoints",
@@ -765,6 +819,7 @@ const QUESTIONS = [
   },
   {
     "id": "api044",
+    "part": 2,
     "q": "In a response's usage field, what's the difference between cache_creation_input_tokens and cache_read_input_tokens?",
     "options": [
       "cache_creation_input_tokens counts tokens read from an existing cache; cache_read_input_tokens counts tokens written to the cache for the first time",
@@ -778,6 +833,7 @@ const QUESTIONS = [
   },
   {
     "id": "api045",
+    "part": 2,
     "q": "Why is the Files API paired with code execution, given the code execution sandbox has no network access?",
     "options": [
       "The Files API speeds up code execution by pre-compiling any uploaded scripts before running them",
@@ -791,6 +847,7 @@ const QUESTIONS = [
   },
   {
     "id": "api046",
+    "part": 1,
     "q": "When an image and text appear in the same message, which should come first, and why does it matter?",
     "options": [
       "The text describing the image should come first, so Claude has context before seeing it",
@@ -804,6 +861,7 @@ const QUESTIONS = [
   },
   {
     "id": "api047",
+    "part": 1,
     "q": "What can Claude read from a PDF document block that a plain OCR text dump would miss?",
     "options": [
       "Only the extracted plain text, identical to what a standard OCR tool would produce",
@@ -817,6 +875,7 @@ const QUESTIONS = [
   },
   {
     "id": "api048",
+    "part": 1,
     "q": "What are the two citation location types, and when is each used?",
     "options": [
       "citation_page_location for plain text and citation_char_location for PDFs",
@@ -830,6 +889,7 @@ const QUESTIONS = [
   },
   {
     "id": "api049",
+    "part": 2,
     "q": "Which of the following correctly describes the Computer Use loop in order?",
     "options": [
       "Send Claude a screenshot, Claude requests a computer action as a tool call, your code executes it in a sandboxed environment, your code takes a new screenshot and returns it as the tool result, repeat until done",
@@ -843,6 +903,7 @@ const QUESTIONS = [
   },
   {
     "id": "api050",
+    "part": 2,
     "q": "Why must Computer Use run against a sandboxed VM/container rather than a real production desktop?",
     "options": [
       "Because production desktops don't support the screenshot image format Claude's Computer Use tool requires",
@@ -856,6 +917,7 @@ const QUESTIONS = [
   },
   {
     "id": "api051",
+    "part": 1,
     "q": "What's the maximum number of images allowed in a single Claude request, and how does Claude charge for image tokens?",
     "options": [
       "50 images max per request, charged by file size in kilobytes",
@@ -869,6 +931,7 @@ const QUESTIONS = [
   },
   {
     "id": "api052",
+    "part": 1,
     "q": "What are the five steps of the prompt-engineering iteration cycle?",
     "options": [
       "Draft a prompt, create an eval dataset, feed inputs through Claude, feed outputs through a grader, revise and repeat",
@@ -882,6 +945,7 @@ const QUESTIONS = [
   },
   {
     "id": "api053",
+    "part": 1,
     "q": "What's the difference between being \"clear\" and being \"direct\" in a prompt's opening line?",
     "options": [
       "Clear means phrasing the request as an instruction starting with an action verb; direct means using simple, unambiguous language",
@@ -895,6 +959,7 @@ const QUESTIONS = [
   },
   {
     "id": "api054",
+    "part": 1,
     "q": "What are the two types of \"specificity\" you can add to a prompt, and when should each be used?",
     "options": [
       "Few-shot examples (use in every prompt) and XML tags (use only for complex tasks)",
@@ -908,6 +973,7 @@ const QUESTIONS = [
   },
   {
     "id": "api055",
+    "part": 1,
     "q": "When are XML tags most valuable in a prompt?",
     "options": [
       "Only when generating code, since XML tags aren't useful for natural-language tasks",
@@ -921,6 +987,7 @@ const QUESTIONS = [
   },
   {
     "id": "api056",
+    "part": 1,
     "q": "What's the difference between one-shot and multi-shot prompting?",
     "options": [
       "One-shot provides multiple examples covering edge cases; multi-shot provides a single canonical example",
@@ -934,6 +1001,7 @@ const QUESTIONS = [
   },
   {
     "id": "api057",
+    "part": 1,
     "q": "Where should you source your best few-shot examples from?",
     "options": [
       "Randomly sampled outputs from any prior production run, regardless of quality",
@@ -947,6 +1015,7 @@ const QUESTIONS = [
   },
   {
     "id": "api058",
+    "part": 1,
     "q": "A meal-plan-generation prompt scored 2.32 as a naive request. Which single technique bumped it to 3.92, and which technique bumped it further to 7.86?",
     "options": [
       "Adding process steps got it to 3.92; adding XML tags got it further to 7.86",
@@ -960,6 +1029,7 @@ const QUESTIONS = [
   },
   {
     "id": "api059",
+    "part": 1,
     "q": "What is \"assistant message prefilling,\" and how does Claude treat the pre-filled text?",
     "options": [
       "Adding a system message describing the desired first sentence, which Claude then rewrites from scratch",
@@ -973,6 +1043,7 @@ const QUESTIONS = [
   },
   {
     "id": "api060",
+    "part": 1,
     "q": "How do stop sequences work, and is the matched stop-sequence text included in the final output?",
     "options": [
       "The matched stop-sequence text is included in the final output, appended right before generation halts",
@@ -986,6 +1057,7 @@ const QUESTIONS = [
   },
   {
     "id": "api061",
+    "part": 1,
     "q": "What's the difference between prompt engineering and prompt evaluation?",
     "options": [
       "Prompt engineering is measuring performance through automated testing; prompt evaluation is the toolkit of techniques for writing prompts",
@@ -999,6 +1071,7 @@ const QUESTIONS = [
   },
   {
     "id": "api062",
+    "part": 1,
     "q": "Which of the following correctly lists the five steps of a typical eval workflow?",
     "options": [
       "Set a goal, write an initial prompt, evaluate it, apply a technique, and re-evaluate",
@@ -1012,6 +1085,7 @@ const QUESTIONS = [
   },
   {
     "id": "api063",
+    "part": 1,
     "q": "Why use Haiku (rather than the model you're actually testing) to generate your eval dataset?",
     "options": [
       "Because only Haiku supports the JSON-prefill technique required to generate a clean dataset",
@@ -1025,6 +1099,7 @@ const QUESTIONS = [
   },
   {
     "id": "api064",
+    "part": 1,
     "q": "What API technique ensures clean JSON parsing when generating a dataset from Claude?",
     "options": [
       "Set response_format: \"json\" in the request body, with no need for prefilling or stop sequences",
@@ -1038,6 +1113,7 @@ const QUESTIONS = [
   },
   {
     "id": "api065",
+    "part": 1,
     "q": "Which of the following correctly names the three types of graders and their use cases?",
     "options": [
       "Code grader (syntax, length, keyword checks), model grader (quality, instruction-following, safety), and cost grader (token spend per response)",
@@ -1051,6 +1127,7 @@ const QUESTIONS = [
   },
   {
     "id": "api066",
+    "part": 1,
     "q": "What critical piece of information should you ask a model grader for beyond just a numeric score, and why?",
     "options": [
       "A confidence percentage — without it, model graders tend to default to the maximum score regardless of quality",
@@ -1064,6 +1141,7 @@ const QUESTIONS = [
   },
   {
     "id": "api067",
+    "part": 1,
     "q": "Roughly how many test cases should you use during active prompt-development iteration vs. final validation?",
     "options": [
       "10–15 cases during active development, scaling to 20–30 for final validation",
@@ -1077,6 +1155,7 @@ const QUESTIONS = [
   },
   {
     "id": "api068",
+    "part": 1,
     "q": "You've just written a first draft of a prompt. Which approach to validating it before you ship is recommended, and why?",
     "options": [
       "Run it once or twice by hand and ship if the output looks right — a couple of manual passes is the fastest objective signal available",
@@ -1090,6 +1169,7 @@ const QUESTIONS = [
   },
   {
     "id": "api069",
+    "part": 2,
     "q": "What problem does RAG solve, and how, at a high level?",
     "options": [
       "Claude's inability to access the internet for up-to-date information",
@@ -1103,6 +1183,7 @@ const QUESTIONS = [
   },
   {
     "id": "api070",
+    "part": 2,
     "q": "Which of the following correctly names the four text-chunking strategies and a trade-off for each?",
     "options": [
       "Size-based, keyword-based, sentence-based, and semantic-based",
@@ -1116,6 +1197,7 @@ const QUESTIONS = [
   },
   {
     "id": "api071",
+    "part": 2,
     "q": "Which chunking strategy is the common production default, and why?",
     "options": [
       "Semantic-based chunking, because it produces the most relevant chunks regardless of cost",
@@ -1129,6 +1211,7 @@ const QUESTIONS = [
   },
   {
     "id": "api072",
+    "part": 2,
     "q": "Which of the following best describes a text embedding?",
     "options": [
       "A compressed copy of the original text that remains individually human-readable",
@@ -1142,6 +1225,7 @@ const QUESTIONS = [
   },
   {
     "id": "api073",
+    "part": 2,
     "q": "Does Anthropic provide an embeddings API? What's the recommended alternative?",
     "options": [
       "Yes, via a dedicated embeddings endpoint on the Messages API",
@@ -1155,6 +1239,7 @@ const QUESTIONS = [
   },
   {
     "id": "api074",
+    "part": 2,
     "q": "Why does semantic search alone sometimes fail for queries like a specific incident ID (e.g., \"INC-2023-Q4-011\")?",
     "options": [
       "Because embedding models are mathematically unable to represent numbers or alphanumeric strings",
@@ -1168,6 +1253,7 @@ const QUESTIONS = [
   },
   {
     "id": "api075",
+    "part": 2,
     "q": "Which of the following correctly lists the four steps of the BM25 algorithm?",
     "options": [
       "Embed the query → compute cosine similarity → weight by document length → return the top-K nearest vectors",
@@ -1181,6 +1267,7 @@ const QUESTIONS = [
   },
   {
     "id": "api076",
+    "part": 2,
     "q": "What is \"hybrid search\" in a RAG pipeline, and why use it?",
     "options": [
       "Running semantic search twice with two different embedding models and averaging the results",
@@ -1194,6 +1281,7 @@ const QUESTIONS = [
   },
   {
     "id": "api077",
+    "part": 2,
     "q": "What is \"reranking\" in a RAG pipeline, and how does it differ from the initial retrieval step?",
     "options": [
       "A first pass that happens before initial retrieval, narrowing the full document set into an initial candidate pool",
@@ -1207,6 +1295,7 @@ const QUESTIONS = [
   },
   {
     "id": "api078",
+    "part": 2,
     "q": "What problem does \"contextual retrieval\" solve, and when in the pipeline does it happen?",
     "options": [
       "Ambiguous ranking order among top retrieval results; it happens at query time, right before results are sent to Claude",
@@ -1220,6 +1309,7 @@ const QUESTIONS = [
   },
   {
     "id": "api079",
+    "part": 2,
     "q": "What's the difference between cosine similarity and cosine distance, and how do you read their values?",
     "options": [
       "Cosine similarity ranges 0 to 1 with higher meaning more similar; cosine distance ranges -1 to 1 with higher meaning more similar",
@@ -1233,6 +1323,7 @@ const QUESTIONS = [
   },
   {
     "id": "api080",
+    "part": 3,
     "q": "What's the fundamental difference between a \"workflow\" and an \"agent\"?",
     "options": [
       "A workflow is given a goal and a set of tools and figures out its own steps; an agent follows a predefined series of calls for a known problem",
@@ -1246,6 +1337,7 @@ const QUESTIONS = [
   },
   {
     "id": "api081",
+    "part": 3,
     "q": "What's the general recommendation for choosing between workflows and agents, and why?",
     "options": [
       "Prefer agents wherever possible, since they represent more architecturally sophisticated solutions users appreciate",
@@ -1259,6 +1351,7 @@ const QUESTIONS = [
   },
   {
     "id": "api082",
+    "part": 3,
     "q": "Which of the following best describes the \"parallelization\" workflow pattern and its benefit?",
     "options": [
       "Run the same sub-task multiple times in parallel and take a majority vote on the result",
@@ -1272,6 +1365,7 @@ const QUESTIONS = [
   },
   {
     "id": "api083",
+    "part": 3,
     "q": "What problem does \"chaining\" solve, and what's the two-step fix for a prompt with many constraints Claude keeps partially ignoring?",
     "options": [
       "The cost problem of overly large prompts; fixed by caching the system prompt and batching requests",
@@ -1285,6 +1379,7 @@ const QUESTIONS = [
   },
   {
     "id": "api084",
+    "part": 3,
     "q": "Which of the following correctly describes the \"routing\" workflow pattern in two steps?",
     "options": [
       "Step 1: run every specialized pipeline on the input in parallel. Step 2: pick whichever pipeline's output scores highest",
@@ -1298,6 +1393,7 @@ const QUESTIONS = [
   },
   {
     "id": "api085",
+    "part": 3,
     "q": "Which of the following best describes the \"Evaluator-Optimizer\" pattern?",
     "options": [
       "A producer and a grader run simultaneously, and their two outputs are merged into a final answer",
@@ -1311,6 +1407,7 @@ const QUESTIONS = [
   },
   {
     "id": "api086",
+    "part": 3,
     "q": "An agent has date and time tools available. A user asks \"When does my 90-day warranty expire?\" without saying when they bought the item. How does Claude handle this, and why is it hard for a rigid workflow to match?",
     "options": [
       "It assumes today's date is the purchase date and calculates the expiration immediately",
@@ -1324,6 +1421,7 @@ const QUESTIONS = [
   },
   {
     "id": "api087",
+    "part": 3,
     "q": "Given a scenario where you know a user will only ever submit an image and need a STEP file back through fixed steps (describe → model → render → grade → fix), which pattern is this, specifically?",
     "options": [
       "A pure agent, since the system must decide its own steps at each stage",
@@ -1337,6 +1435,7 @@ const QUESTIONS = [
   },
   {
     "id": "api088",
+    "part": 3,
     "q": "What are the four primitives of managed agents, in order?",
     "options": [
       "Environment → Agent → Session → Events",
@@ -1350,6 +1449,7 @@ const QUESTIONS = [
   },
   {
     "id": "api089",
+    "part": 3,
     "q": "Is managed agents a special-access feature you need to request?",
     "options": [
       "Yes, it requires filling out an access request form before use",
@@ -1363,6 +1463,7 @@ const QUESTIONS = [
   },
   {
     "id": "api090",
+    "part": 3,
     "q": "What's the correct order of operations: open the event stream, or send the kickoff message, first? Why?",
     "options": [
       "Send the kickoff message first, then open the event stream, so you don't miss the initial acknowledgment",
@@ -1376,6 +1477,7 @@ const QUESTIONS = [
   },
   {
     "id": "api091",
+    "part": 3,
     "q": "Which of the following correctly names the three key event types to watch for when consuming a managed-agent session stream?",
     "options": [
       "agent.message, agent.tool_result, and session.status_complete",
@@ -1389,6 +1491,7 @@ const QUESTIONS = [
   },
   {
     "id": "api092",
+    "part": 3,
     "q": "In a managed-agent workflow with rubrics, what does the \"grader\" do?",
     "options": [
       "The same agent evaluates its own output within the same context window before finishing",
@@ -1402,6 +1505,7 @@ const QUESTIONS = [
   },
   {
     "id": "api093",
+    "part": 3,
     "q": "When should you reach for managed agents instead of writing your own agent loop?",
     "options": [
       "When the task is simple and short-lived, to avoid the overhead of writing a hand-rolled loop",
@@ -1415,6 +1519,7 @@ const QUESTIONS = [
   },
   {
     "id": "api094",
+    "part": 1,
     "q": "What does the system parameter control in a Messages API request?",
     "options": [
       "The maximum number of tokens Claude is allowed to generate",
@@ -1428,6 +1533,7 @@ const QUESTIONS = [
   },
   {
     "id": "api095",
+    "part": 3,
     "q": "Why might a production application route different task types to different Claude models?",
     "options": [
       "Because each model has a hard context-window limit that determines which tasks it's technically able to handle",
@@ -1441,6 +1547,7 @@ const QUESTIONS = [
   },
   {
     "id": "api096",
+    "part": 2,
     "q": "What changes are needed when adding another client-side tool to a hand-written agent loop?",
     "options": [
       "You must rewrite the entire agent loop from scratch, since each additional tool changes the control flow",
@@ -1454,6 +1561,7 @@ const QUESTIONS = [
   },
   {
     "id": "api097",
+    "part": 1,
     "q": "Why combine code graders with model graders in a prompt evaluation pipeline?",
     "options": [
       "Because code graders are inherently more accurate, and model graders exist only as a backup when code graders fail",
@@ -1467,6 +1575,7 @@ const QUESTIONS = [
   },
   {
     "id": "api098",
+    "part": 2,
     "q": "How does reciprocal rank fusion help a hybrid search system?",
     "options": [
       "It averages the raw similarity scores returned by semantic search and BM25 directly",
@@ -1480,6 +1589,7 @@ const QUESTIONS = [
   },
   {
     "id": "api099",
+    "part": 3,
     "q": "How does Claude Code avoid conflicts when you want to run multiple instances on the same project in parallel?",
     "options": [
       "Each instance locks the entire repository so that only one instance can run at any given time",
@@ -1493,6 +1603,7 @@ const QUESTIONS = [
   },
   {
     "id": "api100",
+    "part": 3,
     "q": "What does Claude Code's init command do, and what file does it produce?",
     "options": [
       "It runs the project's test suite and generates a coverage.md report summarizing results",
@@ -1506,6 +1617,7 @@ const QUESTIONS = [
   },
   {
     "id": "api101",
+    "part": 3,
     "q": "Which of the following correctly describes the automated production-debugging workflow that combines Claude Code, GitHub Actions, and CloudWatch?",
     "options": [
       "Claude Code polls CloudWatch logs directly in real time and auto-deploys fixes to production without human review",
@@ -1519,6 +1631,7 @@ const QUESTIONS = [
   },
   {
     "id": "api102",
+    "part": 3,
     "q": "What are the two effective prompting workflows recommended for working with Claude Code on a new feature?",
     "options": [
       "A single one-shot workflow: describe the feature once in detail and let Claude implement it directly with no planning step",
@@ -1531,7 +1644,6 @@ const QUESTIONS = [
     "reviewHref": "../../lessons/0005-claude-api-agentic-orchestration.html#scene8"
   }
 ];
-
 /* ---------- STATE / PERSISTENCE ---------- */
 const STORAGE_KEY = "ccaf_quiz_03_v1";
 function loadState() {
@@ -1584,13 +1696,62 @@ document.querySelectorAll(".tab").forEach(tab => {
   });
 });
 
+/* ---------- PARTS ---------- */
+/* Section 3 spans three lessons; every question carries the part it belongs to
+   so a reader can drill one lesson's material without wading through the rest. */
+const PARTS = {
+  1: { label: "Part 1 · The first integration", short: "Part 1" },
+  2: { label: "Part 2 · Tools, retrieval & context", short: "Part 2" },
+  3: { label: "Part 3 · Agentic orchestration", short: "Part 3" }
+};
+const partSelect = document.getElementById("quizPart");
+
+function currentPart() {
+  const v = partSelect.value;
+  return v === "all" ? null : parseInt(v, 10);
+}
+function activeQuestions() {
+  const part = currentPart();
+  return part ? QUESTIONS.filter(q => q.part === part) : QUESTIONS;
+}
+function syncLenOptions() {
+  const total = activeQuestions().length;
+  const allOpt = document.querySelector('#quizLen option[value="999"]');
+  allOpt.textContent = "All " + total + " questions";
+  // A 20-question round is meaningless once the pool is smaller than that.
+  document.querySelectorAll("#quizLen option").forEach(opt => {
+    const n = parseInt(opt.value, 10);
+    opt.hidden = n !== 999 && n >= total;
+  });
+  if (document.getElementById("quizLen").selectedOptions[0].hidden) {
+    document.getElementById("quizLen").value = "999";
+  }
+}
+partSelect.addEventListener("change", () => {
+  syncLenOptions();
+  renderProgress();
+  try {
+    const url = new URL(window.location);
+    const part = currentPart();
+    if (part) url.searchParams.set("part", part); else url.searchParams.delete("part");
+    history.replaceState(null, "", url);
+  } catch (e) {}
+});
+(function applyPartFromUrl() {
+  try {
+    const p = new URLSearchParams(window.location.search).get("part");
+    if (p && PARTS[p]) partSelect.value = p;
+  } catch (e) {}
+  syncLenOptions();
+})();
+
 /* ---------- QUIZ ---------- */
 let quizQueue = [];
 let quizIndex = 0;
 let quizScore = 0;
 
 function pickQuizQuestions(len, mode) {
-  let pool = QUESTIONS.slice();
+  let pool = activeQuestions().slice();
   if (mode === "weak") {
     pool.sort((a,b) => {
       const ma = getStat(a.id).mastery, mb = getStat(b.id).mastery;
@@ -1617,9 +1778,12 @@ document.getElementById("startQuizBtn").addEventListener("click", () => {
 });
 
 document.getElementById("reviewMissedBtn").addEventListener("click", () => {
-  const missed = QUESTIONS.filter(q => getStat(q.id).lastResult === "wrong");
+  const missed = activeQuestions().filter(q => getStat(q.id).lastResult === "wrong");
   if (!missed.length) {
-    alert("No questions are currently marked wrong. Take a quiz first, or nice work — you're clean!");
+    const part = currentPart();
+    alert(part
+      ? "No questions in " + PARTS[part].short + " are currently marked wrong. Try another part, or nice work — you're clean!"
+      : "No questions are currently marked wrong. Take a quiz first, or nice work — you're clean!");
     return;
   }
   missed.sort(() => Math.random() - 0.5);
@@ -1643,7 +1807,7 @@ function renderQuizQuestion() {
   area.innerHTML = `<div class="card">
     <div class="qmeta">
       <span>Question ${quizIndex+1} of ${quizQueue.length}</span>
-      <span class="badge">Section 3 · Claude API</span>
+      <span class="badge">${PARTS[q.part] ? PARTS[q.part].label : "Section 3 · Claude API"}</span>
     </div>
     <div class="qtext">${q.q}</div>
     <div id="quizOptions">${optHtml}</div>
@@ -1683,38 +1847,64 @@ function masteryColor(mastery) {
   if (mastery === 1) return "#e0a34a";
   return "#cfcfd4";
 }
-function renderProgress() {
-  const total = QUESTIONS.length;
-  let masteredCount = 0, sumMastery = 0, missedCount = 0;
-  QUESTIONS.forEach(q => {
+function tally(pool) {
+  let mastered = 0, sumMastery = 0, missed = 0, seen = 0, correct = 0;
+  pool.forEach(q => {
     const s = getStat(q.id);
     sumMastery += s.mastery;
-    if (s.mastery >= 3) masteredCount += 1;
-    if (s.lastResult === "wrong") missedCount += 1;
+    seen += s.seen;
+    correct += s.correct;
+    if (s.mastery >= 3) mastered += 1;
+    if (s.lastResult === "wrong") missed += 1;
   });
-  const pct = Math.round((sumMastery / (total * 3)) * 100);
-  const acc = state.totalAnswers ? Math.round((state.totalCorrect / state.totalAnswers) * 100) : 0;
+  return {
+    total: pool.length, mastered, missed, seen, correct,
+    pct: pool.length ? Math.round((sumMastery / (pool.length * 3)) * 100) : 0,
+    acc: seen ? Math.round((correct / seen) * 100) : 0
+  };
+}
+
+function renderProgress() {
+  const pool = activeQuestions();
+  const part = currentPart();
+  const t = tally(pool);
+  const scope = part ? PARTS[part].short : "all parts";
 
   document.getElementById("statGrid").innerHTML = `
-    <div class="stat-box"><div class="stat-num">${masteredCount}/${total}</div><div class="stat-label">Mastered</div></div>
-    <div class="stat-box"><div class="stat-num">${missedCount}</div><div class="stat-label">Currently missed</div></div>
-    <div class="stat-box"><div class="stat-num">${state.totalAnswers||0}</div><div class="stat-label">Answers given</div></div>
-    <div class="stat-box"><div class="stat-num">${acc}%</div><div class="stat-label">Accuracy</div></div>
+    <div class="stat-box"><div class="stat-num">${t.mastered}/${t.total}</div><div class="stat-label">Mastered</div></div>
+    <div class="stat-box"><div class="stat-num">${t.missed}</div><div class="stat-label">Currently missed</div></div>
+    <div class="stat-box"><div class="stat-num">${t.seen}</div><div class="stat-label">Answers given</div></div>
+    <div class="stat-box"><div class="stat-num">${t.acc}%</div><div class="stat-label">Accuracy</div></div>
   `;
-  document.getElementById("masteryBar").style.width = pct + "%";
-  document.getElementById("masteryLabel").textContent = pct + "% overall mastery across " + total + " questions";
+  document.getElementById("masteryBar").style.width = t.pct + "%";
+  document.getElementById("masteryLabel").textContent =
+    t.pct + "% mastery across " + t.total + " questions in " + scope +
+    (part ? " — switch the part selector on the Quiz tab to see another." : "");
 
-  const missed = QUESTIONS.filter(q => getStat(q.id).lastResult === "wrong")
+  // The by-part table always covers all three, so you can see where the gaps are
+  // regardless of which part is currently selected.
+  let partHtml = `<table><thead><tr><th>Part</th><th>Mastered</th><th>Missed</th><th>Accuracy</th></tr></thead><tbody>`;
+  Object.keys(PARTS).forEach(p => {
+    const pt = tally(QUESTIONS.filter(q => q.part === parseInt(p, 10)));
+    const here = part === parseInt(p, 10);
+    partHtml += `<tr${here ? ' style="font-weight:600;"' : ''}>` +
+      `<td>${PARTS[p].label}</td><td>${pt.mastered}/${pt.total}</td><td>${pt.missed}</td>` +
+      `<td>${pt.seen ? pt.acc + "%" : "—"}</td></tr>`;
+  });
+  partHtml += `</tbody></table>`;
+  document.getElementById("partBreakdown").innerHTML = partHtml;
+
+  const missed = pool.filter(q => getStat(q.id).lastResult === "wrong")
     .sort((a,b) => getStat(b.id).wrong - getStat(a.id).wrong);
   let html;
   if (!missed.length) {
-    html = `<div class="small sys">Nothing currently marked wrong. Take the quiz to build up a review queue.</div>`;
+    html = `<div class="small sys">Nothing currently marked wrong in ${scope}. Take the quiz to build up a review queue.</div>`;
   } else {
-    html = `<table><thead><tr><th></th><th>Question</th><th>Times wrong</th><th>Seen</th></tr></thead><tbody>`;
+    html = `<table><thead><tr><th></th><th>Question</th><th>Part</th><th>Times wrong</th><th>Seen</th></tr></thead><tbody>`;
     missed.forEach(q => {
       const s = getStat(q.id);
       const qtext = q.q.length > 90 ? q.q.slice(0,87) + "…" : q.q;
-      html += `<tr><td><span class="mastery-dot" style="background:${masteryColor(s.mastery)}"></span></td><td>${qtext}</td><td>${s.wrong}</td><td>${s.seen}</td></tr>`;
+      html += `<tr><td><span class="mastery-dot" style="background:${masteryColor(s.mastery)}"></span></td><td>${qtext}</td><td>${PARTS[q.part] ? PARTS[q.part].short : "—"}</td><td>${s.wrong}</td><td>${s.seen}</td></tr>`;
     });
     html += `</tbody></table>`;
   }
