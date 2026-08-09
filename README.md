@@ -11,7 +11,10 @@ This folder is a spaced-repetition study system built from the official **"Prepa
 
 **One narrative lesson per course** — `lessons/` holds a self-contained interactive HTML lesson for each of the 7 courses (section 03 is split into three parts, since it carries the exam's heaviest domain). Each lesson teaches the course material as a story set at a fictional company, Northstar, with timestamped scenes and interactive decision points where every wrong option is explained rather than just marked wrong. Open `lessons/index.html` in a browser to start. Use these to *learn* the material; use `quiz.md` to test whether it stuck.
 
-Three additional reference folders sit alongside the 7 course folders:
+**Start with the speed run.** `speedrun/index.html` is the entry point to everything else: 60 graded multiple-choice cards covering all five scored exam domains, weighted to match the real exam (16/12/12/11/9 across a 27/20/20/18/15% split). It takes about 45 minutes and is built from `all-sections/quiz.md` plus the exam-guide-derived `study-reference/`. Alongside the sprint it carries a printable cheat sheet of all 60 compressed answers, a confusable-pairs "traps" drill, an exam-day facts card, and a **"Where I stand" dashboard** — the only place in this repo that maps progress onto the five *domains* rather than the seven *courses*, reading your existing section-quiz and glossary scores automatically. Use it first to find your weak domains, then open the lessons below only where you need them.
+
+Four additional reference folders sit alongside the 7 course folders:
+- `speedrun/index.html` — the weighted 60-card first pass and readiness dashboard described above. Progress is stored under `ccaf_speedrun_v1`.
 - `glossary/ccaf_glossary_quiz_tracker.html` — an interactive, self-contained quiz/tracker artifact covering 64 exam-specific terms across all 5 domains, built directly from the official CCA-F Exam Guide (not just course content). Open it in a browser and click through — it tracks your mastery locally.
 - `study-reference/ccaf_study_reference.md` — a machine-readable companion covering the same 64-term glossary plus 12 official-style scenario practice questions (drawn from the exam's actual scenario bank), with a built-in progress-tracking log. This is the single most authoritative file in this folder for exam-realistic prep, since it's sourced from the Exam Guide itself rather than course transcripts.
 - `quizzes/` — a self-contained, no-Claude-needed HTML quiz for each of the 7 course folders (344 four-option multiple-choice questions total), converted from each course's `quiz.md`. Each quiz tracks right/wrong answers per question in the browser's `localStorage` and offers a "missed & new first" mode plus a "review only missed" mode so wrong answers resurface more often. Open `quizzes/index.html` to start, or jump in from `index.html` / `lessons/index.html` / any individual lesson page.
@@ -43,6 +46,8 @@ Progress lives in the browser's `localStorage`, which is **not durable on mobile
 Folders 03 and 07 also carry a small amount of **[Bonus]**-labeled background from Claude Platform 101 and Claude Code 101 — those two courses aren't on the official prep list, but their content directly overlaps with courses 03 and 07 and rounds out the picture. Everything else is drawn strictly from the 7 official courses.
 
 ## How to use this for long-term retention
+
+**First pass (no Claude needed):** Open `speedrun/index.html` and work the 60 cards. Check the "Where I stand" tab — it ranks the five exam domains by *weighted gap*, so the top row is whichever domain will move your score most. Study that first.
 
 **On demand (chat-based):** Ask Claude things like:
 - "Quiz me on 06 (Introduction to MCP)"
