@@ -10,6 +10,31 @@
   var toastEl = null;
   var toastTimer = null;
 
+  // Maps each lesson file to the real CCA-F exam domain(s) it covers, per
+  // EXAM-DOMAINS.md. Lessons use a fictional "Northstar" case-study narrative
+  // as a teaching device; the coaching prompt should ground the student in
+  // the actual exam structure instead of that story framing.
+  var LESSON_DOMAINS = {
+    "0001-claude-101-choose-the-right-surface.html":
+      "Prompt Engineering & Structured Output (20%) — course folder 02-claude-101",
+    "0002-ai-fluency-the-four-d-framework.html":
+      "Prompt Engineering & Structured Output (20%) — course folder 01-ai-fluency-framework-foundations",
+    "0003-claude-api-the-first-integration.html":
+      "Prompt Engineering & Structured Output (20%) — course folder 03-building-with-the-claude-api",
+    "0004-claude-api-tools-retrieval-and-context.html":
+      "Tool Design & MCP Integration (18%) and Context Management & Reliability (15%) — course folder 03-building-with-the-claude-api",
+    "0005-claude-api-agentic-orchestration.html":
+      "Agentic Architecture & Orchestration (27%) — course folder 03-building-with-the-claude-api",
+    "0006-claude-with-amazon-bedrock.html":
+      "Deployment options (Bedrock access/auth layer, cuts across all domains) — course folder 04-claude-with-amazon-bedrock",
+    "0007-claude-on-google-cloud.html":
+      "Deployment options (Vertex/Google Cloud access/auth layer, cuts across all domains) — course folder 05-claude-on-google-cloud",
+    "0008-model-context-protocol.html":
+      "Tool Design & MCP Integration (18%) — course folder 06-introduction-to-mcp",
+    "0009-claude-code-in-action.html":
+      "Claude Code Configuration & Workflows (20%) and Context Management & Reliability (15%) — course folder 07-claude-code-in-action"
+  };
+
   function collapse(s) {
     return (s || "").replace(/\s+/g, " ").trim();
   }
@@ -20,11 +45,26 @@
     return section.classList.contains("end") ? "The architect's pocket card" : "This section";
   }
 
-  function buildPrompt(courseContext, lessonTitle, label, bodyText) {
+  function currentLessonFile() {
+    var parts = (location.pathname || "").split("/");
+    return parts[parts.length - 1];
+  }
+
+  function buildPrompt(label, bodyText) {
+    var domain = LESSON_DOMAINS[currentLessonFile()];
+    var domainLine = domain
+      ? "Exam domain focus: " + domain + "\n"
+      : "";
+
     return (
       "You are a coach for the Claude Certified Architect (Foundations) exam.\n" +
-      "Course context: " + courseContext + " — \"" + lessonTitle + "\"\n" +
+      domainLine +
       "Current topic: \"" + label + "\"\n\n" +
+      "The section content below uses a fictional case-study narrative (a\n" +
+      "company called \"Northstar\" and invented characters) purely as a\n" +
+      "teaching device on the lesson page. Ignore that framing entirely —\n" +
+      "do not refer to Northstar, its characters, or the story. Coach using\n" +
+      "the real CCAF exam domain(s) and terminology named above.\n\n" +
       "Your role is to guide the student through understanding this topic: help\n" +
       "them understand it, quiz them on it with a couple of follow-up questions,\n" +
       "and flag anything they should watch for on the CCAF exam.\n\n" +
@@ -139,12 +179,9 @@
     var sections = document.querySelectorAll("main section.scene, main section.end");
     if (!sections.length) return;
 
-    var courseContext = collapse((document.querySelector(".masthead a") || {}).textContent);
-    var lessonTitle = collapse((document.querySelector("h1") || {}).textContent);
-
     var prompts = [];
     sections.forEach(function (section) {
-      prompts.push(buildPrompt(courseContext, lessonTitle, sectionLabel(section), collapse(section.innerText)));
+      prompts.push(buildPrompt(sectionLabel(section), collapse(section.innerText)));
     });
 
     sections.forEach(function (section, i) {
