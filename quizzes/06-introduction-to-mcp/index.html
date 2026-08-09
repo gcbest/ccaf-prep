@@ -458,10 +458,10 @@ const QUESTIONS = [
       "Yes, production applications always implement both to maximize protocol flexibility.",
       "No, MCP requires a third-party intermediary to implement both sides for security.",
       "Yes, but only when the application also needs to support tool use directly.",
-      "Usually it implements just the side it owns, either a server that publishes capabilities or a client that connects to one; the course builds both mainly for end-to-end understanding."
+      "Usually it implements just the side it owns, either a server that publishes capabilities or a client that connects to one; tutorials build both mainly for end-to-end understanding."
     ],
     "correct": 3,
-    "explain": "In practice a project typically owns only one side of the connection; the course builds both client and server so learners can see the whole protocol flow end to end.",
+    "explain": "In practice a project typically owns only one side of the connection; tutorials build both client and server so learners can see the whole protocol flow end to end.",
     "reviewHref": "../../lessons/0008-model-context-protocol.html#scene4"
   },
   {
@@ -505,7 +505,7 @@ const QUESTIONS = [
   },
   {
     "id": "mcp24",
-    "q": "Which of the following best describes what happens to a document's edits in the course's CLI project after you close and restart the program?",
+    "q": "A tutorial MCP document server seeds a few documents at startup and exposes tools to read and edit them. After you close and restart the program, what has happened to your edits, and why?",
     "options": [
       "Edits are saved to a local SQLite file automatically, so they persist across restarts.",
       "Edits are written to disk as markdown files but lose formatting on restart.",
@@ -518,7 +518,7 @@ const QUESTIONS = [
   },
   {
     "id": "mcp25",
-    "q": "Which of the following correctly describes the two tools on the course's example document server and their exact error behavior?",
+    "q": "A typical MCP document server exposes exactly two tools: one to read a document's contents and one to edit it. Which of the following correctly describes their signatures and their error behavior?",
     "options": [
       "`read_doc_contents(doc_id)` returns stored text and raises `ValueError` if the ID isn't found; `edit_document(doc_id, old_string, new_string)` does a find/replace, also raising `ValueError` if the document doesn't exist.",
       "`read_doc_contents` returns `None` for missing IDs; `edit_document` raises a `KeyError` if not found.",
@@ -570,7 +570,7 @@ const QUESTIONS = [
   },
   {
     "id": "mcp29",
-    "q": "Which of the following best describes how a user picks which document to attach as a resource in the course project's CLI, and what happens once they do?",
+    "q": "In a CLI MCP client that lets you attach a document as a resource, which of the following best describes how a user picks the document, and what happens once they do?",
     "options": [
       "They type the document's exact filename into a text prompt, which the server then validates and fetches.",
       "They select it from a dropdown that triggers a tool call to `read_doc_contents` before attaching it.",

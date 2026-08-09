@@ -713,15 +713,15 @@ const QUESTIONS = [
   },
   {
     "id": "api040",
-    "q": "How long does the prompt cache live, and what invalidates it?",
+    "q": "How long does a prompt-cache entry live, and what invalidates it?",
     "options": [
       "24 hours, invalidated only by changes to the system prompt",
-      "One hour, invalidated by any change to the content up to and including the cache breakpoint",
+      "Five minutes by default, refreshed each time the cache is read, with a one-hour TTL available as an option; invalidated by any change to the content up to and including the cache breakpoint",
       "One hour, invalidated only when the tools array changes",
       "30 minutes, invalidated by any change anywhere in the request"
     ],
     "correct": 1,
-    "explain": "The prompt cache lives for one hour and is invalidated by any change to content up to and including the cache breakpoint — even adding a single word.",
+    "explain": "A cache entry lives five minutes by default and its clock resets on every cache hit, so a steady stream of requests keeps it warm; a one-hour TTL can be requested instead. Either way, any change to the content up to and including the cache breakpoint — even one added word — invalidates it and forces a fresh cache write. (The Building with the Claude API course states one hour flat; the five-minute default with a one-hour option is the fuller picture.)",
     "reviewHref": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene18"
   },
   {
@@ -1077,15 +1077,15 @@ const QUESTIONS = [
   },
   {
     "id": "api068",
-    "q": "What are the three paths an engineer can take after writing a first draft of a prompt, and which two are considered traps?",
+    "q": "You've just written a first draft of a prompt. Which approach to validating it before you ship is recommended, and why?",
     "options": [
-      "Paths 2 and 3 are traps; testing once or twice and shipping directly (path 1) is the only recommended approach",
-      "Path 3 — running a proper evaluation pipeline — is the trap, since it's too slow for most real projects",
-      "Testing once or twice then shipping, and testing a few custom inputs then tweaking and shipping, are both traps; only running the prompt through a proper evaluation pipeline for objective scoring is recommended",
-      "All three paths are equally valid, and the choice should depend only on the team's available time"
+      "Run it once or twice by hand and ship if the output looks right — a couple of manual passes is the fastest objective signal available",
+      "Try a handful of inputs you made up yourself, tweak the wording until those look better, then ship — self-chosen inputs cover the input space well enough in practice",
+      "Run it through an evaluation pipeline — a dataset of representative inputs plus graders that score every output — because ad hoc hand-testing feels like validation but never measures performance across the input space",
+      "Skip pre-launch validation and watch production error rates instead, since real traffic is the only representative dataset"
     ],
     "correct": 2,
-    "explain": "Of the three paths — ship after minimal testing, tweak for a few custom inputs then ship, or run a full evaluation pipeline — the first two are traps because they feel like validation but give no objective measure across the input space; only the evaluation pipeline is recommended.",
+    "explain": "Engineers typically take one of three paths after a first draft: ship after testing once or twice, tweak against a few self-invented inputs and ship, or run the prompt through a proper evaluation pipeline. The first two are traps — they feel like validation but give no objective measure across the input space. Only the eval pipeline produces a score you can actually compare prompt versions against.",
     "reviewHref": "../../lessons/0003-claude-api-the-first-integration.html#scene15"
   },
   {
@@ -1311,11 +1311,11 @@ const QUESTIONS = [
   },
   {
     "id": "api086",
-    "q": "In the datetime-tools example, how does Claude handle a request like \"When does my 90-day warranty expire?\" when it doesn't yet have enough information?",
+    "q": "An agent has date and time tools available. A user asks \"When does my 90-day warranty expire?\" without saying when they bought the item. How does Claude handle this, and why is it hard for a rigid workflow to match?",
     "options": [
       "It assumes today's date is the purchase date and calculates the expiration immediately",
       "It returns a hard error and refuses to proceed until a developer supplies the missing field",
-      "It recognizes it's missing required information and asks the user when the item was purchased before it can calculate the expiration — a capability a rigid workflow would struggle to replicate without an explicit branch",
+      "It recognizes it is missing required information and asks the user when the item was purchased before it can calculate the expiration — a capability a rigid workflow would struggle to replicate without an explicit branch",
       "It calls a default lookup tool that guesses the purchase date from the user's order history"
     ],
     "correct": 2,

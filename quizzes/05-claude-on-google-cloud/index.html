@@ -518,7 +518,7 @@ const QUESTIONS = [
   },
   {
     "id": "gcp25",
-    "q": "What are the three paths an engineer can take after writing a prompt, and which two are traps?",
+    "q": "After writing a prompt, an engineer typically takes one of three paths. Which of the following correctly names all three and identifies the two that are traps?",
     "options": [
       "Only two paths exist: manual testing or an automated eval pipeline",
       "All three paths — minimal testing, a few tweaks, and full evaluation — are equally valid depending on team size",
@@ -570,7 +570,7 @@ const QUESTIONS = [
   },
   {
     "id": "gcp29",
-    "q": "Which of the following best describes the 'Being Clear and Direct' technique, and the score improvement shown in the course example?",
+    "q": "Which of the following best describes the 'Being Clear and Direct' technique, and the score it produced on a meal-plan prompt that scored 2.32 as a naive request (1–10 scale)?",
     "options": [
       "It focuses on wrapping content in XML tags; the score jumped from 2.32 to 7.86",
       "It focuses on the prompt's first line, opening with an action verb and direct language stating the task and expected output; the score jumped from 2.32 to 3.92",
@@ -583,7 +583,7 @@ const QUESTIONS = [
   },
   {
     "id": "gcp30",
-    "q": "Which of the following correctly distinguishes 'Type A' and 'Type B' guidelines in the 'Being Specific' technique, including the example score improvement?",
+    "q": "In the 'Being Specific' technique, which of the following correctly distinguishes 'Type A' from 'Type B' guidelines, including the score they produced on the same meal-plan prompt (1–10 scale)?",
     "options": [
       "Type A and Type B are interchangeable names for the same kind of guideline",
       "Type A is steps to follow; Type B is output attributes; the score jumped from 2.32 to 3.92",
@@ -830,7 +830,7 @@ const QUESTIONS = [
   },
   {
     "id": "gcp49",
-    "q": "In the reranking step, why does the implementation pass document IDs to Claude instead of full chunk text, and what's reranking's main trade-off?",
+    "q": "In the reranking step, why does a typical implementation pass document IDs to Claude instead of full chunk text, and what is reranking's main trade-off?",
     "options": [
       "Full chunk text is passed to Claude while only IDs are returned back to the app",
       "Passing IDs eliminates the need for an extra LLM call, making reranking free",
@@ -856,7 +856,7 @@ const QUESTIONS = [
   },
   {
     "id": "gcp51",
-    "q": "What are the two hard rules for using Extended Thinking, and when does the course recommend enabling it?",
+    "q": "What are the two hard rules for using Extended Thinking, and when is enabling it recommended?",
     "options": [
       "Minimum thinking budget is 1024 tokens, and max_tokens must exceed thinking_budget; it's recommended only after prompt evals show accuracy is still insufficient",
       "Extended thinking should be enabled by default for all prompts before evaluation",
@@ -923,13 +923,13 @@ const QUESTIONS = [
     "id": "gcp56",
     "q": "What's the single strict requirement for cached content to actually be reused, and how long does a cache last?",
     "options": [
-      "The input text must be exactly identical to the previously cached content up to the cache breakpoint; the cache lasts 5 minutes",
-      "Exact identical matching is required; the cache lasts 24 hours",
+      "The input text must be exactly identical to the previously cached content up to the cache breakpoint; the cache lasts 5 minutes by default, refreshed on each hit, with a one-hour TTL available as an option",
+      "Exact identical matching is required; the cache lasts 24 hours with no shorter option",
       "Approximate semantic matching is sufficient; the cache lasts 5 minutes",
-      "Cached content can differ slightly, such as whitespace, and still be reused; the cache lasts 1 hour"
+      "Cached content can differ slightly, such as in whitespace, and still be reused; the cache lasts 1 hour"
     ],
     "correct": 0,
-    "explain": "For a cache to be reused, the input text must be exactly identical to the previously cached content through the cache breakpoint — any change forces a fresh cache_creation — and the cache itself only lasts 5 minutes.",
+    "explain": "Cache reuse is all-or-nothing: the input must match the cached content byte for byte up to and including the cache breakpoint, and any difference forces a fresh cache_creation. The entry lives five minutes by default, with its clock refreshed on every cache hit, and a one-hour TTL can be requested instead.",
     "reviewHref": "../../lessons/0007-claude-on-google-cloud.html#scene10"
   },
   {
@@ -1051,7 +1051,7 @@ const QUESTIONS = [
   },
   {
     "id": "gcp66",
-    "q": "Which of the following best describes the evaluator-optimizer workflow pattern, using the image-to-3D-model example?",
+    "q": "Which of the following best describes the evaluator-optimizer workflow pattern, as illustrated by generating a 3D model from an image?",
     "options": [
       "The evaluator generates the 3D model while the producer only judges its accuracy",
       "The loop repeats a fixed number of times regardless of what the evaluation finds",
@@ -1103,7 +1103,7 @@ const QUESTIONS = [
   },
   {
     "id": "gcp70",
-    "q": "Which of the following best compares workflows and agents on accuracy, testability, and reliability, and states the course's ultimate recommendation?",
+    "q": "Which of the following best compares workflows and agents on accuracy, testability, and reliability, and states the recommended default?",
     "options": [
       "Workflows and agents perform identically on accuracy and testability, so the choice is a matter of preference",
       "Recommendation: prioritize agents for reliability and use workflows only when true flexibility is required",
