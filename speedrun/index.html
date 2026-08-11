@@ -202,6 +202,7 @@
         <button class="primary" id="srStart">Start sprint</button>
       </div>
       <label class="check"><input type="checkbox" id="srMissedOnly"> Review only what I've missed</label>
+      <label class="check"><input type="checkbox" id="srSkipDone"> Skip questions I've already answered</label>
       <div class="small sys" style="margin-top:10px;">Answer with keys <code>1</code>–<code>4</code>, advance with <code>Enter</code>. Every card ends with a link to the lesson and section quiz that cover it in depth.</div>
     </div>
     <div id="srArea"></div>
@@ -997,7 +998,7 @@ const TRAPS = [
 const STORAGE_KEY = "ccaf_speedrun_v1";
 let state = loadState();
 
-function blankState() { return { q: {}, t: {}, totalAnswers: 0, totalCorrect: 0, _updatedAt: 0 }; }
+function blankState() { return { q: {}, t: {}, totalAnswers: 0, totalCorrect: 0, skipDone: false, _updatedAt: 0 }; }
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -1063,9 +1064,14 @@ function pickSprint() {
   const dom = document.getElementById("srDomain").value;
   const mode = document.getElementById("srMode").value;
   const missedOnly = document.getElementById("srMissedOnly").checked;
+  const skipDone = document.getElementById("srSkipDone").checked;
   let pool = cardsForDomain(dom);
   if (missedOnly) {
     pool = pool.filter(function (c) { const s = state.q[c.id]; return s && s.lastResult === "wrong"; });
+    if (!pool.length) return [];
+  }
+  if (skipDone) {
+    pool = pool.filter(function (c) { const s = state.q[c.id]; return !s || !s.seen; });
     if (!pool.length) return [];
   }
   if (mode === "random") {
@@ -1087,7 +1093,13 @@ function startSprint() {
   srIndex = 0; srBucket = "q";
   const area = document.getElementById("srArea");
   if (!srQueue.length) {
-    area.innerHTML = '<div class="card"><p style="margin:0;">Nothing to review here — you haven\'t missed anything in this selection yet. Uncheck <em>Review only what I\'ve missed</em> to run the full set.</p></div>';
+    const missedOnly = document.getElementById("srMissedOnly").checked;
+    const skipDone = document.getElementById("srSkipDone").checked;
+    let msg = "Nothing to review here.";
+    if (missedOnly && skipDone) msg = "Nothing to review here — no unanswered misses left in this selection. Uncheck <em>Review only what I've missed</em> or <em>Skip questions I've already answered</em> to run more.";
+    else if (missedOnly) msg = "Nothing to review here — you haven't missed anything in this selection yet. Uncheck <em>Review only what I've missed</em> to run the full set.";
+    else if (skipDone) msg = "You've answered everything in this selection. Uncheck <em>Skip questions I've already answered</em> to go through it again.";
+    area.innerHTML = '<div class="card"><p style="margin:0;">' + msg + '</p></div>';
     return;
   }
   renderSprintCard();
@@ -1558,6 +1570,10 @@ function toggleTheme() {
     opt.textContent = DOMAINS[d].short + " · " + n + " cards · " + DOMAINS[d].weight + "%";
     sel.appendChild(opt);
   });
+
+  const skipDoneBox = document.getElementById("srSkipDone");
+  skipDoneBox.checked = !!state.skipDone;
+  skipDoneBox.addEventListener("change", function () { state.skipDone = skipDoneBox.checked; saveState(); });
 
   document.getElementById("srStart").addEventListener("click", startSprint);
   document.getElementById("trStart").addEventListener("click", startTraps);
