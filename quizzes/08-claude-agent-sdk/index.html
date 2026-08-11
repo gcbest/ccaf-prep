@@ -1,0 +1,1258 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>(function(){try{var t=localStorage.getItem('ccaf-theme');if(!t){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <title>Claude Agent SDK Quiz — CCA-F Quiz</title>
+  <style>
+    :root {
+      --ink: #242321;
+      --muted: #706b63;
+      --paper: #f7f3ec;
+      --paper-deep: #ece4d7;
+      --rust: #a84e31;
+      --rust-dark: #7d3825;
+      --line: #d6ccbd;
+      --white: #fffdfa;
+      --accent: #7a4a6b;
+      --accent-text: #7a4a6b;
+      --good: #3d7a4a;
+      --good-bg: #e6f0e4;
+      --bad: #a13a2e;
+      --bad-bg: #f7e6e2;
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --ink: #ece7de;
+      --muted: #a89d8f;
+      --paper: #17140f;
+      --paper-deep: #221e17;
+      --line: #3a3327;
+      --white: #211d16;
+      --accent-text: #a8779a;
+      --good: #77c57b;
+      --good-bg: #172b19;
+      --bad: #cf786e;
+      --bad-bg: #2b1917;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.7 Georgia, 'Times New Roman', serif;
+    }
+    main { max-width: 720px; margin: 0 auto; padding: 40px 22px 80px; }
+    .masthead {
+      position: sticky; top: 0; z-index: 5; background: var(--paper);
+      display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+      border-bottom: 1px solid var(--line); padding-bottom: 10px;
+      color: var(--muted); font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .13em; text-transform: uppercase;
+    }
+    .masthead a { color: var(--muted); }
+    .theme-toggle {
+      flex: none; width: 28px; height: 28px; padding: 0; margin: 0; border-radius: 999px;
+      border: 1px solid var(--line); background: none; color: var(--muted);
+      font-size: 13px; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    }
+    .theme-toggle:hover, .theme-toggle:focus-visible { background: var(--paper-deep); outline: none; }
+    .kicker { display: block; margin: 22px 0 6px; color: var(--accent-text); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    h1 { max-width: 680px; margin: 0 0 10px; font: 700 clamp(1.8rem, 6vw, 2.7rem)/1.08 Georgia, serif; letter-spacing: -.02em; }
+    .dek { max-width: 640px; margin: 0 0 24px; color: var(--muted); font-size: 1.02rem; }
+    p { max-width: 70ch; margin: 0 0 13px; }
+    a { color: var(--rust-dark); }
+    code { background: var(--paper-deep); padding: .08em .28em; border-radius: 3px; }
+
+    nav.crumbs { font: 600 12px/1.5 system-ui, sans-serif; color: var(--muted); margin-bottom: 6px; }
+    nav.crumbs a { color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--line); }
+    nav.crumbs a:hover { color: var(--rust-dark); border-color: var(--rust-dark); }
+
+    .tabs { display: flex; gap: 4px; margin: 26px 0 18px; border-bottom: 1px solid var(--line); }
+    .tab {
+      padding: 9px 14px; cursor: pointer; font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .04em;
+      color: var(--muted); border-bottom: 2px solid transparent; user-select: none; background: none; border-top: none; border-left: none; border-right: none;
+    }
+    .tab.active { color: var(--accent-text); border-bottom-color: var(--accent-text); }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .card {
+      background: var(--white); border: 1px solid var(--line); border-radius: 3px;
+      padding: 20px 22px; margin-bottom: 14px;
+    }
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+    select, button {
+      font: 600 13px/1.3 system-ui, sans-serif; padding: 8px 13px; border-radius: 3px; border: 1px solid var(--line);
+      background: var(--white); color: var(--ink); cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: #fffdfa; border-color: var(--accent); }
+    button.primary:hover { filter: brightness(1.08); }
+    button.ghost { background: var(--white); color: var(--accent-text); border-color: var(--line); }
+    button.ghost:hover { background: var(--paper-deep); }
+    .small { font: 400 13px/1.5 Georgia, serif; color: var(--muted); }
+    .small.sys { font: 400 12.5px/1.5 system-ui, sans-serif; color: var(--muted); }
+
+    .qmeta { display: flex; justify-content: space-between; align-items: center; font: 600 12px/1.4 system-ui, sans-serif; color: var(--muted); margin-bottom: 10px; }
+    .badge { font: 700 10.5px/1.4 system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: var(--paper-deep); color: var(--rust-dark); }
+    .qtext { font: 700 1.18rem/1.4 Georgia, serif; margin-bottom: 16px; }
+    .option {
+      display: block; width: 100%; text-align: left; padding: 11px 14px; margin-bottom: 9px;
+      border: 1px solid var(--line); border-radius: 3px; background: var(--white);
+      font: 400 15px/1.5 Georgia, serif; color: var(--ink); cursor: pointer;
+    }
+    .option:hover:not(.disabled) { border-color: var(--accent-text); background: var(--paper); }
+    .option .optkey { display: inline-block; width: 20px; font-weight: 700; color: var(--muted); }
+    .option.correct { background: var(--good-bg); border-color: var(--good); }
+    .option.wrong { background: var(--bad-bg); border-color: var(--bad); }
+    .option.disabled { cursor: default; }
+    .feedback { font: 700 13px/1.5 system-ui, sans-serif; margin: 12px 0 4px; padding: 10px 13px; border-radius: 3px; }
+    .feedback.good { background: var(--good-bg); color: var(--good); }
+    .feedback.bad { background: var(--bad-bg); color: var(--bad); }
+    .explain { font: 400 15px/1.6 Georgia, serif; color: var(--ink); margin-top: 8px; padding: 12px 14px; background: var(--paper-deep); border-radius: 3px; }
+    .explain strong { color: var(--rust-dark); }
+    .review-link { display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; font: 600 13px/1.4 system-ui, sans-serif; color: var(--accent-text); text-decoration: none; border-bottom: 1px solid transparent; }
+    .review-link:hover { border-bottom-color: var(--accent-text); }
+
+    .progress-bar-outer { width: 100%; height: 8px; background: var(--paper-deep); border-radius: 999px; overflow: hidden; margin: 6px 0 2px; }
+    .progress-bar-inner { height: 100%; border-radius: 999px; background: var(--accent); }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 10px; margin-bottom: 14px; }
+    .stat-box { background: var(--white); border: 1px solid var(--line); border-radius: 3px; padding: 13px 14px; text-align: center; }
+    .stat-num { font: 700 1.5rem/1.2 Georgia, serif; color: var(--rust-dark); }
+    .stat-label { font: 600 10.5px/1.4 system-ui, sans-serif; color: var(--muted); margin-top: 3px; letter-spacing: .03em; text-transform: uppercase; }
+    table { width: 100%; border-collapse: collapse; font: 400 13.5px/1.5 Georgia, serif; }
+    th, td { text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font: 600 10.5px/1.4 system-ui, sans-serif; text-transform: uppercase; letter-spacing: .03em; }
+    .row-between { display: flex; justify-content: space-between; align-items: center; }
+    .mastery-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+
+    footer { margin-top: 34px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: .88rem; }
+    @media (max-width: 560px) {
+      main { padding: 26px 16px 60px; }
+      .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
+      .card { padding: 16px 16px; }
+    }
+      .autohide-header { transition: transform .28s ease; will-change: transform; }
+    .autohide-header--hidden { transform: translateY(-100%); }
+</style>
+</head>
+<body>
+<main>
+  <div class="masthead"><a href="../../index.html">CCA-F Study System</a><span>Section 8 · Agent SDK</span><button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button></div>
+
+  <nav class="crumbs"><a href="../../index.html">Home</a> › <a href="../index.html">Quizzes</a> › Section 8 · Agent SDK</nav>
+  <span class="kicker">Section 8 · The Claude Agent SDK</span>
+  <h1>Claude Agent SDK Quiz</h1>
+  <p class="dek">64 multiple-choice questions on the Claude Agent SDK: the agentic loop the SDK owns, subagents and multi-agent orchestration, hooks and programmatic enforcement, in-process MCP tools, and session and context control. This section has no official prep course — it covers the gap between the seven courses and the exam blueprint.</p>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="quiz">Quiz</button>
+    <button class="tab" data-tab="progress">My progress</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="panel active" id="panel-quiz">
+    <div class="card" id="quizSetup">
+      <div class="controls">
+        <select id="quizLen">
+          <option value="10">10 questions</option>
+          <option value="20">20 questions</option>
+          <option value="999" selected>All 64 questions</option>
+        </select>
+        <select id="quizMode">
+          <option value="weak" selected>Missed &amp; new first (recommended)</option>
+          <option value="random">Fully random</option>
+          <option value="sequential">In order</option>
+        </select>
+        <button class="primary" id="startQuizBtn">Start quiz</button>
+        <button class="ghost" id="reviewMissedBtn">Review only missed</button>
+      </div>
+      <div class="small sys">"Missed &amp; new first" weights questions you've gotten wrong or haven't seen, so review sessions target real gaps. "Review only missed" quizzes you exclusively on questions currently marked wrong.</div>
+    </div>
+    <div id="quizArea"></div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="panel" id="panel-progress">
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="card">
+      <div class="row-between"><strong style="font:700 13px/1.4 system-ui, sans-serif; color:var(--rust-dark);">Mastery</strong></div>
+      <div class="progress-bar-outer"><div class="progress-bar-inner" id="masteryBar" style="width:0%"></div></div>
+      <div class="small sys" id="masteryLabel" style="margin-top:6px;"></div>
+    </div>
+    <div class="card">
+      <div class="row-between"><strong style="font:700 13px/1.4 system-ui, sans-serif; color:var(--rust-dark);">Questions currently missed</strong></div>
+      <div id="weakTable" style="margin-top:8px;"></div>
+    </div>
+    <div class="card">
+      <div class="row-between">
+        <span class="small sys">Progress is saved in this browser and persists across visits.</span>
+        <button class="ghost" id="resetBtn">Reset progress</button>
+      </div>
+    </div>
+    <div class="card" id="syncPanel"></div>
+  </div>
+
+  <footer>
+    <p>Source questions: <code>08-claude-agent-sdk/quiz.md</code> · <a href="../../08-claude-agent-sdk/notes.md">section notes</a> · <a href="../../lessons/0010-claude-agent-sdk-orchestration.html">read part 1</a> · <a href="../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html">read part 2</a></p>
+    <p><a href="index.html">← All section quizzes</a></p>
+  </footer>
+</main>
+
+<script src="../assets/js/gist-sync.js"></script>
+<script>
+/* ---------- QUESTION BANK ---------- */
+const QUESTIONS = [
+  {
+    "id": "sdk01",
+    "q": "What is the single mental model that best explains why the Agent SDK has permission modes, hooks, settings files, and CLAUDE.md loading?",
+    "options": [
+      "The SDK is a thin wrapper over the Messages API that re-implements each feature independently",
+      "Those features are part of the Model Context Protocol specification",
+      "The SDK spawns the Claude Code CLI as a subprocess and talks to it over a control protocol, so Claude Code's features come along with it",
+      "They are inherited from the Anthropic Python and TypeScript API clients"
+    ],
+    "correct": 2,
+    "explain": "The SDK is a steering wheel bolted onto a car that already exists. This also explains options like pathToClaudeCodeExecutable and spawnClaudeCodeProcess, which would make no sense in a pure HTTP client.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene0"
+  },
+  {
+    "id": "sdk02",
+    "q": "Which package names are correct for the Agent SDK?",
+    "options": [
+      "TypeScript: @anthropic/agent-sdk · Python: claude-sdk",
+      "TypeScript: @anthropic-ai/claude-agent-sdk · Python: claude-agent-sdk",
+      "Both languages use the same package name, claude-agent",
+      "TypeScript: @anthropic-ai/claude-code · Python: anthropic-agents"
+    ],
+    "correct": 1,
+    "explain": "Same engine, two ignition keys. The options type differs too: Options in TypeScript, ClaudeAgentOptions in Python.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene0"
+  },
+  {
+    "id": "sdk03",
+    "q": "What does the Agent SDK take over that you wrote by hand in the Claude API course?",
+    "options": [
+      "Model selection and fallback routing",
+      "The agentic loop itself — checking stop_reason, dispatching tools, appending tool_result blocks, and re-calling until end_turn",
+      "Prompt caching and token counting",
+      "Authentication and API key rotation"
+    ],
+    "correct": 1,
+    "explain": "You stop owning the mechanism and start owning policy: which tools exist, who may call them, when to stop, and what runs around each call.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene1"
+  },
+  {
+    "id": "sdk04",
+    "q": "You are building a live chat surface where a customer can interrupt the agent mid-run and redirect it. Which entry point?",
+    "options": [
+      "ClaudeSDKClient",
+      "query() with resume passed on every turn",
+      "A fresh query() per message, replaying the history in the prompt",
+      "Two agents, one for chat and one for resolution"
+    ],
+    "correct": 0,
+    "explain": "query() does not support interrupts; ClaudeSDKClient does. The rule of thumb: if the next action depends on Claude's response, or a human might cut in, use ClaudeSDKClient.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene1"
+  },
+  {
+    "id": "sdk05",
+    "q": "Which capability does ClaudeSDKClient have that query() does not?",
+    "options": [
+      "Custom tools",
+      "Streaming input",
+      "Interrupts",
+      "Hooks"
+    ],
+    "correct": 2,
+    "explain": "Hooks, custom tools, and streaming input are supported by both. Session reuse and interrupts are what separate them.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene1"
+  },
+  {
+    "id": "sdk06",
+    "q": "What does startup() do in the TypeScript SDK?",
+    "options": [
+      "Validates your API key and prints the resolved model",
+      "Starts a long-running server that queries connect to over HTTP",
+      "Pre-spawns the CLI subprocess and completes the initialize handshake before a prompt exists, so the first query does not pay spawn cost inline",
+      "Loads settings files and returns a resolved settings snapshot"
+    ],
+    "correct": 2,
+    "explain": "Preheat the oven while you are still shopping. It returns a WarmQuery handle; the default initialize timeout is 60,000 ms.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene0"
+  },
+  {
+    "id": "sdk07",
+    "q": "You call query() without setting systemPrompt. What system prompt does the agent get?",
+    "options": [
+      "No system prompt at all",
+      "Claude Code's full system prompt, same as the CLI",
+      "A minimal prompt — Claude Code's system prompt is opt-in",
+      "Whatever is in the project CLAUDE.md"
+    ],
+    "correct": 2,
+    "explain": "To get Claude Code's, pass { type: 'preset', preset: 'claude_code' }, optionally with append to extend it. The SDK hands you an empty stage, not Claude Code's whole set.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene2"
+  },
+  {
+    "id": "sdk08",
+    "q": "An SDK application is ignoring the project's CLAUDE.md. What is the most likely cause?",
+    "options": [
+      "systemPrompt must be set to the string \"claude_md\"",
+      "settingSources was set to [] or to a list that omits \"project\"",
+      "CLAUDE.md is only read by the CLI and never by the SDK",
+      "The CLAUDE.md file needs a YAML frontmatter block to be loaded by the SDK"
+    ],
+    "correct": 1,
+    "explain": "Project CLAUDE.md loads only when \"project\" is among the setting sources. You unplugged the filing cabinet, then wondered where the files went.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene2"
+  },
+  {
+    "id": "sdk09",
+    "q": "Which SettingSource maps to .claude/settings.local.json?",
+    "options": [
+      "managed",
+      "user",
+      "local",
+      "project"
+    ],
+    "correct": 2,
+    "explain": "user is ~/.claude/settings.json, project is .claude/settings.json and version-controlled, local is .claude/settings.local.json and gitignored.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene2"
+  },
+  {
+    "id": "sdk10",
+    "q": "Why would a shipped, customer-facing product pass settingSources: []?",
+    "options": [
+      "For reproducibility — so behavior cannot shift because of files on whichever machine it happens to run on",
+      "To reduce token usage on every request",
+      "Because settings files are deprecated in the SDK",
+      "Because it is required whenever mcpServers is set"
+    ],
+    "correct": 0,
+    "explain": "Endpoint-managed policy still loads regardless. The rules then move into systemPrompt, where they are version-controlled with the code that depends on them.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene2"
+  },
+  {
+    "id": "sdk11",
+    "q": "What is the Python-only version trap with setting_sources?",
+    "options": [
+      "In SDK 0.1.59 and earlier, setting_sources=[] was treated the same as omitting the option, so it did not disable filesystem settings",
+      "setting_sources is ignored entirely in Python and must be set via environment variable",
+      "Python requires setting_sources to be a tuple rather than a list",
+      "Python reads settings from ~/.config/claude instead of ~/.claude"
+    ],
+    "correct": 0,
+    "explain": "The TypeScript SDK is unaffected. If a Python agent is reading settings you told it to ignore, check the SDK version before you check your code.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene2"
+  },
+  {
+    "id": "sdk12",
+    "q": "Which stopping option does the model itself know about, so it can pace its work and wrap up rather than being cut off?",
+    "options": [
+      "taskBudget",
+      "maxTurns",
+      "abortController",
+      "maxBudgetUsd"
+    ],
+    "correct": 0,
+    "explain": "maxTurns and maxBudgetUsd are guillotines — the run stops when the number is hit. taskBudget is an API-side token budget the model is told about. fallbackModel is not a cap at all.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene3"
+  },
+  {
+    "id": "sdk13",
+    "q": "What does maxTurns actually count?",
+    "options": [
+      "Subagents spawned",
+      "Individual messages in the transcript",
+      "Agentic turns — tool-use round trips",
+      "Total tokens consumed"
+    ],
+    "correct": 2,
+    "explain": "It caps the number of round trips through the loop, which is the thing that runs away when an agent gets stuck.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene3"
+  },
+  {
+    "id": "sdk14",
+    "q": "Which two AgentDefinition fields are required?",
+    "options": [
+      "description and prompt",
+      "name and prompt",
+      "description and tools",
+      "prompt and model"
+    ],
+    "correct": 0,
+    "explain": "Who to call, and what to tell them. description is the natural-language \"when to use this agent\" that Claude matches against; prompt is its system prompt.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene4"
+  },
+  {
+    "id": "sdk15",
+    "q": "What does an AgentDefinition specify for a subagent?",
+    "options": [
+      "The coordinator's memory files",
+      "Its description, system prompt, and tool restrictions",
+      "The user's billing tier",
+      "Only its name"
+    ],
+    "correct": 1,
+    "explain": "Plus optional model, skills, memory, mcpServers, maxTurns, effort, permissionMode, background, and initialPrompt.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene4"
+  },
+  {
+    "id": "sdk16",
+    "q": "You omit the tools field from an AgentDefinition. What can the subagent do?",
+    "options": [
+      "It inherits every tool available to subagents",
+      "Only the tools the parent listed in allowedTools",
+      "Nothing, until you list tools explicitly",
+      "Only Read, Grep, and Glob"
+    ],
+    "correct": 0,
+    "explain": "Silence means give them the whole keyring. A tool you do leave off the list is not in the subagent's session at all — no permission prompt, no error, Claude just works without it.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene4"
+  },
+  {
+    "id": "sdk17",
+    "q": "In Python, why does AgentDefinition(max_turns=6) raise a TypeError?",
+    "options": [
+      "maxTurns was removed from AgentDefinition in recent versions",
+      "AgentDefinition keeps camelCase field names to match the shared wire format, so the field is maxTurns",
+      "The dataclass requires all fields to be passed positionally",
+      "max_turns is only valid on subagents that set background=True"
+    ],
+    "correct": 1,
+    "explain": "Two objects, two conventions, one file: AgentDefinition uses camelCase (disallowedTools, permissionMode, maxTurns), while ClaudeAgentOptions uses snake_case (disallowed_tools, permission_mode, max_turns).",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene4"
+  },
+  {
+    "id": "sdk18",
+    "q": "According to the CCA-F exam guide, what must a coordinator's allowedTools include in order to spawn subagents?",
+    "options": [
+      "\"Delegate\"",
+      "\"Spawn\"",
+      "\"Fork\"",
+      "\"Task\""
+    ],
+    "correct": 3,
+    "explain": "Answer \"Task\" on the exam. In current SDK code the tool is named \"Agent\" — it was renamed in Claude Code v2.1.63 — but the exam guide is version 1.0, effective July 2026, and predates the rename.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene5"
+  },
+  {
+    "id": "sdk19",
+    "q": "In current SDK releases, what is the subagent-spawning tool called, and where does the old name still appear?",
+    "options": [
+      "It is called Task; the name Agent appears only in TypeScript",
+      "Both names are fully interchangeable everywhere in the API",
+      "It is called Subagent, and neither older name appears",
+      "It is called Agent; the name Task still appears in the system:init tools list and in result.permission_denials[].tool_name"
+    ],
+    "correct": 3,
+    "explain": "Renamed in Claude Code v2.1.63. Detection code should match both names in tool_use blocks for compatibility across versions.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene5"
+  },
+  {
+    "id": "sdk20",
+    "q": "Claude keeps doing work itself instead of delegating to your well-written subagent. What should you check first?",
+    "options": [
+      "Whether the subagent's model is set to opus",
+      "Whether the Task/Agent tool is in allowedTools, since without it the invocation falls through to canUseTool or is denied outright",
+      "Whether the subagent has its own mcpServers entry",
+      "Whether maxTurns is high enough for two agents"
+    ],
+    "correct": 1,
+    "explain": "Then check that the prompt names the subagent explicitly, and that the description is specific enough for Claude to match the task against it.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene5"
+  },
+  {
+    "id": "sdk21",
+    "q": "A subagent needs findings the coordinator gathered earlier. How does it get them?",
+    "options": [
+      "Subagents share a global memory object",
+      "They must be explicitly written into the subagent's prompt",
+      "It automatically inherits the coordinator's full conversation history",
+      "It reads the coordinator's memory files directly"
+    ],
+    "correct": 1,
+    "explain": "The only content that crosses from parent to subagent is the Task/Agent tool's prompt string. If subagents inherited parent history they would provide no context isolation at all.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene6"
+  },
+  {
+    "id": "sdk22",
+    "q": "What does a subagent receive when it starts?",
+    "options": [
+      "Everything the parent has except its tool results",
+      "The parent's full conversation history and system prompt",
+      "Its own AgentDefinition.prompt, the Task/Agent tool's prompt string, tool definitions, and project CLAUDE.md if settingSources loads it",
+      "A read-only copy of the parent's context window"
+    ],
+    "correct": 2,
+    "explain": "It does not receive the parent's conversation history, tool results, or system prompt — nor preloaded skill content unless listed in the skills field.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene6"
+  },
+  {
+    "id": "sdk23",
+    "q": "What comes back from a subagent to its parent?",
+    "options": [
+      "Nothing — the parent must query the subagent's session separately",
+      "Its full transcript, including every tool call and result",
+      "Only its final message, delivered as the tool result",
+      "A structured diff of everything it changed"
+    ],
+    "correct": 2,
+    "explain": "Intermediate tool calls and results stay inside the subagent — that is the isolation working. You get the report, not the researcher's desk. The parent may summarize it unless told to preserve it verbatim.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene6"
+  },
+  {
+    "id": "sdk24",
+    "q": "Which of these is NOT one of the four benefits of subagents?",
+    "options": [
+      "Reduced per-token cost, since subagents bill at a lower rate",
+      "Tool restrictions",
+      "Parallelization",
+      "Context isolation"
+    ],
+    "correct": 0,
+    "explain": "The four are context isolation, parallelization, specialized instructions, and tool restrictions. Subagents can reduce total cost by keeping the main window small, but there is no discounted rate.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene4"
+  },
+  {
+    "id": "sdk25",
+    "q": "In hub-and-spoke multi-agent orchestration, who manages inter-subagent communication and error handling?",
+    "options": [
+      "The end user",
+      "A shared queue that subagents poll directly",
+      "The coordinator agent",
+      "Each subagent independently"
+    ],
+    "correct": 2,
+    "explain": "Spokes never touch — everything goes through the hub. This is the default topology for multi-agent systems.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene7"
+  },
+  {
+    "id": "sdk26",
+    "q": "Splitting a code review into per-file analysis and then a separate cross-file integration pass is an example of what?",
+    "options": [
+      "Hub-and-spoke orchestration",
+      "Fork-based session management",
+      "Dynamic adaptive decomposition",
+      "Prompt chaining"
+    ],
+    "correct": 3,
+    "explain": "Prompt chaining is fixed sequential decomposition, used when the steps are known before you start. A recipe, not an investigation.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene7"
+  },
+  {
+    "id": "sdk27",
+    "q": "Which decomposition strategy suits \"add comprehensive tests to a legacy codebase nobody fully understands\"?",
+    "options": [
+      "Batch processing",
+      "Fixed sequential prompt chaining",
+      "Dynamic decomposition that adapts as dependencies are discovered",
+      "A single monolithic prompt"
+    ],
+    "correct": 2,
+    "explain": "The dependencies are the discovery, so a fixed sequence would be guessing. Dynamic decomposition generates subtasks from what each step finds.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene7"
+  },
+  {
+    "id": "sdk28",
+    "q": "Three subagents each complete successfully, but the final report covers only one of three sub-topics. What is the root cause?",
+    "options": [
+      "The synthesis step dropped the other topics",
+      "The subagents' tool sets were too restricted",
+      "The subagents ignored parts of their assignments",
+      "The coordinator's task decomposition was too narrow, so all three assignments pointed at the same sub-topic"
+    ],
+    "correct": 3,
+    "explain": "When every worker succeeds and the aggregate is wrong, look up the chain, not down. Blaming a downstream component that provably worked is the trap this question is built around.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene8"
+  },
+  {
+    "id": "sdk29",
+    "q": "A search subagent times out mid-investigation. What should it return so the coordinator can recover intelligently?",
+    "options": [
+      "Nothing — it should simply not respond",
+      "An empty result set marked as successful",
+      "A generic \"search unavailable\" status, after silently exhausting retries",
+      "A structured error naming what failed and how far it got"
+    ],
+    "correct": 3,
+    "explain": "A coordinator can only be as smart as its inputs. Marking a failure as success converts it into a confident wrong answer; a generic string discards the information needed to re-scope.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene8"
+  },
+  {
+    "id": "sdk30",
+    "q": "How deep can subagents nest by default, and what changes it?",
+    "options": [
+      "Two layers; the depth field on AgentDefinition changes it",
+      "One layer; nesting cannot be enabled",
+      "Three layers below the main conversation; CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH changes it, and 1 turns nesting off",
+      "Unlimited; only maxTurns constrains it"
+    ],
+    "correct": 2,
+    "explain": "Also worth holding: since Claude Code v2.1.198, subagents run in the background by default unless Claude sets run_in_background: false.",
+    "reviewHref": "../../lessons/0010-claude-agent-sdk-orchestration.html#scene4"
+  },
+  {
+    "id": "sdk31",
+    "q": "Production shows the agent skipping get_customer in 12% of cases and calling process_refund anyway. What is the correct fix?",
+    "options": [
+      "Putting the rule in the system prompt in capital letters",
+      "Five to eight few-shot examples showing the correct call ordering",
+      "Rewriting process_refund's description to state that verification is required",
+      "A programmatic prerequisite that blocks lookup_order and process_refund until identity verification has run"
+    ],
+    "correct": 3,
+    "explain": "Programmatic enforcement guarantees deterministic compliance; prompt instructions are probabilistic and carry a non-zero failure rate. The 12% becomes 0%, not 3%.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene1"
+  },
+  {
+    "id": "sdk32",
+    "q": "Why prefer a programmatic prerequisite gate over a prompt instruction for a rule that must never be broken?",
+    "options": [
+      "It is easier to write",
+      "It removes the need for tool descriptions",
+      "It guarantees deterministic compliance instead of relying on probabilistic prompt-following",
+      "It requires no testing"
+    ],
+    "correct": 2,
+    "explain": "A locked door beats a polite sign. The governing question: is this something you want Claude to do, or something Claude must not be able to skip?",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene1"
+  },
+  {
+    "id": "sdk33",
+    "q": "Several MCP tools return timestamps in different formats — Unix epoch, ISO 8601, MM/DD/YYYY. Which hook normalizes them?",
+    "options": [
+      "PostToolUse",
+      "tool_choice",
+      "A SessionStart hook",
+      "PreToolUse"
+    ],
+    "correct": 0,
+    "explain": "Pre guards the exit; Post cleans the entrance. PreToolUse fires before the tool runs, so the data you want to normalize does not exist yet.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene3"
+  },
+  {
+    "id": "sdk34",
+    "q": "What hook pattern blocks a process_refund call exceeding $500 and redirects to human escalation?",
+    "options": [
+      "A PostToolUse hook that reverses oversized refunds",
+      "A tool call interception hook — PreToolUse returning permissionDecision: \"deny\" with a reason",
+      "A rule in CLAUDE.md",
+      "A few-shot example showing escalation above $500"
+    ],
+    "correct": 1,
+    "explain": "PostToolUse fires after the refund has been issued — reversing it means a second financial transaction. The reason string is what turns the block into a redirect rather than a dead end.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene4"
+  },
+  {
+    "id": "sdk35",
+    "q": "Which values can a PreToolUse hook return in permissionDecision?",
+    "options": [
+      "allow, deny, ask, defer",
+      "allow, deny",
+      "continue, block",
+      "approve, reject, escalate"
+    ],
+    "correct": 0,
+    "explain": "Paired with permissionDecisionReason. The defer value ends the run with stop_reason: \"tool_deferred\" and the pending call in deferred_tool_use, so you can surface an approval request in your own UI and resume the same session.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene4"
+  },
+  {
+    "id": "sdk36",
+    "q": "Which hook events block using a top-level decision field rather than hookSpecificOutput?",
+    "options": [
+      "SessionStart and SubagentStart",
+      "PostToolUse, PostToolUseFailure, UserPromptSubmit, Stop, SubagentStop, and PreCompact",
+      "Only Stop and SubagentStop",
+      "Only PreToolUse"
+    ],
+    "correct": 1,
+    "explain": "They use decision: \"block\" with a reason. PreToolUse is the exception that uses hookSpecificOutput.permissionDecision, and SessionStart/SubagentStart are context-only with no blocking at all.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene4"
+  },
+  {
+    "id": "sdk37",
+    "q": "How does a hook rewrite a tool's arguments before it runs, versus push information into Claude's context?",
+    "options": [
+      "PreToolUse returns updatedInput under hookSpecificOutput; PostToolUse returns additionalContext",
+      "Neither is possible — hooks can only allow or deny",
+      "Both use additionalContext, keyed by direction",
+      "Both use updatedInput; the event determines the meaning"
+    ],
+    "correct": 0,
+    "explain": "additionalContext is wrapped in a system reminder and placed next to the tool result, and is capped at 10,000 characters — longer output is written to a file and replaced with a preview and path.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene3"
+  },
+  {
+    "id": "sdk38",
+    "q": "You leave timeout unset on a HookMatcher. What does the hook get?",
+    "options": [
+      "600 seconds for every event with no exceptions",
+      "30 seconds for every event",
+      "600 seconds for most events, but 30 seconds for UserPromptSubmit",
+      "No timeout — it runs until it returns"
+    ],
+    "correct": 2,
+    "explain": "UserPromptSubmit sits in front of a waiting human, so it gets the short leash. Omitting matcher matches every tool; patterns like \"Write|Edit\" match a set.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene2"
+  },
+  {
+    "id": "sdk39",
+    "q": "When is the canUseTool callback actually invoked?",
+    "options": [
+      "Only when the permission flow resolves to a prompt — calls auto-approved by allowedTools, an allow rule, or a permissive permissionMode never reach it",
+      "On every tool call, without exception",
+      "Only for MCP tools, never for built-in tools",
+      "Only when permissionMode is set to dontAsk"
+    ],
+    "correct": 0,
+    "explain": "canUseTool is the doorbell; a PreToolUse hook is the doorframe. To gate every tool call unconditionally, use the hook.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene5"
+  },
+  {
+    "id": "sdk40",
+    "q": "Which calls reach canUseTool even when an allow rule matches them?",
+    "options": [
+      "Bash and Write, because they are destructive",
+      "Any tool whose name begins with mcp__",
+      "Any tool called from inside a subagent",
+      "AskUserQuestion, MCP tools marked requiresUserInteraction, and connector tools an organization set to ask"
+    ],
+    "correct": 3,
+    "explain": "In dontAsk mode those are denied outright instead of prompting.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene5"
+  },
+  {
+    "id": "sdk41",
+    "q": "Does allowedTools restrict Claude to only the tools listed?",
+    "options": [
+      "No — it has no effect unless canUseTool is also set",
+      "No — it auto-approves the listed tools; unlisted tools fall through to permissionMode and canUseTool",
+      "Yes — unlisted tools are removed from Claude's context",
+      "Yes, but only when permissionMode is default"
+    ],
+    "correct": 1,
+    "explain": "The name promises a whitelist; the behavior is an auto-approve list. To actually block, use disallowedTools.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene6"
+  },
+  {
+    "id": "sdk42",
+    "q": "What is the difference between disallowedTools: [\"Bash\"] and disallowedTools: [\"Bash(rm *)\"]?",
+    "options": [
+      "The bare name only applies to the main agent, the scoped rule to subagents",
+      "They are equivalent; the parentheses are decorative",
+      "The scoped rule only applies in default permission mode",
+      "The bare name removes the tool from Claude's context entirely; the scoped rule leaves Bash available and denies matching calls in every mode, including bypassPermissions"
+    ],
+    "correct": 3,
+    "explain": "Scoped deny rules surviving bypassPermissions is the detail worth remembering — it is the one guarantee that holds in every mode.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene6"
+  },
+  {
+    "id": "sdk43",
+    "q": "Which permission mode never prompts and denies anything not pre-approved?",
+    "options": [
+      "bypassPermissions",
+      "acceptEdits",
+      "dontAsk",
+      "auto"
+    ],
+    "correct": 2,
+    "explain": "One locks the door and answers no; bypassPermissions removes the door (though explicit ask rules still prompt, and it requires allowDangerouslySkipPermissions: true).",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene6"
+  },
+  {
+    "id": "sdk44",
+    "q": "Name the six permission modes.",
+    "options": [
+      "strict, default, relaxed, plan, auto, dontAsk",
+      "default, readOnly, write, admin, plan, auto",
+      "manual, acceptEdits, plan, auto, dontAsk, bypass",
+      "default, acceptEdits, plan, dontAsk, bypassPermissions, auto"
+    ],
+    "correct": 3,
+    "explain": "For an unattended production agent, dontAsk is usually right: there is no human to answer a prompt, and a surprise call should be denied rather than silently permitted.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene6"
+  },
+  {
+    "id": "sdk45",
+    "q": "What does createSdkMcpServer() give you that a stdio MCP server does not?",
+    "options": [
+      "Tools that bypass the permission system",
+      "A server that runs in the same process as your application — no subprocess, no transport, no separate deployment",
+      "Automatic authentication against third-party APIs",
+      "A hosted server managed by Anthropic"
+    ],
+    "correct": 1,
+    "explain": "The tool shop moves inside the house. This is the SDK's answer to custom tools, and the main thing the MCP course does not cover since it builds external servers over stdio.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene7"
+  },
+  {
+    "id": "sdk46",
+    "q": "How does tool() differ between the TypeScript and Python SDKs?",
+    "options": [
+      "Python has no tool() — custom tools are TypeScript-only",
+      "TypeScript is a function taking (name, description, inputSchema, handler, extras?) with a Zod schema; Python is a decorator taking (name, description, input_schema, annotations?) where the decorated async function is the handler",
+      "They are identical in both languages",
+      "TypeScript is a decorator; Python is a function"
+    ],
+    "correct": 1,
+    "explain": "Python's schema is a simple type map like {\"a\": float} or full JSON Schema, and annotations are its fourth positional argument. The extras bag — searchHint and alwaysLoad — is TypeScript-only.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene7"
+  },
+  {
+    "id": "sdk47",
+    "q": "Which statement about ToolAnnotations is correct?",
+    "options": [
+      "They are required on every tool definition",
+      "They are enforced by the SDK, which blocks writes from a tool marked readOnlyHint",
+      "They are behavioral hints only, and clients should not rely on them for security decisions",
+      "They replace the permission system for MCP tools"
+    ],
+    "correct": 2,
+    "explain": "Note the defaults that surprise people: destructiveHint and openWorldHint both default to true, while readOnlyHint and idempotentHint default to false. The safe assumption is baked in.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene7"
+  },
+  {
+    "id": "sdk48",
+    "q": "What does strictMcpConfig: true do?",
+    "options": [
+      "Rejects MCP servers that do not declare tool annotations",
+      "Uses only the servers passed in mcpServers, ignoring project .mcp.json, user settings, plugin servers, and claude.ai connectors",
+      "Requires all MCP servers to use HTTPS transport",
+      "Validates every MCP tool schema against the specification before connecting"
+    ],
+    "correct": 1,
+    "explain": "The same reproducibility instinct as settingSources: [] — a tool surface that does not change because of what is on the machine.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene7"
+  },
+  {
+    "id": "sdk49",
+    "q": "An agent confuses two similarly-named tools roughly half the time. What is the most effective first fix?",
+    "options": [
+      "Merge them into a single tool",
+      "Expand each tool's description with input formats, example queries, edge cases, and boundary explanations",
+      "Add a routing classifier in front of the agent",
+      "Add few-shot examples of correct routing"
+    ],
+    "correct": 1,
+    "explain": "The description is the primary mechanism the model uses to select a tool, so a thin description is the root cause. Fix the label before you rearrange the shelf.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene7"
+  },
+  {
+    "id": "sdk50",
+    "q": "Of isError, errorCategory, and isRetryable, which is an actual MCP protocol field?",
+    "options": [
+      "Only isRetryable, which the SDK reads to decide whether to retry automatically",
+      "Only isError — the other two are conventions you put in your own error payload",
+      "All three are MCP fields",
+      "Only errorCategory, which MCP uses to route failures"
+    ],
+    "correct": 1,
+    "explain": "One is standard issue; two are things you bring yourself. The exam names errorCategory and isRetryable as vocabulary, so learn the terms — just do not go hunting for them in the SDK types.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene8"
+  },
+  {
+    "id": "sdk51",
+    "q": "How does an MCP tool signal that a call failed?",
+    "options": [
+      "Returning an empty string",
+      "Throwing an uncaught exception only",
+      "Setting stop_reason to \"tool_use\"",
+      "The isError flag"
+    ],
+    "correct": 3,
+    "explain": "isError is the MCP pattern for communicating tool call failure back to the calling agent.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene8"
+  },
+  {
+    "id": "sdk52",
+    "q": "What does isRetryable: false on a business error tell the agent?",
+    "options": [
+      "Do not retry — explain the business rule violation instead",
+      "The tool is permanently broken",
+      "Escalate to a human regardless of context",
+      "Retry immediately with exponential backoff"
+    ],
+    "correct": 0,
+    "explain": "Retrying a rule violation just burns turns to reach the same refusal. A 30-day refund window is a business error, not a transient one.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene8"
+  },
+  {
+    "id": "sdk53",
+    "q": "Why return an errorCategory instead of a generic \"Operation failed\"?",
+    "options": [
+      "It is required by the MCP specification",
+      "It looks more professional in logs",
+      "It reduces token usage",
+      "It lets the agent choose the right recovery action instead of guessing from prose"
+    ],
+    "correct": 3,
+    "explain": "An error message is an instruction to the agent. Transient, validation, business, and permission failures each call for a different next move.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene8"
+  },
+  {
+    "id": "sdk54",
+    "q": "You want to compare two implementation strategies against the same expensive codebase analysis. What do you use?",
+    "options": [
+      "/compact",
+      "A new CLAUDE.md file",
+      "--resume",
+      "fork_session"
+    ],
+    "correct": 3,
+    "explain": "One trunk, two branches — not one increasingly confused trunk. Forking creates an independent branch from a shared baseline, so both inherit the analysis and neither sees the other.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene9"
+  },
+  {
+    "id": "sdk55",
+    "q": "What does forkSession require in order to mean anything?",
+    "options": [
+      "It must accompany resume — there has to be a session to fork from",
+      "It only works when settingSources is empty",
+      "It requires a sessionStore to be configured",
+      "It must be paired with persistSession: false"
+    ],
+    "correct": 0,
+    "explain": "Without resume, there is no baseline to branch. With it, you get a new session ID instead of continuing the original.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene9"
+  },
+  {
+    "id": "sdk56",
+    "q": "What does --resume <session-name> do?",
+    "options": [
+      "Starts a brand-new session with no history",
+      "Compacts the current session's context",
+      "Continues a specific named prior conversation",
+      "Forks a session into two branches"
+    ],
+    "correct": 2,
+    "explain": "Contrast with fork_session, which branches rather than continues.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene9"
+  },
+  {
+    "id": "sdk57",
+    "q": "What does persistSession: false cost you?",
+    "options": [
+      "Hooks stop firing for that session",
+      "Compaction is disabled",
+      "Subagents can no longer be spawned",
+      "The session is not written to disk, so it cannot be resumed later"
+    ],
+    "correct": 3,
+    "explain": "Useful when transcripts must not touch disk; expensive when you later wish you could resume.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene9"
+  },
+  {
+    "id": "sdk58",
+    "q": "An agent achieves 55% first-contact resolution against an 80% target, escalating easy cases and pushing on ones it should hand off. What fixes it?",
+    "options": [
+      "Explicit escalation criteria in the system prompt with few-shot examples demonstrating them",
+      "Raising maxTurns so it has more room to work",
+      "A PreToolUse hook gating escalate_to_human",
+      "Switching to a larger model for every request"
+    ],
+    "correct": 0,
+    "explain": "This is the one place where few-shot examples are the right answer, because the failure is a judgment call rather than a rule. A hook can enforce a threshold; it cannot teach taste.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene10"
+  },
+  {
+    "id": "sdk59",
+    "q": "Your evaluation reports 97% overall accuracy, but one document type fails almost every time. What is the lesson?",
+    "options": [
+      "The evaluation set is too small to be meaningful",
+      "97% is within tolerance, so no action is needed",
+      "Accuracy is the wrong metric; use latency instead",
+      "Aggregate metrics can mask a category that fails nearly always — evaluate per category, not just in total"
+    ],
+    "correct": 3,
+    "explain": "An average temperature of comfortable can still mean one room is on fire.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene10"
+  },
+  {
+    "id": "sdk60",
+    "q": "How do you make \"the test suite must have run\" a condition rather than a request?",
+    "options": [
+      "Asking the agent at the end of each turn whether it ran the tests",
+      "A PostToolUse hook that logs the result",
+      "A line in CLAUDE.md marked IMPORTANT",
+      "A Stop hook that runs the suite and returns decision: \"block\" with a reason on failure"
+    ],
+    "correct": 3,
+    "explain": "Stop fires when the agent wants to end its turn, and you can refuse. Asking the model whether it ran the tests is not evidence.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene10"
+  },
+  {
+    "id": "sdk61",
+    "q": "For a shell-command hook, what does exit code 2 do?",
+    "options": [
+      "Silently succeeds",
+      "Retries the tool call once",
+      "Terminates the session immediately",
+      "Blocks the action and feeds stderr back to Claude, which reads it and adapts"
+    ],
+    "correct": 3,
+    "explain": "Stderr from a hook that exits 0 goes to the debug log only — Claude never sees it. If a hook seems to be doing nothing, check its exit code before its logic.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene4"
+  },
+  {
+    "id": "sdk62",
+    "q": "Which subagent type does the exam name for preventing context exhaustion during a verbose multi-phase discovery?",
+    "options": [
+      "The Workflow subagent",
+      "The Explore subagent",
+      "The Plan subagent",
+      "The general-purpose subagent"
+    ],
+    "correct": 1,
+    "explain": "It does the reading; only its summary lands in the main context. Delegation is the primary context lever, ahead of compaction.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene10"
+  },
+  {
+    "id": "sdk63",
+    "q": "When do you reach past subagents for the Workflow tool?",
+    "options": [
+      "When a run coordinates dozens to hundreds of agents, so orchestration moves into a script executed outside the conversation context",
+      "When the agent needs to write files",
+      "Whenever subagents must run in parallel",
+      "When a subagent needs more than one tool"
+    ],
+    "correct": 0,
+    "explain": "Subagents work well for a few delegated tasks per turn. Workflow is the shape for jobs too large for one conversation.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene10"
+  },
+  {
+    "id": "sdk64",
+    "q": "Which hook event fires before compaction, letting you act on what is about to be condensed?",
+    "options": [
+      "PreCompact",
+      "PostCompact",
+      "SessionStart",
+      "Stop"
+    ],
+    "correct": 0,
+    "explain": "PostCompact fires after and has no decision control — it is for side effects like logging. A compact-boundary message also appears in the message stream.",
+    "reviewHref": "../../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene2"
+  }
+];
+
+/* ---------- STATE / PERSISTENCE ---------- */
+const STORAGE_KEY = "ccaf_quiz_08_v1";
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return { q: {}, totalAnswers: 0, totalCorrect: 0 };
+}
+function saveState() {
+  state._updatedAt = Date.now();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (sync) sync.schedulePush();
+}
+let state = loadState();
+
+/* ---------- CROSS-DEVICE SYNC ---------- */
+const sync = window.GistSync ? window.GistSync.create(STORAGE_KEY, {
+  getState: () => state,
+  getUpdatedAt: () => state._updatedAt || 0,
+  setState: (remote) => {
+    state = remote;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    renderProgress();
+  }
+}) : null;
+
+function getStat(id) {
+  if (!state.q[id]) state.q[id] = { seen: 0, correct: 0, wrong: 0, mastery: 0, lastResult: null };
+  return state.q[id];
+}
+function recordAnswer(id, wasCorrect) {
+  const s = getStat(id);
+  s.seen += 1;
+  if (wasCorrect) { s.correct += 1; s.mastery = Math.min(3, s.mastery + 1); s.lastResult = "correct"; }
+  else { s.wrong += 1; s.mastery = 0; s.lastResult = "wrong"; }
+  state.totalAnswers = (state.totalAnswers||0) + 1;
+  if (wasCorrect) state.totalCorrect = (state.totalCorrect||0) + 1;
+  saveState();
+}
+
+/* ---------- TABS ---------- */
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
+    if (tab.dataset.tab === "progress") renderProgress();
+  });
+});
+
+/* ---------- QUIZ ---------- */
+let quizQueue = [];
+let quizIndex = 0;
+let quizScore = 0;
+
+function pickQuizQuestions(len, mode) {
+  let pool = QUESTIONS.slice();
+  if (mode === "weak") {
+    pool.sort((a,b) => {
+      const ma = getStat(a.id).mastery, mb = getStat(b.id).mastery;
+      if (ma !== mb) return ma - mb;
+      return Math.random() - 0.5;
+    });
+  } else if (mode === "random") {
+    pool.sort(() => Math.random() - 0.5);
+  }
+  return pool.slice(0, Math.min(len, pool.length));
+}
+
+function startQuiz(pool) {
+  quizQueue = pool;
+  quizIndex = 0;
+  quizScore = 0;
+  renderQuizQuestion();
+}
+
+document.getElementById("startQuizBtn").addEventListener("click", () => {
+  const len = parseInt(document.getElementById("quizLen").value, 10);
+  const mode = document.getElementById("quizMode").value;
+  startQuiz(pickQuizQuestions(len, mode));
+});
+
+document.getElementById("reviewMissedBtn").addEventListener("click", () => {
+  const missed = QUESTIONS.filter(q => getStat(q.id).lastResult === "wrong");
+  if (!missed.length) {
+    alert("No questions are currently marked wrong. Take a quiz first, or nice work — you're clean!");
+    return;
+  }
+  missed.sort(() => Math.random() - 0.5);
+  startQuiz(missed);
+});
+
+function renderQuizQuestion() {
+  const area = document.getElementById("quizArea");
+  if (quizIndex >= quizQueue.length) {
+    area.innerHTML = `<div class="card">
+      <div class="qtext">Session complete: ${quizScore} / ${quizQueue.length} correct</div>
+      <div class="small sys">Progress has been saved. Check "My progress" for what's still missed, or start another round above.</div>
+    </div>`;
+    return;
+  }
+  const q = quizQueue[quizIndex];
+  const letters = ["A","B","C","D"];
+  const optHtml = q.options.map((opt, i) =>
+    `<button class="option" data-idx="${i}"><span class="optkey">${letters[i]}.</span>${opt}</button>`
+  ).join("");
+  area.innerHTML = `<div class="card">
+    <div class="qmeta">
+      <span>Question ${quizIndex+1} of ${quizQueue.length}</span>
+      <span class="badge">Section 8 · Agent SDK</span>
+    </div>
+    <div class="qtext">${q.q}</div>
+    <div id="quizOptions">${optHtml}</div>
+    <div id="quizFeedback"></div>
+    <div id="quizNextWrap"></div>
+  </div>`;
+  document.querySelectorAll("#quizOptions .option").forEach(btn => {
+    btn.addEventListener("click", () => handleQuizAnswer(q, parseInt(btn.dataset.idx,10)));
+  });
+}
+
+function handleQuizAnswer(q, idx) {
+  const correct = idx === q.correct;
+  if (correct) quizScore += 1;
+  recordAnswer(q.id, correct);
+  document.querySelectorAll("#quizOptions .option").forEach((btn, i) => {
+    btn.classList.add("disabled");
+    btn.disabled = true;
+    if (i === q.correct) btn.classList.add("correct");
+    else if (i === idx) btn.classList.add("wrong");
+  });
+  const reviewLink = (!correct && q.reviewHref)
+    ? `<a class="review-link" href="${q.reviewHref}" target="_blank" rel="noopener">Review this in the lesson →</a>`
+    : "";
+  document.getElementById("quizFeedback").innerHTML =
+    `<div class="feedback ${correct ? "good" : "bad"}">${correct ? "Correct." : "Not quite."}</div>
+     <div class="explain"><strong>Why:</strong> ${q.explain}</div>
+     ${reviewLink}`;
+  document.getElementById("quizNextWrap").innerHTML = `<button class="primary" id="nextQBtn" style="margin-top:12px;">${quizIndex+1 < quizQueue.length ? "Next question" : "See results"}</button>`;
+  document.getElementById("nextQBtn").addEventListener("click", () => { quizIndex += 1; renderQuizQuestion(); });
+}
+
+/* ---------- PROGRESS ---------- */
+function masteryColor(mastery) {
+  if (mastery >= 3) return "#3d7a4a";
+  if (mastery === 2) return "#8bc34a";
+  if (mastery === 1) return "#e0a34a";
+  return "#cfcfd4";
+}
+function renderProgress() {
+  const total = QUESTIONS.length;
+  let masteredCount = 0, sumMastery = 0, missedCount = 0;
+  QUESTIONS.forEach(q => {
+    const s = getStat(q.id);
+    sumMastery += s.mastery;
+    if (s.mastery >= 3) masteredCount += 1;
+    if (s.lastResult === "wrong") missedCount += 1;
+  });
+  const pct = Math.round((sumMastery / (total * 3)) * 100);
+  const acc = state.totalAnswers ? Math.round((state.totalCorrect / state.totalAnswers) * 100) : 0;
+
+  document.getElementById("statGrid").innerHTML = `
+    <div class="stat-box"><div class="stat-num">${masteredCount}/${total}</div><div class="stat-label">Mastered</div></div>
+    <div class="stat-box"><div class="stat-num">${missedCount}</div><div class="stat-label">Currently missed</div></div>
+    <div class="stat-box"><div class="stat-num">${state.totalAnswers||0}</div><div class="stat-label">Answers given</div></div>
+    <div class="stat-box"><div class="stat-num">${acc}%</div><div class="stat-label">Accuracy</div></div>
+  `;
+  document.getElementById("masteryBar").style.width = pct + "%";
+  document.getElementById("masteryLabel").textContent = pct + "% overall mastery across " + total + " questions";
+
+  const missed = QUESTIONS.filter(q => getStat(q.id).lastResult === "wrong")
+    .sort((a,b) => getStat(b.id).wrong - getStat(a.id).wrong);
+  let html;
+  if (!missed.length) {
+    html = `<div class="small sys">Nothing currently marked wrong. Take the quiz to build up a review queue.</div>`;
+  } else {
+    html = `<table><thead><tr><th></th><th>Question</th><th>Times wrong</th><th>Seen</th></tr></thead><tbody>`;
+    missed.forEach(q => {
+      const s = getStat(q.id);
+      const qtext = q.q.length > 90 ? q.q.slice(0,87) + "…" : q.q;
+      html += `<tr><td><span class="mastery-dot" style="background:${masteryColor(s.mastery)}"></span></td><td>${qtext}</td><td>${s.wrong}</td><td>${s.seen}</td></tr>`;
+    });
+    html += `</tbody></table>`;
+  }
+  document.getElementById("weakTable").innerHTML = html;
+}
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (confirm("Reset all quiz progress for this section? This can't be undone.")) {
+    state = { q: {}, totalAnswers: 0, totalCorrect: 0 };
+    saveState();
+    renderProgress();
+  }
+});
+
+/* ---------- THEME TOGGLE ---------- */
+function toggleTheme() {
+  var html = document.documentElement;
+  var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  try { localStorage.setItem('ccaf-theme', next); } catch(e) {}
+  var btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = next === 'dark' ? '☀️' : '🌙';
+}
+(function() {
+  var btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+})();
+
+/* ---------- INIT ---------- */
+renderProgress();
+if (sync) { sync.mountUI(document.getElementById("syncPanel")); sync.syncOnLoad(); }
+</script>
+  <script src="../assets/js/header-scroll.js"></script>
+</body>
+</html>

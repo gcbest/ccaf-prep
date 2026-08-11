@@ -4,12 +4,12 @@ This folder is a spaced-repetition study system built from the official **"Prepa
 
 ## How this is organized
 
-**One folder per official prep course** — the same 7 courses Anthropic lists under "Prepare for this exam." Each folder contains two files:
+**One folder per official prep course** — the same 7 courses Anthropic lists under "Prepare for this exam" — plus `08-claude-agent-sdk/`, which has no official course behind it (see below). Each folder contains two files:
 
 - `notes.md` — condensed source material: definitions, key facts, code patterns, recap points pulled directly from the course lessons.
 - `quiz.md` — question bank for that course. Questions first, answers below a `---` divider so you can self-test before peeking, or so Claude can quiz you conversationally without spoiling the answer.
 
-**One narrative lesson per course** — `lessons/` holds a self-contained interactive HTML lesson for each of the 7 courses (section 03 is split into three parts, since it carries the exam's heaviest domain). Each lesson teaches the course material as a story set at a fictional company, Northstar, with timestamped scenes and interactive decision points where every wrong option is explained rather than just marked wrong. Open `lessons/index.html` in a browser to start. Use these to *learn* the material; use `quiz.md` to test whether it stuck.
+**One narrative lesson per course** — `lessons/` holds a self-contained interactive HTML lesson for each course (sections 03 and 08 are each split into parts, since they carry the exam's heaviest domain). Each lesson teaches the course material as a story set at a fictional company, Northstar, with timestamped scenes and interactive decision points where every wrong option is explained rather than just marked wrong. Open `lessons/index.html` in a browser to start. Use these to *learn* the material; use `quiz.md` to test whether it stuck.
 
 **Start with the speed run.** `speedrun/index.html` is the entry point to everything else: 60 graded multiple-choice cards covering all five scored exam domains, weighted to match the real exam (16/12/12/11/9 across a 27/20/20/18/15% split). It takes about 45 minutes and is built from `all-sections/quiz.md` plus the exam-guide-derived `study-reference/`. Alongside the sprint it carries a printable cheat sheet of all 60 compressed answers, a confusable-pairs "traps" drill, an exam-day facts card, and a **"Where I stand" dashboard** — the only place in this repo that maps progress onto the five *domains* rather than the seven *courses*, reading your existing section-quiz and glossary scores automatically. Use it first to find your weak domains, then open the lessons below only where you need them.
 
@@ -17,7 +17,7 @@ Four additional reference folders sit alongside the 7 course folders:
 - `speedrun/index.html` — the weighted 60-card first pass and readiness dashboard described above. Progress is stored under `ccaf_speedrun_v1`.
 - `glossary/ccaf_glossary_quiz_tracker.html` — an interactive, self-contained quiz/tracker artifact covering 64 exam-specific terms across all 5 domains, built directly from the official CCA-F Exam Guide (not just course content). Open it in a browser and click through — it tracks your mastery locally.
 - `study-reference/ccaf_study_reference.md` — a machine-readable companion covering the same 64-term glossary plus 12 official-style scenario practice questions (drawn from the exam's actual scenario bank), with a built-in progress-tracking log. This is the single most authoritative file in this folder for exam-realistic prep, since it's sourced from the Exam Guide itself rather than course transcripts.
-- `quizzes/` — a self-contained, no-Claude-needed HTML quiz for each of the 7 course folders (344 four-option multiple-choice questions total), converted from each course's `quiz.md`. Each quiz tracks right/wrong answers per question in the browser's `localStorage` and offers a "missed & new first" mode plus a "review only missed" mode so wrong answers resurface more often. Open `quizzes/index.html` to start, or jump in from `index.html` / `lessons/index.html` / any individual lesson page.
+- `quizzes/` — a self-contained, no-Claude-needed HTML quiz for each of the 8 course folders (408 four-option multiple-choice questions total), converted from each course's `quiz.md`. Each quiz tracks right/wrong answers per question in the browser's `localStorage` and offers a "missed & new first" mode plus a "review only missed" mode so wrong answers resurface more often. Open `quizzes/index.html` to start, or jump in from `index.html` / `lessons/index.html` / any individual lesson page.
 
 See `EXAM-DOMAINS.md` for how these courses map to the five scored exam domains, and `PROGRESS.md` for a running log of what's been reviewed and how well you know it.
 
@@ -42,6 +42,8 @@ Progress lives in the browser's `localStorage`, which is **not durable on mobile
 | 05 | `05-claude-on-google-cloud` | Claude on Google Cloud | 100–200 |
 | 06 | `06-introduction-to-mcp` | Introduction to Model Context Protocol | 200 |
 | 07 | `07-claude-code-in-action` | Claude Code in Action | 200 |
+
+**Folder 08 is not drawn from a course, because there isn't one.** Anthropic publishes no Agent SDK course, but the exam guide names the Agent SDK in the first line of its scope statement, and Domain 1 — Agentic Architecture & Orchestration, 27%, the heaviest domain — is almost entirely Agent SDK material. Folder 08 is built directly from the official Agent SDK TypeScript and Python references and the Subagents, Hooks, and Permissions guides on `docs.claude.com`, and it is where exam terminology the courses never say out loud lives: `AgentDefinition`, `fork_session`, `isRetryable`, the Task tool. Where the shipping SDK and the exam guide disagree — most importantly the Task/Agent tool rename in Claude Code v2.1.63 — the notes state both and mark which answer belongs on the exam.
 
 Folders 03 and 07 also carry a small amount of **[Bonus]**-labeled background from Claude Platform 101 and Claude Code 101 — those two courses aren't on the official prep list, but their content directly overlaps with courses 03 and 07 and rounds out the picture. Everything else is drawn strictly from the 7 official courses.
 

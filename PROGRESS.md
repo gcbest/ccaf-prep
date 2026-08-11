@@ -9,6 +9,7 @@
 | 05 | Claude on Google Cloud | not-reviewed | — | — |
 | 06 | Introduction to Model Context Protocol | not-reviewed | — | — |
 | 07 | Claude Code in Action | not-reviewed | — | — |
+| 08 | The Claude Agent SDK (no official course) | not-reviewed | — | — |
 
 Status values: `not-reviewed` → `weak` → `okay` → `strong`. Update after each quiz session (on-demand or scheduled) based on how the session went.
 

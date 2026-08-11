@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>(function(){try{var t=localStorage.getItem('ccaf-theme');if(!t){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <title>The Claude Agent SDK — The Gates</title>
+  <style>
+    :root {
+      --ink: #242321;
+      --muted: #706b63;
+      --paper: #f7f3ec;
+      --paper-deep: #ece4d7;
+      --rust: #8f3f3f;
+      --rust-dark: #6a2c2c;
+      --rust-deep: #6a2c2c;
+      --sage: #dfe9df;
+      --blue: #dce8ee;
+      --line: #d6ccbd;
+      --white: #fffdfa;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.7 Georgia, 'Times New Roman', serif;
+    }
+    main { max-width: 780px; margin: 0 auto; padding: 44px 24px 80px; }
+    .masthead {
+      position: sticky; top: 4px; z-index: 3; background: var(--paper);
+      display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+      border-bottom: 1px solid var(--line); padding-bottom: 10px;
+      color: var(--muted); font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .13em; text-transform: uppercase;
+    }
+    .masthead a { color: var(--muted); }
+    h1 { max-width: 680px; margin: 28px 0 12px; font: 700 clamp(2.5rem, 8vw, 5.2rem)/.98 Georgia, serif; letter-spacing: -.04em; }
+    .dek { max-width: 670px; margin: 0 0 34px; color: var(--muted); font-size: 1.2rem; }
+    .progress { position: sticky; top: 0; z-index: 2; height: 4px; background: var(--paper-deep); }
+    .progress span { display: block; width: 0; height: 100%; background: var(--rust); transition: width .25s ease; }
+    .scene {
+      position: relative; margin: 34px 0 0; padding: 25px 28px 28px;
+      background: var(--white); border: 1px solid var(--line); border-radius: 3px;
+    }
+    .scene::before { content: ''; position: absolute; left: -1px; top: 0; bottom: 0; width: 4px; background: var(--rust); }
+    .opening { background: #fff8ed; }
+    .time { margin: 0 0 7px; color: var(--rust-dark); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    h2 { margin: 0 0 13px; font: 700 1.65rem/1.2 Georgia, serif; }
+    h3 { margin: 27px 0 7px; font: 700 1.1rem/1.3 Georgia, serif; }
+    p { max-width: 70ch; margin: 0 0 13px; }
+    ul, ol { max-width: 68ch; padding-left: 1.35em; }
+    li { margin: 5px 0; }
+    .voice { margin: 18px 0; padding-left: 19px; border-left: 2px solid var(--paper-deep); font-style: italic; }
+    .choice { margin: 20px 0 2px; color: var(--muted); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+    .choices { display: flex; flex-wrap: wrap; gap: 9px; margin: 10px 0 5px; }
+    button {
+      border: 1px solid var(--rust); border-radius: 3px; background: var(--white); color: var(--rust-dark);
+      padding: 9px 13px; font: 600 14px/1.2 system-ui, sans-serif; cursor: pointer;
+    }
+    button:hover, button:focus-visible { background: var(--rust); color: #fff; outline: none; }
+    button:focus-visible { box-shadow: 0 0 0 3px rgba(143, 63, 63, .22); }
+    .outcome { display: none; margin-top: 13px; padding: 14px 16px; border-left: 3px solid var(--sage); background: #f1f6ef; }
+    .outcome.visible { display: block; }
+    .outcome strong { color: var(--rust-dark); }
+    .lesson { margin: 25px 0 0; padding: 17px 18px; background: var(--paper-deep); }
+    .lesson p:last-child { margin-bottom: 0; }
+    .blue-note { margin: 18px 0; padding: 15px 17px; background: #f1f6f8; border-left: 3px solid #7b9cac; }
+    .blue-note p:last-child { margin-bottom: 0; }
+    .rule { margin: 38px 0; padding: 25px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); text-align: center; }
+    .rule strong { display: block; color: var(--rust-dark); font: 700 1.35rem/1.25 Georgia, serif; }
+    .prompt { margin: 15px 0; padding: 17px 18px; background: #fff4eb; border-left: 3px solid var(--rust); font-size: .98rem; }
+    .prompt strong { color: var(--rust-dark); }
+    .prompt code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em; }
+    .mini-table { width: 100%; margin: 17px 0; border-collapse: collapse; font-size: .95rem; }
+    .mini-table th, .mini-table td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    .mini-table th { background: var(--paper-deep); color: var(--rust-dark); font: 700 12px/1.25 system-ui, sans-serif; letter-spacing: .05em; text-transform: uppercase; }
+    .end { margin-top: 39px; padding: 27px 28px; background: var(--rust-deep); color: #fff8f1; }
+    .end h2 { color: #fff; }
+    .end p { color: #f6dfd1; }
+    .end code { background: rgba(255,255,255,.16); color: #fff8f1; }
+    .source, footer { color: var(--muted); font-size: .9rem; }
+    footer { margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--line); }
+    a { color: var(--rust-dark); }
+    code { background: var(--paper-deep); padding: .08em .28em; border-radius: 3px; }
+    pre { max-width: 70ch; margin: 15px 0; padding: 14px 16px; background: var(--paper-deep); border-left: 3px solid var(--rust); overflow-x: auto; font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    pre code { background: none; padding: 0; }
+    @media (max-width: 560px) {
+      main { padding-top: 28px; }
+      .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
+      .scene { padding: 21px 19px 23px; }
+      .choices { display: grid; grid-template-columns: 1fr; }
+      button { text-align: left; }
+      .mini-table { font-size: .88rem; }
+    }
+      .theme-toggle {
+      flex: none; width: 28px; height: 28px; padding: 0; margin: 0; border-radius: 999px;
+      border: 1px solid var(--line); background: none; color: var(--muted);
+      font-size: 13px; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    }
+    .theme-toggle:hover, .theme-toggle:focus-visible { background: var(--paper-deep); outline: none; }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --ink: #ece7de;
+      --muted: #a89d8f;
+      --paper: #17140f;
+      --paper-deep: #221e17;
+      --line: #3a3327;
+      --white: #211d16;
+      --sage: #426142;
+      --rust-dark: #bf6666;
+    }
+    :root[data-theme="dark"] .opening { background: #292114; }
+    :root[data-theme="dark"] .outcome { background: #1b2716; }
+    :root[data-theme="dark"] .blue-note { background: #142329; border-left-color: #88a6b4; }
+    :root[data-theme="dark"] .prompt { background: #291e14; }
+      .autohide-header { transition: transform .28s ease; will-change: transform; }
+    .autohide-header--hidden { transform: translateY(-100%); }
+      .codeswap { margin: 15px 0; }
+    .codeswap-tabs { display: flex; gap: 5px; margin: 0 0 -3px; }
+    .codeswap-tabs button {
+      padding: 4px 11px; border-radius: 3px 3px 0 0; font-size: 12px;
+      border-bottom-color: transparent;
+    }
+    .codeswap-tabs button[aria-pressed="true"] { background: var(--rust); color: #fff; }
+    .codeswap pre { margin-top: 0; }
+    .codeswap pre[hidden] { display: none; }
+    .langbar {
+      display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap;
+      margin: 22px 0 0; padding: 11px 14px; background: var(--paper-deep); border-radius: 3px;
+      font: 600 12px/1.3 system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase; color: var(--muted);
+    }
+    .langbar .codeswap-tabs { margin: 0; }
+    .langbar .codeswap-tabs button { border-radius: 3px; border-bottom-color: var(--rust); }
+</style>
+</head>
+<body>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+  <main>
+    <div class="masthead"><a href="../index.html">CCA-F · Section 8 · Part 2</a><span>Northstar Dispatch · Friday, later</span><button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button></div>
+    <h1>The gates</h1>
+    <p class="dek">The support agent works. It also, in twelve percent of cases, issues a refund to a customer it never actually identified. Nobody wrote a bug. The prompt says to verify identity first, and most of the time it does. This afternoon is about the difference between most of the time and every time.</p>
+
+    <div class="langbar">
+      <span>Code examples in</span>
+      <span class="codeswap-tabs" role="group" aria-label="Choose code language">
+        <button type="button" data-lang="py" onclick="setCodeLang('py')" aria-pressed="true">Python</button>
+        <button type="button" data-lang="ts" onclick="setCodeLang('ts')" aria-pressed="false">TypeScript</button>
+      </span>
+      <span style="text-transform:none;letter-spacing:0;font-weight:400">Your choice sticks across every lesson.</span>
+    </div>
+
+    <section class="scene opening" id="scene0">
+      <p class="time">2:00 p.m. · The number nobody likes</p>
+      <h2>Twelve percent</h2>
+      <p>Northstar’s support agent has four tools: <code>get_customer</code>, <code>lookup_order</code>, <code>process_refund</code>, and <code>escalate_to_human</code>. The system prompt is explicit — always identify the customer before touching an order.</p>
+      <p>Production says it skips <code>get_customer</code> entirely in 12% of cases and calls <code>process_refund</code> anyway.</p>
+      <p class="voice">Toby: “I’ll add few-shot examples showing it calling <code>get_customer</code> first. Five or six should do it.”</p>
+      <p class="voice">Rosa: “Will that make it zero?”</p>
+      <p>It will not, and that question is the whole lesson. Few-shot examples move a failure rate. They do not eliminate one, because a prompt is a request and the model is free to decline it under pressure. <strong>Programmatic enforcement guarantees deterministic compliance; prompt instructions are probabilistic and carry a non-zero failure rate.</strong></p>
+      <p>Yesterday you learned this in Claude Code terms: if it must happen every time without fail, it belongs in a hook. Today the same principle, in a product, where the failure has a customer’s money attached to it.</p>
+      <div class="lesson"><p><strong>The governing question all afternoon:</strong> is this a thing I want Claude to do, or a thing Claude must not be able to skip? The first is a prompt. The second is code.</p></div>
+    </section>
+
+    <section class="scene" id="scene1">
+      <p class="time">2:20 p.m. · The fix</p>
+      <h2>A gate, not a reminder</h2>
+      <p class="choice">Twelve percent of refunds go out without identity verification. Your move.</p>
+      <div class="choices" role="group" aria-label="Choose a fix for the skipped verification step">
+        <button type="button" data-correct onclick="choose('gate','hook', 6)">A programmatic prerequisite that blocks <code>lookup_order</code> and <code>process_refund</code> until <code>get_customer</code> has run</button>
+        <button type="button" onclick="choose('gate','fewshot', 6)">Five to eight few-shot examples showing the correct ordering</button>
+        <button type="button" onclick="choose('gate','desc', 6)">Rewrite <code>process_refund</code>’s description to say verification is required</button>
+        <button type="button" onclick="choose('gate','caps', 6)">Put the rule in the system prompt in capitals</button>
+      </div>
+      <div class="outcome" id="gate-hook" aria-live="polite"><strong>Correct, and this is the exam’s flagship question.</strong> A <code>PreToolUse</code> hook inspects each outgoing call, checks whether verification has happened in this session, and denies the call if it hasn’t. Deterministic: the 12% becomes 0%, not 3%.</div>
+      <div class="outcome" id="gate-fewshot" aria-live="polite"><strong>Reduces, doesn’t eliminate.</strong> Few-shot examples are the right tool for <em>ambiguous judgment</em> — which of two similar tools to pick, when to escalate. They are the wrong tool for a rule that must hold 100% of the time, because they still leave the decision with the model.</div>
+      <div class="outcome" id="gate-desc" aria-live="polite"><strong>Still a request.</strong> Tool descriptions shape selection, and a better description may help — but nothing about a description <em>prevents</em> a call. The model reads it and decides.</div>
+      <div class="outcome" id="gate-caps" aria-live="polite"><strong>Emphasis is a budget, not a mechanism.</strong> Capitalising a rule raises its priority relative to quieter rules nearby. It does not turn guidance into enforcement, and spending emphasis here devalues it everywhere else.</div>
+      <div class="lesson"><p><strong>Match the mechanism to the tolerance.</strong> A rule with a tolerable failure rate can live in a prompt. A rule with a zero tolerance has to live in code that runs whether the model cooperates or not.</p></div>
+    </section>
+
+    <section class="scene" id="scene2">
+      <p class="time">2:45 p.m. · The event list</p>
+      <h2>Where hooks attach</h2>
+      <p>Hooks are callbacks the SDK fires at fixed points in the loop. The Python <code>HookEvent</code> values:</p>
+      <ul>
+        <li><code>PreToolUse</code> — before a tool executes. The enforcement primitive; it can block.</li>
+        <li><code>PostToolUse</code> — after a tool returns. Where transformation lives.</li>
+        <li><code>PostToolUseFailure</code> — when a tool execution fails.</li>
+        <li><code>UserPromptSubmit</code> — when a prompt is submitted.</li>
+        <li><code>Stop</code> / <code>SubagentStop</code> — when the agent, or a subagent, wants to end its turn. You may refuse.</li>
+        <li><code>SubagentStart</code> — when a subagent begins.</li>
+        <li><code>PreCompact</code> — before compaction.</li>
+        <li><code>Notification</code>, <code>PermissionRequest</code> — notification events and permission decisions.</li>
+      </ul>
+      <p>The TypeScript SDK supports additional events beyond this list.</p>
+      <h3>Registering one</h3>
+      <div class="codeswap">
+        <div class="codeswap-tabs" role="group" aria-label="Choose code language"><button type="button" data-lang="py" onclick="setCodeLang('py')" aria-pressed="true">Python</button><button type="button" data-lang="ts" onclick="setCodeLang('ts')" aria-pressed="false">TypeScript</button></div>
+        <pre data-lang="py"><code>from claude_agent_sdk import ClaudeAgentOptions, HookMatcher
+
+verified = set()
+
+async def require_identity(input, tool_use_id, context):
+    name = input["tool_name"]
+    if name == "mcp__support__get_customer":
+        verified.add(input["session_id"])
+        return {}
+    if name in ("mcp__support__lookup_order", "mcp__support__process_refund"):
+        if input["session_id"] not in verified:
+            return {"hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "permissionDecision": "deny",
+                "permissionDecisionReason":
+                    "Identity not verified. Call get_customer first.",
+            }}
+    return {}
+
+options = ClaudeAgentOptions(
+    hooks={"PreToolUse": [HookMatcher(matcher=None, hooks=[require_identity])]}
+)</code></pre>
+        <pre data-lang="ts" hidden><code>import { query } from "@anthropic-ai/claude-agent-sdk";
+
+const verified = new Set&lt;string&gt;();
+
+const requireIdentity = async (input: any) =&gt; {
+  const name = input.tool_name;
+  if (name === "mcp__support__get_customer") {
+    verified.add(input.session_id);
+    return {};
+  }
+  if (["mcp__support__lookup_order", "mcp__support__process_refund"].includes(name)) {
+    if (!verified.has(input.session_id)) {
+      return { hookSpecificOutput: {
+        hookEventName: "PreToolUse",
+        permissionDecision: "deny",
+        permissionDecisionReason:
+          "Identity not verified. Call get_customer first."
+      }};
+    }
+  }
+  return {};
+};
+
+const options = {
+  hooks: { PreToolUse: [{ hooks: [requireIdentity] }] }
+};</code></pre>
+      </div>
+      <p>A matcher has three parts: <code>matcher</code> (a tool name or pattern like <code>"Bash"</code> or <code>"Write|Edit"</code> — omit it to match everything), <code>hooks</code> (the callbacks), and <code>timeout</code> in seconds. <strong>Timeout defaults: 600 seconds for most events, 30 for <code>UserPromptSubmit</code>.</strong></p>
+      <p>Every hook input carries <code>session_id</code>, <code>transcript_path</code>, <code>cwd</code>, and optionally <code>permission_mode</code>. A <code>PreToolUse</code> input adds <code>tool_name</code>, <code>tool_input</code>, <code>tool_use_id</code>, and — when it fires inside a subagent — <code>agent_id</code> and <code>agent_type</code>.</p>
+    </section>
+
+    <section class="scene" id="scene3">
+      <p class="time">3:15 p.m. · Dana’s date problem</p>
+      <h2>Which direction does the hook face?</h2>
+      <p>Northstar’s tools were written by three teams over four years. <code>get_customer</code> returns Unix epoch timestamps. <code>lookup_order</code> returns ISO 8601. The legacy warehouse tool returns <code>MM/DD/YYYY</code>. The agent now reasons about “which happened first” and gets it wrong often enough that Dana has stopped trusting the timeline in every summary.</p>
+      <p class="voice">“I’m not rewriting a fifteen-year-old warehouse service so a chatbot can read a date.”</p>
+      <p class="choice">Where does the normalization go?</p>
+      <div class="choices" role="group" aria-label="Choose where to normalize inconsistent timestamp formats">
+        <button type="button" onclick="choose('norm','pre', 14)">A <code>PreToolUse</code> hook</button>
+        <button type="button" data-correct onclick="choose('norm','post', 14)">A <code>PostToolUse</code> hook</button>
+        <button type="button" onclick="choose('norm','choice', 14)">The <code>tool_choice</code> setting</button>
+        <button type="button" onclick="choose('norm','prompt', 14)">Instructions in the system prompt explaining the three formats</button>
+      </div>
+      <div class="outcome" id="norm-pre" aria-live="polite"><strong>Too early.</strong> <code>PreToolUse</code> fires <em>before</em> the tool runs, so the data you want to normalize does not exist yet. It can rewrite the call’s arguments — not its results.</div>
+      <div class="outcome" id="norm-post" aria-live="polite"><strong>Correct.</strong> <code>PostToolUse</code> intercepts tool <em>results</em> and transforms them before the model processes them. The model never has to reconcile three formats because it only ever sees one. If a question says “different tools return inconsistent formats,” this is the answer.</div>
+      <div class="outcome" id="norm-choice" aria-live="polite"><strong>Wrong layer.</strong> <code>tool_choice</code> controls whether and which tool the model calls. It has nothing to do with the shape of what comes back.</div>
+      <div class="outcome" id="norm-prompt" aria-live="polite"><strong>Probabilistic, and wasteful.</strong> You’d be spending context and model attention on parsing work that three lines of deterministic code do perfectly, every time. Save the model’s judgment for things that need judgment.</div>
+      <div class="rule" style="margin:26px 0 10px"><strong>PreToolUse guards what goes out. PostToolUse cleans what comes back.</strong><span>Direction is the whole distinction.</span></div>
+      <h3>The two write operations</h3>
+      <ul>
+        <li><strong><code>PreToolUse</code> → <code>updatedInput</code></strong>, placed directly under <code>hookSpecificOutput</code>, replaces the tool’s arguments before it runs.</li>
+        <li><strong><code>PostToolUse</code> → <code>additionalContext</code></strong> pushes a string into Claude’s context, wrapped in a system reminder and placed next to the tool result. Capped at <strong>10,000 characters</strong>; longer output is written to a file and replaced with a preview and path.</li>
+      </ul>
+    </section>
+
+    <section class="scene" id="scene4">
+      <p class="time">3:50 p.m. · The five-hundred-dollar line</p>
+      <h2>Blocking and redirecting</h2>
+      <p>Finance sets a rule: no automated refund above $500. Over that, a human decides. Dana wants the agent to hand off cleanly rather than just fail.</p>
+      <p class="choice">Which pattern?</p>
+      <div class="choices" role="group" aria-label="Choose a pattern for the refund threshold rule">
+        <button type="button" data-correct onclick="choose('refund','intercept', 22)">A tool call interception hook on <code>process_refund</code></button>
+        <button type="button" onclick="choose('refund','post', 22)">A <code>PostToolUse</code> hook that reverses oversized refunds</button>
+        <button type="button" onclick="choose('refund','fewshot', 22)">A few-shot example showing escalation above $500</button>
+        <button type="button" onclick="choose('refund','md', 22)">A rule in <code>CLAUDE.md</code></button>
+      </div>
+      <div class="outcome" id="refund-intercept" aria-live="polite"><strong>Correct.</strong> A <code>PreToolUse</code> hook reads <code>tool_input</code>, sees the amount exceeds the threshold, and returns <code>permissionDecision: "deny"</code> with a reason that tells Claude to escalate instead. The reason string matters — it is how the block becomes a redirect rather than a dead end.</div>
+      <div class="outcome" id="refund-post" aria-live="polite"><strong>Too late by definition.</strong> <code>PostToolUse</code> fires after the refund has been issued. “Reversing” it means a second financial transaction, a reconciliation problem, and a customer who saw money move twice.</div>
+      <div class="outcome" id="refund-fewshot" aria-live="polite"><strong>A rule with money attached needs zero tolerance.</strong> Few-shot examples shape judgment in ambiguous cases; a hard threshold is not ambiguous. This is the same mistake as the 12% verification problem, with a larger blast radius.</div>
+      <div class="outcome" id="refund-md" aria-live="polite"><strong>Guidance, not a gate.</strong> And in a shipped product with <code>settingSources: []</code>, the file isn’t even loaded — so the rule would silently not exist.</div>
+      <h3>Decision control, by event</h3>
+      <table class="mini-table"><thead><tr><th>Events</th><th>Pattern</th><th>Key fields</th></tr></thead><tbody>
+        <tr><td><code>PreToolUse</code></td><td><code>hookSpecificOutput</code></td><td><code>permissionDecision</code>: <strong>allow / deny / ask / defer</strong>, plus <code>permissionDecisionReason</code></td></tr>
+        <tr><td><code>PostToolUse</code>, <code>PostToolUseFailure</code>, <code>UserPromptSubmit</code>, <code>Stop</code>, <code>SubagentStop</code>, <code>PreCompact</code></td><td>top-level <code>decision</code></td><td><code>decision: "block"</code> with a <code>reason</code></td></tr>
+        <tr><td><code>PermissionRequest</code></td><td><code>hookSpecificOutput</code></td><td><code>decision.behavior</code>: allow / deny</td></tr>
+        <tr><td><code>SessionStart</code>, <code>SubagentStart</code></td><td>context only</td><td><code>additionalContext</code> — no blocking</td></tr>
+        <tr><td><code>Notification</code>, <code>SessionEnd</code>, <code>PostCompact</code>, <code>InstructionsLoaded</code></td><td>none</td><td>Side effects only — logging, cleanup</td></tr>
+      </tbody></table>
+      <p>The fourth <code>permissionDecision</code> value is the interesting one: <strong><code>"defer"</code></strong> ends the run with <code>stop_reason: "tool_deferred"</code> and the pending call in <code>deferred_tool_use</code>. That is how you surface “a human needs to approve this refund” in Northstar’s own UI and resume the same session once someone clicks.</p>
+      <div class="blue-note"><p><strong>For shell-command hooks</strong> (the kind defined in settings files rather than SDK callbacks), <strong>exit code 2 blocks the action and feeds stderr back to Claude</strong>, which reads it and adapts. Stderr from a hook that exits <code>0</code> goes to the debug log only — Claude never sees it. If a hook seems to be doing nothing, check its exit code before you check its logic.</p></div>
+    </section>
+
+    <section class="scene" id="scene5">
+      <p class="time">4:20 p.m. · The callback that doesn’t fire</p>
+      <h2><code>canUseTool</code> is not a gate</h2>
+      <p>Toby has already built something that looks like enforcement: a <code>canUseTool</code> callback that inspects every call and approves or denies it. He is confident the refund rule is covered. It is not, and the reason is subtle enough that it is worth slowing down for.</p>
+      <p><strong><code>canUseTool</code> is the SDK’s replacement for the interactive permission prompt.</strong> It fires only when the permission flow resolves to <em>a prompt</em>. Calls already approved never reach it — and Toby’s config auto-approves the support tools, because otherwise the agent would stall on every ticket.</p>
+      <p class="choice">You need a check that runs on every single tool call, unconditionally.</p>
+      <div class="choices" role="group" aria-label="Choose the mechanism that gates every tool call">
+        <button type="button" onclick="choose('gate2','canuse', 30)">Keep <code>canUseTool</code> and remove the auto-approvals</button>
+        <button type="button" data-correct onclick="choose('gate2','pre', 30)">A <code>PreToolUse</code> hook</button>
+        <button type="button" onclick="choose('gate2','dontask', 30)">Switch to <code>dontAsk</code> mode</button>
+        <button type="button" onclick="choose('gate2','disallow', 30)">List the tools in <code>disallowedTools</code></button>
+      </div>
+      <div class="outcome" id="gate2-canuse" aria-live="polite"><strong>You’d be trading one failure for another.</strong> Removing the auto-approvals does route everything through <code>canUseTool</code> — and also makes every ticket wait on a permission decision, which is the stall you were avoiding. The docs are explicit: to gate every tool call, use a <code>PreToolUse</code> hook.</div>
+      <div class="outcome" id="gate2-pre" aria-live="polite"><strong>Correct.</strong> A <code>PreToolUse</code> hook fires on every tool call regardless of how permission was resolved. <code>canUseTool</code> is the doorbell — it rings only when someone would have had to answer the door. The hook is the doorframe; everything passes through it.</div>
+      <div class="outcome" id="gate2-dontask" aria-live="polite"><strong>Changes who decides, not whether you inspect.</strong> <code>dontAsk</code> denies anything not pre-approved instead of prompting. Pre-approved calls still sail through uninspected, so your business rule still isn’t evaluated.</div>
+      <div class="outcome" id="gate2-disallow" aria-live="polite"><strong>Blunt.</strong> <code>disallowedTools</code> blocks calls unconditionally — you don’t want <em>no</em> refunds, you want refunds that satisfy a condition. That requires inspecting the arguments, which only a hook does.</div>
+      <div class="blue-note"><p><strong>The exceptions worth knowing:</strong> <code>AskUserQuestion</code>, MCP tools marked <code>requiresUserInteraction</code>, and connector tools an organization set to <code>ask</code> reach <code>canUseTool</code> <em>even when an allow rule matches</em>. In <code>dontAsk</code> mode those are denied outright instead. A <code>canUseTool</code> callback returns either <code>{ behavior: "allow", updatedInput?, updatedPermissions? }</code> or <code>{ behavior: "deny", message, interrupt? }</code>.</p></div>
+    </section>
+
+    <section class="scene" id="scene6">
+      <p class="time">4:45 p.m. · The word “allowed”</p>
+      <h2>Six modes, and one badly-named option</h2>
+      <table class="mini-table"><thead><tr><th>Mode</th><th>Behavior</th></tr></thead><tbody>
+        <tr><td><code>default</code></td><td>Standard prompting behavior</td></tr>
+        <tr><td><code>acceptEdits</code></td><td>Auto-accept file edits</td></tr>
+        <tr><td><code>plan</code></td><td>Read-only — explore and propose without editing</td></tr>
+        <tr><td><code>dontAsk</code></td><td>Never prompt; deny anything not pre-approved</td></tr>
+        <tr><td><code>bypassPermissions</code></td><td>Skip checks (explicit ask rules still prompt). Requires <code>allowDangerouslySkipPermissions: true</code></td></tr>
+        <tr><td><code>auto</code></td><td>A model classifier approves or denies what would have been prompts</td></tr>
+      </tbody></table>
+      <p>For an unattended production agent, <code>dontAsk</code> is usually right: there is no human to answer a prompt, and you would rather a surprise call be denied than silently permitted.</p>
+      <p class="choice">Lila writes <code>allowedTools: ["Read", "Grep", "Agent"]</code> and tells Dana the agent can only read files. Is she right?</p>
+      <div class="choices" role="group" aria-label="Decide whether allowedTools restricts the agent">
+        <button type="button" onclick="choose('allow','yes', 38)">Yes — that’s exactly what <code>allowedTools</code> means</button>
+        <button type="button" data-correct onclick="choose('allow','no', 38)">No — <code>allowedTools</code> auto-approves, it doesn’t restrict</button>
+        <button type="button" onclick="choose('allow','plan', 38)">Only if <code>permissionMode</code> is also <code>plan</code></button>
+        <button type="button" onclick="choose('allow','sub', 38)">Only for the main agent, not subagents</button>
+      </div>
+      <div class="outcome" id="allow-yes" aria-live="polite"><strong>The single most common misreading of the option.</strong> The name promises a whitelist; the behavior is an auto-approve list.</div>
+      <div class="outcome" id="allow-no" aria-live="polite"><strong>Correct.</strong> <code>allowedTools</code> auto-approves the listed tools without prompting. Unlisted tools are <em>not</em> blocked — they fall through to <code>permissionMode</code> and <code>canUseTool</code>. To actually restrict, use <code>disallowedTools</code>.</div>
+      <div class="outcome" id="allow-plan" aria-live="polite"><strong>Close, and worth understanding.</strong> <code>plan</code> mode <em>would</em> make it read-only, but that’s the mode doing the work, not <code>allowedTools</code>. Lila’s claim is wrong on its own terms.</div>
+      <div class="outcome" id="allow-sub" aria-live="polite"><strong>Not the distinction.</strong> Subagent tool restriction is a separate mechanism — <code>AgentDefinition.tools</code> — but <code>allowedTools</code> fails to restrict for the main agent too.</div>
+      <h3>How you actually block</h3>
+      <ul>
+        <li><code>disallowedTools: ["Bash"]</code> — the bare name <strong>removes the tool from Claude’s context entirely.</strong></li>
+        <li><code>disallowedTools: ["Bash(rm *)"]</code> — a scoped rule leaves <code>Bash</code> available and denies matching calls <strong>in every permission mode, including <code>bypassPermissions</code>.</strong></li>
+      </ul>
+      <div class="lesson"><p><strong>Read the three options as a sentence:</strong> <code>allowedTools</code> says “don’t ask me about these,” <code>disallowedTools</code> says “never do these,” and <code>permissionMode</code> says “here’s what to do about everything else.”</p></div>
+    </section>
+
+    <section class="scene" id="scene7">
+      <p class="time">5:15 p.m. · Kenji’s tools</p>
+      <h2>MCP servers that don’t leave the process</h2>
+      <p>Northstar’s four support tools have to live somewhere. Section 6 taught you to build an MCP server as a separate process talking over stdio. Inside a product, that means another deployable, another lifecycle, another thing that can be down at 3 a.m.</p>
+      <p><code>createSdkMcpServer()</code> builds an MCP server that <strong>runs in the same process as your application</strong> — no subprocess, no transport, no separate deployment.</p>
+      <div class="codeswap">
+        <div class="codeswap-tabs" role="group" aria-label="Choose code language"><button type="button" data-lang="py" onclick="setCodeLang('py')" aria-pressed="true">Python</button><button type="button" data-lang="ts" onclick="setCodeLang('ts')" aria-pressed="false">TypeScript</button></div>
+        <pre data-lang="py"><code>from claude_agent_sdk import tool, create_sdk_mcp_server
+
+@tool(
+    "lookup_order",
+    "Look up an order by ID. Accepts a 12-character alphanumeric "
+    "order ID (e.g. NS4417XQ2210), not an email or order name. "
+    "Returns status, line items, and refund eligibility. "
+    "If you only have an email address, call get_customer first.",
+    {"order_id": str},
+)
+async def lookup_order(args):
+    return {"content": [{"type": "text", "text": await fetch(args["order_id"])}]}
+
+support = create_sdk_mcp_server(name="support", tools=[lookup_order])</code></pre>
+        <pre data-lang="ts" hidden><code>import { tool, createSdkMcpServer } from "@anthropic-ai/claude-agent-sdk";
+import { z } from "zod";
+
+const lookupOrder = tool(
+  "lookup_order",
+  "Look up an order by ID. Accepts a 12-character alphanumeric order ID " +
+    "(e.g. NS4417XQ2210), not an email or order name. Returns status, line " +
+    "items, and refund eligibility. If you only have an email address, " +
+    "call get_customer first.",
+  { orderId: z.string() },
+  async ({ orderId }) =&gt; ({
+    content: [{ type: "text", text: await fetch(orderId) }]
+  }),
+  { annotations: { readOnlyHint: true } }
+);
+
+const support = createSdkMcpServer({ name: "support", tools: [lookupOrder] });</code></pre>
+      </div>
+      <p><strong><code>tool()</code> has a different shape in each language</strong> — worth noticing if you switch the toggle above. In TypeScript it is a function, <code>tool(name, description, inputSchema, handler, extras?)</code>, taking a Zod schema and the handler as its fourth argument. In Python it is a <em>decorator</em>, <code>@tool(name, description, input_schema, annotations?)</code>, where the decorated <code>async def</code> is the handler and the schema is a simple type map like <code>{"order_id": str}</code> (or full JSON Schema when you need real validation).</p>
+      <p>The <code>extras</code> argument is TypeScript-only, carrying <code>annotations</code>, a <code>searchHint</code> one-liner shown in the deferred-tool list when tool search is active, and <code>alwaysLoad: true</code> to keep a tool’s full schema in the initial prompt instead of deferring it. Python passes <code>annotations</code> as its fourth positional argument instead. Both return <code>{"content": [{"type": "text", …}]}</code>, and both reference their tools as <code>mcp__&lt;server&gt;__&lt;tool&gt;</code> in <code>allowedTools</code>.</p>
+      <p><code>ToolAnnotations</code> are <strong>hints, not security controls</strong> — the spec says clients should not rely on them for security decisions. Note the two defaults that surprise people: <code>destructiveHint</code> defaults to <strong>true</strong> and <code>openWorldHint</code> defaults to <strong>true</strong>, while <code>readOnlyHint</code> and <code>idempotentHint</code> default to false. The safe assumption is baked in.</p>
+      <h3>The description is the interface</h3>
+      <p>Two weeks in, Dana reports the agent keeps calling <code>get_customer</code> for order-status questions and <code>lookup_order</code> for account questions. Roughly a coin flip on which it picks.</p>
+      <p class="choice">First fix?</p>
+      <div class="choices" role="group" aria-label="Choose the first fix for tool selection confusion">
+        <button type="button" onclick="choose('tooldesc','classifier', 46)">Add a routing classifier before the agent</button>
+        <button type="button" data-correct onclick="choose('tooldesc','desc', 46)">Expand each description with input formats, example queries, edge cases, and boundaries</button>
+        <button type="button" onclick="choose('tooldesc','merge', 46)">Merge them into one tool</button>
+        <button type="button" onclick="choose('tooldesc','fewshot', 46)">Add few-shot examples of correct routing</button>
+      </div>
+      <div class="outcome" id="tooldesc-classifier" aria-live="polite"><strong>A whole component to fix a paragraph.</strong> You’ve added a service to maintain, a latency hop, and a second thing that can be wrong — without touching the actual cause.</div>
+      <div class="outcome" id="tooldesc-desc" aria-live="polite"><strong>Correct.</strong> The description is the primary mechanism the model uses to select a tool, so a thin description is the root cause and expanding it is the low-effort, high-leverage fix. Name the input format, give example queries, state the edge cases, and say explicitly where each tool’s boundary is.</div>
+      <div class="outcome" id="tooldesc-merge" aria-live="polite"><strong>Discards a real distinction.</strong> One tool doing two jobs pushes the ambiguity into the arguments, where it’s harder to see and harder to validate.</div>
+      <div class="outcome" id="tooldesc-fewshot" aria-live="polite"><strong>The exam’s designated distractor.</strong> Few-shot examples add tokens to every request and treat the symptom. Fix the descriptions first; reach for examples when genuine ambiguity survives good descriptions.</div>
+      <div class="blue-note"><p><strong>Two wiring options worth remembering.</strong> <code>strictMcpConfig: true</code> uses only the servers you passed in <code>mcpServers</code>, ignoring project <code>.mcp.json</code>, user settings, plugin servers, and claude.ai connectors — the same reproducibility instinct as <code>settingSources: []</code>. And <code>toolAliases</code> maps a built-in tool name to an MCP tool, so <code>{ Bash: 'mcp__workspace__bash' }</code> makes Claude call yours instead of the built-in.</p></div>
+    </section>
+
+    <section class="scene" id="scene8">
+      <p class="time">5:40 p.m. · What a failure should say</p>
+      <h2>Three fields, one of which is real</h2>
+      <p>The refund tool fails four different ways: the payment provider is briefly down, the order ID is malformed, the order is outside the 30-day window, and the account is locked. Today all four return <code>"Operation failed"</code>. The agent retries all four, identically, and gives up on all four.</p>
+      <p>The fix is a structured error, and the exam has vocabulary for it — but you should know which parts are protocol and which are your own design:</p>
+      <table class="mini-table"><thead><tr><th>Field</th><th>Status</th><th>What it does</th></tr></thead><tbody>
+        <tr><td><code>isError</code></td><td><strong>A real MCP field</strong></td><td>Signals that a tool call failed.</td></tr>
+        <tr><td><code>errorCategory</code></td><td><strong>Your convention</strong></td><td>Classifies the failure — transient, validation, business, permission — so the agent can pick a recovery instead of guessing from prose.</td></tr>
+        <tr><td><code>isRetryable</code></td><td><strong>Your convention</strong></td><td>Whether the operation can safely be retried at all.</td></tr>
+      </tbody></table>
+      <p>Applied to the four failures: the provider outage is <code>transient</code> and retryable. The malformed ID is <code>validation</code> and not retryable — but fixable, so say what the format should be. The 30-day window is <code>business</code> and not retryable; <strong><code>isRetryable: false</code> on a business error means “don’t retry, explain the rule.”</strong> The locked account is <code>permission</code> and belongs with a human.</p>
+      <div class="blue-note"><p><strong>Learn these as vocabulary, not as API.</strong> The exam glossary names <code>errorCategory</code> and <code>isRetryable</code> as if they were fields you look up, and questions will use them by name — but they’re fields <em>you</em> put in your own error payload. Only <code>isError</code> is part of MCP. Don’t go hunting for the other two in the SDK types.</p></div>
+      <div class="lesson"><p><strong>An error message is an instruction to the agent.</strong> “Operation failed” tells it nothing, so it does the only thing it can: retry, then quit. Name the category and the retryability and the same model recovers intelligently with no prompt change at all.</p></div>
+    </section>
+
+    <section class="scene" id="scene9">
+      <p class="time">6:05 p.m. · Two ways forward</p>
+      <h2>Resume, or branch</h2>
+      <p>Last thing. Northstar wants to test two escalation policies — aggressive versus conservative — against the same hundred-ticket analysis the agent has already done. That analysis was expensive and neither Rosa nor the budget wants it run twice.</p>
+      <table class="mini-table"><thead><tr><th>Option</th><th>Effect</th></tr></thead><tbody>
+        <tr><td><code>resume: "&lt;id&gt;"</code></td><td>Resume a specific session by ID</td></tr>
+        <tr><td><code>continue</code> / <code>continue_conversation</code></td><td>Continue the most recent conversation</td></tr>
+        <tr><td><code>forkSession</code> / <code>fork_session</code></td><td><strong>With <code>resume</code>:</strong> branch to a <em>new</em> session ID instead of continuing the original</td></tr>
+        <tr><td><code>resumeSessionAt</code></td><td>Resume at a specific message UUID</td></tr>
+        <tr><td><code>persistSession: false</code></td><td>Don’t write to disk — the session can’t be resumed later</td></tr>
+      </tbody></table>
+      <p class="choice">Two policies, one shared baseline. Which?</p>
+      <div class="choices" role="group" aria-label="Choose a session mechanism for comparing two strategies">
+        <button type="button" onclick="choose('fork','resume', 54)"><code>--resume</code> twice against the same session</button>
+        <button type="button" data-correct onclick="choose('fork','fork', 54)"><code>fork_session</code></button>
+        <button type="button" onclick="choose('fork','compact', 54)"><code>/compact</code>, then run both</button>
+        <button type="button" onclick="choose('fork','fresh', 54)">Two fresh sessions, re-running the analysis in each</button>
+      </div>
+      <div class="outcome" id="fork-resume" aria-live="polite"><strong>They’d contaminate each other.</strong> Resuming twice appends both explorations to one timeline, so the second policy is evaluated by an agent that already read everything about the first.</div>
+      <div class="outcome" id="fork-fork" aria-live="polite"><strong>Correct.</strong> Forking creates an independent branch from a shared baseline, which is exactly “explore divergent approaches from the same starting context.” Both branches inherit the expensive analysis; neither sees the other. Note it only means something <em>alongside</em> <code>resume</code> — there has to be a session to fork from.</div>
+      <div class="outcome" id="fork-compact" aria-live="polite"><strong>Wrong tool.</strong> Compaction reduces context within one session. It doesn’t create the two independent branches this comparison needs.</div>
+      <div class="outcome" id="fork-fresh" aria-live="polite"><strong>Correct isolation, wrong price.</strong> You’d get clean branches by paying for the hundred-ticket analysis twice — which is the specific cost forking exists to avoid.</div>
+      <p>Alongside these: <code>listSessions()</code>, <code>getSessionMessages()</code>, <code>renameSession()</code>, and <code>tagSession()</code> for managing what’s accumulated, and <code>sessionStore</code> to mirror transcripts to an external backend so any host can resume them.</p>
+    </section>
+
+    <section class="scene" id="scene10">
+      <p class="time">6:30 p.m. · What Rosa needs to sign off</p>
+      <h2>Evidence, not assurance</h2>
+      <p>Three last disciplines, each one an answer to a question the exam asks in scenario form.</p>
+      <h3>Make the check a condition, not a request</h3>
+      <p>A <code>Stop</code> hook fires when the agent wants to end its turn, and can return <code>decision: "block"</code> with a reason. That turns “did you confirm the refund posted?” from a question you might forget to ask into a condition the agent cannot end its turn without satisfying.</p>
+      <h3>Escalation is judgment — teach it with examples</h3>
+      <p>Northstar’s agent hits 55% first-contact resolution against an 80% target: it escalates cases it could have handled and pushes on cases it should have handed off. That is not a tool-wiring problem or a model-capacity problem, and no hook fixes it. <strong>Add explicit escalation criteria to the system prompt with few-shot examples demonstrating them.</strong> This is the one place today where few-shot examples <em>are</em> the right answer — because the failure is genuinely a judgment call, not a rule.</p>
+      <h3>Distrust the average</h3>
+      <p>The evaluation reports 97% accuracy. Dana reports that every ticket forwarded from the legacy warehouse system comes back wrong. Both are true: an aggregate can hide a category that fails nearly always, if the category is small enough. <strong>Evaluate per category, not just in total.</strong></p>
+      <p class="voice">Rosa, finally: “Alright. Not because it’s smart. Because I can see what it can’t do.”</p>
+      <h3>And manage the window</h3>
+      <p>Compaction happens automatically; <code>PreCompact</code> fires before it and a compact-boundary message appears in the stream. But delegation is still the primary context lever — an <code>Explore</code>-style subagent keeps a verbose multi-phase discovery from exhausting the main window, because the findings come back as a summary and the fifty files don’t come back at all.</p>
+      <p>Past a few delegated tasks per turn, the <code>Workflow</code> tool moves orchestration into a script the runtime executes outside the conversation context — the right shape when a run coordinates dozens to hundreds of agents rather than three.</p>
+    </section>
+
+    <section class="end" id="end">
+      <h2>The architect’s pocket card</h2>
+      <p>On Monday Dana asks how you decided so fast. You answer:</p>
+      <p><strong>Ask what the tolerance is.</strong> A rule that can fail sometimes lives in a prompt. A rule that must never fail lives in a hook. Twelve percent is not a prompt-engineering problem.</p>
+      <p><strong>Face the hook the right direction.</strong> <code>PreToolUse</code> guards what goes out — deny, rewrite with <code>updatedInput</code>, or <code>defer</code> to a human. <code>PostToolUse</code> cleans what comes back — normalize formats, add context. <code>Stop</code> refuses to let the turn end. And <code>canUseTool</code> is not a gate: it only fires when something would have prompted.</p>
+      <p><strong>Say what you mean about tools.</strong> <code>allowedTools</code> auto-approves, it doesn’t restrict. <code>disallowedTools</code> blocks — bare names remove the tool, scoped rules survive even <code>bypassPermissions</code>. In-process MCP servers keep custom tools inside your application, and the description is the interface: when the model picks wrong, the description was thin.</p>
+      <p><strong>Make failures informative.</strong> <code>isError</code> is real; <code>errorCategory</code> and <code>isRetryable</code> are conventions you owe the agent. A structured error is the difference between a retry loop and a recovery.</p>
+      <p><strong>Then branch instead of repeating yourself,</strong> gate the outcome instead of asking about it, and never trust an average. That is the Agent SDK: not “what can it do?” but “what has been made impossible, and what evidence proves the rest?”</p>
+    </section>
+
+    <p class="source">Primary source: <code>08-claude-agent-sdk/notes.md</code> in this study workspace, built from the official Claude Agent SDK TypeScript and Python references and the Hooks, Permissions, and Subagents guides on <code>docs.claude.com</code>. Fields the exam names as vocabulary rather than API — <code>errorCategory</code>, <code>isRetryable</code> — are flagged inline and drawn from <code>study-reference/ccaf_study_reference.md</code>.</p>
+    <footer>Between them, parts 1 and 2 cover the Agent SDK half of Agentic Architecture &amp; Orchestration (27%), the in-SDK half of Tool Design &amp; MCP Integration (18%), and the session and context half of Context Management &amp; Reliability (15%). When you are ready, ask your teacher to drill the confusable pairs in <code>notes.md</code> — <code>PreToolUse</code> vs <code>PostToolUse</code>, <code>canUseTool</code> vs hook, <code>allowedTools</code> vs <code>disallowedTools</code>, <code>resume</code> vs <code>fork</code> — one row at a time.<br><a href="0010-claude-agent-sdk-orchestration.html">← Back to part 1</a> · <a href="../quizzes/08-claude-agent-sdk/index.html">Take the Section 8 practice quiz →</a></footer>
+  </main>
+  <script>
+    function toggleTheme() {
+      var html = document.documentElement;
+      var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      try { localStorage.setItem('ccaf-theme', next); } catch(e) {}
+      var btn = document.getElementById('themeToggle');
+      if (btn) btn.textContent = next === 'dark' ? '☀️' : '🌙';
+    }
+    (function() {
+      var btn = document.getElementById('themeToggle');
+      if (btn) btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+    })();
+  </script>
+  <script src="../assets/js/code-lang.js"></script>
+  <script src="../assets/js/ask-claude.js"></script>
+  <script src="../assets/js/lesson-search.js"></script>
+  <script src="../assets/js/gist-sync.js"></script>
+  <script src="../assets/js/lesson-progress.js"></script>
+  <script src="../assets/js/checks/0011.js"></script>
+  <script src="../assets/js/section-check.js"></script>
+  <script src="../assets/js/scene-flag.js"></script>
+  <script src="../assets/js/review-mode.js"></script>
+  <script src="../assets/js/header-scroll.js"></script>
+</body>
+</html>

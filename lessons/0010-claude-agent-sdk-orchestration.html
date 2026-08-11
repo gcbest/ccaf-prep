@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>(function(){try{var t=localStorage.getItem('ccaf-theme');if(!t){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <title>The Claude Agent SDK — The Second Engine</title>
+  <style>
+    :root {
+      --ink: #242321;
+      --muted: #706b63;
+      --paper: #f7f3ec;
+      --paper-deep: #ece4d7;
+      --rust: #8f3f3f;
+      --rust-dark: #6a2c2c;
+      --rust-deep: #6a2c2c;
+      --sage: #dfe9df;
+      --blue: #dce8ee;
+      --line: #d6ccbd;
+      --white: #fffdfa;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.7 Georgia, 'Times New Roman', serif;
+    }
+    main { max-width: 780px; margin: 0 auto; padding: 44px 24px 80px; }
+    .masthead {
+      position: sticky; top: 4px; z-index: 3; background: var(--paper);
+      display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+      border-bottom: 1px solid var(--line); padding-bottom: 10px;
+      color: var(--muted); font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .13em; text-transform: uppercase;
+    }
+    .masthead a { color: var(--muted); }
+    h1 { max-width: 680px; margin: 28px 0 12px; font: 700 clamp(2.5rem, 8vw, 5.2rem)/.98 Georgia, serif; letter-spacing: -.04em; }
+    .dek { max-width: 670px; margin: 0 0 34px; color: var(--muted); font-size: 1.2rem; }
+    .progress { position: sticky; top: 0; z-index: 2; height: 4px; background: var(--paper-deep); }
+    .progress span { display: block; width: 0; height: 100%; background: var(--rust); transition: width .25s ease; }
+    .scene {
+      position: relative; margin: 34px 0 0; padding: 25px 28px 28px;
+      background: var(--white); border: 1px solid var(--line); border-radius: 3px;
+    }
+    .scene::before { content: ''; position: absolute; left: -1px; top: 0; bottom: 0; width: 4px; background: var(--rust); }
+    .opening { background: #fff8ed; }
+    .time { margin: 0 0 7px; color: var(--rust-dark); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    h2 { margin: 0 0 13px; font: 700 1.65rem/1.2 Georgia, serif; }
+    h3 { margin: 27px 0 7px; font: 700 1.1rem/1.3 Georgia, serif; }
+    p { max-width: 70ch; margin: 0 0 13px; }
+    ul, ol { max-width: 68ch; padding-left: 1.35em; }
+    li { margin: 5px 0; }
+    .voice { margin: 18px 0; padding-left: 19px; border-left: 2px solid var(--paper-deep); font-style: italic; }
+    .choice { margin: 20px 0 2px; color: var(--muted); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+    .choices { display: flex; flex-wrap: wrap; gap: 9px; margin: 10px 0 5px; }
+    button {
+      border: 1px solid var(--rust); border-radius: 3px; background: var(--white); color: var(--rust-dark);
+      padding: 9px 13px; font: 600 14px/1.2 system-ui, sans-serif; cursor: pointer;
+    }
+    button:hover, button:focus-visible { background: var(--rust); color: #fff; outline: none; }
+    button:focus-visible { box-shadow: 0 0 0 3px rgba(143, 63, 63, .22); }
+    .outcome { display: none; margin-top: 13px; padding: 14px 16px; border-left: 3px solid var(--sage); background: #f1f6ef; }
+    .outcome.visible { display: block; }
+    .outcome strong { color: var(--rust-dark); }
+    .lesson { margin: 25px 0 0; padding: 17px 18px; background: var(--paper-deep); }
+    .lesson p:last-child { margin-bottom: 0; }
+    .blue-note { margin: 18px 0; padding: 15px 17px; background: #f1f6f8; border-left: 3px solid #7b9cac; }
+    .blue-note p:last-child { margin-bottom: 0; }
+    .rule { margin: 38px 0; padding: 25px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); text-align: center; }
+    .rule strong { display: block; color: var(--rust-dark); font: 700 1.35rem/1.25 Georgia, serif; }
+    .prompt { margin: 15px 0; padding: 17px 18px; background: #fff4eb; border-left: 3px solid var(--rust); font-size: .98rem; }
+    .prompt strong { color: var(--rust-dark); }
+    .prompt code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em; }
+    .mini-table { width: 100%; margin: 17px 0; border-collapse: collapse; font-size: .95rem; }
+    .mini-table th, .mini-table td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    .mini-table th { background: var(--paper-deep); color: var(--rust-dark); font: 700 12px/1.25 system-ui, sans-serif; letter-spacing: .05em; text-transform: uppercase; }
+    .end { margin-top: 39px; padding: 27px 28px; background: var(--rust-deep); color: #fff8f1; }
+    .end h2 { color: #fff; }
+    .end p { color: #f6dfd1; }
+    .end code { background: rgba(255,255,255,.16); color: #fff8f1; }
+    .source, footer { color: var(--muted); font-size: .9rem; }
+    footer { margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--line); }
+    a { color: var(--rust-dark); }
+    code { background: var(--paper-deep); padding: .08em .28em; border-radius: 3px; }
+    pre { max-width: 70ch; margin: 15px 0; padding: 14px 16px; background: var(--paper-deep); border-left: 3px solid var(--rust); overflow-x: auto; font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    pre code { background: none; padding: 0; }
+    @media (max-width: 560px) {
+      main { padding-top: 28px; }
+      .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
+      .scene { padding: 21px 19px 23px; }
+      .choices { display: grid; grid-template-columns: 1fr; }
+      button { text-align: left; }
+      .mini-table { font-size: .88rem; }
+    }
+      .theme-toggle {
+      flex: none; width: 28px; height: 28px; padding: 0; margin: 0; border-radius: 999px;
+      border: 1px solid var(--line); background: none; color: var(--muted);
+      font-size: 13px; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    }
+    .theme-toggle:hover, .theme-toggle:focus-visible { background: var(--paper-deep); outline: none; }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --ink: #ece7de;
+      --muted: #a89d8f;
+      --paper: #17140f;
+      --paper-deep: #221e17;
+      --line: #3a3327;
+      --white: #211d16;
+      --sage: #426142;
+      --rust-dark: #bf6666;
+    }
+    :root[data-theme="dark"] .opening { background: #292114; }
+    :root[data-theme="dark"] .outcome { background: #1b2716; }
+    :root[data-theme="dark"] .blue-note { background: #142329; border-left-color: #88a6b4; }
+    :root[data-theme="dark"] .prompt { background: #291e14; }
+      .autohide-header { transition: transform .28s ease; will-change: transform; }
+    .autohide-header--hidden { transform: translateY(-100%); }
+      .codeswap { margin: 15px 0; }
+    .codeswap-tabs { display: flex; gap: 5px; margin: 0 0 -3px; }
+    .codeswap-tabs button {
+      padding: 4px 11px; border-radius: 3px 3px 0 0; font-size: 12px;
+      border-bottom-color: transparent;
+    }
+    .codeswap-tabs button[aria-pressed="true"] { background: var(--rust); color: #fff; }
+    .codeswap pre { margin-top: 0; }
+    .codeswap pre[hidden] { display: none; }
+    .langbar {
+      display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap;
+      margin: 22px 0 0; padding: 11px 14px; background: var(--paper-deep); border-radius: 3px;
+      font: 600 12px/1.3 system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase; color: var(--muted);
+    }
+    .langbar .codeswap-tabs { margin: 0; }
+    .langbar .codeswap-tabs button { border-radius: 3px; border-bottom-color: var(--rust); }
+</style>
+</head>
+<body>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+  <main>
+    <div class="masthead"><a href="../index.html">CCA-F · Section 8 · Part 1</a><span>Northstar Dispatch · Friday</span><button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button></div>
+    <h1>The second engine</h1>
+    <p class="dek">You are the architect. Northstar is about to put an agent inside its own product — a support agent that answers customers directly, at three in the morning, with nobody watching. Claude Code gave your engineers hands. This gives your customers one, and every decision you make now is a decision you cannot take back on Monday.</p>
+
+    <div class="langbar">
+      <span>Code examples in</span>
+      <span class="codeswap-tabs" role="group" aria-label="Choose code language">
+        <button type="button" data-lang="py" onclick="setCodeLang('py')" aria-pressed="true">Python</button>
+        <button type="button" data-lang="ts" onclick="setCodeLang('ts')" aria-pressed="false">TypeScript</button>
+      </span>
+      <span style="text-transform:none;letter-spacing:0;font-weight:400">Your choice sticks across every lesson.</span>
+    </div>
+
+    <section class="scene opening" id="scene0">
+      <p class="time">8:05 a.m. · The brief</p>
+      <h2>A coworker with hands, then a product with hands</h2>
+      <p>Yesterday Northstar adopted Claude Code: an agent that works inside your repository, for your engineers. Today the ask is different. Dana Osei, who runs support ops, has a queue of 4,000 tickets a week and a resolution playbook her team follows by hand. She wants that playbook to be an agent that talks to customers.</p>
+      <p class="voice">“Same model. Same tools, more or less. Can’t we just point Claude Code at it?”</p>
+      <p>No — because Claude Code is a terminal application and this needs to live inside Northstar’s product. What you want is the <strong>Claude Agent SDK</strong>: the same agent harness, exposed as a library you call from your own code.</p>
+      <h3>The mental model that explains everything else</h3>
+      <p>Here is the fact that makes the rest of the API stop looking arbitrary: <strong>the SDK spawns the Claude Code CLI as a subprocess and talks to it over a control protocol.</strong></p>
+      <p>Once you know that, you stop being surprised that a <em>library</em> has permission modes, hooks, settings files, <code>CLAUDE.md</code> loading, plan mode, and subagents. Those are Claude Code’s features. The SDK is a steering wheel bolted onto a car that already exists — which is also why options like <code>pathToClaudeCodeExecutable</code> and <code>spawnClaudeCodeProcess</code> are there at all.</p>
+      <h3>Two packages, one engine</h3>
+      <table class="mini-table"><thead><tr><th></th><th>TypeScript</th><th>Python</th></tr></thead><tbody>
+        <tr><td><strong>Package</strong></td><td><code>@anthropic-ai/claude-agent-sdk</code></td><td><code>claude-agent-sdk</code></td></tr>
+        <tr><td><strong>Options type</strong></td><td><code>Options</code></td><td><code>ClaudeAgentOptions</code></td></tr>
+        <tr><td><strong>One-off call</strong></td><td><code>query({ prompt, options })</code></td><td><code>query(prompt=…, options=…)</code></td></tr>
+        <tr><td><strong>Multi-turn</strong></td><td><code>query</code> with <code>resume</code></td><td><code>ClaudeSDKClient</code></td></tr>
+      </tbody></table>
+      <p>The cast, continued from yesterday: <strong>Toby Vance</strong>, staff engineer, who is already three commits into a prototype. <strong>Rosa Ibarra</strong>, release manager, who will not ship anything she cannot roll back. <strong>Kenji Abbott</strong>, platform engineer, who owns the shared configuration. <strong>Lila Moreau</strong>, two weeks in. And now <strong>Dana Osei</strong>, who owns the outcome and does not care what any of it is called.</p>
+      <div class="lesson"><p><strong>First principle:</strong> Claude Code is the agent you drive. The Agent SDK is the agent you ship. Everything you learned about permissions, hooks, and context yesterday still applies — but now the person who gets hurt by a bad default is a customer, not a colleague.</p></div>
+    </section>
+
+    <section class="scene" id="scene1">
+      <p class="time">8:40 a.m. · What you stop writing</p>
+      <h2>The loop is no longer yours</h2>
+      <p>In the Claude API course you wrote the agentic loop by hand: call the model, check <code>stop_reason</code>, and while it is <code>"tool_use"</code>, run the tool yourself, append a <code>tool_result</code> block, and call again — stopping at <code>"end_turn"</code>.</p>
+      <p>That knowledge is still tested and still true underneath. But the SDK runs that loop for you and hands you a stream of messages instead. <strong>What you own shifts from mechanism to policy:</strong> which tools exist, who may call them, when to stop, and what runs around each call.</p>
+      <div class="codeswap">
+        <div class="codeswap-tabs" role="group" aria-label="Choose code language"><button type="button" data-lang="py" onclick="setCodeLang('py')" aria-pressed="true">Python</button><button type="button" data-lang="ts" onclick="setCodeLang('ts')" aria-pressed="false">TypeScript</button></div>
+        <pre data-lang="py"><code>from claude_agent_sdk import query, ClaudeAgentOptions
+
+async for message in query(
+    prompt="Resolve ticket NS-4417.",
+    options=ClaudeAgentOptions(
+        allowed_tools=["Read", "Grep"],
+        max_turns=12,
+    ),
+):
+    if hasattr(message, "result"):
+        print(message.result)</code></pre>
+        <pre data-lang="ts" hidden><code>import { query } from "@anthropic-ai/claude-agent-sdk";
+
+for await (const message of query({
+  prompt: "Resolve ticket NS-4417.",
+  options: {
+    allowedTools: ["Read", "Grep"],
+    maxTurns: 12
+  }
+})) {
+  if ("result" in message) console.log(message.result);
+}</code></pre>
+      </div>
+      <p>No <code>stop_reason</code> check anywhere. That is the trade.</p>
+      <h3>The fork in the road: one shot or a conversation</h3>
+      <p>Toby’s prototype answers one ticket per call. Dana wants a live chat where a customer can say “no, the <em>other</em> order” halfway through and the agent adjusts.</p>
+      <table class="mini-table"><thead><tr><th>Feature</th><th><code>query()</code></th><th><code>ClaudeSDKClient</code></th></tr></thead><tbody>
+        <tr><td>Session</td><td>New session by default</td><td>Reuses the same session</td></tr>
+        <tr><td>Conversation</td><td>Single exchange</td><td>Multiple exchanges in one context</td></tr>
+        <tr><td>Connection</td><td>Managed automatically</td><td>Manual control</td></tr>
+        <tr><td>Interrupts</td><td>❌ Not supported</td><td>✅ Supported</td></tr>
+        <tr><td>Hooks, custom tools, streaming input</td><td>✅</td><td>✅</td></tr>
+        <tr><td>Continue chat</td><td>Manual, via <code>continue_conversation</code> or <code>resume</code></td><td>Automatic</td></tr>
+      </tbody></table>
+      <p class="choice">Your call</p>
+      <div class="choices" role="group" aria-label="Choose an entry point for the live chat surface">
+        <button type="button" onclick="choose('entry','query', 8)">Keep <code>query()</code>, pass <code>resume</code> every turn</button>
+        <button type="button" data-correct onclick="choose('entry','client', 8)">Use <code>ClaudeSDKClient</code></button>
+        <button type="button" onclick="choose('entry','fresh', 8)">A fresh <code>query()</code> per message, replaying history in the prompt</button>
+        <button type="button" onclick="choose('entry','two', 8)">Two agents — one for chat, one for resolution</button>
+      </div>
+      <div class="outcome" id="entry-query" aria-live="polite"><strong>Workable, but it fights the tool.</strong> Threading <code>resume</code> by hand gets you multi-turn, but never interrupts — and interrupts are exactly what “no, the other order” needs. That’s the row in the table that decides this.</div>
+      <div class="outcome" id="entry-client" aria-live="polite"><strong>Right.</strong> The rule of thumb: if the next action depends on Claude’s response, or you need to interrupt, use <code>ClaudeSDKClient</code>. It reuses the session, manages the connection under your control, and is the only one of the two that supports interrupts.</div>
+      <div class="outcome" id="entry-fresh" aria-live="polite"><strong>Expensive and lossy.</strong> Replaying history into every prompt re-pays for the whole conversation each turn and still can’t interrupt a run in flight. Session reuse exists precisely so you don’t do this.</div>
+      <div class="outcome" id="entry-two" aria-live="polite"><strong>Solving the wrong problem.</strong> Splitting into two agents doesn’t give either one interrupts; it just doubles the orchestration. This is one conversation that needs to stay open.</div>
+      <div class="lesson"><p><strong>Pick by dependency, not by size.</strong> One-off task where you want the answer and nothing else → <code>query()</code>. Anything where the next move depends on what came back, or a human might cut in → <code>ClaudeSDKClient</code>.</p></div>
+    </section>
+
+    <section class="scene" id="scene2">
+      <p class="time">9:20 a.m. · The empty stage</p>
+      <h2>“It’s ignoring our CLAUDE.md.”</h2>
+      <p>Kenji has spent a week getting Northstar’s <code>CLAUDE.md</code> right — tone rules, escalation language, the list of things support may never promise. The SDK agent ignores all of it. He assumes a bug.</p>
+      <p>It is not a bug. It is two defaults, and both surprise people.</p>
+      <h3>Default one: the system prompt is minimal</h3>
+      <p>Omit <code>systemPrompt</code> and you do <strong>not</strong> get Claude Code’s system prompt — you get a minimal one. To opt in:</p>
+      <div class="codeswap">
+        <div class="codeswap-tabs" role="group" aria-label="Choose code language"><button type="button" data-lang="py" onclick="setCodeLang('py')" aria-pressed="true">Python</button><button type="button" data-lang="ts" onclick="setCodeLang('ts')" aria-pressed="false">TypeScript</button></div>
+        <pre data-lang="py"><code>ClaudeAgentOptions(
+    system_prompt={
+        "type": "preset",
+        "preset": "claude_code",
+        "append": "Never promise a refund before eligibility is confirmed.",
+    },
+    setting_sources=["project"],   # ← this is what loads CLAUDE.md
+)</code></pre>
+        <pre data-lang="ts" hidden><code>{
+  systemPrompt: {
+    type: "preset",
+    preset: "claude_code",
+    append: "Never promise a refund before eligibility is confirmed."
+  },
+  settingSources: ["project"]   // ← this is what loads CLAUDE.md
+}</code></pre>
+      </div>
+      <h3>Default two: <code>settingSources</code> decides what the SDK reads off disk</h3>
+      <table class="mini-table"><thead><tr><th>Value</th><th>Location</th></tr></thead><tbody>
+        <tr><td><code>user</code></td><td><code>~/.claude/settings.json</code></td></tr>
+        <tr><td><code>project</code></td><td><code>.claude/settings.json</code> — version controlled</td></tr>
+        <tr><td><code>local</code></td><td><code>.claude/settings.local.json</code> — gitignored</td></tr>
+      </tbody></table>
+      <p>Omit the option entirely and all three load, exactly like the CLI. Pass <code>[]</code> and none of them do. And <strong>project <code>CLAUDE.md</code> loads only when <code>"project"</code> is among the sources</strong> — which is Kenji’s bug, because Toby had written <code>settingSources: []</code> to make the prototype deterministic.</p>
+      <p class="choice">Northstar is shipping this in a product. What goes in the config?</p>
+      <div class="choices" role="group" aria-label="Choose a settingSources configuration for production">
+        <button type="button" onclick="choose('sources','all', 16)">Omit <code>settingSources</code> — load everything</button>
+        <button type="button" data-correct onclick="choose('sources','empty', 16)"><code>[]</code>, and move the rules into <code>systemPrompt</code></button>
+        <button type="button" onclick="choose('sources','project', 16)"><code>["project"]</code> so CLAUDE.md keeps working</button>
+        <button type="button" onclick="choose('sources','userproj', 16)"><code>["user", "project"]</code></button>
+      </div>
+      <div class="outcome" id="sources-all" aria-live="polite"><strong>Non-reproducible.</strong> Loading <code>user</code> and <code>local</code> means the shipped agent’s behavior depends on files on whichever machine it runs on — including a developer’s personal settings. Fine for a CLI, wrong for a product.</div>
+      <div class="outcome" id="sources-empty" aria-live="polite"><strong>Right for a shipped product.</strong> <code>[]</code> disables user, project, and local settings, so behavior is identical everywhere it runs. The tone rules still need a home — they move into <code>systemPrompt</code> (or its <code>append</code>), where they are version-controlled with the code that depends on them. Endpoint-managed policy still loads regardless.</div>
+      <div class="outcome" id="sources-project" aria-live="polite"><strong>Defensible, and a real trade.</strong> It keeps CLAUDE.md authoring in Kenji’s hands, but it also means editing a markdown file changes production behavior with no deploy and no review. For an internal tool, reasonable. For a customer-facing agent, prefer <code>[]</code> and put the rules in the prompt.</div>
+      <div class="outcome" id="sources-userproj" aria-live="polite"><strong>Worst of both.</strong> You’ve kept the reproducibility problem — <code>user</code> settings still vary per machine — without gaining anything <code>["project"]</code> alone wouldn’t give you.</div>
+      <div class="blue-note"><p><strong>Version trap, Python only:</strong> in Python SDK <strong>0.1.59 and earlier</strong>, <code>setting_sources=[]</code> was treated the same as omitting the option, so it did <em>not</em> disable filesystem settings. If a Python agent is mysteriously reading settings you told it to ignore, check the SDK version first. TypeScript is unaffected.</p></div>
+    </section>
+
+    <section class="scene" id="scene3">
+      <p class="time">10:00 a.m. · Rosa’s question</p>
+      <h2>“What stops it?”</h2>
+      <p>Rosa has one question about anything that runs unattended, and it is always the same question. An agentic loop that can call tools can also call tools forever.</p>
+      <table class="mini-table"><thead><tr><th>Option</th><th>What it caps</th></tr></thead><tbody>
+        <tr><td><code>maxTurns</code> / <code>max_turns</code></td><td>Agentic turns — tool-use round trips</td></tr>
+        <tr><td><code>maxBudgetUsd</code></td><td>Stops when the client-side cost estimate reaches a USD figure</td></tr>
+        <tr><td><code>taskBudget: { total }</code> <em>(alpha)</em></td><td>An API-side token budget the model is <em>told about</em>, so it paces itself and wraps up before the limit</td></tr>
+        <tr><td><code>fallbackModel</code></td><td>Not a cap — the model to use if the primary fails</td></tr>
+        <tr><td><code>abortController</code> (TS)</td><td>Cancellation from your side</td></tr>
+      </tbody></table>
+      <p>The distinction worth holding: <code>maxTurns</code> and <code>maxBudgetUsd</code> are <em>guillotines</em> — the run stops, mid-thought, when the number is hit. <code>taskBudget</code> is different in kind, because the model knows the budget and can choose to summarize and finish rather than be cut off.</p>
+      <p class="voice">“I don’t mind it stopping. I mind it stopping in a way that leaves the customer holding half an answer.”</p>
+      <div class="lesson"><p><strong>Cap the loop twice:</strong> once with a hard stop you control, and once with a budget the model can see and plan against. The first protects your bill; the second protects the answer.</p></div>
+    </section>
+
+    <div class="rule"><strong>The SDK gives you the loop for free. It does not give you judgment for free.</strong><span>Everything from here is about buying judgment back.</span></div>
+
+    <section class="scene" id="scene4">
+      <p class="time">10:45 a.m. · The context problem</p>
+      <h2>One agent, reading everything</h2>
+      <p>Toby’s prototype works, and then it doesn’t. A hard ticket makes it read the order history, then the refund policy, then eleven similar past tickets — and by the time it has an answer, the window is full of material the customer never asked about, and the answer is worse for it.</p>
+      <p><strong>Subagents</strong> are the fix. A subagent is a separate agent instance your main agent spawns for a focused subtask, and it buys you four things:</p>
+      <ul>
+        <li><strong>Context isolation.</strong> Each subagent runs its own fresh conversation. Intermediate tool calls and results stay inside it; only its final message comes back. A researcher can read fifty files without fifty files landing in the main window.</li>
+        <li><strong>Parallelization.</strong> Independent subtasks finish in the time of the slowest, not the sum of all of them.</li>
+        <li><strong>Specialized instructions.</strong> Deep refund-policy knowledge that would be noise in the main prompt.</li>
+        <li><strong>Tool restrictions.</strong> A subagent given only <code>Read</code> and <code>Grep</code> cannot modify anything, ever.</li>
+      </ul>
+      <h3>Defining one</h3>
+      <div class="codeswap">
+        <div class="codeswap-tabs" role="group" aria-label="Choose code language"><button type="button" data-lang="py" onclick="setCodeLang('py')" aria-pressed="true">Python</button><button type="button" data-lang="ts" onclick="setCodeLang('ts')" aria-pressed="false">TypeScript</button></div>
+        <pre data-lang="py"><code>from claude_agent_sdk import query, ClaudeAgentOptions, AgentDefinition
+
+options = ClaudeAgentOptions(
+    allowed_tools=["Read", "Grep", "Glob", "Agent"],
+    agents={
+        "policy-checker": AgentDefinition(
+            description="Checks refund eligibility against policy. "
+                        "Use before any refund is offered.",
+            prompt="You are a refund policy specialist...",
+            tools=["Read", "Grep"],     # read-only
+            model="sonnet",
+            maxTurns=6,                 # camelCase — see the trap below
+        )
+    },
+)</code></pre>
+        <pre data-lang="ts" hidden><code>import { query } from "@anthropic-ai/claude-agent-sdk";
+
+const options = {
+  allowedTools: ["Read", "Grep", "Glob", "Agent"],
+  agents: {
+    "policy-checker": {
+      description:
+        "Checks refund eligibility against policy. Use before any refund is offered.",
+      prompt: "You are a refund policy specialist...",
+      tools: ["Read", "Grep"],   // read-only
+      model: "sonnet",
+      maxTurns: 6
+    }
+  }
+};</code></pre>
+      </div>
+      <table class="mini-table"><thead><tr><th>Field</th><th>Required</th><th>What it does</th></tr></thead><tbody>
+        <tr><td><code>description</code></td><td><strong>Yes</strong></td><td><em>When to use this agent.</em> This is what Claude matches against — vague descriptions mean the subagent never gets picked.</td></tr>
+        <tr><td><code>prompt</code></td><td><strong>Yes</strong></td><td>The subagent’s system prompt.</td></tr>
+        <tr><td><code>tools</code></td><td>No</td><td>Allowed tool names. <strong>Omit and it inherits every tool available to subagents.</strong></td></tr>
+        <tr><td><code>disallowedTools</code></td><td>No</td><td>Removes tools. Accepts MCP patterns: <code>mcp__server__*</code>, <code>mcp__*</code>.</td></tr>
+        <tr><td><code>model</code></td><td>No</td><td><code>'opus'</code>, <code>'sonnet'</code>, <code>'haiku'</code>, <code>'inherit'</code>, or a full ID.</td></tr>
+        <tr><td><code>skills</code>, <code>memory</code>, <code>mcpServers</code></td><td>No</td><td>Preloaded skills, memory source, per-agent MCP servers.</td></tr>
+        <tr><td><code>maxTurns</code>, <code>effort</code>, <code>permissionMode</code></td><td>No</td><td>Per-agent turn cap, reasoning effort, permission mode.</td></tr>
+        <tr><td><code>background</code></td><td>No</td><td>Force non-blocking background execution.</td></tr>
+        <tr><td><code>initialPrompt</code></td><td>No</td><td>Auto-submitted first turn <em>when this agent runs as the main thread agent</em> — ignored when it’s invoked as a subagent.</td></tr>
+      </tbody></table>
+      <p>A tool you leave out of <code>tools</code> isn’t merely denied — it isn’t in the subagent’s session at all. No permission prompt, no error. Claude just works without it.</p>
+      <div class="blue-note"><p><strong>The Python camelCase trap.</strong> <code>AgentDefinition</code> keeps <strong>camelCase</strong> field names even in Python — <code>disallowedTools</code>, <code>permissionMode</code>, <code>maxTurns</code>, <code>mcpServers</code>, <code>initialPrompt</code> — because they map straight to the wire format shared with the TypeScript SDK. Meanwhile <code>ClaudeAgentOptions</code> uses ordinary snake_case (<code>disallowed_tools</code>, <code>permission_mode</code>, <code>max_turns</code>). Since <code>AgentDefinition</code> is a dataclass, passing <code>max_turns=</code> raises <code>TypeError</code> at construction. Two objects, two conventions, one file.</p></div>
+    </section>
+
+    <section class="scene" id="scene5">
+      <p class="time">11:30 a.m. · Nothing is being delegated</p>
+      <h2>The tool with two names</h2>
+      <p>Lila has written a perfectly good <code>policy-checker</code> subagent. Claude never calls it. It just does the policy check itself, in the main context, which is the exact thing the subagent existed to prevent.</p>
+      <p class="voice">“The definition is right there. Why is it being ignored?”</p>
+      <p>Because Claude invokes subagents <em>through a tool</em>, and that tool has to be auto-approved. If it isn’t, the invocation falls through to your permission callback — or in <code>dontAsk</code> mode, gets denied outright. Silently.</p>
+      <p class="choice">What belongs in <code>allowedTools</code>?</p>
+      <div class="choices" role="group" aria-label="Choose what allowedTools must include to spawn subagents">
+        <button type="button" onclick="choose('spawn','spawn', 24)"><code>"Spawn"</code></button>
+        <button type="button" onclick="choose('spawn','delegate', 24)"><code>"Delegate"</code></button>
+        <button type="button" data-correct onclick="choose('spawn','task', 24)"><code>"Task"</code> — and today, also <code>"Agent"</code></button>
+        <button type="button" onclick="choose('spawn','fork', 24)"><code>"Fork"</code></button>
+      </div>
+      <div class="outcome" id="spawn-spawn" aria-live="polite"><strong>No such tool.</strong> The subagent-spawning tool has been called two things across versions, and <code>Spawn</code> was never either of them.</div>
+      <div class="outcome" id="spawn-delegate" aria-live="polite"><strong>No such tool.</strong> Plausible-sounding, but delegation happens through the Task/Agent tool, not a tool named for the verb.</div>
+      <div class="outcome" id="spawn-task" aria-live="polite"><strong>Correct — and this is the one place the exam and the shipping SDK disagree.</strong> The exam guide names the <strong>Task</strong> tool, and that is the answer to give on test day. Current SDK releases renamed it to <strong>Agent</strong> in Claude Code v2.1.63, so working code should list <code>"Agent"</code>. Confusingly, current releases still report <code>"Task"</code> in the <code>system:init</code> tools list and in <code>result.permission_denials[].tool_name</code> — so detection code should match both.</div>
+      <div class="outcome" id="spawn-fork" aria-live="polite"><strong>Different mechanism.</strong> Forking is about branching a <em>session</em>, which you’ll meet in part 2. It has nothing to do with spawning a subagent.</div>
+      <div class="lesson"><p><strong>When Claude won’t delegate, check three things in order:</strong> is the Task/Agent tool in <code>allowedTools</code>; does the prompt name the subagent explicitly; and is the <code>description</code> specific enough for Claude to match the task against it.</p></div>
+      <div class="blue-note"><p><strong>Answer “Task” on the exam.</strong> The CCA-F Exam Guide is version 1.0, effective July 2026, and predates the rename — its glossary keys this question to <code>"Task"</code>. Write <code>"Agent"</code> in real code. This is the largest single divergence between the shipping SDK and the exam blueprint, and it is exactly the kind of detail a scenario question turns on.</p></div>
+    </section>
+
+    <section class="scene" id="scene6">
+      <p class="time">12:15 p.m. · The empty-handed researcher</p>
+      <h2>What actually crosses the boundary</h2>
+      <p>The <code>policy-checker</code> now runs. It also comes back with nonsense, because it has no idea which customer or which order anyone is talking about.</p>
+      <p>Toby assumes it can see the conversation. It cannot. <strong>A subagent’s context window starts fresh.</strong></p>
+      <table class="mini-table"><thead><tr><th>The subagent receives</th><th>The subagent does <em>not</em> receive</th></tr></thead><tbody>
+        <tr><td>Its own <code>AgentDefinition.prompt</code></td><td>The parent’s conversation history or tool results</td></tr>
+        <tr><td>The Task/Agent tool’s prompt string</td><td>The parent’s system prompt</td></tr>
+        <tr><td>Project <code>CLAUDE.md</code>, if loaded via <code>settingSources</code></td><td>Preloaded skill content, unless listed in <code>skills</code></td></tr>
+        <tr><td>Tool definitions — inherited, or the <code>tools</code> subset</td><td></td></tr>
+      </tbody></table>
+      <p><strong>The only content that crosses from parent to subagent is the Task/Agent tool’s prompt string.</strong> Every file path, error message, prior finding, and decision the subagent needs has to be written into that prompt on purpose.</p>
+      <p class="choice">The support agent has already looked up the customer and the order. How does <code>policy-checker</code> learn what they are?</p>
+      <div class="choices" role="group" aria-label="Choose how a subagent receives prior findings">
+        <button type="button" onclick="choose('iso','inherit', 32)">It inherits the coordinator’s full history</button>
+        <button type="button" data-correct onclick="choose('iso','prompt', 32)">The findings are written into its prompt explicitly</button>
+        <button type="button" onclick="choose('iso','memory', 32)">It reads the coordinator’s memory files</button>
+        <button type="button" onclick="choose('iso','global', 32)">Subagents share a global memory object</button>
+      </div>
+      <div class="outcome" id="iso-inherit" aria-live="polite"><strong>This is the misconception the exam is built to catch.</strong> If subagents inherited parent history, they would provide no context isolation at all — the entire benefit would vanish. They start fresh, every time.</div>
+      <div class="outcome" id="iso-prompt" aria-live="polite"><strong>Correct.</strong> Context must be passed explicitly through the Task/Agent tool’s prompt string. That string is the whole channel. Design your delegation prompts as briefing documents, not as pointers.</div>
+      <div class="outcome" id="iso-memory" aria-live="polite"><strong>No.</strong> A subagent’s <code>memory</code> field selects a memory <em>source</em> (<code>user</code>, <code>project</code>, <code>local</code>) — it is not a window into the coordinator’s working state.</div>
+      <div class="outcome" id="iso-global" aria-live="polite"><strong>There is no such object.</strong> Subagents don’t share memory between invocations, which is also why two subagents can run in parallel without stepping on each other.</div>
+      <h3>And what comes back</h3>
+      <p>Only the subagent’s <strong>final message</strong>, delivered as the tool result. Everything it did to get there stays inside it — that is the isolation working. Note that the parent may summarize that final message in its own response; if you need it preserved verbatim, say so in the main query’s prompt or system prompt.</p>
+      <div class="lesson"><p><strong>Delegation is a briefing, not a handoff.</strong> You cannot give a subagent your memory — only a note. Write the note as if the reader has never seen the conversation, because they haven’t.</p></div>
+    </section>
+
+    <section class="scene" id="scene7">
+      <p class="time">1:40 p.m. · Kenji’s whiteboard</p>
+      <h2>Three shapes of decomposition</h2>
+      <p>Dana wants more than refunds. She wants the agent to handle a whole class of “investigate this account and tell me what happened” tickets. That is a different shape of problem, and the exam names three shapes.</p>
+      <table class="mini-table"><thead><tr><th>Pattern</th><th>What it is</th><th>Use when</th></tr></thead><tbody>
+        <tr><td><strong>Hub-and-spoke</strong></td><td>A coordinator owns all inter-subagent communication, error handling, and routing. Spokes never talk to each other.</td><td>Any multi-agent system. This is the default topology.</td></tr>
+        <tr><td><strong>Prompt chaining</strong></td><td>Fixed, sequential decomposition — analyze each file, <em>then</em> a separate cross-file integration pass.</td><td>The steps are known before you start.</td></tr>
+        <tr><td><strong>Dynamic / adaptive decomposition</strong></td><td>Subtasks generated from what each step discovers.</td><td>Open-ended investigation, where you can’t list the steps up front.</td></tr>
+      </tbody></table>
+      <p>Rosa asks the question that decides it: “Do we know the steps before we start, or do we find them out by looking?”</p>
+      <p class="choice">Northstar also wants comprehensive tests added to a legacy billing module nobody fully understands. Which decomposition?</p>
+      <div class="choices" role="group" aria-label="Choose a decomposition strategy for the legacy test task">
+        <button type="button" onclick="choose('decomp','chain', 40)">Fixed sequential prompt chaining</button>
+        <button type="button" data-correct onclick="choose('decomp','dynamic', 40)">Dynamic decomposition that adapts as dependencies surface</button>
+        <button type="button" onclick="choose('decomp','mono', 40)">A single monolithic prompt</button>
+        <button type="button" onclick="choose('decomp','batch', 40)">Batch processing</button>
+      </div>
+      <div class="outcome" id="decomp-chain" aria-live="polite"><strong>Wrong shape.</strong> Prompt chaining needs the steps known in advance. Nobody fully understands this module — the dependencies <em>are</em> the discovery, so a fixed sequence would be guessing.</div>
+      <div class="outcome" id="decomp-dynamic" aria-live="polite"><strong>Right.</strong> Dynamic decomposition generates subtasks from what each step finds, which is what an unfamiliar codebase demands. Contrast with the code-review case — per-file analysis, then a cross-file integration pass — where the steps <em>are</em> known up front, and prompt chaining is correct.</div>
+      <div class="outcome" id="decomp-mono" aria-live="polite"><strong>The thing subagents exist to avoid.</strong> One prompt doing everything exhausts the context window and gives you nothing to parallelize or restrict.</div>
+      <div class="outcome" id="decomp-batch" aria-live="polite"><strong>Different problem entirely.</strong> Batch processing is a cost and throughput mechanism for many independent requests, not a decomposition strategy for one exploratory task.</div>
+    </section>
+
+    <section class="scene" id="scene8">
+      <p class="time">3:10 p.m. · Everything passed, nothing worked</p>
+      <h2>When every worker succeeds and the answer is still wrong</h2>
+      <p>Northstar’s research agent — the one that summarizes “what happened with this account” — decomposes each ticket into three parallel subagents. Every subagent returns cleanly. Every log is green. And the summary Dana gets covers billing, only billing, and nothing but billing, while the actual complaint was about delivery.</p>
+      <p>Toby wants to add retries to the subagents. Rosa wants to know why three green checks produced a wrong answer.</p>
+      <p class="choice">Where is the defect?</p>
+      <div class="choices" role="group" aria-label="Diagnose the multi-agent research failure">
+        <button type="button" onclick="choose('coord','sub', 48)">The subagents ignored parts of their assignments</button>
+        <button type="button" data-correct onclick="choose('coord','decomp', 48)">The coordinator’s task decomposition was too narrow</button>
+        <button type="button" onclick="choose('coord','synth', 48)">The synthesis step dropped the other topics</button>
+        <button type="button" onclick="choose('coord','tools', 48)">The subagents’ tools were too restricted</button>
+      </div>
+      <div class="outcome" id="coord-sub" aria-live="polite"><strong>The logs say otherwise.</strong> Each subagent did exactly what it was told. Blaming a downstream component that provably worked is the trap this question is built around.</div>
+      <div class="outcome" id="coord-decomp" aria-live="polite"><strong>Correct.</strong> The coordinator generated three subtasks that all pointed at the same sub-topic, so the workers succeeded within a scope that was wrong before they ever started. <strong>When every worker succeeds and the aggregate is wrong, look up the chain, not down.</strong></div>
+      <div class="outcome" id="coord-synth" aria-live="polite"><strong>Nothing to drop.</strong> Synthesis can only combine what it received, and delivery findings were never produced — because nobody was asked for them.</div>
+      <div class="outcome" id="coord-tools" aria-live="polite"><strong>Not the constraint here.</strong> Restricted tools would show up as subagent failures or empty results. These returned cleanly and in scope; the scope was just the wrong one.</div>
+      <h3>The other half: what a failing subagent should say</h3>
+      <p>A subagent that times out mid-investigation has three ways to report it, and only one lets the coordinator recover well:</p>
+      <ul>
+        <li><strong>Return an empty result marked successful.</strong> Now the coordinator believes there was nothing to find. Worst option — it converts a failure into a confident wrong answer.</li>
+        <li><strong>Retry silently, then return “search unavailable.”</strong> Better, but the coordinator learns nothing about how far it got or what it did find.</li>
+        <li><strong>Return a structured error naming what failed and how far it got.</strong> Now the coordinator can re-scope, re-dispatch a narrower query, or escalate — an actual decision.</li>
+      </ul>
+      <div class="lesson"><p><strong>A coordinator can only be as smart as its inputs.</strong> Error propagation is an architecture decision, not an implementation detail: what a failing component says determines what its supervisor is capable of doing about it.</p></div>
+    </section>
+
+    <section class="end" id="end">
+      <h2>Where part 1 leaves you</h2>
+      <p>Dana’s agent runs. It answers tickets, delegates policy checks, and stays inside a turn budget. Rosa still won’t ship it, and she’s right not to.</p>
+      <p><strong>The SDK is Claude Code as a library.</strong> Subprocess underneath, which is why permissions, hooks, settings, and subagents all came along for the ride. <code>query()</code> for one-off work; <code>ClaudeSDKClient</code> when the next move depends on the answer or a human might interrupt.</p>
+      <p><strong>The defaults are quieter than you expect.</strong> Minimal system prompt unless you ask for the preset. No <code>CLAUDE.md</code> unless <code>"project"</code> is in <code>settingSources</code>. In a shipped product, prefer <code>[]</code> and put the rules where they get reviewed.</p>
+      <p><strong>Subagents buy isolation, parallelism, specialization, and restriction</strong> — and cost you the assumption that anyone downstream knows anything. Task/Agent in <code>allowedTools</code> or nothing gets delegated. The prompt string is the entire channel. Only the final message comes back.</p>
+      <p><strong>And when the aggregate is wrong but every part is green, the coordinator wrote the wrong assignment.</strong> That is the multi-agent failure mode worth memorizing, because it looks like nothing is broken.</p>
+      <p>Part 2 is Rosa’s objection, stated properly: the agent currently <em>usually</em> does the right thing. Next we make “usually” into “always.”</p>
+    </section>
+
+    <p class="source">Primary source: <code>08-claude-agent-sdk/notes.md</code> in this study workspace, built from the official Claude Agent SDK TypeScript and Python references and the Subagents guide on <code>docs.claude.com</code>. Exam-guide-only terminology and the Task/Agent divergence are flagged inline and drawn from <code>study-reference/ccaf_study_reference.md</code>.</p>
+    <footer>Agentic Architecture &amp; Orchestration is 27% of the exam — the single heaviest domain — and Anthropic publishes no prep course for the Agent SDK, so this section and its sequel carry weight no other folder covers. <br><a href="0011-claude-agent-sdk-hooks-and-reliability.html">Continue to part 2 · The gates →</a> · <a href="../quizzes/08-claude-agent-sdk/index.html">Take the Section 8 practice quiz →</a></footer>
+  </main>
+  <script>
+    function toggleTheme() {
+      var html = document.documentElement;
+      var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      try { localStorage.setItem('ccaf-theme', next); } catch(e) {}
+      var btn = document.getElementById('themeToggle');
+      if (btn) btn.textContent = next === 'dark' ? '☀️' : '🌙';
+    }
+    (function() {
+      var btn = document.getElementById('themeToggle');
+      if (btn) btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+    })();
+  </script>
+  <script src="../assets/js/code-lang.js"></script>
+  <script src="../assets/js/ask-claude.js"></script>
+  <script src="../assets/js/lesson-search.js"></script>
+  <script src="../assets/js/gist-sync.js"></script>
+  <script src="../assets/js/lesson-progress.js"></script>
+  <script src="../assets/js/checks/0010.js"></script>
+  <script src="../assets/js/section-check.js"></script>
+  <script src="../assets/js/scene-flag.js"></script>
+  <script src="../assets/js/review-mode.js"></script>
+  <script src="../assets/js/header-scroll.js"></script>
+</body>
+</html>
