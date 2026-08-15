@@ -75,6 +75,16 @@ a { color: var(--accent); }
   flex-direction: column;
   gap: 22px;
 }
+.home-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--sans);
+  font-size: 0.76rem;
+  color: var(--muted);
+  text-decoration: none;
+}
+.home-link:hover { color: var(--accent); }
 .brand {
   font-family: var(--serif);
   font-size: 1.15rem;
@@ -413,6 +423,7 @@ main { min-width: 0; padding: 0 0 80px; }
 
 <div class="layout">
   <nav class="sidebar">
+    <a class="home-link" href="../index.html">&larr; Course Home</a>
     <div class="brand-row">
       <div class="brand">Evals to Agents
         <span class="sub">Course Companion</span>
