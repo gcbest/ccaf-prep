@@ -1,0 +1,50 @@
+{
+  "$comment": "Domain summaries. A cluster is a human-facing grouping of micro-topics; the graph, not the cluster, is the source of truth for ordering.",
+  "clusters": [
+    {
+      "id": "cl_foundations",
+      "name": "Foundations & the SDK boundary",
+      "subject": "Claude Agent SDK",
+      "summary": "What the Agent SDK takes over from the hand-rolled agentic loop, the subprocess mental model that explains its whole surface area, and the four options that decide how loud or quiet an agent's defaults are.",
+      "color": "#7a4a6b",
+      "colorDark": "#a8779a",
+      "notesPart": "Part 1 — The SDK versus the hand-rolled loop"
+    },
+    {
+      "id": "cl_subagents",
+      "name": "Subagents & orchestration",
+      "subject": "Claude Agent SDK",
+      "summary": "Defining subagents, the tool that spawns them, exactly what crosses the context boundary in each direction, and the three decomposition shapes the exam names.",
+      "color": "#2f6b6b",
+      "colorDark": "#4f9c9c",
+      "notesPart": "Part 2 — Subagents and multi-agent orchestration"
+    },
+    {
+      "id": "cl_hooks",
+      "name": "Hooks & permissions",
+      "subject": "Claude Agent SDK",
+      "summary": "Programmatic enforcement versus prompt instruction, where hooks attach, which direction each one faces, and the permission surface that decides whether a hook is even reached.",
+      "color": "#8f3f3f",
+      "colorDark": "#c67878",
+      "notesPart": "Part 3 — Hooks: programmatic control of the loop"
+    },
+    {
+      "id": "cl_tools",
+      "name": "Tools, MCP & structured errors",
+      "subject": "Claude Agent SDK",
+      "summary": "In-process MCP servers, the two shapes of tool(), description design as the primary selection mechanism, and the three error fields — only one of which is real.",
+      "color": "#5f6b3a",
+      "colorDark": "#8ba055",
+      "notesPart": "Part 4 — Tools and MCP inside the SDK"
+    },
+    {
+      "id": "cl_sessions",
+      "name": "Sessions, context & reliability",
+      "subject": "Claude Agent SDK",
+      "summary": "Resuming versus forking, compaction and delegation as context levers, and the reliability posture that turns \"did you run the tests?\" into a condition the agent cannot skip.",
+      "color": "#3f6b86",
+      "colorDark": "#5f9cc0",
+      "notesPart": "Part 5 — Sessions, context, and reliability"
+    }
+  ]
+}

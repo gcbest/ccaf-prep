@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>(function(){try{var t=localStorage.getItem('ccaf-theme');if(!t){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <title>Section 8 Learning Graph — The Claude Agent SDK</title>
+  <style>
+    :root {
+      --ink: #242321;
+      --muted: #706b63;
+      --paper: #f7f3ec;
+      --paper-deep: #ece4d7;
+      --rust: #a84e31;
+      --rust-dark: #7d3825;
+      --line: #d6ccbd;
+      --white: #fffdfa;
+      --good: #3d7a4a;
+      --good-bg: #e6f0e4;
+      --bad: #a13a2e;
+      --bad-bg: #f7e6e2;
+      --locked: #b3a996;
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --ink: #ece7de;
+      --muted: #a89d8f;
+      --paper: #17140f;
+      --paper-deep: #221e17;
+      --line: #3a3327;
+      --white: #211d16;
+      --rust-dark: #c96549;
+      --good: #77c57b;
+      --good-bg: #172b19;
+      --bad: #cf786e;
+      --bad-bg: #2b1917;
+      --locked: #5b5344;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.7 Georgia, 'Times New Roman', serif;
+      overflow-x: hidden;
+    }
+    main { max-width: 860px; margin: 0 auto; padding: 34px 22px 90px; }
+    .masthead {
+      position: sticky; top: 0; z-index: 20; background: var(--paper);
+      display: flex; justify-content: space-between; align-items: baseline; gap: 14px; flex-wrap: wrap;
+      border-bottom: 1px solid var(--line); padding-bottom: 10px;
+      color: var(--muted); font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .13em; text-transform: uppercase;
+    }
+    .masthead a { color: var(--muted); text-decoration: none; }
+    .masthead a:hover { color: var(--rust-dark); }
+    .theme-toggle {
+      flex: none; width: 28px; height: 28px; padding: 0; border-radius: 999px;
+      border: 1px solid var(--line); background: none; color: var(--muted);
+      font-size: 13px; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    }
+    .theme-toggle:hover, .theme-toggle:focus-visible { background: var(--paper-deep); outline: none; }
+
+    h1 { max-width: 700px; margin: 26px 0 10px; font: 700 clamp(2.1rem, 7vw, 3.4rem)/1.02 Georgia, serif; letter-spacing: -.03em; }
+    .dek { max-width: 66ch; margin: 0 0 26px; color: var(--muted); font-size: 1.1rem; }
+    p { max-width: 68ch; margin: 0 0 12px; }
+    a { color: var(--rust-dark); }
+    code { background: var(--paper-deep); padding: .08em .3em; border-radius: 3px; font-size: .9em; }
+
+    /* ---------- tabs ---------- */
+    .tabs { display: flex; gap: 2px; margin: 0 0 22px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+    .tabs button {
+      flex: none; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted);
+      padding: 10px 14px; font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .08em;
+      text-transform: uppercase; cursor: pointer; white-space: nowrap;
+    }
+    .tabs button:hover { color: var(--ink); }
+    .tabs button[aria-selected="true"] { color: var(--rust-dark); border-bottom-color: var(--rust); }
+    .panel[hidden] { display: none; }
+
+    /* ---------- generic bits ---------- */
+    .card {
+      position: relative; margin: 14px 0 0; padding: 18px 20px;
+      background: var(--white); border: 1px solid var(--line); border-radius: 4px;
+    }
+    .card::before { content: ''; position: absolute; left: -1px; top: 0; bottom: 0; width: 4px; background: var(--accent, var(--rust)); border-radius: 4px 0 0 4px; }
+    .kicker { display: block; margin: 0 0 5px; color: var(--accent, var(--rust-dark)); font: 700 11px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    .btn {
+      display: inline-block; border: 1px solid var(--rust); border-radius: 3px; background: var(--rust); color: #fff;
+      padding: 10px 16px; font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .05em; cursor: pointer; text-decoration: none;
+    }
+    .btn:hover, .btn:focus-visible { background: var(--rust-dark); border-color: var(--rust-dark); outline: none; }
+    .btn[disabled] { opacity: .45; cursor: not-allowed; }
+    .btn-ghost { background: none; color: var(--rust-dark); border-color: var(--line); }
+    .btn-ghost:hover, .btn-ghost:focus-visible { background: var(--paper-deep); color: var(--rust-dark); border-color: var(--rust-dark); }
+    .row { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; }
+    .muted { color: var(--muted); }
+    .small { font: 13px/1.6 system-ui, sans-serif; }
+    .chip {
+      display: inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line);
+      font: 700 10px/1.7 system-ui, sans-serif; letter-spacing: .07em; text-transform: uppercase; color: var(--muted);
+      white-space: nowrap;
+    }
+    .chip-mastered { color: var(--good); border-color: var(--good); }
+    .chip-learning { color: var(--rust-dark); border-color: var(--rust); }
+    .chip-ready { color: var(--ink); border-color: var(--ink); }
+    .chip-due { color: var(--bad); border-color: var(--bad); }
+    .chip-locked { color: var(--locked); border-color: var(--locked); }
+    .bar { height: 6px; border-radius: 999px; background: var(--paper-deep); overflow: hidden; }
+    .bar i { display: block; height: 100%; background: var(--rust); }
+
+    /* ---------- today ---------- */
+    .xp-head { display: flex; flex-wrap: wrap; gap: 18px 26px; align-items: flex-end; margin: 0 0 4px; }
+    .stat { min-width: 92px; }
+    .stat b { display: block; font: 700 1.7rem/1.1 Georgia, serif; }
+    .stat span { display: block; color: var(--muted); font: 600 10px/1.6 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    .queue { list-style: none; margin: 12px 0 0; padding: 0; }
+    .queue li { display: flex; gap: 12px; align-items: baseline; padding: 9px 2px; border-top: 1px solid var(--line); font-size: .96rem; }
+    .queue li:last-child { border-bottom: 1px solid var(--line); }
+    .queue .qtype { flex: none; width: 88px; font: 700 10px/1.7 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+    .qtype-learn { color: var(--rust-dark); }
+    .qtype-review { color: #3f6b86; }
+    .qtype-remediate { color: var(--bad); }
+    .qtype-quiz { color: #5f6b3a; }
+
+    /* ---------- task runner ---------- */
+    .runner { margin-top: 6px; }
+    .runner .teach { margin: 14px 0 18px; }
+    .runner .teach p { margin: 0 0 11px; }
+    .runner .teach ul, .runner .teach ol { margin: 0 0 12px; padding-left: 22px; }
+    .runner .teach li { margin: 0 0 5px; max-width: 66ch; }
+    .kp-key {
+      margin: 12px 0 !important; padding: 11px 14px; background: var(--paper-deep);
+      border-left: 3px solid var(--rust); font-weight: 700;
+    }
+    .kp-code {
+      margin: 0 0 12px; padding: 12px 14px; background: var(--paper-deep); border-radius: 3px;
+      overflow-x: auto; font: 12.5px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre;
+    }
+    .kp-table { width: 100%; margin: 0 0 12px; border-collapse: collapse; font: 14px/1.55 system-ui, sans-serif; display: block; overflow-x: auto; }
+    .kp-table th, .kp-table td { border: 1px solid var(--line); padding: 7px 10px; text-align: left; vertical-align: top; }
+    .kp-table th { background: var(--paper-deep); font-weight: 700; }
+    .opts { list-style: none; margin: 12px 0 0; padding: 0; }
+    .opt {
+      display: block; width: 100%; margin: 0 0 8px; padding: 12px 14px; text-align: left;
+      border: 1px solid var(--line); border-radius: 3px; background: var(--white); color: inherit;
+      font: 15px/1.5 system-ui, sans-serif; cursor: pointer;
+    }
+    .opt:hover:not([disabled]) { border-color: var(--rust); }
+    .opt[disabled] { cursor: default; }
+    .opt.right { border-color: var(--good); background: var(--good-bg); }
+    .opt.wrong { border-color: var(--bad); background: var(--bad-bg); }
+    .explain { margin: 10px 0 0; padding: 12px 14px; border-radius: 3px; background: var(--paper-deep); font: 14.5px/1.65 system-ui, sans-serif; }
+    .explain.right { background: var(--good-bg); }
+    .explain.wrong { background: var(--bad-bg); }
+    .kp-progress { display: flex; gap: 5px; margin: 0 0 4px; }
+    .kp-dot { width: 26px; height: 4px; border-radius: 999px; background: var(--paper-deep); }
+    .kp-dot.done { background: var(--good); }
+    .kp-dot.now { background: var(--rust); }
+
+    /* ---------- graph ---------- */
+    .graph-wrap { position: relative; margin: 4px -22px 0; padding: 0 22px; }
+    .graph-scroll { overflow-x: auto; overflow-y: hidden; border: 1px solid var(--line); border-radius: 4px; background: var(--white); }
+    .graph-scroll svg { display: block; }
+    .gnode { cursor: pointer; }
+    .gnode text { font: 600 9.5px/1.2 system-ui, sans-serif; fill: var(--ink); pointer-events: none; }
+    .gnode rect { stroke-width: 1.5; }
+    .gnode:hover rect { stroke: var(--ink); }
+    .gnode.sel rect { stroke: var(--ink); stroke-width: 3; }
+    .gedge { fill: none; stroke: var(--line); stroke-width: 1.2; }
+    .gedge.soft { stroke-dasharray: 3 4; opacity: .75; }
+    .gedge.enc { stroke: var(--rust); opacity: .3; stroke-dasharray: 1 5; stroke-linecap: round; }
+    .gedge.hot { stroke: var(--rust); stroke-width: 2.2; opacity: 1; stroke-dasharray: none; }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 12px 0 0; font: 12px/1.6 system-ui, sans-serif; color: var(--muted); }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .swatch { width: 13px; height: 13px; border-radius: 2px; border: 1.5px solid var(--muted); }
+    .toggles { display: flex; flex-wrap: wrap; gap: 14px; margin: 12px 0 0; font: 12px/1.6 system-ui, sans-serif; color: var(--muted); }
+    .toggles label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+
+    /* ---------- topic detail ---------- */
+    .detail { margin-top: 14px; }
+    .detail h3 { margin: 0 0 4px; font: 700 1.25rem/1.3 Georgia, serif; }
+    .detail dl { display: grid; grid-template-columns: minmax(120px, auto) 1fr; gap: 5px 16px; margin: 12px 0 0; font: 14px/1.6 system-ui, sans-serif; }
+    .detail dt { color: var(--muted); font-weight: 700; }
+    .detail dd { margin: 0; }
+    .detail ul { margin: 4px 0 0; padding-left: 20px; font: 14px/1.6 system-ui, sans-serif; }
+
+    /* ---------- topics list ---------- */
+    .tlist { list-style: none; margin: 8px 0 0; padding: 0; }
+    .tlist li { border-top: 1px solid var(--line); }
+    .tlist li:last-child { border-bottom: 1px solid var(--line); }
+    .tlist button {
+      display: flex; gap: 12px; align-items: baseline; width: 100%; padding: 11px 4px;
+      border: 0; background: none; color: inherit; text-align: left; cursor: pointer; font: inherit;
+    }
+    .tlist button:hover { background: var(--paper-deep); }
+    .tlist .tname { flex: 1; font-size: .98rem; }
+    h2 { margin: 34px 0 4px; font: 700 1.4rem/1.25 Georgia, serif; }
+    h2:first-child { margin-top: 6px; }
+
+    /* ---------- stats ---------- */
+    .cluster-stat { margin: 14px 0 0; }
+    .cluster-stat .row { justify-content: space-between; font: 13px/1.6 system-ui, sans-serif; }
+
+    footer { margin-top: 44px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: .88rem; }
+
+    @media (max-width: 620px) {
+      main { padding: 24px 16px 70px; }
+      .masthead { font-size: 10px; }
+      .graph-wrap { margin: 4px -16px 0; padding: 0 16px; }
+      .queue .qtype { width: 74px; }
+      .detail dl { grid-template-columns: 1fr; gap: 2px; }
+      .detail dt { margin-top: 8px; }
+    }
+    @media (hover: none) and (pointer: coarse) {
+      .opt { min-height: 46px; }
+      .btn { min-height: 44px; }
+      .tabs button { min-height: 44px; }
+    }
+    .autohide-header { transition: transform .28s ease; will-change: transform; }
+    .autohide-header--hidden { transform: translateY(-100%); }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="masthead">
+      <a href="../index.html">CCA-F · Study system</a>
+      <span>Learning graph</span>
+      <a href="../lessons/0010-claude-agent-sdk-orchestration.html">📖 Lessons</a>
+      <a href="../quizzes/08-claude-agent-sdk/index.html">✎ Quiz</a>
+      <button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button>
+    </div>
+
+    <h1>Section 8, as a graph</h1>
+    <p class="dek">The Claude Agent SDK broken into 44 micro-topics wired by prerequisite, taught one knowledge point at a time, and kept alive by spaced review that pays credit down the graph. Built the Math Academy way.</p>
+
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tab-today" aria-controls="panel-today" aria-selected="true">Today</button>
+      <button role="tab" id="tab-graph" aria-controls="panel-graph" aria-selected="false">Graph</button>
+      <button role="tab" id="tab-topics" aria-controls="panel-topics" aria-selected="false">Topics</button>
+      <button role="tab" id="tab-stats" aria-controls="panel-stats" aria-selected="false">Progress</button>
+      <button role="tab" id="tab-method" aria-controls="panel-method" aria-selected="false">Method</button>
+    </div>
+
+    <section class="panel" id="panel-today" role="tabpanel" aria-labelledby="tab-today"></section>
+    <section class="panel" id="panel-graph" role="tabpanel" aria-labelledby="tab-graph" hidden></section>
+    <section class="panel" id="panel-topics" role="tabpanel" aria-labelledby="tab-topics" hidden></section>
+    <section class="panel" id="panel-stats" role="tabpanel" aria-labelledby="tab-stats" hidden></section>
+
+    <section class="panel" id="panel-method" role="tabpanel" aria-labelledby="tab-method" hidden>
+      <h2>How this works</h2>
+      <p>This page is a small implementation of the system described in <em>The Math Academy Way</em>, applied to one exam section instead of to mathematics. Six ideas do all the work.</p>
+
+      <h2>1 · The knowledge graph</h2>
+      <p>Section 8 is cut into 44 <strong>micro-topics</strong>, each small enough to teach and assess on its own, and wired together by <strong>prerequisite edges</strong>. A <em>hard</em> edge gates: you do not see a topic until everything behind it is mastered. A <em>soft</em> edge only orders the queue. The graph — not the reading order of the notes — is the source of truth about what comes next.</p>
+
+      <h2>2 · The knowledge frontier</h2>
+      <p>The boundary between what you know and what you are ready to learn. Every new lesson you are served sits exactly on it. The <a href="#" data-goto="graph">Graph tab</a> draws it: filled nodes are mastered, outlined nodes are ready, faded nodes are still locked behind something.</p>
+
+      <h2>3 · Scaffolded mastery learning</h2>
+      <p>Each topic is a short lesson broken into <strong>knowledge points</strong> — the first covers the most basic idea, later ones introduce the harder cases. You clear a knowledge point by answering its questions correctly, and only then does the next one open. Advanced topics unlock when the topic as a whole is mastered, not when you have merely read it.</p>
+
+      <h2>4 · Targeted remediation</h2>
+      <p>Fail the <em>same</em> knowledge point twice and the lesson stops. Rather than lowering the bar, the system queues a <strong>remedial review</strong> on that knowledge point's key prerequisites — the specific earlier topics it leans on — so you clear the bar fully on the next attempt.</p>
+
+      <h2>5 · Encompassings and fractional implicit repetition</h2>
+      <p>Advanced topics implicitly practise simpler ones. Reasoning about <em>what comes back out of a subagent</em> exercises <em>context isolation</em> whether you meant to or not. Those relationships are recorded as <strong>encompassing edges</strong> with a coverage weight, and reviewing an advanced topic pays discounted repetition credit down to everything it encompasses. Credit that arrives too early counts for less. When credit reaches a full repetition, the simpler topic's review schedule moves on without you ever seeing it in the queue.</p>
+      <p>The same edges drive <strong>review compression</strong>: when several due topics are covered by one advanced topic, you are served the advanced one and the rest are paid implicitly. That is why the review queue stays short as the graph fills up.</p>
+
+      <h2>6 · Spaced repetition and XP</h2>
+      <p>A cleared topic comes back after 1 day, then 3, 7, 16, 35, 75, 160 — each successful repetition pushing the next one further out. XP rewards both quantity and quality: full credit for clearing something first try, partial credit after a stumble, a bonus for mastering a topic outright.</p>
+
+      <h2>Sources</h2>
+      <p>Content is drawn from <code>08-claude-agent-sdk/notes.md</code> in this repo, which is built from the official Agent SDK references cross-checked against the CCA-F Exam Guide v1.0. Method from <a href="https://www.mathacademy.com/">Math Academy</a>'s <em>The Math Academy Way</em> (Justin Skycak). Data format modelled on <a href="https://github.com/withmarbleapp/os-taxonomy">withmarbleapp/os-taxonomy</a> — topics as nodes, dependencies as edges with a strength and a reason, plus an encompassings file this graph adds.</p>
+      <p class="small muted">The taxonomy lives in <code>learning-graph/data/*.json</code> and is validated with <code>node learning-graph/scripts/validate.mjs</code>. Your progress is stored in this browser only.</p>
+    </section>
+
+    <footer>
+      <p>Progress is saved locally in this browser. <button type="button" class="btn btn-ghost small" id="resetBtn">Reset all progress</button></p>
+    </footer>
+  </main>
+
+  <script>
+    function toggleTheme() {
+      var html = document.documentElement;
+      var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      try { localStorage.setItem('ccaf-theme', next); } catch(e) {}
+      var btn = document.getElementById('themeToggle');
+      if (btn) btn.textContent = next === 'dark' ? '☀️' : '🌙';
+    }
+    (function() {
+      var btn = document.getElementById('themeToggle');
+      if (btn) btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+    })();
+  </script>
+  <script src="../assets/js/gist-sync.js"></script>
+  <script src="graph-data.js"></script>
+  <script src="app.js"></script>
+  <script src="../assets/js/header-scroll.js"></script>
+</body>
+</html>

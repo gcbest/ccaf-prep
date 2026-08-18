@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gcbest.github.io/ccaf-prep/learning-graph/schema/encompassings.schema.json",
+  "title": "Encompassing edges",
+  "description": "Working on topicId implicitly practises encompassedId. Powers fractional implicit repetition and review compression.",
+  "type": "object",
+  "required": ["encompassings"],
+  "properties": {
+    "$comment": { "type": "string" },
+    "encompassings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["topicId", "encompassedId", "coverage", "reason"],
+        "properties": {
+          "topicId": { "type": "string", "pattern": "^mt_[a-z0-9_]+$" },
+          "encompassedId": { "type": "string", "pattern": "^mt_[a-z0-9_]+$" },
+          "coverage": {
+            "type": "number", "exclusiveMinimum": 0, "maximum": 1,
+            "description": "Fraction of the simpler topic actually exercised. 1.0 is a full encompassing."
+          },
+          "reason": { "type": "string", "minLength": 10 }
+        }
+      }
+    }
+  }
+}

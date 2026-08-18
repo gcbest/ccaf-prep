@@ -1,0 +1,27 @@
+{
+  "builtAt": "2026-08-18",
+  "stats": {
+    "topics": 44,
+    "clusters": 5,
+    "dependencies": 64,
+    "hardDependencies": 49,
+    "encompassings": 48,
+    "knowledgePoints": 60,
+    "questions": 164,
+    "layers": 8,
+    "coreTopics": 38,
+    "estimatedMinutes": 314
+  },
+  "checksums": {
+    "topics.json": "sha256:127e19d96fb721bb",
+    "dependencies.json": "sha256:97ecf1b2ce4122c8",
+    "encompassings.json": "sha256:a0f478b72d90b499",
+    "clusters.json": "sha256:90777e24eb3505a2",
+    "curriculum-standards.json": "sha256:a223dd8a8229ab1e",
+    "knowledge-points/foundations.json": "sha256:a6b494ec8fdb035e",
+    "knowledge-points/hooks.json": "sha256:78809f8ad1d54b5a",
+    "knowledge-points/sessions.json": "sha256:9c6a44f461b53045",
+    "knowledge-points/subagents.json": "sha256:c3054ba1bc3bb7eb",
+    "knowledge-points/tools-mcp.json": "sha256:93ed75f3e1c0aade"
+  }
+}

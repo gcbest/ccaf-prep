@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gcbest.github.io/ccaf-prep/learning-graph/schema/dependencies.schema.json",
+  "title": "Prerequisite edges",
+  "type": "object",
+  "required": ["dependencies"],
+  "properties": {
+    "$comment": { "type": "string" },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["topicId", "prerequisiteId", "strength", "reason"],
+        "properties": {
+          "topicId": { "type": "string", "pattern": "^mt_[a-z0-9_]+$" },
+          "prerequisiteId": { "type": "string", "pattern": "^mt_[a-z0-9_]+$" },
+          "strength": {
+            "enum": ["hard", "soft"],
+            "description": "hard gates the knowledge frontier; soft only orders the queue."
+          },
+          "reason": { "type": "string", "minLength": 10 }
+        }
+      }
+    }
+  }
+}

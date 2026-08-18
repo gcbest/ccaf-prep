@@ -1,0 +1,809 @@
+{
+  "$comment": "Knowledge points for cl_subagents.",
+  "cluster": "cl_subagents",
+  "topics": [
+    {
+      "topicId": "mt_subagent_why",
+      "knowledgePoints": [
+        {
+          "id": "kp_subwhy_1",
+          "name": "Four reasons, and only four",
+          "keyPrerequisites": ["mt_loop_ownership"],
+          "teach": "<p>Delegation costs a round trip, a fresh context, and a summary in place of detail. It is worth paying for exactly four reasons:</p><ul><li><strong>Context isolation</strong> — verbose exploration stays out of the main window. A research agent can read fifty files without fifty files landing in your conversation.</li><li><strong>Parallelization</strong> — independent subtasks finish in the time of the slowest, not the sum.</li><li><strong>Specialized instructions</strong> — expertise that would be noise in the main prompt.</li><li><strong>Tool restrictions</strong> — a doc reviewer holding only <code>Read</code> and <code>Grep</code> cannot modify anything, structurally.</li></ul><p>If none of the four applies, a subagent is overhead with extra steps.</p>",
+          "questions": [
+            {
+              "id": "q_subwhy_1a",
+              "q": "Which is NOT one of the four reasons to delegate to a subagent?",
+              "options": [
+                "Keeping verbose exploration out of the main context",
+                "Getting a cheaper per-token rate for the subtask",
+                "Running independent subtasks in parallel",
+                "Making a capability structurally impossible by withholding tools"
+              ],
+              "correct": 1,
+              "explain": "You can set a cheaper model per agent, but price is not why the pattern exists — and a subagent is not billed at a discount for being one."
+            },
+            {
+              "id": "q_subwhy_1b",
+              "q": "A subagent is given only Read and Grep. What happens when it 'wants' to edit a file?",
+              "options": [
+                "It asks the parent for permission",
+                "It errors and the parent sees a permission denial",
+                "Nothing — the tool is not in its session at all, so it works without it",
+                "It falls back to Bash"
+              ],
+              "correct": 2,
+              "explain": "Withholding a tool is not a denial. The tool simply does not exist in that session: no prompt, no error, no mention."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_subwhy_1",
+          "q": "Name the reason to delegate that has nothing to do with tokens or speed.",
+          "options": [
+            "Specialized instructions and tool restriction",
+            "Cheaper billing",
+            "Higher rate limits",
+            "Automatic retries"
+          ],
+          "correct": 0,
+          "explain": "Two of the four reasons are about capability shaping rather than resource use."
+        }
+      ]
+    },
+
+    {
+      "topicId": "mt_subagent_definition_sources",
+      "knowledgePoints": [
+        {
+          "id": "kp_subdef_1",
+          "name": "Three sources and the precedence rule",
+          "keyPrerequisites": ["mt_subagent_why"],
+          "teach": "<ol><li><strong>Programmatically</strong> — the <code>agents</code> option on <code>query()</code>. Recommended for SDK apps: the definition ships with the code.</li><li><strong>Filesystem</strong> — markdown files in <code>.claude/agents/</code>. Shared with anyone using the CLI in that repo.</li><li><strong>Built-in <code>general-purpose</code></strong> — Claude can spawn it with no definition at all.</li></ol><p class='kp-key'>Programmatic definitions take precedence over filesystem agents with the same name.</p><p>That precedence is what makes a shipped product predictable: a developer's local <code>.claude/agents/reviewer.md</code> cannot quietly replace the reviewer your app defines.</p>",
+          "questions": [
+            {
+              "id": "q_subdef_1a",
+              "q": "A repo has .claude/agents/reviewer.md and the app passes agents: { reviewer: {...} }. Which definition runs?",
+              "options": [
+                "The filesystem one, because disk wins",
+                "The programmatic one, because it takes precedence",
+                "Both, merged field by field",
+                "Neither — the name collision is an error"
+              ],
+              "correct": 1,
+              "explain": "Programmatic wins. That is what makes a shipped agent immune to whatever is in someone's working copy."
+            },
+            {
+              "id": "q_subdef_1b",
+              "q": "Which subagent can Claude spawn with no definition anywhere?",
+              "options": [
+                "research-assistant",
+                "general-purpose",
+                "reviewer",
+                "None — every subagent requires a definition"
+              ],
+              "correct": 1,
+              "explain": "general-purpose is built in. Explore and Plan are also built in, but they are one-shot and return no agentId."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_subdef_1",
+          "q": "Which definition source should a shipped SDK product prefer, and why?",
+          "options": [
+            "Filesystem, so ops can tune agents without a deploy",
+            "Programmatic, so the definition ships with the code and cannot be shadowed",
+            "Built-in general-purpose, to avoid maintenance",
+            "Whichever the CLI used last"
+          ],
+          "correct": 1,
+          "explain": "Reproducibility again — the same reason production apps pass settingSources: []."
+        }
+      ]
+    },
+
+    {
+      "topicId": "mt_agent_definition",
+      "knowledgePoints": [
+        {
+          "id": "kp_agentdef_1",
+          "name": "The two required fields",
+          "keyPrerequisites": ["mt_subagent_definition_sources"],
+          "teach": "<p><code>AgentDefinition</code> requires exactly two fields:</p><ul><li><code>description</code> — natural language saying <em>when to use this agent</em>. <strong>This is what Claude matches against</strong> when deciding whether to delegate. Write it specifically, the way you would write a tool description.</li><li><code>prompt</code> — the subagent's system prompt.</li></ul><p>The failure mode follows directly: an agent that is never selected almost always has a vague description, not a broken prompt. \"Reviews things\" competes with everything; \"Reviews Python diffs for SQL injection and unsafe deserialization, before merge\" competes with nothing.</p>",
+          "questions": [
+            {
+              "id": "q_agentdef_1a",
+              "q": "Claude never delegates to your security-reviewer agent. Which field do you fix first?",
+              "options": [
+                "prompt — it must not be instructing the agent properly",
+                "description — it is what Claude matches against when choosing an agent",
+                "model — the agent is too small to be selected",
+                "tools — Claude skips agents with restricted tools"
+              ],
+              "correct": 1,
+              "explain": "Selection happens before the prompt is ever used. If the description does not describe the situation you are in, the agent is invisible."
+            },
+            {
+              "id": "q_agentdef_1b",
+              "q": "Which two AgentDefinition fields are required?",
+              "options": [
+                "name and prompt",
+                "description and prompt",
+                "description and tools",
+                "prompt and model"
+              ],
+              "correct": 1,
+              "explain": "The name is the key you register it under; description and prompt are the required contents."
+            }
+          ]
+        },
+        {
+          "id": "kp_agentdef_2",
+          "name": "The optional fields worth knowing",
+          "keyPrerequisites": ["mt_subagent_definition_sources"],
+          "teach": "<table class='kp-table'><tr><th>Field</th><th>Notes</th></tr><tr><td><code>tools</code></td><td>Allowed tool names. <strong>Omit → inherits every tool available to subagents.</strong></td></tr><tr><td><code>disallowedTools</code></td><td>Removes tools; accepts MCP patterns <code>mcp__server</code>, <code>mcp__server__*</code>, <code>mcp__*</code>.</td></tr><tr><td><code>model</code></td><td><code>opus</code> / <code>sonnet</code> / <code>haiku</code> / <code>inherit</code> / full id. Omitted → main model.</td></tr><tr><td><code>skills</code>, <code>memory</code>, <code>mcpServers</code></td><td>Preloaded skills; <code>user</code>/<code>project</code>/<code>local</code> memory; per-agent servers.</td></tr><tr><td><code>initialPrompt</code></td><td>Auto-submitted first user turn <strong>only when the agent runs as the main thread agent</strong>; ignored as a subagent.</td></tr><tr><td><code>maxTurns</code>, <code>background</code>, <code>effort</code>, <code>permissionMode</code></td><td>Per-agent turn cap, forced background execution, effort level, permission mode.</td></tr></table>",
+          "questions": [
+            {
+              "id": "q_agentdef_2a",
+              "q": "You set initialPrompt on an agent that is only ever invoked as a subagent. What happens?",
+              "options": [
+                "It is submitted as the subagent's first user turn",
+                "It is ignored — initialPrompt only applies when the agent is the main thread agent",
+                "It replaces the agent's prompt field",
+                "It raises a validation error"
+              ],
+              "correct": 1,
+              "explain": "Silently ignored. If you need the subagent to start with specific content, it goes in the Agent tool's prompt string instead."
+            },
+            {
+              "id": "q_agentdef_2b",
+              "q": "Which value of `model` makes a subagent explicitly track whatever the main session is using?",
+              "options": [
+                "'auto'",
+                "'inherit'",
+                "'default'",
+                "Omitting the field, which is the only way"
+              ],
+              "correct": 1,
+              "explain": "Omitting also uses the main model, but 'inherit' says so on purpose — useful when a template might otherwise be given a fixed model."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_agentdef_1",
+          "q": "What is AgentDefinition.description actually for?",
+          "options": [
+            "Documentation for your team",
+            "The text Claude matches against to decide whether to delegate to this agent",
+            "The subagent's system prompt",
+            "The label shown in the CLI"
+          ],
+          "correct": 1,
+          "explain": "It is a selection mechanism, not a comment — the same role a tool description plays for tool choice."
+        }
+      ]
+    },
+
+    {
+      "topicId": "mt_agentdef_case_trap",
+      "knowledgePoints": [
+        {
+          "id": "kp_casetrap_1",
+          "name": "Two objects, two conventions, one file",
+          "keyPrerequisites": ["mt_agent_definition"],
+          "teach": "<p>In Python, <code>AgentDefinition</code> is a dataclass whose field names stay <strong>camelCase</strong> — <code>disallowedTools</code>, <code>permissionMode</code>, <code>maxTurns</code>, <code>mcpServers</code>, <code>initialPrompt</code> — because they map directly to the wire format shared with the TypeScript SDK.</p><p>Meanwhile <code>ClaudeAgentOptions</code> in the same file uses snake_case: <code>disallowed_tools</code>, <code>permission_mode</code>, <code>max_turns</code>.</p><pre class='kp-code'>AgentDefinition(description=..., prompt=..., maxTurns=5)     # correct\nAgentDefinition(description=..., prompt=..., max_turns=5)    # TypeError\n\nClaudeAgentOptions(max_turns=5)                              # correct\nClaudeAgentOptions(maxTurns=5)                               # wrong</pre><p>Passing the wrong one raises <code>TypeError</code> at construction, not at run time — which is the merciful version.</p>",
+          "questions": [
+            {
+              "id": "q_casetrap_1a",
+              "q": "In Python, which object takes max_turns and which takes maxTurns?",
+              "options": [
+                "Both take max_turns",
+                "ClaudeAgentOptions takes max_turns; AgentDefinition takes maxTurns",
+                "AgentDefinition takes max_turns; ClaudeAgentOptions takes maxTurns",
+                "Both take maxTurns"
+              ],
+              "correct": 1,
+              "explain": "AgentDefinition keeps camelCase because it maps straight to the wire format shared with TypeScript."
+            },
+            {
+              "id": "q_casetrap_1b",
+              "q": "Why does AgentDefinition keep camelCase in Python at all?",
+              "options": [
+                "An oversight that is being fixed",
+                "Its fields map directly onto the wire format shared with the TypeScript SDK",
+                "Python dataclasses cannot use snake_case",
+                "To match the .claude/agents markdown front matter"
+              ],
+              "correct": 1,
+              "explain": "It is a serialisation boundary showing through. Knowing why makes it stick better than memorising the list."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_casetrap_1",
+          "q": "AgentDefinition(prompt=..., description=..., permission_mode='plan') — what happens?",
+          "options": [
+            "It works",
+            "TypeError at construction, because the field is permissionMode",
+            "It works but the mode is ignored",
+            "It raises at query time"
+          ],
+          "correct": 1,
+          "explain": "Construction-time TypeError. ClaudeAgentOptions is the one that wants permission_mode."
+        }
+      ]
+    },
+
+    {
+      "topicId": "mt_subagent_tool_scope",
+      "knowledgePoints": [
+        {
+          "id": "kp_toolscope_1",
+          "name": "Omitted, listed, empty",
+          "keyPrerequisites": ["mt_agent_definition"],
+          "teach": "<p>Three states, three very different agents:</p><ul><li><code>tools</code> <strong>omitted</strong> → inherits <em>every</em> tool available to subagents. Silence means \"give them the whole keyring.\"</li><li><code>tools: ['Read', 'Grep']</code> → exactly those. Anything else is not in the session at all.</li><li><code>tools: []</code> → no tools. The agent can only think and answer.</li></ul><p>Common combinations worth recognising: read-only analysis <code>Read, Grep, Glob</code>; test execution <code>Bash, Read, Grep</code>; code modification <code>Read, Edit, Write, Grep, Glob</code>; full access → omit the field.</p><p><code>disallowedTools</code> subtracts, and accepts MCP patterns: <code>mcp__server</code>, <code>mcp__server__*</code>, <code>mcp__*</code>.</p>",
+          "questions": [
+            {
+              "id": "q_toolscope_1a",
+              "q": "You define a doc-reviewer subagent and omit the tools field entirely. What can it do?",
+              "options": [
+                "Nothing, until you list tools",
+                "Only Read, Grep and Glob, the safe defaults",
+                "It inherits every tool available to subagents",
+                "Only the tools the parent listed in allowedTools"
+              ],
+              "correct": 2,
+              "explain": "Omission is maximal, not minimal. Listing is how you restrict."
+            },
+            {
+              "id": "q_toolscope_1b",
+              "q": "Which tool set makes it structurally impossible for a subagent to modify the repo?",
+              "options": [
+                "Read, Grep, Glob",
+                "Read, Grep, Glob, Bash",
+                "Omit tools and set permissionMode: 'plan'",
+                "Read, Edit with a PreToolUse hook"
+              ],
+              "correct": 0,
+              "explain": "Bash re-opens every door. Plan mode and hooks are policy layers that can be misconfigured; a missing tool cannot be."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_toolscope_1",
+          "q": "tools omitted vs. tools: [] — what is the difference?",
+          "options": [
+            "No difference; both mean 'default tools'",
+            "Omitted inherits every available tool; [] means the agent has none",
+            "Omitted means none; [] inherits everything",
+            "Both raise a validation error"
+          ],
+          "correct": 1,
+          "explain": "One of the confusable pairs the exam likes: absence and emptiness mean opposite things here."
+        }
+      ]
+    },
+
+    {
+      "topicId": "mt_agent_task_tool",
+      "knowledgePoints": [
+        {
+          "id": "kp_tasktool_1",
+          "name": "Delegation happens through a tool, and it must be approved",
+          "keyPrerequisites": ["mt_subagent_definition_sources"],
+          "teach": "<p>Claude does not delegate by magic. It calls a tool, and <strong>that tool's name must be auto-approved or the delegation silently fails</strong> — it falls through to <code>canUseTool</code>, or is denied outright in <code>dontAsk</code> mode.</p><p>So a coordinator whose subagents never run, with no error anywhere, is almost always missing the spawn tool from <code>allowedTools</code>.</p><p>The tool's name has changed:</p><ul><li><strong>Current SDK: the tool is <code>Agent</code>.</strong> Put <code>\"Agent\"</code> in <code>allowedTools</code>.</li><li>It was renamed from <code>Task</code> in Claude Code <strong>v2.1.63</strong>. Current releases still emit <code>\"Task\"</code> in the <code>system:init</code> tools list and in <code>result.permission_denials[].tool_name</code>, so detection code should match both.</li></ul>",
+          "questions": [
+            {
+              "id": "q_tasktool_1a",
+              "q": "A coordinator's subagents never run and nothing errors. What is the most likely cause?",
+              "options": [
+                "The subagent definitions are invalid",
+                "The spawn tool is not in allowedTools, so delegation is silently denied",
+                "maxTurns is too low",
+                "The subagents have no tools"
+              ],
+              "correct": 1,
+              "explain": "Silent is the tell. An unapproved spawn tool does not error — the delegation simply never happens."
+            },
+            {
+              "id": "q_tasktool_1b",
+              "q": "Your parser looks for delegation in the message stream. Which tool names should it match?",
+              "options": [
+                "Only \"Agent\"",
+                "Only \"Task\"",
+                "Both \"Agent\" and \"Task\", since older names still appear in system:init and permission_denials",
+                "\"Subagent\""
+              ],
+              "correct": 2,
+              "explain": "Match both. The rename landed in v2.1.63 but the old name persists in several places in the stream."
+            }
+          ]
+        },
+        {
+          "id": "kp_tasktool_2",
+          "name": "The exam answers Task; your code writes Agent",
+          "keyPrerequisites": [],
+          "teach": "<p class='kp-key'>The CCA-F Exam Guide (v1.0, July 2026) predates the rename and names the <strong>Task</strong> tool.</p><p>Glossary term t4 asks what a coordinator's <code>allowedTools</code> must include and keys the answer to <code>\"Task\"</code>.</p><ul><li><strong>On the exam: answer \"Task.\"</strong></li><li><strong>In real code: write \"Agent\"</strong>, and match both when parsing.</li></ul><p>This is the single largest course-versus-exam divergence in Section 8. Hold both answers, and keep straight which context you are in.</p>",
+          "questions": [
+            {
+              "id": "q_tasktool_2a",
+              "q": "On the CCA-F exam, what must a coordinator's allowedTools include so it can spawn subagents?",
+              "options": [
+                "\"Agent\"",
+                "\"Task\"",
+                "\"Subagent\"",
+                "\"Delegate\""
+              ],
+              "correct": 1,
+              "explain": "Exam answer: Task. The exam guide v1.0 predates the v2.1.63 rename, and glossary t4 keys to it."
+            },
+            {
+              "id": "q_tasktool_2b",
+              "q": "You are writing production code today against a current SDK. Which name goes in allowedTools?",
+              "options": [
+                "\"Task\", to match the exam",
+                "\"Agent\"",
+                "Both, in an array",
+                "Neither — the spawn tool is always approved"
+              ],
+              "correct": 1,
+              "explain": "\"Agent\" is the current tool. Listing \"Task\" as well is harmless but only \"Agent\" is doing the work; matching both matters when parsing, not when allowing."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_tasktool_1",
+          "q": "Give both answers to \"what is the subagent spawn tool called?\" and say which context each belongs to.",
+          "options": [
+            "Agent on the exam, Task in code",
+            "Task on the exam, Agent in code",
+            "Task in both",
+            "Agent in both"
+          ],
+          "correct": 1,
+          "explain": "Exam guide v1.0 says Task; the shipping SDK renamed it to Agent in v2.1.63."
+        }
+      ]
+    },
+
+    {
+      "topicId": "mt_context_isolation",
+      "knowledgePoints": [
+        {
+          "id": "kp_isolation_1",
+          "name": "The inheritance table",
+          "keyPrerequisites": ["mt_agent_definition"],
+          "teach": "<p>A subagent's context window <strong>starts fresh</strong>. It does not inherit the parent's conversation.</p><table class='kp-table'><tr><th>It receives</th><th>It does <em>not</em> receive</th></tr><tr><td>Its own <code>AgentDefinition.prompt</code></td><td>The parent's conversation history or tool results</td></tr><tr><td>The Agent tool's prompt string</td><td>The parent's system prompt</td></tr><tr><td>Project CLAUDE.md — only if loaded via <code>settingSources</code></td><td>Preloaded skill content, unless listed in <code>skills</code></td></tr><tr><td>Tool definitions (inherited, or the <code>tools</code> subset)</td><td></td></tr></table>",
+          "questions": [
+            {
+              "id": "q_isolation_1a",
+              "q": "Which of these does a subagent inherit from its parent?",
+              "options": [
+                "The parent's conversation history",
+                "The parent's system prompt",
+                "Tool definitions",
+                "The parent's tool results"
+              ],
+              "correct": 2,
+              "explain": "Tools cross; conversation does not. That asymmetry is the whole design."
+            },
+            {
+              "id": "q_isolation_1b",
+              "q": "Under what condition does a subagent see the project CLAUDE.md?",
+              "options": [
+                "Always",
+                "Only if settingSources loaded it",
+                "Only if the parent read it into context first",
+                "Never — CLAUDE.md is main-thread only"
+              ],
+              "correct": 1,
+              "explain": "The same settingSources rule that governs the main thread governs the subagent."
+            }
+          ]
+        },
+        {
+          "id": "kp_isolation_2",
+          "name": "The one channel in",
+          "keyPrerequisites": [],
+          "teach": "<p class='kp-key'>The only content that crosses from parent to subagent is the Agent tool's prompt string.</p><p>Everything the subagent needs — a file path, an error message, a prior finding, a decision already made — must be written into that prompt explicitly. Nothing else carries.</p><p>This is exam glossary <strong>t6</strong>, near verbatim: <em>\"How does a subagent receive context from prior research findings?\"</em> → <strong>the findings must be explicitly included in its prompt.</strong></p><p>Practical consequence: a coordinator's job is largely <em>writing good prompts for its workers</em>. A delegation prompt that says \"continue the analysis\" is a delegation to an agent that has no idea what the analysis was.</p>",
+          "questions": [
+            {
+              "id": "q_isolation_2a",
+              "q": "How does a subagent receive context from prior research findings?",
+              "options": [
+                "It reads the parent's transcript automatically",
+                "The findings must be explicitly included in its prompt",
+                "Through shared memory between agents",
+                "Via the parent's system prompt, which is inherited"
+              ],
+              "correct": 1,
+              "explain": "Exam glossary t6. The Agent tool's prompt string is the only channel in."
+            },
+            {
+              "id": "q_isolation_2b",
+              "q": "A coordinator delegates with the prompt \"continue the analysis and report back.\" What goes wrong?",
+              "options": [
+                "Nothing — the subagent resumes from the parent's context",
+                "The subagent has no idea what analysis is meant, because none of it crossed the boundary",
+                "The subagent errors on an empty prompt",
+                "The subagent inherits the analysis but not the tools"
+              ],
+              "correct": 1,
+              "explain": "It will do something — that is the danger. It will just do it without any of the context the coordinator assumed it had."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_isolation_1",
+          "q": "Name the only content that crosses from parent to subagent.",
+          "options": [
+            "The parent's last five messages",
+            "The Agent tool's prompt string",
+            "The parent's system prompt",
+            "Any file the parent read"
+          ],
+          "correct": 1,
+          "explain": "One string. Everything else must be written into it."
+        }
+      ]
+    },
+
+    {
+      "topicId": "mt_subagent_return",
+      "knowledgePoints": [
+        {
+          "id": "kp_return_1",
+          "name": "Only the final message comes back",
+          "keyPrerequisites": ["mt_context_isolation"],
+          "teach": "<p>Coming back the other way, the parent receives the subagent's <strong>final message</strong> as the Agent tool result. Intermediate tool calls and their results stay inside the subagent.</p><p>That is the entire point. A <code>research-assistant</code> can read fifty files without fifty files landing in the main context — the parent gets the conclusion, not the reading.</p><p>One wrinkle: the parent may <em>summarize</em> that final message in its own response. If you need it verbatim — a report, a diff, a list of findings — instruct the main query to preserve it.</p>",
+          "questions": [
+            {
+              "id": "q_return_1a",
+              "q": "A research subagent reads 50 files and reports back. What lands in the parent's context?",
+              "options": [
+                "All 50 file contents",
+                "The subagent's final message only",
+                "The subagent's full transcript",
+                "Nothing until the parent asks for it"
+              ],
+              "correct": 1,
+              "explain": "Final message only. This is exactly why delegation is the primary context lever."
+            },
+            {
+              "id": "q_return_1b",
+              "q": "Your coordinator keeps paraphrasing a subagent's carefully formatted report. What is the fix?",
+              "options": [
+                "Set the subagent's model to opus",
+                "Instruct the main query to preserve the subagent's final message verbatim",
+                "Increase maxTurns on the subagent",
+                "Return the report as a tool_result with isError: false"
+              ],
+              "correct": 1,
+              "explain": "The parent is free to summarise unless told otherwise. Say otherwise."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_return_1",
+          "q": "What does the parent receive as the Agent tool result?",
+          "options": [
+            "The subagent's full transcript",
+            "The subagent's final message",
+            "A structured summary generated by the SDK",
+            "A session id to fetch results with"
+          ],
+          "correct": 1,
+          "explain": "Final message. Everything else stayed inside."
+        }
+      ]
+    },
+
+    {
+      "topicId": "mt_subagent_runtime",
+      "knowledgePoints": [
+        {
+          "id": "kp_runtime_1",
+          "name": "Background by default, three layers deep",
+          "keyPrerequisites": ["mt_agent_task_tool"],
+          "teach": "<p>Behaviours that changed in <strong>v2.1.198</strong>:</p><ul><li><strong>Subagents run in the background by default.</strong> An Agent tool call that omits <code>run_in_background</code> launches a background subagent; Claude sets <code>run_in_background: false</code> when it needs the result before continuing. <code>background: true</code> on the definition forces background regardless.</li><li>A subagent inherits the main session's extended thinking configuration.</li></ul><p>Nesting: subagents can spawn subagents <strong>three layers deep by default</strong>. <code>CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH</code> changes it, and <code>1</code> turns nesting off.</p>",
+          "questions": [
+            {
+              "id": "q_runtime_1a",
+              "q": "How deep can subagents nest by default, and what changes it?",
+              "options": [
+                "One layer; nesting cannot be enabled",
+                "Three layers; CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH, where 1 disables nesting",
+                "Unlimited; capped only by maxTurns",
+                "Two layers; set by AgentDefinition.maxTurns"
+              ],
+              "correct": 1,
+              "explain": "Three by default. Setting the variable to 1 is how you flatten the topology."
+            },
+            {
+              "id": "q_runtime_1b",
+              "q": "Claude needs a subagent's answer before it can continue. What does it do?",
+              "options": [
+                "Sets run_in_background: false on the Agent tool call",
+                "Sets background: true on the definition",
+                "Polls the subagent's session id",
+                "Nothing — subagents always block"
+              ],
+              "correct": 0,
+              "explain": "Background is the default; blocking is the explicit choice Claude makes when the result is needed inline."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_runtime_1",
+          "q": "Since v2.1.198, do subagents block the parent by default?",
+          "options": [
+            "Yes, always",
+            "No — they run in the background unless Claude sets run_in_background: false",
+            "Only when nested",
+            "Only when they have tools"
+          ],
+          "correct": 1,
+          "explain": "Background by default; blocking on demand."
+        }
+      ]
+    },
+
+    {
+      "topicId": "mt_subagent_detect_resume",
+      "knowledgePoints": [
+        {
+          "id": "kp_detect_1",
+          "name": "Detecting delegation in the stream",
+          "keyPrerequisites": ["mt_agent_task_tool"],
+          "teach": "<p>To show \"delegating to research-assistant…\" in your own UI:</p><ul><li>Look for <code>tool_use</code> blocks named <code>\"Agent\"</code> — <em>or</em> <code>\"Task\"</code>, which still appears in current releases.</li><li>Messages produced <em>inside</em> a subagent carry <code>parent_tool_use_id</code>. That is how you attribute a message to the right agent.</li><li>Python reads blocks via <code>message.content</code>; TypeScript via <code>message.message.content</code> — the SDK message wraps the API message.</li></ul>",
+          "questions": [
+            {
+              "id": "q_detect_1a",
+              "q": "Which field tells you a message came from inside a subagent rather than the main thread?",
+              "options": [
+                "agent_id",
+                "parent_tool_use_id",
+                "session_id",
+                "subagent: true"
+              ],
+              "correct": 1,
+              "explain": "parent_tool_use_id points back at the Agent tool call that spawned it."
+            },
+            {
+              "id": "q_detect_1b",
+              "q": "In TypeScript, how do you reach the content blocks of an SDK message?",
+              "options": [
+                "message.content",
+                "message.message.content",
+                "message.blocks",
+                "message.data.content"
+              ],
+              "correct": 1,
+              "explain": "The SDK message wraps the API message in TypeScript. Python flattens it to message.content."
+            }
+          ]
+        },
+        {
+          "id": "kp_detect_2",
+          "name": "Resuming a subagent",
+          "keyPrerequisites": [],
+          "teach": "<p>The Agent tool result contains a text block with <code>agentId: &lt;id&gt;</code>. To go back to that same subagent later:</p><ol><li>Capture the <code>session_id</code> and the <code>agentId</code>.</li><li>Re-query with <code>resume: sessionId</code>, naming the agent in the prompt.</li></ol><p>Built-in <code>Explore</code> and <code>Plan</code> agents are one-shot and return <strong>no agentId</strong> — there is nothing to resume.</p><p>Beyond a few agents per turn, the <code>Workflow</code> tool (TS SDK v0.3.149+) moves orchestration into a script that runs outside the conversation context.</p>",
+          "questions": [
+            {
+              "id": "q_detect_2a",
+              "q": "What two identifiers do you need to resume a specific subagent?",
+              "options": [
+                "session_id and agentId",
+                "parent_tool_use_id and tool_use_id",
+                "agentId alone",
+                "session_id and the agent's name only"
+              ],
+              "correct": 0,
+              "explain": "Session to get back to the conversation, agentId to name which agent inside it."
+            },
+            {
+              "id": "q_detect_2b",
+              "q": "Why can you not resume an Explore agent?",
+              "options": [
+                "It runs in a separate process",
+                "It is one-shot and returns no agentId",
+                "Its session is never persisted",
+                "It has no tools"
+              ],
+              "correct": 1,
+              "explain": "Explore and Plan are both one-shot built-ins. No agentId, nothing to resume."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_detect_1",
+          "q": "Where does agentId come from?",
+          "options": [
+            "The system:init message",
+            "A text block in the Agent tool result",
+            "The AgentDefinition you wrote",
+            "parent_tool_use_id"
+          ],
+          "correct": 1,
+          "explain": "It comes back with the result, which is why you have to capture it at the time."
+        }
+      ]
+    },
+
+    {
+      "topicId": "mt_hub_and_spoke",
+      "knowledgePoints": [
+        {
+          "id": "kp_hub_1",
+          "name": "The topology isolation forces",
+          "keyPrerequisites": ["mt_context_isolation"],
+          "teach": "<p><strong>Hub-and-spoke</strong>: a coordinator owns all inter-subagent communication, error handling, and routing. Subagents do not talk to each other.</p><p>This is not a style preference — it is what context isolation leaves you with. There is no channel between siblings, because the only channel that exists is a parent writing a prompt string for a child.</p><p>So when subagent B needs something subagent A discovered, the sequence is always: A returns its final message → the coordinator reads it → the coordinator writes it into B's prompt. (Exam glossary <strong>t3</strong>.)</p>",
+          "questions": [
+            {
+              "id": "q_hub_1a",
+              "q": "Three subagents each need a fact the first one discovered. How does it reach them?",
+              "options": [
+                "The first subagent broadcasts it to its siblings",
+                "The coordinator reads the first agent's final message and writes the fact into each subsequent prompt",
+                "Shared session memory makes it available automatically",
+                "Each subagent re-derives it independently"
+              ],
+              "correct": 1,
+              "explain": "Hub-and-spoke, forced by isolation. Every fact that moves between workers moves through the coordinator."
+            },
+            {
+              "id": "q_hub_1b",
+              "q": "Why can't you build a mesh of subagents that message each other directly?",
+              "options": [
+                "The SDK rate-limits agent-to-agent calls",
+                "There is no sibling channel — a subagent's only inbound content is the prompt its parent wrote",
+                "Mesh topologies require the Workflow tool",
+                "Only three agents may run at once"
+              ],
+              "correct": 1,
+              "explain": "The absence of a channel is the architecture. Everything else follows from it."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_hub_1",
+          "q": "Name the coordination pattern in which subagents never communicate directly.",
+          "options": [
+            "Prompt chaining",
+            "Hub-and-spoke",
+            "Evaluator-optimizer",
+            "Dynamic decomposition"
+          ],
+          "correct": 1,
+          "explain": "Glossary t3. The coordinator owns routing, error handling, and every message between workers."
+        }
+      ]
+    },
+
+    {
+      "topicId": "mt_decomposition_shapes",
+      "knowledgePoints": [
+        {
+          "id": "kp_decomp_1",
+          "name": "Fixed sequence vs. discovered subtasks",
+          "keyPrerequisites": ["mt_hub_and_spoke"],
+          "teach": "<ul><li><strong>Prompt chaining</strong> (glossary t12) — fixed sequential decomposition. The steps are known up front: analyse each file, then run a separate cross-file integration pass. Use it when you can write the plan before the run starts.</li><li><strong>Dynamic / adaptive decomposition</strong> (t13) — subtasks generated from what each step discovers. Use it for open-ended investigation: \"add tests to a legacy codebase,\" where you cannot know what needs testing until you have looked.</li></ul><p>The discriminating question is simply: <em>could you have written the list of subtasks before starting?</em> If yes, chain. If no, decompose dynamically.</p>",
+          "questions": [
+            {
+              "id": "q_decomp_1a",
+              "q": "\"Add tests to this legacy codebase.\" Fixed chain or dynamic decomposition?",
+              "options": [
+                "Fixed chain — testing is always the same steps",
+                "Dynamic decomposition — the subtasks depend on what each step discovers",
+                "Neither; this is a single-agent task",
+                "Fixed chain, because the number of files is known"
+              ],
+              "correct": 1,
+              "explain": "You cannot list what needs testing before you have looked at the code. That is the definition of the dynamic case."
+            },
+            {
+              "id": "q_decomp_1b",
+              "q": "\"Summarise each of these 12 reports, then write one combined brief.\" Which shape?",
+              "options": [
+                "Dynamic decomposition",
+                "Prompt chaining — the steps are known up front",
+                "Hub-and-spoke, which is a third alternative to both",
+                "Neither; use a single query"
+              ],
+              "correct": 1,
+              "explain": "Per-item work then an integration pass, all writable in advance. Textbook prompt chaining."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_decomp_1",
+          "q": "What single question separates prompt chaining from dynamic decomposition?",
+          "options": [
+            "How many subagents are involved",
+            "Whether you could have written the list of subtasks before the run started",
+            "Whether the agents run in parallel",
+            "Whether a coordinator exists"
+          ],
+          "correct": 1,
+          "explain": "Known up front → chain. Discovered as you go → dynamic."
+        }
+      ]
+    },
+
+    {
+      "topicId": "mt_coordinator_defect",
+      "knowledgePoints": [
+        {
+          "id": "kp_coorddefect_1",
+          "name": "When every worker succeeds and the answer is still wrong",
+          "keyPrerequisites": ["mt_decomposition_shapes"],
+          "teach": "<p class='kp-key'>The coordinator is usually the defect.</p><p>The exam's multi-agent research scenario: three subagents each succeed, and the final report covers only one sub-topic. The tempting reads are \"a subagent failed silently\" or \"the aggregation step dropped content.\" Both are wrong.</p><p>The root cause is the <strong>coordinator's task decomposition being too narrow</strong> — it never asked for the other sub-topics, so nothing was there to aggregate.</p><p>The general rule: <strong>when every worker succeeds and the aggregate is wrong, look up, not down.</strong> Success at each node is evidence that the nodes are fine and the partition is not.</p>",
+          "questions": [
+            {
+              "id": "q_coorddefect_1a",
+              "q": "Three subagents each return a good report, and the combined answer covers only one sub-topic. Where is the bug?",
+              "options": [
+                "One subagent failed silently",
+                "The coordinator's task decomposition was too narrow",
+                "The aggregation step truncated the results",
+                "Context isolation dropped the other findings"
+              ],
+              "correct": 1,
+              "explain": "Every worker succeeded — so the workers are not the problem. What was never asked for cannot come back."
+            },
+            {
+              "id": "q_coorddefect_1b",
+              "q": "Which observation most strongly points at decomposition rather than worker failure?",
+              "options": [
+                "One subagent timed out",
+                "All subagents reported success and the aggregate is still incomplete",
+                "The coordinator ran out of turns",
+                "A tool returned isError: true"
+              ],
+              "correct": 1,
+              "explain": "Universal success plus an incomplete whole is the signature of a bad partition."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_coorddefect_1",
+          "q": "State the diagnostic rule for multi-agent failure.",
+          "options": [
+            "Always suspect the slowest subagent",
+            "When every worker succeeds and the aggregate is wrong, look up, not down",
+            "Retry the whole run with more turns",
+            "Blame context isolation first"
+          ],
+          "correct": 1,
+          "explain": "Look up. The coordinator owns the partition, and a bad partition survives perfect workers."
+        }
+      ]
+    }
+  ]
+}

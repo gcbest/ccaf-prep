@@ -1,0 +1,1150 @@
+{
+  "$comment": "Micro-topics — the nodes of the learning graph. Each is small enough to teach in one sitting and to assess on its own. `centrality` and `depth` are computed by scripts/build-web-data.mjs and written back here; do not hand-edit them.",
+  "subject": "Claude Agent SDK",
+  "sourceSection": "Section 8 · The Claude Agent SDK (08-claude-agent-sdk/notes.md)",
+  "topics": [
+    {
+      "id": "mt_subprocess_model",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_foundations",
+      "name": "The subprocess mental model",
+      "description": "The SDK spawns the Claude Code CLI as a subprocess and talks to it over a control protocol. That one fact explains why a library has permission modes, hooks, settings files, CLAUDE.md loading, and subagents.",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "Explain why a client library would have a `pathToClaudeCodeExecutable` option",
+        "Predict that a Claude Code feature (settings, CLAUDE.md, subagents) is reachable from the SDK before reading its docs"
+      ],
+      "assessmentPrompt": "Why does the Agent SDK have permission modes and settings files at all, when the raw Messages API has neither?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · The second engine",
+          "href": "../lessons/0010-claude-agent-sdk-orchestration.html#scene0"
+        },
+        {
+          "label": "Notes · Part 1",
+          "href": "../08-claude-agent-sdk/notes.md"
+        }
+      ],
+      "centrality": 0.698,
+      "layer": 1
+    },
+    {
+      "id": "mt_loop_ownership",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_foundations",
+      "name": "Mechanism vs. policy: what you stop writing",
+      "description": "In the hand-rolled loop you own stop_reason checks, tool dispatch, tool_result blocks, and the re-call. The SDK owns all of it and hands you a message stream. What you own shifts from mechanism to policy: which tools exist, who may call them, when to stop, what runs around each call.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Name the four steps of the hand-rolled loop the SDK absorbs",
+        "Classify a given concern as mechanism (SDK's) or policy (yours)"
+      ],
+      "assessmentPrompt": "You move a working hand-rolled agent onto the Agent SDK. Which of your code disappears, and which of it becomes configuration?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · The loop is no longer yours",
+          "href": "../lessons/0010-claude-agent-sdk-orchestration.html#scene1"
+        }
+      ],
+      "centrality": 1,
+      "layer": 0
+    },
+    {
+      "id": "mt_entry_points",
+      "type": "FACTUAL",
+      "cluster": "cl_foundations",
+      "name": "Packages, entry points, and options types",
+      "description": "TypeScript `@anthropic-ai/claude-agent-sdk` with `query({ prompt, options })` and the `Options` type; Python `claude-agent-sdk` with `query(prompt=..., options=...)` and `ClaudeAgentOptions`. TypeScript adds `startup()` → `WarmQuery` to pre-spawn the subprocess (60,000 ms default initialize timeout).",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "Recall both package names and both options type names without hedging",
+        "Say what `startup()` buys you and what it costs"
+      ],
+      "assessmentPrompt": "Name the package and the options type for each language, and say what pre-warming does.",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Installation and entry points",
+          "href": "../08-claude-agent-sdk/notes.md"
+        }
+      ],
+      "centrality": 0.651,
+      "layer": 1
+    },
+    {
+      "id": "mt_query_vs_client",
+      "type": "PROCEDURAL",
+      "cluster": "cl_foundations",
+      "name": "query() vs. ClaudeSDKClient",
+      "description": "`query()` opens a new session per call, handles one exchange, and cannot be interrupted. `ClaudeSDKClient` (Python) reuses one session across exchanges, is manually connected, and supports interrupts. Rule of thumb: if the next action depends on Claude's response, or you need to interrupt, use the client.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Pick the right entry point from a described workload",
+        "Name the two capabilities `query()` cannot provide"
+      ],
+      "assessmentPrompt": "A support console needs to interrupt a long-running agent when the customer hangs up. Which entry point, and why?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Notes · query() versus ClaudeSDKClient",
+          "href": "../08-claude-agent-sdk/notes.md"
+        }
+      ],
+      "centrality": 0.419,
+      "layer": 2
+    },
+    {
+      "id": "mt_system_prompt",
+      "type": "PROCEDURAL",
+      "cluster": "cl_foundations",
+      "name": "The system prompt is minimal by default",
+      "description": "Omitting `systemPrompt` gives a minimal prompt, not Claude Code's. `{ type: 'preset', preset: 'claude_code' }` opts into the full one; `append` extends it; `excludeDynamicSections: true` moves per-session context into the first user message so the prompt cache survives across machines.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Predict the behaviour difference between an SDK agent and the Claude Code CLI on the same prompt",
+        "Choose the right systemPrompt shape for a custom product agent vs. a coding agent"
+      ],
+      "assessmentPrompt": "Your SDK agent behaves nothing like Claude Code on the same task. What is the first option you check?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d3"
+      ],
+      "sources": [
+        {
+          "label": "Notes · The system prompt is minimal by default",
+          "href": "../08-claude-agent-sdk/notes.md"
+        }
+      ],
+      "centrality": 0.209,
+      "layer": 2
+    },
+    {
+      "id": "mt_setting_sources",
+      "type": "PROCEDURAL",
+      "cluster": "cl_foundations",
+      "name": "settingSources and CLAUDE.md loading",
+      "description": "`user` → ~/.claude/settings.json, `project` → .claude/settings.json, `local` → .claude/settings.local.json. Omitted loads all three; `[]` disables all three (endpoint-managed policy still loads). Project CLAUDE.md loads only when `\"project\"` is present. Python ≤ 0.1.59 treated `[]` as omitted.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Diagnose \"the agent ignores our CLAUDE.md\" from an options object",
+        "Justify `settingSources: []` for a deployed product"
+      ],
+      "assessmentPrompt": "An SDK app ignores the repo's CLAUDE.md. What is the most likely cause and the fix?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · It's ignoring our CLAUDE.md",
+          "href": "../lessons/0010-claude-agent-sdk-orchestration.html#scene2"
+        }
+      ],
+      "centrality": 0.372,
+      "layer": 2
+    },
+    {
+      "id": "mt_budgets",
+      "type": "PROCEDURAL",
+      "cluster": "cl_foundations",
+      "name": "Budgets, stopping, and structured output",
+      "description": "`maxTurns` caps agentic round trips, `maxBudgetUsd` stops on a client-side cost estimate, `taskBudget: { total }` is an API-side token budget the model is told about so it can pace itself, `abortController` cancels, and `outputFormat: { type: 'json_schema', schema }` shapes the final result.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Distinguish caps that cut the model off from budgets the model can plan against",
+        "Pick the right stop control for a described failure mode"
+      ],
+      "assessmentPrompt": "Which budget option does the model itself know about, and why does that matter?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · What stops it?",
+          "href": "../lessons/0010-claude-agent-sdk-orchestration.html#scene3"
+        }
+      ],
+      "centrality": 0.023,
+      "layer": 1
+    },
+    {
+      "id": "mt_subagent_why",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_subagents",
+      "name": "Why reach for a subagent",
+      "description": "Four reasons: context isolation (verbose exploration stays out of the main window), parallelization (independent subtasks finish in the time of the slowest), specialized instructions, and tool restriction. A tool left out of a subagent's `tools` isn't in its session at all.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Give the reason a particular delegation is worth its overhead",
+        "Reject delegation when none of the four reasons applies"
+      ],
+      "assessmentPrompt": "Name a case where delegating to a subagent makes the system worse, and a case where it is the only good option.",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · One agent, reading everything",
+          "href": "../lessons/0010-claude-agent-sdk-orchestration.html#scene4"
+        }
+      ],
+      "centrality": 0.349,
+      "layer": 1
+    },
+    {
+      "id": "mt_subagent_definition_sources",
+      "type": "FACTUAL",
+      "cluster": "cl_subagents",
+      "name": "Three ways to define a subagent",
+      "description": "Programmatically via the `agents` option (recommended for SDK apps), from markdown files in .claude/agents/, or the built-in `general-purpose` agent which needs no definition. Programmatic definitions take precedence over filesystem agents of the same name.",
+      "core": true,
+      "estMinutes": 5,
+      "evidence": [
+        "State which definition wins on a name collision",
+        "Choose a definition source for a shipped product vs. a repo convention"
+      ],
+      "assessmentPrompt": "A repo has .claude/agents/reviewer.md and the app passes an `agents: { reviewer: ... }`. Which one runs?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Three ways to define a subagent",
+          "href": "../08-claude-agent-sdk/notes.md"
+        }
+      ],
+      "centrality": 0.326,
+      "layer": 2
+    },
+    {
+      "id": "mt_agent_definition",
+      "type": "FACTUAL",
+      "cluster": "cl_subagents",
+      "name": "The AgentDefinition fields",
+      "description": "`description` and `prompt` are required — the description is what Claude matches against when choosing an agent. Optional: tools, disallowedTools, model, skills, memory, mcpServers, initialPrompt, maxTurns, background, effort, permissionMode.",
+      "core": true,
+      "estMinutes": 9,
+      "evidence": [
+        "List the two required fields and say what each is for",
+        "Explain why a vague description causes an agent never to be selected"
+      ],
+      "assessmentPrompt": "Claude never delegates to your `security-reviewer` agent. Which field do you fix first?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Notes · AgentDefinition",
+          "href": "../08-claude-agent-sdk/notes.md"
+        }
+      ],
+      "centrality": 0.256,
+      "layer": 3
+    },
+    {
+      "id": "mt_agentdef_case_trap",
+      "type": "FACTUAL",
+      "cluster": "cl_subagents",
+      "name": "The Python camelCase trap",
+      "description": "`AgentDefinition` keeps camelCase field names even in Python (disallowedTools, permissionMode, maxTurns, mcpServers, initialPrompt) because they map to the wire format shared with TypeScript. `ClaudeAgentOptions` uses snake_case. Mixing them raises TypeError at construction.",
+      "core": false,
+      "estMinutes": 4,
+      "evidence": [
+        "Spot the TypeError in a Python snippet that passes max_turns= to AgentDefinition"
+      ],
+      "assessmentPrompt": "In Python, which object takes `max_turns` and which takes `maxTurns`?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Notes · The Python camelCase trap",
+          "href": "../08-claude-agent-sdk/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 4
+    },
+    {
+      "id": "mt_subagent_tool_scope",
+      "type": "PROCEDURAL",
+      "cluster": "cl_subagents",
+      "name": "tools omitted vs. listed vs. empty",
+      "description": "Omitting `tools` inherits every tool available to subagents; listing them restricts to that set; `tools: []` leaves the agent with none. `disallowedTools` subtracts and accepts MCP patterns (mcp__server, mcp__server__*, mcp__*). Common sets: read-only Read/Grep/Glob; tests Bash/Read/Grep; edits Read/Edit/Write/Grep/Glob.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Predict what a subagent can do from its definition",
+        "Write a tool set that makes a described capability structurally impossible"
+      ],
+      "assessmentPrompt": "You define a doc-reviewer subagent and omit `tools` entirely. What can it do?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d2"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · One agent, reading everything",
+          "href": "../lessons/0010-claude-agent-sdk-orchestration.html#scene4"
+        }
+      ],
+      "centrality": 0,
+      "layer": 4
+    },
+    {
+      "id": "mt_agent_task_tool",
+      "type": "FACTUAL",
+      "cluster": "cl_subagents",
+      "name": "The tool that spawns subagents (Agent vs. Task)",
+      "description": "Delegation happens through a tool that must be auto-approved or the delegation silently fails. The tool is `Agent` in current SDKs, renamed from `Task` in Claude Code v2.1.63, and `\"Task\"` still appears in system:init and permission_denials. The CCA-F Exam Guide v1.0 predates the rename: answer \"Task\" on the exam, write \"Agent\" in code, match both when parsing.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Give the exam answer and the shipping answer without confusing them",
+        "Diagnose a coordinator whose delegations never happen"
+      ],
+      "assessmentPrompt": "A coordinator's subagents never run and nothing errors. What is missing from allowedTools — and what does the exam call it?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf-glossary:t4"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · The tool with two names",
+          "href": "../lessons/0010-claude-agent-sdk-orchestration.html#scene5"
+        }
+      ],
+      "centrality": 0.047,
+      "layer": 3
+    },
+    {
+      "id": "mt_context_isolation",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_subagents",
+      "name": "Context isolation: what crosses inward",
+      "description": "A subagent's context starts fresh. It receives its own prompt, the Agent tool's prompt string, tool definitions, and project CLAUDE.md if settingSources loaded it. It does not receive the parent's conversation history, tool results, or system prompt, nor preloaded skills unless listed. The only content that crosses from parent to child is the Agent tool's prompt string.",
+      "core": true,
+      "estMinutes": 10,
+      "evidence": [
+        "List what a subagent does and does not inherit",
+        "Rewrite a delegation prompt so a subagent has the file paths and findings it needs"
+      ],
+      "assessmentPrompt": "How does a subagent receive context from prior research findings?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d5",
+        "ccaf-glossary:t6"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · What actually crosses the boundary",
+          "href": "../lessons/0010-claude-agent-sdk-orchestration.html#scene6"
+        }
+      ],
+      "centrality": 0.186,
+      "layer": 4
+    },
+    {
+      "id": "mt_subagent_return",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_subagents",
+      "name": "What comes back out",
+      "description": "The parent receives the subagent's final message as the Agent tool result. Intermediate tool calls and results stay inside the subagent — that is the point. The parent may summarize that final message; to keep it verbatim, instruct the main query to do so.",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "Explain why fifty files read by a subagent cost the parent almost nothing",
+        "Preserve a subagent's exact output when a summary would lose detail"
+      ],
+      "assessmentPrompt": "A research subagent reads 50 files. What lands in the parent's context?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · What actually crosses the boundary",
+          "href": "../lessons/0010-claude-agent-sdk-orchestration.html#scene6"
+        }
+      ],
+      "centrality": 0.116,
+      "layer": 5
+    },
+    {
+      "id": "mt_subagent_runtime",
+      "type": "FACTUAL",
+      "cluster": "cl_subagents",
+      "name": "Background execution and nesting depth",
+      "description": "Since v2.1.198 subagents run in the background by default; Claude sets run_in_background: false when it needs the result before continuing, and `background: true` on the definition forces background regardless. Subagents inherit the main session's extended thinking config and can nest three layers deep by default (CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH, 1 disables nesting).",
+      "core": false,
+      "estMinutes": 5,
+      "evidence": [
+        "State the default nesting depth and how to turn nesting off",
+        "Predict whether a delegation blocks the parent"
+      ],
+      "assessmentPrompt": "How deep can subagents nest by default, and what changes it?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Behaviors that changed in v2.1.198",
+          "href": "../08-claude-agent-sdk/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 4
+    },
+    {
+      "id": "mt_subagent_detect_resume",
+      "type": "PROCEDURAL",
+      "cluster": "cl_subagents",
+      "name": "Detecting and resuming a subagent",
+      "description": "Detect delegation by tool_use blocks named Agent (or Task); messages from inside carry parent_tool_use_id. Python reads message.content, TypeScript message.message.content. The Agent tool result carries `agentId`; capture it with session_id and re-query with resume plus the agent named in the prompt. Explore and Plan are one-shot and return no agentId.",
+      "core": false,
+      "estMinutes": 7,
+      "evidence": [
+        "Write the detection predicate that works across the rename",
+        "Name the two identifiers needed to resume a subagent"
+      ],
+      "assessmentPrompt": "Your UI needs to show \"delegating to research-assistant…\". What do you watch for in the message stream?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Detecting and resuming",
+          "href": "../08-claude-agent-sdk/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 4
+    },
+    {
+      "id": "mt_hub_and_spoke",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_subagents",
+      "name": "Hub-and-spoke coordination",
+      "description": "A coordinator owns all inter-subagent communication, error handling, and routing; subagents never talk to each other. Follows directly from context isolation — there is no channel between siblings.",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "Name the pattern from a described topology",
+        "Explain why a mesh of subagents is not available to you"
+      ],
+      "assessmentPrompt": "Three subagents each need a fact the first one discovered. How does it reach them?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf-glossary:t3"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Three shapes of decomposition",
+          "href": "../lessons/0010-claude-agent-sdk-orchestration.html#scene7"
+        }
+      ],
+      "centrality": 0.047,
+      "layer": 5
+    },
+    {
+      "id": "mt_decomposition_shapes",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_subagents",
+      "name": "Prompt chaining vs. dynamic decomposition",
+      "description": "Prompt chaining is fixed sequential decomposition — the steps are known up front, e.g. per-file analysis then a cross-file integration pass. Dynamic (adaptive) decomposition generates subtasks from what each step discovers, for open-ended work like adding tests to a legacy codebase.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Choose the decomposition shape from how much is known before the run",
+        "Say what goes wrong when you chain an open-ended investigation"
+      ],
+      "assessmentPrompt": "\"Add tests to this legacy codebase.\" Fixed chain or dynamic decomposition, and why?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf-glossary:t12",
+        "ccaf-glossary:t13"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Three shapes of decomposition",
+          "href": "../lessons/0010-claude-agent-sdk-orchestration.html#scene7"
+        }
+      ],
+      "centrality": 0.023,
+      "layer": 6
+    },
+    {
+      "id": "mt_coordinator_defect",
+      "type": "PROCEDURAL",
+      "cluster": "cl_subagents",
+      "name": "Diagnosing multi-agent failure: look up, not down",
+      "description": "When every subagent succeeds and the aggregate is still wrong, the defect is the coordinator's task decomposition, not the workers. The exam's research scenario — three successful subagents, a report covering one sub-topic — resolves to decomposition that was too narrow.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Locate the defect in a multi-agent run where all workers report success",
+        "Distinguish worker failure from decomposition failure from aggregation failure"
+      ],
+      "assessmentPrompt": "Three subagents each return a good report, and the combined answer covers only one sub-topic. Where is the bug?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · When every worker succeeds",
+          "href": "../lessons/0010-claude-agent-sdk-orchestration.html#scene8"
+        }
+      ],
+      "centrality": 0,
+      "layer": 7
+    },
+    {
+      "id": "mt_determinism_principle",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_hooks",
+      "name": "Programmatic enforcement vs. prompt instruction",
+      "description": "A hook is code that runs; a prompt is a request. Programmatic enforcement guarantees deterministic compliance, prompt instructions are probabilistic with a non-zero failure rate. If a rule must hold on every run including the unwatched ones, it belongs in a hook.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Reject \"add few-shot examples\" as a fix for a compliance gap",
+        "State the principle in one sentence and apply it to a new scenario"
+      ],
+      "assessmentPrompt": "An agent skips identity verification in 12% of refunds. What class of fix actually closes that gap?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf-glossary:t9"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · A gate, not a reminder",
+          "href": "../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene1"
+        }
+      ],
+      "centrality": 0.256,
+      "layer": 1
+    },
+    {
+      "id": "mt_hook_events",
+      "type": "FACTUAL",
+      "cluster": "cl_hooks",
+      "name": "The hook events",
+      "description": "Python HookEvent: PreToolUse, PostToolUse, PostToolUseFailure, UserPromptSubmit, Stop, SubagentStop, PreCompact, Notification, SubagentStart, PermissionRequest. TypeScript supports additional events. Each event names a moment in the loop where your code can run.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Pick the event that fires at a described moment",
+        "Distinguish events that fire per tool call from events that fire per turn or session"
+      ],
+      "assessmentPrompt": "You want to run code every time the agent tries to end its turn. Which event?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Where hooks attach",
+          "href": "../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene2"
+        }
+      ],
+      "centrality": 0.233,
+      "layer": 2
+    },
+    {
+      "id": "mt_hook_registration",
+      "type": "PROCEDURAL",
+      "cluster": "cl_hooks",
+      "name": "Registering a hook",
+      "description": "Hooks go in the `hooks` option keyed by event as a list of matchers. Python HookMatcher takes matcher (tool name or pattern like \"Write|Edit\"; omit to match all), hooks, and timeout (default 600s, UserPromptSubmit 30s). Callbacks are (input, tool_use_id, context) -> HookJSONOutput; input is a union discriminated on hook_event_name. Shell command hooks block with exit code 2 and feed stderr back to Claude; stderr from an exit-0 hook goes only to the debug log.",
+      "core": true,
+      "estMinutes": 9,
+      "evidence": [
+        "Register a hook that fires only on Write and Edit",
+        "Explain why a hook's stderr never reached the model"
+      ],
+      "assessmentPrompt": "Write the matcher that runs a hook on Write and Edit but not Read.",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Registering a hook",
+          "href": "../08-claude-agent-sdk/notes.md"
+        }
+      ],
+      "centrality": 0.14,
+      "layer": 3
+    },
+    {
+      "id": "mt_hook_direction",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_hooks",
+      "name": "Which direction does the hook face?",
+      "description": "PreToolUse guards what goes out; PostToolUse cleans what comes back. Tool call interception (block a refund over $500) is PreToolUse. Result normalization (three MCP tools returning three timestamp formats) is PostToolUse. If a question says \"different tools return inconsistent formats,\" the answer is PostToolUse, not better prompting.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Choose Pre vs. Post from the direction of the problem",
+        "Name both exam-named hook patterns and their canonical scenarios"
+      ],
+      "assessmentPrompt": "Several MCP tools return timestamps in different formats. Where do you fix it?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d2",
+        "ccaf-glossary:t10",
+        "ccaf-glossary:t11"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Which direction does the hook face?",
+          "href": "../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene3"
+        }
+      ],
+      "centrality": 0.14,
+      "layer": 3
+    },
+    {
+      "id": "mt_hook_decisions",
+      "type": "PROCEDURAL",
+      "cluster": "cl_hooks",
+      "name": "Decision control, by event",
+      "description": "PreToolUse returns hookSpecificOutput.permissionDecision: allow / deny / ask / defer plus a reason. PostToolUse, PostToolUseFailure, UserPromptSubmit, Stop, SubagentStop and PreCompact use top-level `decision: \"block\"` with a reason. PermissionRequest uses hookSpecificOutput.decision.behavior. SessionStart and SubagentStart can only add context; Notification, SessionEnd, PostCompact and InstructionsLoaded are side-effect only.",
+      "core": true,
+      "estMinutes": 9,
+      "evidence": [
+        "Write the right return shape for a given event",
+        "Say which events cannot block at all"
+      ],
+      "assessmentPrompt": "Your PostToolUse hook returns permissionDecision: \"deny\". What happens?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Blocking and redirecting",
+          "href": "../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene4"
+        }
+      ],
+      "centrality": 0.116,
+      "layer": 4
+    },
+    {
+      "id": "mt_hook_rewrite",
+      "type": "PROCEDURAL",
+      "cluster": "cl_hooks",
+      "name": "Rewriting instead of gating",
+      "description": "PreToolUse `updatedInput` (directly under hookSpecificOutput) replaces the tool's arguments before it runs. PostToolUse `additionalContext` injects a string next to the tool result, wrapped in a system reminder, capped at 10,000 characters — longer output is written to a file and replaced with a preview and path.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Choose rewriting over denial when the call is nearly right",
+        "State the additionalContext size limit and what happens past it"
+      ],
+      "assessmentPrompt": "An agent keeps calling a search tool without the tenant filter. Deny, or rewrite?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d2"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Blocking and redirecting",
+          "href": "../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene4"
+        }
+      ],
+      "centrality": 0,
+      "layer": 5
+    },
+    {
+      "id": "mt_hook_defer",
+      "type": "PROCEDURAL",
+      "cluster": "cl_hooks",
+      "name": "Deferring a tool call for human approval",
+      "description": "A PreToolUse hook returning permissionDecision: \"defer\" produces stop_reason: \"tool_deferred\" with the pending call in deferred_tool_use. That is how you surface an approval request in your own UI and resume later with the same session_id.",
+      "core": false,
+      "estMinutes": 6,
+      "evidence": [
+        "Build a human-in-the-loop approval step without blocking the process",
+        "Name the stop_reason and the field that carries the pending call"
+      ],
+      "assessmentPrompt": "You need a manager to approve a refund in your own web UI before the tool runs. Which decision value?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Decision control, by event",
+          "href": "../08-claude-agent-sdk/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 5
+    },
+    {
+      "id": "mt_can_use_tool",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_hooks",
+      "name": "canUseTool vs. a PreToolUse hook",
+      "description": "canUseTool replaces the interactive permission prompt and fires only when the permission flow resolves to a prompt — calls already approved by allowedTools, a settings rule, or a permissive mode never reach it. To gate every call unconditionally, use PreToolUse. Exceptions that reach canUseTool anyway: AskUserQuestion, MCP tools marked requiresUserInteraction, and connector tools an org set to ask. It returns { behavior: \"allow\", updatedInput?, updatedPermissions? } or { behavior: \"deny\", message, interrupt? }.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Explain why a canUseTool audit log has holes in it",
+        "Choose between canUseTool and PreToolUse for a stated requirement"
+      ],
+      "assessmentPrompt": "You log every tool call from canUseTool and the log is missing calls. Why?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Six modes, one badly-named option",
+          "href": "../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene6"
+        }
+      ],
+      "centrality": 0,
+      "layer": 5
+    },
+    {
+      "id": "mt_permission_modes",
+      "type": "FACTUAL",
+      "cluster": "cl_hooks",
+      "name": "The permission modes",
+      "description": "default (standard prompting), acceptEdits (auto-accept file edits), plan (read-only, propose without editing), dontAsk (never prompt — deny anything not pre-approved), bypassPermissions (skip checks; explicit ask rules still prompt; requires allowDangerouslySkipPermissions), auto (a model classifier resolves what would have been prompts).",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Pick the mode for an unattended production run",
+        "Distinguish bypassPermissions from dontAsk"
+      ],
+      "assessmentPrompt": "A nightly unattended agent must never prompt and never do anything you didn't pre-approve. Which mode?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Six modes, one badly-named option",
+          "href": "../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene6"
+        }
+      ],
+      "centrality": 0.14,
+      "layer": 2
+    },
+    {
+      "id": "mt_allowed_vs_disallowed",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_hooks",
+      "name": "allowedTools does not restrict",
+      "description": "allowedTools auto-approves the tools it lists; unlisted tools fall through to permissionMode and canUseTool rather than being blocked. disallowedTools actually blocks: a bare \"Bash\" removes the tool from Claude's context entirely, while a scoped rule like \"Bash(rm *)\" leaves the tool available and denies matching calls in every mode, including bypassPermissions.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Predict what an agent can still do given only an allowedTools list",
+        "Write the rule that survives bypassPermissions"
+      ],
+      "assessmentPrompt": "You put only Read and Grep in allowedTools. Can the agent write a file?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Six modes, one badly-named option",
+          "href": "../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene6"
+        }
+      ],
+      "centrality": 0.093,
+      "layer": 3
+    },
+    {
+      "id": "mt_inprocess_mcp",
+      "type": "PROCEDURAL",
+      "cluster": "cl_tools",
+      "name": "In-process MCP servers",
+      "description": "createSdkMcpServer() / create_sdk_mcp_server() builds an MCP server that runs in your application's own process — no subprocess, no stdio transport, no separate deployment. It is the SDK's answer to \"I need custom tools,\" and tools are then referenced as mcp__<server>__<tool>.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Choose in-process over a stdio server and justify it",
+        "Write the allowedTools entry for an in-process tool"
+      ],
+      "assessmentPrompt": "Your agent needs three custom tools that call functions already in your app. What do you build?",
+      "standards": [
+        "ccaf:d2"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · MCP servers that don't leave the process",
+          "href": "../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene7"
+        }
+      ],
+      "centrality": 0.163,
+      "layer": 1
+    },
+    {
+      "id": "mt_tool_shape",
+      "type": "FACTUAL",
+      "cluster": "cl_tools",
+      "name": "tool() has two shapes",
+      "description": "TypeScript: a function returning a definition — tool(name, description, zodSchema, handler, extras?). Python: a decorator on an async function — @tool(name, description, input_schema, annotations?) where the decorated function is the handler. TypeScript-only extras carry searchHint and alwaysLoad. Both return { content: [{ type: \"text\", text }] }.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Write a tool definition in either language without mixing the shapes",
+        "Say where annotations go in each language"
+      ],
+      "assessmentPrompt": "In Python, where does the handler live in a @tool definition?",
+      "standards": [
+        "ccaf:d2"
+      ],
+      "sources": [
+        {
+          "label": "Notes · tool() has a different shape",
+          "href": "../08-claude-agent-sdk/notes.md"
+        }
+      ],
+      "centrality": 0.116,
+      "layer": 2
+    },
+    {
+      "id": "mt_tool_annotations",
+      "type": "FACTUAL",
+      "cluster": "cl_tools",
+      "name": "ToolAnnotations are hints, not controls",
+      "description": "title, readOnlyHint (default false), destructiveHint (default true), idempotentHint (default false), openWorldHint (default true). They are behavioural hints — clients must not rely on them for security decisions. Real restriction comes from tool sets, disallowedTools, and hooks.",
+      "core": false,
+      "estMinutes": 5,
+      "evidence": [
+        "Reject readOnlyHint as a safety mechanism",
+        "Recall the two annotations that default to true"
+      ],
+      "assessmentPrompt": "Is `readOnlyHint: true` enough to guarantee a tool cannot modify anything?",
+      "standards": [
+        "ccaf:d2"
+      ],
+      "sources": [
+        {
+          "label": "Notes · ToolAnnotations",
+          "href": "../08-claude-agent-sdk/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 3
+    },
+    {
+      "id": "mt_mcp_wiring",
+      "type": "PROCEDURAL",
+      "cluster": "cl_tools",
+      "name": "Wiring MCP servers into a query",
+      "description": "mcpServers takes a record of configs in four shapes: stdio, SSE, HTTP, and in-process SDK. strictMcpConfig: true uses only what you passed, ignoring project .mcp.json, user settings, plugin servers and claude.ai connectors — reach for it when you need a reproducible tool surface. toolAliases maps a built-in name onto an MCP tool. AgentDefinition.mcpServers scopes servers per subagent.",
+      "core": false,
+      "estMinutes": 7,
+      "evidence": [
+        "Guarantee that production runs see exactly the tools you shipped",
+        "Redirect a built-in tool name to your own implementation"
+      ],
+      "assessmentPrompt": "Your staging agent picks up a developer's personal MCP server. Which option stops that?",
+      "standards": [
+        "ccaf:d2",
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Wiring servers in",
+          "href": "../08-claude-agent-sdk/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 2
+    },
+    {
+      "id": "mt_tool_descriptions",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_tools",
+      "name": "Tool description design",
+      "description": "The description is the primary mechanism the model uses to select a tool. When an agent confuses two similar tools, the highest-leverage fix is expanding each description with input formats, example queries, edge cases and boundary explanations — not adding few-shot examples and not merging the tools.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Rewrite a thin tool description into a selecting one",
+        "Reject merging or few-shot as the fix for tool confusion"
+      ],
+      "assessmentPrompt": "An agent keeps calling `search_orders` when it should call `search_customers`. What is the highest-leverage fix?",
+      "standards": [
+        "ccaf:d2",
+        "ccaf-glossary:t14"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Tool description design",
+          "href": "../08-claude-agent-sdk/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 3
+    },
+    {
+      "id": "mt_is_error",
+      "type": "FACTUAL",
+      "cluster": "cl_tools",
+      "name": "isError — the one real field",
+      "description": "isError is an actual MCP protocol field on a tool result. It is how a tool signals failure back to the calling agent, as opposed to returning a success payload whose text happens to describe a failure.",
+      "core": true,
+      "estMinutes": 5,
+      "evidence": [
+        "Identify isError as protocol, not convention",
+        "Explain why a failure returned as ordinary text misleads the agent"
+      ],
+      "assessmentPrompt": "Which of isError, errorCategory and isRetryable is defined by MCP?",
+      "standards": [
+        "ccaf:d2",
+        "ccaf-glossary:t15"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Three fields, one of which is real",
+          "href": "../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene8"
+        }
+      ],
+      "centrality": 0.047,
+      "layer": 3
+    },
+    {
+      "id": "mt_error_conventions",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_tools",
+      "name": "errorCategory and isRetryable are your conventions",
+      "description": "Neither is an SDK or MCP field. errorCategory is a design convention — you classify failures (transient / validation / business / permission) in your own payload so the agent picks the right recovery. isRetryable is your boolean saying whether the operation can safely be retried; isRetryable: false on a business error means explain the rule, do not retry. The exam names both as concepts, so learn them as vocabulary.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Design an error payload an agent can act on",
+        "Say which of the three named fields you will not find in the SDK types"
+      ],
+      "assessmentPrompt": "A refund is denied by policy. What should isRetryable be, and what should the agent do?",
+      "standards": [
+        "ccaf:d2",
+        "ccaf-glossary:t16",
+        "ccaf-glossary:t17"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Three fields, one of which is real",
+          "href": "../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene8"
+        }
+      ],
+      "centrality": 0.023,
+      "layer": 4
+    },
+    {
+      "id": "mt_error_propagation",
+      "type": "PROCEDURAL",
+      "cluster": "cl_tools",
+      "name": "Propagating subagent failure to the coordinator",
+      "description": "When a subagent times out, the best result for coordinator recovery is a structured error naming what failed and how far it got — not an empty result marked successful, and not a generic \"unavailable\" string after silent retries. A coordinator can only make an intelligent recovery decision from information it actually receives.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Rank four failure payloads by how well a coordinator can recover from each",
+        "Explain why silent retries make the coordinator worse, not better"
+      ],
+      "assessmentPrompt": "A subagent times out halfway through. What should the coordinator receive?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d2",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Three fields, one of which is real",
+          "href": "../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene8"
+        }
+      ],
+      "centrality": 0,
+      "layer": 6
+    },
+    {
+      "id": "mt_session_continuity",
+      "type": "PROCEDURAL",
+      "cluster": "cl_sessions",
+      "name": "Resuming and continuing sessions",
+      "description": "resume: \"<id>\" resumes a specific session; continue / continue_conversation picks up the most recent; resumeSessionAt resumes at a message UUID; sessionId supplies your own; persistSession: false keeps it off disk and unresumable. Utilities: listSessions, getSessionMessages, getSessionInfo, renameSession, tagSession, plus sessionStore for mirroring transcripts to an external backend.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Resume a specific named prior conversation",
+        "Say what persistSession: false costs you"
+      ],
+      "assessmentPrompt": "You want to continue one specific prior conversation, not the most recent one. Which option?",
+      "standards": [
+        "ccaf:d5",
+        "ccaf-glossary:t8"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Resume, or branch",
+          "href": "../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene9"
+        }
+      ],
+      "centrality": 0.023,
+      "layer": 2
+    },
+    {
+      "id": "mt_fork_session",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_sessions",
+      "name": "forkSession: branching from a shared baseline",
+      "description": "forkSession only means something alongside resume. Without it, resuming appends to the original session; with it you get an independent branch from the same baseline. The exam's case: comparing two implementation strategies from the same expensive codebase analysis — fork so both branches share the analysis and diverge without contaminating each other.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Distinguish resume from resume + fork on a described goal",
+        "Name the cost forking saves"
+      ],
+      "assessmentPrompt": "You want two independent explorations that both start from one expensive analysis. What do you pass?",
+      "standards": [
+        "ccaf:d5",
+        "ccaf-glossary:t7"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Resume, or branch",
+          "href": "../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene9"
+        }
+      ],
+      "centrality": 0,
+      "layer": 3
+    },
+    {
+      "id": "mt_compaction",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_sessions",
+      "name": "Compaction and the context window",
+      "description": "The SDK compacts automatically; PreCompact fires before it and a compact-boundary message appears in the stream. /compact is the manual Claude Code equivalent. SDKControlGetContextUsageResponse reports totalTokens against maxTokens, where the window is the model's context window or the lower auto-compaction window when one applies.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Name the hook that fires before compaction and what it is good for",
+        "Read a context-usage response correctly"
+      ],
+      "assessmentPrompt": "You need to save a summary of state before the SDK compacts. Which hook?",
+      "standards": [
+        "ccaf:d5",
+        "ccaf-glossary:t60"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Context management",
+          "href": "../08-claude-agent-sdk/notes.md"
+        }
+      ],
+      "centrality": 0.047,
+      "layer": 1
+    },
+    {
+      "id": "mt_delegation_context_lever",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_sessions",
+      "name": "Delegation as the primary context lever",
+      "description": "Delegation, not compaction, is the main tool for keeping a long run inside its window. The Explore subagent exists so a verbose multi-phase discovery does not exhaust the main context — findings come back as a summary, the fifty files do not. enableFileCheckpointing separately allows rewinding file changes.",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "Choose delegation over compaction for a long discovery phase",
+        "Explain what Explore is for in one sentence"
+      ],
+      "assessmentPrompt": "A multi-phase discovery keeps blowing the context window. What is the first structural fix?",
+      "standards": [
+        "ccaf:d5",
+        "ccaf-glossary:t40"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Context management",
+          "href": "../08-claude-agent-sdk/notes.md"
+        }
+      ],
+      "centrality": 0.023,
+      "layer": 6
+    },
+    {
+      "id": "mt_stop_hook_gate",
+      "type": "PROCEDURAL",
+      "cluster": "cl_sessions",
+      "name": "Gate the outcome with a Stop hook",
+      "description": "A Stop hook that runs the test suite and returns decision: \"block\" with a reason turns \"did you run the tests?\" into a condition the agent cannot end its turn without satisfying. Gate the outcome; do not ask for it.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Convert a request in the system prompt into an enforced end-of-turn condition",
+        "Name the event and the return shape"
+      ],
+      "assessmentPrompt": "The agent keeps declaring done without running tests. What do you build?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Evidence, not assurance",
+          "href": "../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene10"
+        }
+      ],
+      "centrality": 0.023,
+      "layer": 5
+    },
+    {
+      "id": "mt_reliability_posture",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_sessions",
+      "name": "Reliability posture and honest metrics",
+      "description": "Cap the loop with maxTurns, maxBudgetUsd and taskBudget; set fallbackModel for primary-model failure; put escalation criteria in the system prompt with few-shot examples demonstrating them, because judgment about when to hand off is a prompting problem, not a wiring one. And beware aggregates: 97% overall accuracy can hide a category that fails most of the time — evaluate per category.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Separate failures that hooks fix from failures that prompting fixes",
+        "Explain why per-category evaluation changes a decision that aggregate accuracy would not"
+      ],
+      "assessmentPrompt": "First-contact resolution is low because the agent hands off too late. Hook, or prompt?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d3",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Evidence, not assurance",
+          "href": "../lessons/0011-claude-agent-sdk-hooks-and-reliability.html#scene10"
+        }
+      ],
+      "centrality": 0,
+      "layer": 6
+    }
+  ]
+}

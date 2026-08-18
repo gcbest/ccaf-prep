@@ -1,0 +1,593 @@
+{
+  "$comment": "Knowledge points for cl_foundations. Each topic's knowledge points are ordered: the first covers the most basic idea, later ones introduce harder cases. Mastery of a topic = clearing every knowledge point in order. `keyPrerequisites` name the topics a targeted remedial review draws from when a learner fails the same knowledge point twice.",
+  "cluster": "cl_foundations",
+  "topics": [
+    {
+      "topicId": "mt_loop_ownership",
+      "knowledgePoints": [
+        {
+          "id": "kp_loop_1",
+          "name": "The four steps that disappear",
+          "keyPrerequisites": [],
+          "teach": "<p>In <em>Building with the Claude API</em> the agentic loop is yours, and it is always the same four steps:</p><pre class='kp-code'>while True:\n    resp = client.messages.create(...)          # 1. call\n    if resp.stop_reason != \"tool_use\": break     # 2. inspect stop_reason\n    result = run_tool(resp.content[-1])          # 3. dispatch the tool yourself\n    messages.append(tool_result_block(result))   # 4. append and go around again</pre><p>The Agent SDK runs that loop for you and hands you a stream of messages instead. All four steps vanish from your code.</p><p>What replaces them is not nothing. What you own shifts from <strong>mechanism</strong> — how the loop turns — to <strong>policy</strong>: which tools exist, who may call them, when to stop, and what runs around each call. Every option you will meet in this section is a policy knob.</p>",
+          "questions": [
+            {
+              "id": "q_loop_1a",
+              "q": "You port a working hand-rolled agent to the Agent SDK. Which of your code disappears entirely?",
+              "options": [
+                "The tool implementations — the SDK ships its own versions",
+                "The stop_reason check, the tool dispatch, the tool_result append, and the re-call",
+                "The system prompt and the model choice",
+                "Retry and backoff, which the SDK handles at the HTTP layer"
+              ],
+              "correct": 1,
+              "explain": "The loop mechanism goes. Your tool implementations, prompt, and model choice all survive — they are policy, and policy is still yours."
+            },
+            {
+              "id": "q_loop_1b",
+              "q": "Which of these is a policy concern the SDK expects you to own, rather than mechanism it owns for you?",
+              "options": [
+                "Appending tool_result blocks in the right order",
+                "Deciding which tools the agent is allowed to call",
+                "Detecting stop_reason == \"tool_use\"",
+                "Re-issuing the request after a tool runs"
+              ],
+              "correct": 1,
+              "explain": "Three of these are turns of the crank. Which tools exist and who may call them is the decision the SDK deliberately leaves to you."
+            }
+          ]
+        },
+        {
+          "id": "kp_loop_2",
+          "name": "Why the delta matters for the exam",
+          "keyPrerequisites": [],
+          "teach": "<p>The hand-rolled loop is still tested. The SDK is the <em>delta</em> on top of it, not a replacement for knowing it.</p><p>A useful reading habit for exam questions: when a scenario describes something going wrong <em>inside</em> the loop — a tool never runs, a turn never ends, a result never comes back — ask whether the fix is a policy you failed to state, not a mechanism you failed to write. With the SDK, mechanism bugs are rarely yours.</p>",
+          "questions": [
+            {
+              "id": "q_loop_2a",
+              "q": "An SDK agent never calls a tool you know it has. Where do you look first?",
+              "options": [
+                "The loop implementation, for a missing stop_reason branch",
+                "Policy: whether the tool is registered, allowed, and described well enough to be selected",
+                "The HTTP client, for a dropped tool_result block",
+                "The model's temperature setting"
+              ],
+              "correct": 1,
+              "explain": "You no longer own the branch or the block. Registration, permission, and description are the three policy surfaces that can silently stop a tool from being used."
+            },
+            {
+              "id": "q_loop_2b",
+              "q": "Why does the Agent SDK section still assume you know the hand-rolled loop?",
+              "options": [
+                "Because the SDK falls back to it when the subprocess is unavailable",
+                "Because the exam tests both, and SDK options are named after loop concepts like turns and tool results",
+                "Because you must implement the loop before the SDK will accept your tools",
+                "Because Python users must hand-roll while TypeScript users do not"
+              ],
+              "correct": 1,
+              "explain": "maxTurns, tool_result, stop_reason — the vocabulary of the SDK's options is the vocabulary of the loop it absorbed."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_loop_1",
+          "q": "What is the single sentence that describes what changes when you adopt the Agent SDK?",
+          "options": [
+            "You trade a slower loop for a faster one",
+            "You stop owning mechanism and start owning policy",
+            "You gain streaming and lose tool use",
+            "You move from Python to TypeScript"
+          ],
+          "correct": 1,
+          "explain": "Mechanism → policy. Everything else in this section is a consequence of that trade."
+        }
+      ]
+    },
+
+    {
+      "topicId": "mt_subprocess_model",
+      "knowledgePoints": [
+        {
+          "id": "kp_subproc_1",
+          "name": "One fact explains the whole surface area",
+          "keyPrerequisites": ["mt_loop_ownership"],
+          "teach": "<p>Here is the fact that makes the rest of the SDK stop feeling arbitrary:</p><p class='kp-key'>The SDK spawns the Claude Code CLI as a subprocess and talks to it over a control protocol.</p><p>It is a steering wheel bolted onto a car that already exists. Which is why a <em>library</em> — something you would expect to be a thin HTTP client — has permission modes, hooks, settings files, CLAUDE.md loading, and subagents. Those are Claude Code's features, exposed programmatically.</p><p>It also explains options that would be nonsense in an HTTP client: <code>pathToClaudeCodeExecutable</code>, <code>spawnClaudeCodeProcess</code>, and <code>settingSources</code>.</p>",
+          "questions": [
+            {
+              "id": "q_subproc_1a",
+              "q": "Why does the Agent SDK have permission modes and settings files when the raw Messages API has neither?",
+              "options": [
+                "They were added to match competitor feature lists",
+                "The SDK spawns the Claude Code CLI as a subprocess, so Claude Code's features come along with it",
+                "The Messages API exposes them on a beta header",
+                "MCP requires them in order to register tools"
+              ],
+              "correct": 1,
+              "explain": "One fact, most of the API surface. Hold onto it — it lets you guess correctly about features you have not read the docs for yet."
+            },
+            {
+              "id": "q_subproc_1b",
+              "q": "Which option is a direct tell that something other than an HTTP request is happening?",
+              "options": [
+                "maxTokens",
+                "pathToClaudeCodeExecutable",
+                "temperature",
+                "systemPrompt"
+              ],
+              "correct": 1,
+              "explain": "You do not point an HTTP client at an executable. That option only makes sense because there is a process being spawned."
+            }
+          ]
+        },
+        {
+          "id": "kp_subproc_2",
+          "name": "Using the model to predict features",
+          "keyPrerequisites": ["mt_loop_ownership"],
+          "teach": "<p>The model earns its keep as a prediction tool. If a capability exists in the Claude Code CLI, the default assumption is that it is reachable from the SDK — usually under a camelCase version of the same name.</p><p>Skills, memory, plugins, MCP servers, hooks, permission modes, CLAUDE.md, subagents in <code>.claude/agents/</code>: all of these are Claude Code concepts you will meet again as SDK options.</p><p>The converse is also useful. If something is <em>not</em> a Claude Code feature — say, prompt caching controls or a beta header — expect it to belong to the API layer instead, and not to appear as an SDK option at all.</p>",
+          "questions": [
+            {
+              "id": "q_subproc_2a",
+              "q": "You have never read the subagents docs. Using the subprocess model, what do you predict about where subagent definitions can live?",
+              "options": [
+                "Only in code, since a library cannot read files",
+                "In code and on disk under .claude/, because that is where Claude Code keeps them",
+                "Only in a hosted registry",
+                "Only in environment variables"
+              ],
+              "correct": 1,
+              "explain": "That prediction is correct — programmatic definitions and .claude/agents/ markdown files, with the programmatic ones taking precedence."
+            },
+            {
+              "id": "q_subproc_2b",
+              "q": "Which is the weakest reason to remember the subprocess model?",
+              "options": [
+                "It predicts which features the SDK will have",
+                "It explains why disk settings affect an SDK app",
+                "It is the answer to a commonly asked exam question about why the SDK looks the way it does",
+                "It tells you which model version the SDK will use by default"
+              ],
+              "correct": 3,
+              "explain": "Model selection has nothing to do with the subprocess. The other three are exactly what the model buys you."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_subproc_1",
+          "q": "State the mental model that explains permission modes, hooks, settings files, CLAUDE.md loading, and subagents in a client library.",
+          "options": [
+            "The library re-implements each feature against the Messages API",
+            "The library spawns the Claude Code CLI as a subprocess and drives it over a control protocol",
+            "The features are part of the MCP specification",
+            "They are inherited from the Anthropic SDK clients"
+          ],
+          "correct": 1,
+          "explain": "The steering wheel and the car. Everything downstream follows from it."
+        }
+      ]
+    },
+
+    {
+      "topicId": "mt_entry_points",
+      "knowledgePoints": [
+        {
+          "id": "kp_entry_1",
+          "name": "Packages, calls, and options types",
+          "keyPrerequisites": ["mt_loop_ownership"],
+          "teach": "<p>Two languages, same engine, different ignition keys:</p><table class='kp-table'><tr><th></th><th>TypeScript</th><th>Python</th></tr><tr><td>Package</td><td><code>@anthropic-ai/claude-agent-sdk</code></td><td><code>claude-agent-sdk</code></td></tr><tr><td>One-off call</td><td><code>query({ prompt, options })</code></td><td><code>query(prompt=..., options=...)</code></td></tr><tr><td>Options type</td><td><code>Options</code></td><td><code>ClaudeAgentOptions</code></td></tr><tr><td>Returns</td><td><code>Query</code> — an AsyncGenerator with extra methods</td><td><code>AsyncIterator[Message]</code></td></tr><tr><td>Multi-turn client</td><td>— (use <code>query</code> with <code>resume</code>)</td><td><code>ClaudeSDKClient</code></td></tr></table><p>The names are worth rote memorising. <code>@anthropic-ai/claude-code</code> is a different package; <code>claude-sdk</code> and <code>@anthropic/agent-sdk</code> are not packages at all.</p>",
+          "questions": [
+            {
+              "id": "q_entry_1a",
+              "q": "Which pair of package names is correct?",
+              "options": [
+                "TypeScript @anthropic/agent-sdk · Python claude-sdk",
+                "TypeScript @anthropic-ai/claude-agent-sdk · Python claude-agent-sdk",
+                "Both languages use claude-agent",
+                "TypeScript @anthropic-ai/claude-code · Python anthropic-agents"
+              ],
+              "correct": 1,
+              "explain": "Same engine, two keys. And note the options types differ too: Options in TypeScript, ClaudeAgentOptions in Python."
+            },
+            {
+              "id": "q_entry_1b",
+              "q": "In Python, what does query() return?",
+              "options": [
+                "A list of messages once the run completes",
+                "An AsyncIterator[Message] you consume as the run proceeds",
+                "A ClaudeSDKClient you then connect",
+                "A synchronous generator of strings"
+              ],
+              "correct": 1,
+              "explain": "You iterate the stream. The TypeScript equivalent is a Query object, which is an AsyncGenerator with a few extra methods hung off it."
+            }
+          ]
+        },
+        {
+          "id": "kp_entry_2",
+          "name": "Pre-warming with startup()",
+          "keyPrerequisites": ["mt_subprocess_model"],
+          "teach": "<p>Spawning a subprocess and completing an initialize handshake takes real time. If the first thing a user does is wait for it, they feel it.</p><p><code>startup()</code> (TypeScript) pre-spawns the subprocess and finishes the handshake <em>before a prompt exists</em>, returning a <code>WarmQuery</code>. The first real <code>query()</code> then does not pay the spawn cost inline. The default initialize timeout is <strong>60,000 ms</strong>.</p><p>This option only exists because of the subprocess. There is nothing to pre-warm in an HTTP client.</p>",
+          "questions": [
+            {
+              "id": "q_entry_2a",
+              "q": "What problem does startup() solve?",
+              "options": [
+                "It caches the system prompt for cheaper tokens",
+                "It pays the subprocess spawn and handshake cost before the first prompt arrives",
+                "It validates your API key early",
+                "It preloads MCP tool schemas into the model's context"
+              ],
+              "correct": 1,
+              "explain": "Latency, not cost or correctness. The default initialize timeout is 60,000 ms."
+            },
+            {
+              "id": "q_entry_2b",
+              "q": "Why is there no startup() equivalent in a plain HTTP client for the Messages API?",
+              "options": [
+                "Because HTTP clients are always slower",
+                "Because there is no subprocess to spawn or handshake to complete",
+                "Because the Messages API does not support streaming",
+                "Because API keys are validated per request"
+              ],
+              "correct": 1,
+              "explain": "Pre-warming is meaningful only because the SDK has a process to bring up first."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_entry_1",
+          "q": "Which options type name goes with which language?",
+          "options": [
+            "TypeScript ClaudeAgentOptions · Python Options",
+            "TypeScript Options · Python ClaudeAgentOptions",
+            "Both use AgentOptions",
+            "Both use ClaudeAgentOptions"
+          ],
+          "correct": 1,
+          "explain": "TypeScript keeps the bare name; Python spells it out. Worth drilling — it shows up as a distractor."
+        }
+      ]
+    },
+
+    {
+      "topicId": "mt_query_vs_client",
+      "knowledgePoints": [
+        {
+          "id": "kp_qvc_1",
+          "name": "The comparison table",
+          "keyPrerequisites": ["mt_entry_points"],
+          "teach": "<table class='kp-table'><tr><th>Feature</th><th><code>query()</code></th><th><code>ClaudeSDKClient</code></th></tr><tr><td>Session</td><td>New session by default</td><td>Reuses the same session</td></tr><tr><td>Conversation</td><td>Single exchange</td><td>Multiple exchanges, one context</td></tr><tr><td>Connection</td><td>Managed automatically</td><td>Manual control</td></tr><tr><td>Interrupts</td><td>Not supported</td><td>Supported</td></tr><tr><td>Continue chat</td><td>Manual via continue_conversation / resume</td><td>Automatic</td></tr><tr><td>Use case</td><td>One-off tasks</td><td>Continuous conversations</td></tr></table><p>Streaming input, hooks and custom tools work with both — those are not the discriminators.</p>",
+          "questions": [
+            {
+              "id": "q_qvc_1a",
+              "q": "Which capability does query() simply not have?",
+              "options": [
+                "Hooks",
+                "Custom in-process tools",
+                "Interrupts",
+                "Streaming input"
+              ],
+              "correct": 2,
+              "explain": "Hooks, custom tools, and streaming input all work with either. Interrupts are the client's alone."
+            },
+            {
+              "id": "q_qvc_1b",
+              "q": "How does query() behave with respect to sessions by default?",
+              "options": [
+                "It reuses the most recent session automatically",
+                "It opens a new session on each call unless you pass resume or continue",
+                "It refuses to run twice without a session id",
+                "It shares one session per process"
+              ],
+              "correct": 1,
+              "explain": "New session by default is the trap: an app that expected continuity and never passed resume gets an amnesiac agent."
+            }
+          ]
+        },
+        {
+          "id": "kp_qvc_2",
+          "name": "The rule of thumb, applied",
+          "keyPrerequisites": ["mt_entry_points"],
+          "teach": "<p>The rule worth memorising: <strong>if the next action depends on Claude's response, or you need to interrupt, use <code>ClaudeSDKClient</code>. Otherwise <code>query()</code>.</strong></p><p>Two worked cases:</p><ul><li><em>Nightly job that summarises yesterday's tickets and writes a file.</em> Nothing branches on the answer, nobody is watching, nothing to interrupt → <code>query()</code>.</li><li><em>Support console where an operator watches the agent work and can cancel it.</em> Interruption is a hard requirement → <code>ClaudeSDKClient</code>.</li></ul>",
+          "questions": [
+            {
+              "id": "q_qvc_2a",
+              "q": "A support console must let an operator cancel a long-running agent when the customer hangs up. Which entry point?",
+              "options": [
+                "query(), with abortController",
+                "ClaudeSDKClient, because interrupts are only supported there",
+                "Either — interrupts work the same in both",
+                "query() with maxTurns set low"
+              ],
+              "correct": 1,
+              "explain": "abortController and a low maxTurns both end a run, but neither is the interrupt facility the comparison table is pointing at. Interrupts belong to the client."
+            },
+            {
+              "id": "q_qvc_2b",
+              "q": "A nightly batch job runs one prompt per ticket and writes results to disk. Which entry point, and why?",
+              "options": [
+                "ClaudeSDKClient, so all tickets share context",
+                "query(), because each ticket is a one-off exchange with nothing branching on the reply",
+                "ClaudeSDKClient, because batch work always needs manual connection control",
+                "query(), because ClaudeSDKClient cannot use tools"
+              ],
+              "correct": 1,
+              "explain": "Sharing context across unrelated tickets would be a bug, not a feature — it leaks one customer's details into another's run."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_qvc_1",
+          "q": "State the rule of thumb for choosing between query() and ClaudeSDKClient.",
+          "options": [
+            "Use the client whenever you use tools",
+            "Use the client if the next action depends on Claude's response, or you need to interrupt",
+            "Use query() only in TypeScript",
+            "Use the client whenever you want streaming"
+          ],
+          "correct": 1,
+          "explain": "Dependence and interruption. Tools and streaming are available either way."
+        }
+      ]
+    },
+
+    {
+      "topicId": "mt_system_prompt",
+      "knowledgePoints": [
+        {
+          "id": "kp_sysprompt_1",
+          "name": "Minimal by default",
+          "keyPrerequisites": ["mt_subprocess_model"],
+          "teach": "<p>This one trips people constantly. <code>query()</code> does <strong>not</strong> give you Claude Code's system prompt unless you ask for it.</p><ul><li>Omit <code>systemPrompt</code> → a <em>minimal</em> prompt.</li><li><code>systemPrompt: \"…\"</code> → your custom prompt, and only yours.</li><li><code>systemPrompt: { type: 'preset', preset: 'claude_code' }</code> → Claude Code's full prompt.</li></ul><p>So an SDK agent that feels dumber than the CLI on the same task usually is not misconfigured in any exotic way — it just never opted into the preset.</p>",
+          "questions": [
+            {
+              "id": "q_sysprompt_1a",
+              "q": "You omit systemPrompt entirely. What does the agent get?",
+              "options": [
+                "Claude Code's full system prompt, since the CLI is underneath",
+                "A minimal system prompt",
+                "No system prompt at all, which is an error",
+                "The prompt from CLAUDE.md"
+              ],
+              "correct": 1,
+              "explain": "Minimal, not Claude Code's. Opting in is explicit precisely because most SDK apps are not coding agents."
+            },
+            {
+              "id": "q_sysprompt_1b",
+              "q": "Your SDK agent behaves nothing like the Claude Code CLI on an identical coding task. What do you check first?",
+              "options": [
+                "The model id",
+                "Whether systemPrompt opts into the claude_code preset",
+                "Whether hooks are blocking tools",
+                "The maxTurns value"
+              ],
+              "correct": 1,
+              "explain": "Same engine, different instructions. The preset is the difference far more often than anything else."
+            }
+          ]
+        },
+        {
+          "id": "kp_sysprompt_2",
+          "name": "append and excludeDynamicSections",
+          "keyPrerequisites": ["mt_subprocess_model"],
+          "teach": "<p>Two modifiers sit on the preset form:</p><ul><li><code>append: \"…\"</code> — extends the preset rather than replacing it. This is how you add house rules without losing Claude Code's behaviour.</li><li><code>excludeDynamicSections: true</code> — moves per-session context (the parts of the prompt that differ per machine and per run) into the first user message. The point is <strong>prompt-cache reuse</strong>: a prompt prefix that is identical across machines can be cached and shared; one that embeds today's working directory cannot.</li></ul>",
+          "questions": [
+            {
+              "id": "q_sysprompt_2a",
+              "q": "What is excludeDynamicSections: true for?",
+              "options": [
+                "Shrinking the prompt to save tokens",
+                "Moving per-session context into the first user message so the cached prompt prefix is identical across machines",
+                "Removing tool definitions from the prompt",
+                "Disabling CLAUDE.md loading"
+              ],
+              "correct": 1,
+              "explain": "It is a cache-hit optimisation. The dynamic content still reaches the model; it just stops poisoning the cacheable prefix."
+            },
+            {
+              "id": "q_sysprompt_2b",
+              "q": "You want Claude Code's behaviour plus three company-specific rules. Which shape?",
+              "options": [
+                "systemPrompt: \"<your three rules>\"",
+                "preset claude_code with append: \"<your three rules>\"",
+                "Omit systemPrompt and put the rules in CLAUDE.md only",
+                "Two queries, one per prompt"
+              ],
+              "correct": 1,
+              "explain": "A bare string replaces the preset instead of extending it. append is the field that means \"and also\"."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_sysprompt_1",
+          "q": "Which systemPrompt value gives an SDK agent Claude Code's full system prompt?",
+          "options": [
+            "Omitting the field",
+            "{ type: 'preset', preset: 'claude_code' }",
+            "Any non-empty string",
+            "{ type: 'cli' }"
+          ],
+          "correct": 1,
+          "explain": "Explicit opt-in. Omitting gets you a minimal prompt; a string gets you only your own."
+        }
+      ]
+    },
+
+    {
+      "topicId": "mt_setting_sources",
+      "knowledgePoints": [
+        {
+          "id": "kp_settings_1",
+          "name": "Three sources, three files",
+          "keyPrerequisites": ["mt_subprocess_model"],
+          "teach": "<p><code>SettingSource = \"user\" | \"project\" | \"local\"</code>:</p><table class='kp-table'><tr><th>Value</th><th>File</th></tr><tr><td><code>user</code></td><td><code>~/.claude/settings.json</code></td></tr><tr><td><code>project</code></td><td><code>.claude/settings.json</code> (version controlled)</td></tr><tr><td><code>local</code></td><td><code>.claude/settings.local.json</code> (gitignored)</td></tr></table><ul><li><strong>Omitted / undefined</strong> → loads all three, exactly like the CLI.</li><li><strong><code>[]</code></strong> → disables user, project and local. Endpoint-managed policy still loads regardless.</li></ul>",
+          "questions": [
+            {
+              "id": "q_settings_1a",
+              "q": "What does omitting settingSources do?",
+              "options": [
+                "Disables all filesystem settings",
+                "Loads user, project, and local settings — the same as the CLI",
+                "Loads only project settings",
+                "Raises an error; the field is required"
+              ],
+              "correct": 1,
+              "explain": "The default is CLI parity. You have to opt out, not opt in."
+            },
+            {
+              "id": "q_settings_1b",
+              "q": "You pass settingSources: []. What still loads?",
+              "options": [
+                "Nothing at all",
+                "Endpoint-managed policy",
+                "User settings, because they are outside the project",
+                "Local settings, because they are gitignored"
+              ],
+              "correct": 1,
+              "explain": "Organisation policy is not yours to switch off, and that is the point of it."
+            }
+          ]
+        },
+        {
+          "id": "kp_settings_2",
+          "name": "The CLAUDE.md bug, and the production default",
+          "keyPrerequisites": [],
+          "teach": "<p>The common bug: <strong>project CLAUDE.md loads only when <code>\"project\"</code> is in <code>settingSources</code>.</strong> An SDK app that ignores CLAUDE.md has almost always passed <code>[]</code>, or a list that omitted <code>\"project\"</code>.</p><p>Two gotchas worth carrying:</p><ul><li><em>Python-only:</em> in SDK <strong>0.1.59 and earlier</strong>, <code>setting_sources=[]</code> behaved like omitting it, so it did <em>not</em> disable filesystem settings. TypeScript was never affected.</li><li><em>Production default:</em> for a deployed product you usually want <code>settingSources: []</code> — reproducible behaviour that does not change because a developer edited their personal settings file.</li></ul>",
+          "questions": [
+            {
+              "id": "q_settings_2a",
+              "q": "An SDK app ignores the repo's CLAUDE.md. What is the most likely cause?",
+              "options": [
+                "CLAUDE.md must be renamed for SDK use",
+                "settingSources was [] or a list without \"project\"",
+                "The systemPrompt preset was not set to claude_code",
+                "CLAUDE.md is only read by the CLI, never the SDK"
+              ],
+              "correct": 1,
+              "explain": "\"project\" is what makes project CLAUDE.md load. This is the single most common settings bug in SDK apps."
+            },
+            {
+              "id": "q_settings_2b",
+              "q": "Why do deployed products usually pass settingSources: []?",
+              "options": [
+                "It is faster, because no files are read",
+                "So behaviour is reproducible and cannot change because someone edited their personal settings",
+                "Because endpoint-managed policy requires it",
+                "Because CLAUDE.md is not allowed in production"
+              ],
+              "correct": 1,
+              "explain": "Reproducibility. The cost is that you must then supply anything CLAUDE.md would have given you, explicitly."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_settings_1",
+          "q": "Which settingSources value must be present for project CLAUDE.md to load?",
+          "options": [
+            "\"user\"",
+            "\"project\"",
+            "\"local\"",
+            "Any of the three"
+          ],
+          "correct": 1,
+          "explain": "\"project\" specifically. Omitting the whole field also works, since that loads all three."
+        }
+      ]
+    },
+
+    {
+      "topicId": "mt_budgets",
+      "knowledgePoints": [
+        {
+          "id": "kp_budget_1",
+          "name": "Guillotines vs. budgets the model can see",
+          "keyPrerequisites": ["mt_loop_ownership"],
+          "teach": "<p>Four ways to stop a run, and they are not interchangeable:</p><ul><li><code>maxTurns</code> — maximum agentic turns (tool-use round trips). A guillotine: the run stops mid-thought when the count is hit.</li><li><code>maxBudgetUsd</code> — stops when the <em>client-side cost estimate</em> reaches this figure. Also a guillotine.</li><li><code>taskBudget: { total }</code> <em>(alpha)</em> — an API-side <strong>token</strong> budget, and the model is <strong>told its remaining budget</strong> so it can pace itself and wrap up deliberately.</li><li><code>abortController</code> (TS) — cancellation from your side.</li></ul><p>That third one is the distinctive fact. If a question asks which control lets the agent finish gracefully rather than be cut off, it is <code>taskBudget</code>.</p>",
+          "questions": [
+            {
+              "id": "q_budget_1a",
+              "q": "Which budget option does the model itself know about, so it can pace itself and wrap up?",
+              "options": [
+                "maxTurns",
+                "maxBudgetUsd",
+                "taskBudget",
+                "abortController"
+              ],
+              "correct": 2,
+              "explain": "maxTurns and maxBudgetUsd are guillotines. taskBudget is told to the model, which changes its behaviour rather than just ending it."
+            },
+            {
+              "id": "q_budget_1b",
+              "q": "maxBudgetUsd is enforced against what?",
+              "options": [
+                "A server-side billing meter",
+                "A client-side cost estimate",
+                "The token budget the model is told about",
+                "Wall-clock time converted to dollars"
+              ],
+              "correct": 1,
+              "explain": "Client-side estimate — which is why it is a safety rail rather than a billing guarantee."
+            }
+          ]
+        },
+        {
+          "id": "kp_budget_2",
+          "name": "Structured results",
+          "keyPrerequisites": [],
+          "teach": "<p>Stopping is half the problem; the other half is getting something your code can use.</p><p><code>outputFormat: { type: 'json_schema', schema }</code> makes the agent's final result conform to a schema, so a caller can consume it without parsing prose. It pairs naturally with budgets: a run that must end at some point should end with something structured rather than a half-written paragraph.</p>",
+          "questions": [
+            {
+              "id": "q_budget_2a",
+              "q": "Your service needs the agent's final answer as an object with fixed fields. Which option?",
+              "options": [
+                "outputFormat: { type: 'json_schema', schema }",
+                "systemPrompt with a JSON example appended",
+                "taskBudget with a low total",
+                "A PostToolUse hook that reformats the result"
+              ],
+              "correct": 0,
+              "explain": "Prompting for JSON is the probabilistic version of this. outputFormat is the declared one."
+            },
+            {
+              "id": "q_budget_2b",
+              "q": "Which pairing makes the most sense for an unattended run that must always return something usable?",
+              "options": [
+                "abortController plus free-text output",
+                "taskBudget plus outputFormat json_schema",
+                "maxTurns plus a longer system prompt",
+                "maxBudgetUsd plus streaming"
+              ],
+              "correct": 1,
+              "explain": "The model paces itself against a budget it can see, and what it produces at the end has a shape your caller can rely on."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_budget_1",
+          "q": "Rank these by how gracefully the run ends: maxTurns, taskBudget, abortController.",
+          "options": [
+            "abortController is gentlest, then maxTurns, then taskBudget",
+            "taskBudget is gentlest because the model is told about it; maxTurns and abortController simply stop the run",
+            "All three are identical in effect",
+            "maxTurns is gentlest because turns are coarse"
+          ],
+          "correct": 1,
+          "explain": "Only taskBudget changes the model's behaviour before the limit is reached."
+        }
+      ]
+    }
+  ]
+}

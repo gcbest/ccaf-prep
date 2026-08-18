@@ -1,0 +1,27 @@
+{
+  "$comment": "Source standards this graph is aligned to. Two families: CCA-F exam-guide domains (ccaf:*) and the study-reference glossary terms (ccaf-glossary:*). Topics reference these by id in their `standards` array.",
+  "standards": [
+    { "id": "ccaf:d1", "family": "ccaf", "code": "Domain 1", "name": "Agentic Architecture & Orchestration", "weight": 0.27, "source": "CCA-F Exam Guide v1.0 (effective July 2026)" },
+    { "id": "ccaf:d2", "family": "ccaf", "code": "Domain 2", "name": "Tool Design & MCP Integration", "weight": 0.18, "source": "CCA-F Exam Guide v1.0 (effective July 2026)" },
+    { "id": "ccaf:d3", "family": "ccaf", "code": "Domain 3", "name": "Prompt Engineering & Structured Output", "weight": 0.20, "source": "CCA-F Exam Guide v1.0 (effective July 2026)" },
+    { "id": "ccaf:d4", "family": "ccaf", "code": "Domain 4", "name": "Claude Code Configuration & Workflows", "weight": 0.20, "source": "CCA-F Exam Guide v1.0 (effective July 2026)" },
+    { "id": "ccaf:d5", "family": "ccaf", "code": "Domain 5", "name": "Context Management & Reliability", "weight": 0.15, "source": "CCA-F Exam Guide v1.0 (effective July 2026)" },
+
+    { "id": "ccaf-glossary:t3", "family": "ccaf-glossary", "code": "t3", "name": "Hub-and-spoke coordination", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t4", "family": "ccaf-glossary", "code": "t4", "name": "Task tool in a coordinator's allowedTools", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t6", "family": "ccaf-glossary", "code": "t6", "name": "How a subagent receives prior findings", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t7", "family": "ccaf-glossary", "code": "t7", "name": "fork_session for comparing strategies", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t8", "family": "ccaf-glossary", "code": "t8", "name": "--resume for a named prior conversation", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t9", "family": "ccaf-glossary", "code": "t9", "name": "Deterministic compliance via programmatic enforcement", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t10", "family": "ccaf-glossary", "code": "t10", "name": "PostToolUse normalization", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t11", "family": "ccaf-glossary", "code": "t11", "name": "Tool call interception hook", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t12", "family": "ccaf-glossary", "code": "t12", "name": "Prompt chaining", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t13", "family": "ccaf-glossary", "code": "t13", "name": "Dynamic / adaptive decomposition", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t14", "family": "ccaf-glossary", "code": "t14", "name": "Tool description as the selection mechanism", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t15", "family": "ccaf-glossary", "code": "t15", "name": "isError", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t16", "family": "ccaf-glossary", "code": "t16", "name": "errorCategory", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t17", "family": "ccaf-glossary", "code": "t17", "name": "isRetryable", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t40", "family": "ccaf-glossary", "code": "t40", "name": "Explore subagent as a context lever", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t60", "family": "ccaf-glossary", "code": "t60", "name": "/compact", "source": "study-reference/ccaf_study_reference.md" }
+  ]
+}

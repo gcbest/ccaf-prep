@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gcbest.github.io/ccaf-prep/learning-graph/schema/knowledge-points.schema.json",
+  "title": "Knowledge points",
+  "description": "Teaching content for one cluster. Each topic's knowledge points are ordered from the most basic idea to the harder cases; mastery of a topic means clearing every knowledge point in order.",
+  "type": "object",
+  "required": ["cluster", "topics"],
+  "properties": {
+    "$comment": { "type": "string" },
+    "cluster": { "type": "string", "pattern": "^cl_[a-z0-9_]+$" },
+    "topics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["topicId", "knowledgePoints", "reviewQuestions"],
+        "properties": {
+          "topicId": { "type": "string", "pattern": "^mt_[a-z0-9_]+$" },
+          "knowledgePoints": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "name", "teach", "questions"],
+              "properties": {
+                "id": { "type": "string" },
+                "name": { "type": "string" },
+                "keyPrerequisites": {
+                  "type": "array",
+                  "items": { "type": "string", "pattern": "^mt_[a-z0-9_]+$" },
+                  "description": "Topics a targeted remedial review draws from when this knowledge point is failed twice."
+                },
+                "teach": { "type": "string", "description": "Worked example, as an HTML fragment." },
+                "questions": {
+                  "type": "array",
+                  "minItems": 2,
+                  "items": { "$ref": "#/$defs/question" },
+                  "description": "At least two, so a retry after a failure can use a question the learner has not just seen."
+                }
+              }
+            }
+          },
+          "reviewQuestions": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/question" },
+            "description": "Held back from the lesson and used for spaced reviews."
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "question": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "q", "options", "correct", "explain"],
+      "properties": {
+        "id": { "type": "string" },
+        "q": { "type": "string" },
+        "options": { "type": "array", "minItems": 3, "maxItems": 4, "items": { "type": "string" } },
+        "correct": { "type": "integer", "minimum": 0 },
+        "explain": { "type": "string" }
+      }
+    }
+  }
+}
