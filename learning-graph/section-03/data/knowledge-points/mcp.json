@@ -15,22 +15,22 @@
               "id": "q_tsm_1a",
               "q": "Claude must follow your firm's report template, query your internal database, and read Slack. Which mechanism for each?",
               "options": [
-                "Skill, tool, MCP",
                 "Tool, skill, MCP",
-                "Skill, MCP, tool",
-                "MCP, tool, skill"
+                "MCP, tool, skill",
+                "Skill, tool, MCP",
+                "Skill, MCP, tool"
               ],
-              "correct": 0,
+              "correct": 2,
               "explain": "Template is a procedure (skill), your database is your system (tool), Slack is third-party (MCP)."
             },
             {
               "id": "q_tsm_1b",
               "q": "What is the practical argument for MCP over writing the tool yourself?",
               "options": [
-                "MCP tools run faster",
-                "The provider maintains the integration, including schema and auth changes",
-                "MCP tools do not consume context",
-                "MCP tools can be called without a loop"
+                "MCP tools run noticeably faster than yours",
+                "The provider maintains the schema and auth",
+                "MCP tools do not consume any of your context",
+                "MCP tools can be called without any loop"
               ],
               "correct": 1,
               "explain": "Maintenance moves to whoever owns the service."
@@ -44,11 +44,11 @@
           "q": "A skill is best described as…",
           "options": [
             "An integration with an external service",
-            "Instructions teaching Claude a procedure, not necessarily an integration",
-            "A tool with its schema generated automatically",
-            "A server-side tool run by Anthropic"
+            "A tool whose schema gets auto-generated",
+            "A server-side tool that Anthropic runs",
+            "Instructions teaching Claude a procedure"
           ],
-          "correct": 1,
+          "correct": 3,
           "explain": "Procedure, not plumbing — your template or checklist expressed as instructions."
         }
       ]
@@ -66,10 +66,10 @@
               "id": "q_conn_1a",
               "q": "Which two request fields connect a remote MCP server?",
               "options": [
-                "mcp_servers and a tools entry of type mcp_toolset",
-                "mcp_servers and mcp_tools",
-                "servers and tool_choice",
-                "mcp_config and allowed_tools"
+                "mcp_servers, plus a tools mcp_toolset entry",
+                "mcp_servers and mcp_tools on the request",
+                "servers and tool_choice, on the request",
+                "mcp_config and allowed_tools, together"
               ],
               "correct": 0,
               "explain": "One declares the connection, the other grants access to it."
@@ -79,11 +79,11 @@
               "q": "Who writes the schemas for MCP-provided tools?",
               "options": [
                 "You, mirroring the server's documentation",
-                "Nobody — Claude introspects the server and discovers them",
                 "The SDK, from the server's OpenAPI spec",
+                "Nobody — Claude introspects the server",
                 "Anthropic, from a registry of known servers"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "Introspection is the point of the protocol. Hand-writing schemas is what MCP removes."
             }
           ]
@@ -94,10 +94,10 @@
           "id": "r_conn_1",
           "q": "What does an mcp_toolset entry grant by default?",
           "options": [
-            "No tools until each is enabled",
-            "All tools on the named server",
-            "Only read-only tools",
-            "Only tools whose schemas Claude can validate"
+            "No tools at all until each is enabled",
+            "Every tool on the server that is named",
+            "Only the read-only tools that it exposes",
+            "Only tools whose schemas Claude validates"
           ],
           "correct": 1,
           "explain": "All of them — which is exactly why scoping down is a separate, deliberate step."
@@ -117,24 +117,24 @@
               "id": "q_scope_1a",
               "q": "You connect a Slack MCP server and the agent must never post. What do you do?",
               "options": [
-                "Add a system-prompt rule forbidding posting",
-                "Set default_config disabled, then enable only the read tools by name",
+                "A system-prompt rule forbidding posting",
                 "List the posting tools in a blocked set",
-                "Use tool_choice to restrict which tools may be called"
+                "Use tool_choice to restrict what may run",
+                "default_config disabled, then enable reads"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Deny by default, allow by name. It is configuration, and it survives the provider adding new tools."
             },
             {
               "id": "q_scope_1b",
               "q": "Why is a block list worse than an allow list here?",
               "options": [
-                "It is more verbose",
-                "A new tool added by the provider is permitted by default under a block list",
+                "A new provider tool is permitted by default",
+                "It is simply a more verbose thing to write",
                 "Block lists are not supported by the API",
-                "Block lists cannot be combined with authorization tokens"
+                "Block lists cannot combine with auth tokens"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "Anything unlisted is allowed, and the list of things to block grows without you."
             }
           ]
@@ -145,12 +145,12 @@
           "id": "r_scope_1",
           "q": "Why is scoping configuration rather than a prompt instruction?",
           "options": [
-            "Prompt instructions cost tokens",
-            "Configuration is enforced; an instruction is a request untrusted content can compete with",
+            "Prompt instructions cost extra tokens",
             "Instructions are ignored for MCP tools",
-            "Configuration is cached and instructions are not"
+            "Configuration is enforced; a prompt is asked",
+            "Configuration is cached; instructions are not"
           ],
-          "correct": 1,
+          "correct": 2,
           "explain": "The same programmatic-enforcement-versus-instruction line that runs through the whole certification."
         }
       ]

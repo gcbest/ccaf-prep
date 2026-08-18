@@ -18,16 +18,16 @@
     "encompassings.json": "sha256:c0173f37b5226700",
     "clusters.json": "sha256:86821ce4481ec45c",
     "curriculum-standards.json": "sha256:328c9bd917e59331",
-    "knowledge-points/api-core.json": "sha256:b47db04b7d8a1050",
-    "knowledge-points/capabilities.json": "sha256:1e353a8b3ac102ef",
-    "knowledge-points/context.json": "sha256:71b0aab2faad7f4b",
-    "knowledge-points/evaluation.json": "sha256:382f79a9c4958d00",
-    "knowledge-points/managed.json": "sha256:bdc3e41df21cadb7",
-    "knowledge-points/mcp.json": "sha256:8882726795b57cc6",
-    "knowledge-points/orchestration.json": "sha256:2a336a84b00f9bfb",
-    "knowledge-points/prompting.json": "sha256:d1f7b53f18bad530",
-    "knowledge-points/rag.json": "sha256:f222682bd099934b",
-    "knowledge-points/structured.json": "sha256:c53b817618c46f13",
-    "knowledge-points/tools.json": "sha256:af25c5ff5c2c1e56"
+    "knowledge-points/api-core.json": "sha256:77b790dccbd59b29",
+    "knowledge-points/capabilities.json": "sha256:d4e17c8d4e5104a3",
+    "knowledge-points/context.json": "sha256:b26f9721c069d99d",
+    "knowledge-points/evaluation.json": "sha256:46dc48a17faaba32",
+    "knowledge-points/managed.json": "sha256:431e72537b5943cb",
+    "knowledge-points/mcp.json": "sha256:add204e5e945138e",
+    "knowledge-points/orchestration.json": "sha256:a7a69249d4cc148b",
+    "knowledge-points/prompting.json": "sha256:c50c93bae85f3b01",
+    "knowledge-points/rag.json": "sha256:887693413474131a",
+    "knowledge-points/structured.json": "sha256:fd70f6d5fe449332",
+    "knowledge-points/tools.json": "sha256:eb077a59d592cfcb"
   }
 }

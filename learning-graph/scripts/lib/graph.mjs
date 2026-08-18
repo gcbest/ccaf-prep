@@ -139,6 +139,8 @@ export function validate(g) {
     seenQ.add(q.id);
   }
 
+  warnings.push(...checkAnswerTells(allQuestions(g)));
+
   errors.push(...findCycles(g.topics, g.dependencies.filter((d) => d.strength === "hard"), "hard prerequisite"));
   errors.push(...findCycles(
     g.topics,
@@ -159,6 +161,47 @@ function checkQuestion(q, errors) {
     errors.push(`${q.id}: correct index out of range`);
   }
   if (!q.explain) errors.push(`${q.id}: no explanation`);
+}
+
+/* Guard against the two ways a multiple-choice bank leaks its own answers:
+   the correct option being the longest one, and the correct option always
+   sitting at the same index. Both are warnings, not errors — a handful of
+   questions legitimately have a longer right answer (a real identifier, a
+   full option name), so the check is on the rate across the bank, not on
+   any single question. Chance is 25% for four options. */
+function checkAnswerTells(questions) {
+  const warnings = [];
+  const scored = questions.filter((q) => Array.isArray(q.options) && q.options.length >= 3);
+  if (scored.length < 20) return warnings;
+
+  let longest = 0;
+  const byIndex = {};
+  for (const q of scored) {
+    const lengths = q.options.map((o) => String(o).length);
+    const max = Math.max(...lengths);
+    if (lengths[q.correct] === max && lengths.filter((l) => l === max).length === 1) longest++;
+    byIndex[q.correct] = (byIndex[q.correct] || 0) + 1;
+  }
+
+  const longestRate = longest / scored.length;
+  if (longestRate > 0.4) {
+    warnings.push(
+      `${Math.round(longestRate * 100)}% of correct answers are the longest option ` +
+      `(${longest}/${scored.length}); pad the distractors or trim the answer`
+    );
+  }
+
+  const slots = Math.max(...scored.map((q) => q.options.length));
+  const expected = scored.length / slots;
+  for (const [index, count] of Object.entries(byIndex)) {
+    if (count > expected * 1.6) {
+      warnings.push(
+        `${count}/${scored.length} correct answers sit at index ${index} ` +
+        `(expected around ${Math.round(expected)}); spread the answer positions`
+      );
+    }
+  }
+  return warnings;
 }
 
 export function allQuestions(g) {

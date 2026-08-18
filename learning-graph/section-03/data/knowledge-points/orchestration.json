@@ -15,9 +15,9 @@
               "id": "q_wva_1a",
               "q": "What single question separates a workflow design from an agent design?",
               "options": [
-                "Does the task need more than one Claude call?",
-                "Can you picture the exact steps in advance?",
-                "Does the task require tools?",
+                "Does the task need more than one call?",
+                "Can you picture the exact steps upfront?",
+                "Does the task require any tools at all?",
                 "Is the output structured or free-form?"
               ],
               "correct": 1,
@@ -27,12 +27,12 @@
               "id": "q_wva_1b",
               "q": "How is a workflow defined?",
               "options": [
-                "Any pipeline with more than three Claude calls",
-                "A predefined series of Claude calls solving a known problem",
-                "A loop that terminates on a fixed iteration count",
-                "A single call with process steps in the prompt"
+                "Any pipeline with more than three calls",
+                "A loop ending on a fixed iteration count",
+                "A predefined series solving a known problem",
+                "A single call with process steps inside"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "Predefined and known — that is what makes the steps designable ahead of time."
             }
           ]
@@ -47,24 +47,24 @@
               "id": "q_wva_2a",
               "q": "Which does the course recommend by default?",
               "options": [
-                "Agents, since they handle more cases",
-                "Workflows, reaching for agents only when truly required",
-                "Whichever is cheaper to run",
-                "Agents for user-facing work, workflows for batch"
+                "Agents, since they handle far more cases",
+                "Whichever one is cheaper to run overall",
+                "Agents for users, workflows for batch jobs",
+                "Workflows, with agents only when needed"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Workflows by default. Users want reliability, and agents trade success rate for flexibility."
             },
             {
               "id": "q_wva_2b",
               "q": "Which is a stated downside of workflows?",
               "options": [
-                "Lower success rate",
-                "More upfront design work and a more constrained UX",
-                "Harder to test",
-                "Cannot use tools"
+                "More upfront design and a tighter UX",
+                "A lower overall success rate for users",
+                "They are much harder to test properly",
+                "They cannot make use of tools at all"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "You pay in design effort and flexibility. Testability and predictability are what you get back."
             }
           ]
@@ -75,24 +75,24 @@
           "id": "r_wva_1",
           "q": "Which is a benefit unique to agents?",
           "options": [
-            "Higher accuracy per subtask",
-            "Can combine tools in unexpected ways and handle novel situations",
-            "Easier to evaluate",
-            "More predictable behaviour"
+            "Combining tools in ways nobody planned",
+            "Higher accuracy on each single subtask",
+            "Much easier to evaluate and to test",
+            "More predictable behaviour on the whole"
           ],
-          "correct": 1,
+          "correct": 0,
           "explain": "Novelty handling is the thing you are buying. The other three are workflow advantages."
         },
         {
           "id": "r_wva_2",
           "q": "Why are agents harder to instrument than workflows?",
           "options": [
-            "They run on a different endpoint",
-            "The steps are not known ahead of time, so there is no fixed set of stages to measure",
-            "Their tool calls are executed server-side",
-            "They do not emit stop_reason"
+            "They run against a different endpoint",
+            "Their tool calls run on the server side",
+            "They do not emit a stop_reason at all",
+            "The steps are not known ahead of time"
           ],
-          "correct": 1,
+          "correct": 3,
           "explain": "You cannot put a metric on a stage that does not exist until runtime."
         }
       ]
@@ -110,8 +110,8 @@
               "id": "q_par_1a",
               "q": "A loan decision needs a credit check, a fraud check, and an affordability check. Which pattern, and what is the final step?",
               "options": [
-                "Routing; the final step is selecting a pipeline",
-                "Parallelization; the final step is aggregating the results into a decision",
+                "Routing; the final step selects a pipeline",
+                "Parallelization; then aggregate to a decision",
                 "Chaining; the final step is a revision pass",
                 "Evaluator–optimizer; the final step is a grade"
               ],
@@ -122,12 +122,12 @@
               "id": "q_par_1b",
               "q": "Must parallelized sub-tasks be identical?",
               "options": [
-                "Yes — the same prompt run on different inputs",
-                "No — they need only be meaningfully independent",
-                "Yes, unless they use different models",
-                "No, but they must return the same output schema"
+                "Yes — the same prompt on different inputs",
+                "Yes, unless they each use different models",
+                "No — they need only be truly independent",
+                "No, but they must share an output schema"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "Independence is the requirement, not sameness."
             }
           ]
@@ -138,12 +138,12 @@
           "id": "r_par_1",
           "q": "Besides latency, what does parallelization buy?",
           "options": [
-            "Lower token cost",
-            "Accuracy, since each branch is a focused prompt rather than one prompt weighing everything",
-            "Guaranteed structured output",
-            "Fewer round trips to the API"
+            "A lower token cost across the board",
+            "Guaranteed structured output every time",
+            "Fewer round trips to the API in total",
+            "Accuracy — each branch is a focused prompt"
           ],
-          "correct": 1,
+          "correct": 3,
           "explain": "Focus per subtask — the same reason workflows generally beat one large prompt."
         }
       ]
@@ -161,10 +161,10 @@
               "id": "q_chain_1a",
               "q": "A prompt with eight rules obeys five of them. What pattern fixes it?",
               "options": [
-                "Parallelization — evaluate each rule independently",
-                "Chaining — generate first, then a focused revision pass targeting specific fixes",
-                "Routing — send each rule to its own pipeline",
-                "Evaluator–optimizer — grade until all eight pass"
+                "Parallelization — evaluate each rule alone",
+                "Chaining — generate, then revise with focus",
+                "Routing — send each rule to its own branch",
+                "Evaluator–optimizer — grade until all pass"
               ],
               "correct": 1,
               "explain": "Chaining is the named fix for the long-prompt problem: generate, then revise with focus."
@@ -173,12 +173,12 @@
               "id": "q_chain_1b",
               "q": "What does the second call in a two-step chain do?",
               "options": [
-                "Re-runs the original prompt at a lower temperature",
-                "Takes the first output and revises it against specific targeted fixes",
-                "Grades the first output and returns a score",
-                "Splits the output into sections for parallel processing"
+                "Re-runs the prompt at a lower temperature",
+                "Grades the first output and gives a score",
+                "Splits the output for parallel processing",
+                "Takes the first output and revises it hard"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "A focused revision pass. Only a few concerns compete for attention, so they all get it."
             }
           ]
@@ -189,10 +189,10 @@
           "id": "r_chain_1",
           "q": "How does chaining differ from parallelization?",
           "options": [
-            "Chaining is sequential and each step builds on the last; parallelization runs independent steps at once",
-            "Chaining uses one model, parallelization uses several",
-            "Chaining is for known steps, parallelization for unknown ones",
-            "Chaining aggregates results, parallelization does not"
+            "Chaining is sequential; parallel is at once",
+            "Chaining uses one model, parallel uses many",
+            "Chaining is for known steps, parallel unknown",
+            "Chaining aggregates results, parallel does not"
           ],
           "correct": 0,
           "explain": "Sequence and dependence versus simultaneity and independence."
@@ -201,12 +201,12 @@
           "id": "r_chain_2",
           "q": "Why does one prompt with many constraints drop some of them?",
           "options": [
-            "The API truncates long prompts",
-            "The constraints compete for finite attention, so some are only partially applied",
+            "Constraints compete for finite attention",
+            "The API truncates any prompt this long",
             "Later instructions overwrite earlier ones",
-            "Constraints past a count of five are ignored"
+            "Constraints past the fifth are ignored"
           ],
-          "correct": 1,
+          "correct": 0,
           "explain": "Competition, not truncation — which is why splitting the work rather than rewording it is the fix."
         }
       ]
@@ -224,24 +224,24 @@
               "id": "q_route_1a",
               "q": "One inbox receives refund requests, bug reports, and sales enquiries. Which pattern, and how many pipelines does a message reach?",
               "options": [
-                "Parallelization; all three",
-                "Routing; exactly one",
-                "Chaining; all three in sequence",
-                "Routing; one or more, depending on the classification confidence"
+                "Parallelization; all three of them",
+                "Chaining; all three, in sequence",
+                "Routing; exactly one of the three",
+                "Routing; one or more, by confidence"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "Routing sends each input down a single branch, which is what allows each branch to specialise."
             },
             {
               "id": "q_route_1b",
               "q": "What distinguishes routing from parallelization?",
               "options": [
-                "Routing is sequential, parallelization is not",
-                "Routing sends the input to one branch; parallelization sends it to all and aggregates",
-                "Routing requires structured output",
-                "Routing uses one model, parallelization uses several"
+                "Routing is sequential, parallel is not",
+                "Routing always requires structured output",
+                "Routing uses one model, parallel uses many",
+                "Routing picks one branch; parallel uses all"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "One branch versus all branches. The diagrams look alike; the semantics are opposite."
             }
           ]
@@ -252,12 +252,12 @@
           "id": "r_route_1",
           "q": "What does the classification step in routing typically run on?",
           "options": [
-            "The same tier as the pipelines, for consistency",
-            "A cheap tier such as Haiku — classification is exactly its brief",
-            "Opus, since a misroute is expensive",
-            "A non-LLM classifier"
+            "The same tier as the pipelines, for parity",
+            "Opus, since a misroute is very expensive",
+            "A non-LLM classifier trained offline first",
+            "A cheap tier such as Haiku, its exact brief"
           ],
-          "correct": 1,
+          "correct": 3,
           "explain": "Classification is Haiku's named workload, and routing is where per-task model choice actually gets used."
         }
       ]
@@ -274,18 +274,23 @@
             {
               "id": "q_evopt_1a",
               "q": "Which workflow pattern has a feedback edge back to its own first step?",
-              "options": ["Parallelization", "Chaining", "Routing", "Evaluator–optimizer"],
-              "correct": 3,
+              "options": [
+                "Parallelization",
+                "Evaluator–optimizer",
+                "Chaining",
+                "Routing"
+              ],
+              "correct": 1,
               "explain": "Rejection sends feedback back to the producer. The other three flow forwards only."
             },
             {
               "id": "q_evopt_1b",
               "q": "What must the evaluator return for the loop to work?",
               "options": [
-                "A bare score, so acceptance is a simple threshold",
-                "Reasoning about strengths and weaknesses, not just a number — the producer needs something to act on",
-                "A rewritten version of the output",
-                "A confidence interval on its grade"
+                "A bare score, so acceptance is a threshold",
+                "Reasoning on strengths and weaknesses, not a number",
+                "A fully rewritten version of the output itself",
+                "A confidence interval around its own grade"
               ],
               "correct": 1,
               "explain": "It is a model grader, and the same rule applies: a bare number is uninformative and drifts to the middle."
@@ -298,12 +303,12 @@
           "id": "r_evopt_1",
           "q": "In the image-to-CAD example, what is graded against what?",
           "options": [
-            "The CAD model against a specification document",
-            "A rendering of the model against the original image",
-            "The description against the image",
+            "A rendering of the model against the image",
+            "The CAD model against a specification doc",
+            "The description against the original image",
             "The final model against a previous version"
           ],
-          "correct": 1,
+          "correct": 0,
           "explain": "Render, then compare the render to the original — a check in the same medium as the input."
         }
       ]
@@ -321,19 +326,24 @@
               "id": "q_choice_1a",
               "q": "What is the first question to ask of an orchestration scenario?",
               "options": [
-                "How many Claude calls will it need?",
-                "Are the steps knowable in advance?",
-                "Which model tier does it need?",
-                "Does it require tools?"
+                "How many Claude calls will this need?",
+                "Which model tier will this one need?",
+                "Does it require any tools at all?",
+                "Are the steps knowable in advance?"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Knowability first. Only once it is a workflow does the shape question apply."
             },
             {
               "id": "q_choice_1b",
               "q": "A scenario needs quality iterated toward against explicit criteria. Which pattern?",
-              "options": ["Parallelization", "Chaining", "Routing", "Evaluator–optimizer"],
-              "correct": 3,
+              "options": [
+                "Parallelization",
+                "Routing",
+                "Evaluator–optimizer",
+                "Chaining"
+              ],
+              "correct": 2,
               "explain": "Criteria plus iteration until accepted is the evaluator–optimizer signature."
             }
           ]
@@ -349,23 +359,23 @@
               "q": "What do you actually hand an agent?",
               "options": [
                 "A sequence of steps and a tool set",
-                "A goal and a tool set",
                 "A goal and a maximum iteration count",
-                "A classified input and a specialised pipeline"
+                "A goal, plus a set of tools",
+                "A classified input and a pipeline"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "Goal plus tools. If you could hand it steps, you would be building a workflow."
             },
             {
               "id": "q_choice_2b",
               "q": "An agent is asked to calculate a warranty expiry and lacks the purchase date. What is the expected behaviour?",
               "options": [
-                "It fails with an error",
+                "It fails outright with a clear error",
+                "It assumes today's date and proceeds",
                 "It asks the user for the purchase date",
-                "It assumes today's date",
-                "It calls every tool until one supplies a date"
+                "It calls tools until one supplies a date"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "Recognising it needs more input is part of what an agent does — and a listed benefit of the approach."
             }
           ]
@@ -375,18 +385,23 @@
         {
           "id": "r_choice_1",
           "q": "A scenario describes triaging incoming documents into three types, each handled by a different specialised prompt. Which pattern?",
-          "options": ["Parallelization", "Routing", "Chaining", "An agent"],
-          "correct": 1,
+          "options": [
+            "Routing",
+            "Parallelization",
+            "Chaining",
+            "An agent"
+          ],
+          "correct": 0,
           "explain": "Distinct categories, different handling, one branch each — routing."
         },
         {
           "id": "r_choice_2",
           "q": "A scenario says the system must handle requests the team cannot enumerate ahead of time, combining tools as needed. Workflow or agent?",
           "options": [
-            "Workflow — enumerate the common cases and default the rest",
-            "Agent — the steps are not knowable in advance",
-            "Workflow, using routing with an 'other' category",
-            "Either; the distinction is a matter of preference"
+            "Workflow — enumerate the common cases only",
+            "Agent — the steps are simply not knowable",
+            "Workflow, routing with an 'other' branch",
+            "Either; the distinction is mere preference"
           ],
           "correct": 1,
           "explain": "'Cannot be enumerated ahead of time' is the rule's second branch, stated almost verbatim."

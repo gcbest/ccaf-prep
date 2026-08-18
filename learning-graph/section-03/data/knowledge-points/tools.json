@@ -15,10 +15,10 @@
               "id": "q_loop_1a",
               "q": "What distinguishes an agent from an ordinary chat integration?",
               "options": [
-                "It uses a more capable model tier",
-                "Claude runs both sides of the loop — your code supplies the user turns as tool results, with no human in the middle",
+                "It relies on a more capable model tier",
+                "Claude runs both sides; tool results are turns",
                 "It maintains conversation state server-side",
-                "It streams rather than returning a single response"
+                "It streams rather than returning one response"
               ],
               "correct": 1,
               "explain": "The human turn is replaced by a tool result your code produces. That is the whole structural difference."
@@ -27,12 +27,12 @@
               "id": "q_loop_1b",
               "q": "In an agent, who owns what?",
               "options": [
+                "You own the loop and tools; Claude reasons",
                 "Claude owns the loop; you own the reasoning",
-                "You own the loop and the tools; Claude owns the reasoning",
                 "Anthropic owns the loop; you own the tools",
-                "You own the tools; Claude owns the loop and the reasoning"
+                "You own the tools; Claude owns loop and reasoning"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "Loop and tools yours, reasoning Claude's — and that split is exactly what managed agents later renegotiate."
             }
           ]
@@ -47,22 +47,22 @@
               "id": "q_loop_2a",
               "q": "What ends an agent loop?",
               "options": [
-                "The tools array is exhausted",
-                "stop_reason is end_turn",
+                "The tools array has been exhausted",
                 "A maximum iteration count is reached",
-                "The response contains a text block"
+                "The response contains a text block",
+                "stop_reason comes back as end_turn"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "end_turn. An iteration cap is a sensible safety net you add, but it is not what the loop is defined by."
             },
             {
               "id": "q_loop_2b",
               "q": "In which step does your own code do the work?",
               "options": [
-                "Step 2, where Claude decides which tool to use",
-                "Step 3, where the requested tool is executed",
-                "Step 5, where the loop condition is evaluated",
-                "Step 1, where the tools are defined"
+                "Step 2, where Claude decides which tool",
+                "Step 3, where the requested tool is run",
+                "Step 5, where the loop condition is checked",
+                "Step 1, where the tools are all defined"
               ],
               "correct": 1,
               "explain": "Claude asks; you execute. Step 3 is where your function actually runs."
@@ -75,10 +75,10 @@
           "id": "r_loop_1",
           "q": "Which sequence is correct?",
           "options": [
-            "Send with tools → tool_use → execute → tool_result → repeat until end_turn",
+            "Send with tools → tool_use → execute → tool_result → repeat",
             "Send with tools → execute → tool_use → end_turn → repeat",
-            "Execute → send with tools → tool_result → tool_use → end_turn",
-            "Send with tools → end_turn → execute → tool_result → repeat"
+            "Execute → send with tools → tool_result → tool_use → end",
+            "Send with tools → end_turn → execute → tool_result → loop"
           ],
           "correct": 0,
           "explain": "Claude requests before you execute, and end_turn is the exit rather than a stage."
@@ -87,12 +87,12 @@
           "id": "r_loop_2",
           "q": "Does the agent loop require a different API endpoint?",
           "options": [
-            "Yes — /agents rather than /messages",
-            "No — it is messages.create called repeatedly with a growing array",
-            "Yes, when more than one tool is defined",
-            "No, but it requires the streaming endpoint"
+            "Yes — /agents instead of /messages",
+            "Yes, once more than one tool is defined",
+            "No — messages.create in a loop, array growing",
+            "No, but it needs the streaming endpoint"
           ],
-          "correct": 1,
+          "correct": 2,
           "explain": "Same stateless call, called in a loop. The agency is in your code, not in a different endpoint."
         }
       ]
@@ -122,12 +122,12 @@
               "id": "q_anatomy_1b",
               "q": "What kind of specification is input_schema?",
               "options": [
-                "An Anthropic-specific format for tool arguments",
-                "Standard JSON Schema, a general data-validation spec",
-                "A TypeScript type definition",
+                "Standard JSON Schema, a general spec",
+                "An Anthropic format for tool arguments",
+                "A TypeScript type definition, compiled",
                 "OpenAPI, restricted to request bodies"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "Plain JSON Schema. Nothing about it is AI-specific."
             }
           ]
@@ -138,12 +138,12 @@
           "id": "r_anatomy_1",
           "q": "Which field describes what a tool returns?",
           "options": [
-            "output_schema",
-            "The description — in prose, since there is no output schema",
-            "input_schema's `returns` property",
-            "Nothing; Claude infers it from the result"
+            "output_schema on the definition",
+            "The input_schema's `returns` property",
+            "The description, in prose; there is none",
+            "Nothing; Claude infers it from results"
           ],
-          "correct": 1,
+          "correct": 2,
           "explain": "The description carries it. That is one reason the guidance is three or four sentences rather than one."
         }
       ]
@@ -161,12 +161,12 @@
               "id": "q_desc_1a",
               "q": "An agent has a working search tool and never calls it. Where do you look first?",
               "options": [
-                "The input_schema, for a required field it cannot fill",
-                "The description, which is what Claude reads to decide whether to call it",
-                "The model tier, which may be too small to use tools",
-                "The temperature, which may be suppressing tool calls"
+                "The input_schema, for a field it cannot fill",
+                "The model tier, perhaps too small for tools",
+                "The temperature, suppressing the tool calls",
+                "The description, which drives the selection"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Selection is a description problem. It is named as the number one cause of agents ignoring tools they have."
             },
             {
@@ -175,8 +175,8 @@
               "options": [
                 "What it does, when to use it, what it returns",
                 "What it does, who owns it, how long it takes",
-                "Its name, its arguments, its error codes",
-                "What it does, what it costs, when it was last updated"
+                "Its name, its arguments, and its error codes",
+                "What it does, what it costs, when it changed"
               ],
               "correct": 0,
               "explain": "Three or four sentences on those three points. 'When to use it' is the one most often missing."
@@ -190,23 +190,23 @@
           "q": "Why is a tool that is never called a hard bug to notice?",
           "options": [
             "The API returns a warning that is easy to miss",
-            "Nothing errors — the agent just answers without it, often confidently",
-            "It only manifests under load",
-            "The tool_use block is returned but discarded"
+            "It only ever manifests under production load",
+            "The tool_use block comes back and is discarded",
+            "Nothing errors — it just answers without it"
           ],
-          "correct": 1,
+          "correct": 3,
           "explain": "There is no failure signal. The agent produces a plausible invented answer instead of a grounded one."
         },
         {
           "id": "r_desc_2",
           "q": "Two tools have overlapping purposes and Claude keeps picking the wrong one. What do you fix?",
           "options": [
-            "Rename them so they sort differently",
-            "Sharpen both descriptions, especially the 'when to use it' clause",
-            "Remove one and merge their schemas",
-            "Set tool_choice to any"
+            "Rename them so that they sort differently",
+            "Remove one and merge their two schemas together",
+            "Sharpen both, especially 'when to use it'",
+            "Set tool_choice to any on every request"
           ],
-          "correct": 1,
+          "correct": 2,
           "explain": "Selection between tools is decided by description. Making each one's applicability explicit is the fix."
         }
       ]
@@ -224,24 +224,24 @@
               "id": "q_proto_1a",
               "q": "You append only the assistant's text to the history and send a tool_result. What breaks?",
               "options": [
-                "Nothing — the text is what matters",
-                "The tool_use block is gone, so the tool_result has no request to answer",
-                "The tool schemas are lost",
-                "stop_reason becomes end_turn prematurely"
+                "The tool_use is gone; the result answers nothing",
+                "Nothing — the visible text is what matters",
+                "The tool schemas are lost from the tools array",
+                "stop_reason turns into end_turn prematurely"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "Preserve the complete content array. The tool_use block is part of the conversation, not presentation."
             },
             {
               "id": "q_proto_1b",
               "q": "Claude requests three tools in one turn and you return two results. What happens?",
               "options": [
-                "Claude proceeds with the two it has",
-                "The request is rejected — every tool_use needs a matching result",
-                "The third is retried automatically",
+                "The request is rejected; each id needs one",
+                "Claude proceeds with the two it was given",
+                "The third one gets retried automatically",
                 "The third is treated as an error result"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "All or nothing. Each tool_use id must be answered."
             }
           ]
@@ -256,10 +256,10 @@
               "id": "q_proto_2a",
               "q": "Where does authorisation for a tool call belong?",
               "options": [
-                "In the tool description, as an instruction Claude follows",
-                "In your executor, checked before the side effect happens",
-                "In the input_schema, as a required field",
-                "In the system prompt, as a standing rule"
+                "In the description, as an instruction to follow",
+                "In your executor, before the side effect runs",
+                "In the input_schema, as one required field",
+                "In the system prompt, as a standing site rule"
               ],
               "correct": 1,
               "explain": "Only code can enforce. A prompt-level rule is a request, and untrusted content in context can compete with it."
@@ -268,12 +268,12 @@
               "id": "q_proto_2b",
               "q": "The schema validated the tool input. What has that established?",
               "options": [
-                "That the arguments are safe to act on",
-                "That the arguments are the right type and shape — nothing about whether the action is permitted",
-                "That the user authorised the action",
-                "That the values exist in your database"
+                "That the arguments are safe to act on now",
+                "That the user authorised this exact action",
+                "That the values exist in your own database",
+                "That the shape and types are right — no more"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Shape, not permission. Same boundary as structured output: schemas check structure, code checks truth."
             }
           ]
@@ -284,10 +284,10 @@
           "id": "r_proto_1",
           "q": "Which must accompany the follow-up request after a tool runs?",
           "options": [
-            "Only the tool_result blocks",
-            "The original tool schemas, still in the tools array",
-            "A fresh system prompt describing the result",
-            "The tool's source code"
+            "Only the tool_result blocks themselves",
+            "The original tool schemas, still in tools",
+            "A fresh system prompt describing results",
+            "The tool's source code, for reference"
           ],
           "correct": 1,
           "explain": "The schemas stay. Each call is stateless, so dropping them leaves Claude without the definitions it is reasoning about."
@@ -307,12 +307,12 @@
               "id": "q_many_1a",
               "q": "What has to change to go from one tool to five?",
               "options": [
-                "The loop, to handle multiple tool_use blocks per turn",
-                "The tools array and the dispatch function — nothing else",
-                "The model tier, to handle the larger schema set",
-                "tool_choice, which must be set to any"
+                "The loop, to take multiple tool_use blocks",
+                "The model tier, for the bigger schema set",
+                "The tools array and the dispatch function",
+                "tool_choice, which must now be set to any"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "Declare and dispatch. The loop is already generic over the tool set."
             },
             {
@@ -320,11 +320,11 @@
               "q": "How does Claude decide which of several tools to call?",
               "options": [
                 "In the order they appear in the tools array",
-                "By reading all the descriptions and choosing per turn",
                 "By schema similarity to the user's phrasing",
-                "By whichever was used most recently"
+                "By whichever tool was used most recently",
+                "By reading all the descriptions, every turn"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Descriptions, every turn. It is why description quality gets more important as the toolbox grows."
             }
           ]
@@ -335,10 +335,10 @@
           "id": "r_many_1",
           "q": "Can Claude call more than one tool in a single turn?",
           "options": [
-            "No — one tool_use block per response",
-            "Yes, though it often calls them one at a time across turns instead",
-            "Only when tool_choice is any",
-            "Only for server-side tools"
+            "No — only one tool_use block per response",
+            "Yes, though it often spreads them over turns",
+            "Only when tool_choice has been set to any",
+            "Only for the server-side tools it is given"
           ],
           "correct": 1,
           "explain": "It can, and often does not — the conservatism that the batch tool exists to work around."
@@ -358,12 +358,12 @@
               "id": "q_runner_1a",
               "q": "What does the SDK tool runner take over?",
               "options": [
-                "Tool execution, running your functions on Anthropic's servers",
-                "The loop, the stop_reason switch, schema generation, and message-array management",
-                "Tool selection, by ranking descriptions before Claude sees them",
-                "Authorisation checks on tool arguments"
+                "The loop, the switch, schemas, and messages",
+                "Tool execution, on Anthropic's own servers",
+                "Tool selection, by ranking the descriptions",
+                "Authorisation checks on the tool arguments"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "Four pieces of mechanism. Your functions still run where your code runs, and authorisation is still yours."
             },
             {
@@ -371,11 +371,11 @@
               "q": "What does runner.untilDone() return?",
               "options": [
                 "A stream of every intermediate message",
-                "The final assistant message, after all tool exchanges have settled",
-                "The list of tools that were called",
-                "The last tool_result"
+                "The list of tools that ended up called",
+                "The final assistant message, once settled",
+                "The last tool_result from the exchange"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "The settled final message — the loop has already run to end_turn inside it."
             }
           ]
@@ -386,12 +386,12 @@
           "id": "r_runner_1",
           "q": "Where do the schemas come from when using the tool runner?",
           "options": [
-            "You still write them and pass them alongside the functions",
-            "They are generated from your functions' types and docstrings",
-            "Claude infers them at call time from the function name",
-            "They are fetched from a registry"
+            "You still write them and pass them along",
+            "Claude infers them from the function name",
+            "Generated from your types and docstrings",
+            "They are fetched from a shared registry"
           ],
-          "correct": 1,
+          "correct": 2,
           "explain": "Generated from your code — which is also a reason to keep docstrings good, since they become the description Claude reads."
         }
       ]
@@ -409,10 +409,10 @@
               "id": "q_abstract_1a",
               "q": "Your agent has twelve narrow tools and still fails on anything slightly novel. What principle was violated?",
               "options": [
-                "Tools should be few enough to fit in context",
-                "Tools should be abstract and combinable, not hyper-specialised",
-                "Tools should be server-side wherever possible",
-                "Tools should each do one thing"
+                "Tools should be few enough to fit context",
+                "Tools should be abstract and combinable",
+                "Tools should be server-side where possible",
+                "Tools should each do exactly one thing"
               ],
               "correct": 1,
               "explain": "Specialised tools only cover the cases you predicted. Primitives compose into the ones you did not."
@@ -422,11 +422,11 @@
               "q": "Which set illustrates the principle?",
               "options": [
                 "refactor_code, install_dependencies, run_tests",
-                "bash, read, write, edit, glob, grep",
                 "search_orders, refund_order, cancel_order",
-                "summarise, translate, classify"
+                "bash, read, write, edit, glob, grep",
+                "summarise, translate, classify, extract"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "Claude Code's own toolset — deliberately generic so it can be combined."
             }
           ]
@@ -437,12 +437,12 @@
           "id": "r_abstract_1",
           "q": "What does abstraction cost you?",
           "options": [
+            "Reliability on any single predefined job",
             "Nothing — abstract tools are strictly better",
-            "Reliability on any single predefined job, in exchange for coverage of the long tail",
-            "The ability to validate tool inputs",
-            "Compatibility with the tool runner"
+            "The ability to validate the tool inputs",
+            "Compatibility with the SDK tool runner"
           ],
-          "correct": 1,
+          "correct": 0,
           "explain": "A narrow tool is more reliable at its one job. Abstraction trades that for handling what you did not plan for."
         }
       ]
@@ -460,24 +460,24 @@
               "id": "q_inspect_1a",
               "q": "An agent reports it saved the file. It did not. Which principle would have caught it?",
               "options": [
-                "Abstract tools — a narrower save tool would have failed loudly",
-                "Environment inspection — look again after acting, rather than assuming the action landed",
-                "Forced tool choice, so the save could not be skipped",
-                "A lower temperature, for more deterministic tool use"
+                "Abstract tools — a narrow save would fail",
+                "Forced tool choice, so it cannot be skipped",
+                "A lower temperature, for more determinism",
+                "Environment inspection — look again after acting"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Without an inspection step, nothing in the loop ever contradicts the agent's assumption that the write worked."
             },
             {
               "id": "q_inspect_1b",
               "q": "Why can an agent not simply know whether its action succeeded?",
               "options": [
-                "Tool results are asynchronous and may arrive late",
-                "It perceives the environment only through tool results — if you do not send fresh state, it has none",
+                "Tool results are async and may arrive late",
                 "The model does not retain the previous turn",
-                "Success is only reported when stop_reason is end_turn"
+                "It perceives only through the tool results",
+                "Success gets reported only at end_turn"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "There is no channel other than tool results. Perception is something the loop provides or withholds."
             }
           ]
@@ -488,10 +488,10 @@
           "id": "r_inspect_1",
           "q": "Why read a file before editing it?",
           "options": [
-            "To warm the cache for the edit call",
-            "So the edit targets current content rather than a stale assumption about it",
-            "Because edit tools require the file's contents as an argument",
-            "To confirm authorisation"
+            "To warm the cache before the edit call",
+            "So the edit targets the current content",
+            "Because edit tools require the contents",
+            "To confirm you are authorised to edit"
           ],
           "correct": 1,
           "explain": "The 'before' half of look-act-look. An edit built on remembered content is an edit built on a guess."
@@ -511,12 +511,12 @@
               "id": "q_batch_1a",
               "q": "What does batch_tool's input schema accept?",
               "options": [
-                "A list of tool names to enable for this turn",
-                "An array of sub-invocations, each with its own name and input",
-                "A single tool name and a repeat count",
-                "A nested conversation to run in a subprocess"
+                "A list of tool names to enable this turn",
+                "A single tool name plus a repeat count",
+                "A nested conversation to run separately",
+                "An array of sub-invocations, name and input"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "An array of {name, input} pairs, which your code unpacks and executes."
             },
             {
@@ -524,9 +524,9 @@
               "q": "When is batching the wrong move?",
               "options": [
                 "When the calls hit the same backend service",
-                "When one call's input depends on another call's result",
-                "When there are more than five calls",
-                "When the tools are server-side"
+                "When one call's input needs another's result",
+                "When there are more than five calls in play",
+                "When the tools involved are all server-side"
               ],
               "correct": 1,
               "explain": "Independence is the precondition. Dependent calls have to be sequential — that is what the sequencing is for."
@@ -539,12 +539,12 @@
           "id": "r_batch_1",
           "q": "What problem does the batch tool solve?",
           "options": [
-            "Claude calling too many tools at once and exhausting rate limits",
-            "Claude calling independent tools serially across turns, costing a round trip each",
-            "Tool results arriving out of order",
-            "Tool schemas taking up too much context"
+            "Claude calling independent tools one per turn",
+            "Claude calling too many at once, hitting limits",
+            "Tool results arriving back out of their order",
+            "Tool schemas taking up far too much context"
           ],
-          "correct": 1,
+          "correct": 0,
           "explain": "It collapses N round trips into one by giving the conservative serial habit a single call to express itself through."
         }
       ]
@@ -562,24 +562,24 @@
               "id": "q_fine_1a",
               "q": "What causes the delay-then-burst pattern when streaming a large tool input?",
               "options": [
-                "Network buffering between the SDK and the API",
-                "The API buffers and validates the JSON, emitting only complete top-level key/value pairs",
-                "The model generates tool inputs after the text blocks",
-                "Rate limiting on streamed tool calls"
+                "Network buffering between the SDK and API",
+                "Tool inputs are generated after text blocks",
+                "Rate limiting applied to streamed tool calls",
+                "The API validates and emits complete pairs"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Server-side validation holds each pair until it is complete."
             },
             {
               "id": "q_fine_1b",
               "q": "What must your code handle once fine-grained streaming is on?",
               "options": [
-                "Out-of-order content blocks",
-                "Partial or invalid JSON, including malformed values",
-                "Duplicate tool_use ids",
-                "Missing stop_reason values"
+                "Content blocks arriving out of their order",
+                "Duplicate tool_use ids within one response",
+                "Missing stop_reason values on the responses",
+                "Partial or invalid JSON, malformed values"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "You disabled the validation, so its job is now yours: buffer, validate, recover."
             }
           ]
@@ -590,12 +590,12 @@
           "id": "r_fine_1",
           "q": "What is the trade-off fine-grained tool streaming makes?",
           "options": [
-            "Lower cost against higher latency",
-            "Faster, more granular streaming against losing server-side JSON validation",
-            "Better tool selection against slower responses",
+            "Lower cost, set against higher latency",
+            "Better tool selection against slower replies",
+            "Faster streaming against server-side validation",
             "Larger tool inputs against fewer tools"
           ],
-          "correct": 1,
+          "correct": 2,
           "explain": "Immediacy for safety. The validation does not disappear — it moves to your code."
         }
       ]

@@ -15,10 +15,10 @@
               "id": "q_ctx_1a",
               "q": "Which of these occupies the context window?",
               "options": [
-                "Only the message history",
-                "System prompt, message history, tool definitions and results, attached files and skills, thinking blocks",
-                "Message history and system prompt only",
-                "Everything except tool definitions, which are processed separately"
+                "Only the message history that you send",
+                "System prompt, history, tools, files, thinking",
+                "The message history and system prompt only",
+                "Everything but the tool definitions themselves"
               ],
               "correct": 1,
               "explain": "All of it. Tool definitions in particular are a fixed cost people routinely overlook."
@@ -28,11 +28,11 @@
               "q": "What happens when the context window fills?",
               "options": [
                 "The oldest turns are dropped automatically",
-                "The request fails",
-                "The response is truncated with stop_reason max_tokens",
+                "The response truncates with max_tokens",
+                "The request simply fails outright",
                 "Claude summarises the history on its own"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "It fails. Automatic summarisation is compaction, which is an opt-in you have to ask for."
             }
           ]
@@ -43,12 +43,12 @@
           "id": "r_ctx_1",
           "q": "How does the course state the goal of context management?",
           "options": [
-            "Fit everything in",
-            "Fit the right things in, not everything",
-            "Keep every request under half the window",
-            "Minimise total tokens per request"
+            "Fit absolutely everything into it",
+            "Keep requests under half the window",
+            "Minimise total tokens per request",
+            "Fit the right things in, not everything"
           ],
-          "correct": 1,
+          "correct": 3,
           "explain": "Selection, not compression. Cost is a consequence; relevance is the objective."
         }
       ]
@@ -66,22 +66,22 @@
               "id": "q_jit_1a",
               "q": "A 200-page manual sits in your system prompt “just in case”. What replaces it?",
               "options": [
-                "Server-side compaction, which will summarise it",
-                "A lookup tool the agent calls when a question needs the manual",
-                "A cache breakpoint after the manual",
-                "The memory tool"
+                "Server-side compaction, to summarise it",
+                "A cache breakpoint placed after the manual",
+                "A lookup tool the agent calls on demand",
+                "The memory tool, holding the whole manual"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "Just-in-time: don't preload, let the agent pull. Caching would make re-sending it cheaper without making it necessary."
             },
             {
               "id": "q_jit_1b",
               "q": "What makes just-in-time different from the other three context patterns?",
               "options": [
-                "It is the only one that reduces cost",
-                "It is a design pattern with no API feature behind it",
-                "It is enabled by default",
-                "It only applies to agents, not to workflows"
+                "It is the only one that lowers your cost",
+                "It is a pattern with no API feature at all",
+                "It is enabled by default on every request",
+                "It applies to agents but not to workflows"
               ],
               "correct": 1,
               "explain": "Nothing to switch on. It is a decision about architecture."
@@ -94,12 +94,12 @@
           "id": "r_jit_1",
           "q": "Your just-in-time design is sound but the agent answers without ever calling the lookup tool. Where is the fault?",
           "options": [
-            "The context window is too small",
-            "The tool description — Claude reads it to decide whether to call the tool",
-            "The tool schema is too complex",
-            "Compaction removed the tool definition"
+            "The context window is simply too small",
+            "The tool schema is far too complex to fill",
+            "Compaction removed the tool definition",
+            "The tool description, which drives choice"
           ],
-          "correct": 1,
+          "correct": 3,
           "explain": "The pattern depends on the agent choosing to pull, and that choice is made from the description."
         }
       ]
@@ -117,10 +117,10 @@
               "id": "q_compact_1a",
               "q": "Which field enables server-side compaction?",
               "options": [
-                "context_management with an edits entry of type compact",
-                "compaction: true",
-                "auto_summarise on the system prompt",
-                "A cache_control block of type compact"
+                "context_management, with an edits compact entry",
+                "compaction: true at the top of the request",
+                "auto_summarise set on the system prompt block",
+                "A cache_control block with type compact"
               ],
               "correct": 0,
               "explain": "context_management: {edits: [{type: \"compact\"}]}."
@@ -129,10 +129,10 @@
               "id": "q_compact_1b",
               "q": "What does compaction take off your plate?",
               "options": [
-                "Deciding what to load into context in the first place",
-                "Tracking conversation length and deciding when to summarise",
-                "Paying for input tokens",
-                "Validating tool inputs"
+                "Deciding what to load into context at all",
+                "Tracking length and deciding when to trim",
+                "Paying for the input tokens you resend",
+                "Validating the tool inputs that arrive"
               ],
               "correct": 1,
               "explain": "The bookkeeping. What to load is a different problem, and just-in-time's."
@@ -145,12 +145,12 @@
           "id": "r_compact_1",
           "q": "Which context features do managed agents enable by default?",
           "options": [
-            "Compaction only",
-            "Caching and compaction",
-            "Memory and compaction",
+            "Compaction only, not caching",
+            "Memory and compaction together",
+            "Caching and compaction together",
             "None — all are opt-in everywhere"
           ],
-          "correct": 1,
+          "correct": 2,
           "explain": "Both, since a hosted long-running loop needs them almost by definition."
         }
       ]
@@ -168,24 +168,24 @@
               "id": "q_cache_1a",
               "q": "You put a cache breakpoint at the end of your tool definitions. What is cached?",
               "options": [
-                "Only the tool definitions",
-                "Everything up to and including the tool definitions",
+                "Only the tool definitions themselves",
                 "Everything after the tool definitions",
-                "The whole request"
+                "The whole request, start to finish",
+                "Everything up to and including them"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "A breakpoint caches the prefix — everything before and including it."
             },
             {
               "id": "q_cache_1b",
               "q": "Which parts of a request are the best caching candidates?",
               "options": [
-                "The user's most recent message",
                 "System prompts and tool definitions",
-                "Tool results, which repeat across turns",
-                "Whichever part is largest"
+                "The user's most recent message text",
+                "Tool results, which repeat quite a lot",
+                "Whichever part happens to be largest"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "Stability is the criterion, and those two rarely change."
             }
           ]
@@ -196,10 +196,10 @@
           "id": "r_cache_1",
           "q": "Which block form is required to add a cache breakpoint?",
           "options": [
-            "The shorthand string form",
-            "The longhand block form, carrying cache_control",
-            "Either — cache_control is a top-level parameter",
-            "A dedicated cache block type"
+            "The shorthand plain-string form only",
+            "The longhand block form, with cache_control",
+            "Either — cache_control is a top-level field",
+            "A dedicated cache block type entirely"
           ],
           "correct": 1,
           "explain": "cache_control hangs off a longhand block, so a plain string system prompt has to be rewritten as one."
@@ -219,12 +219,12 @@
               "id": "q_rules_1a",
               "q": "Your cache never hits, though the system prompt is identical — except you now interpolate the user's first name at the top. Which rule did you break?",
               "options": [
-                "The 1,024-token minimum",
-                "The requirement that the cached prefix be identical",
-                "The four-breakpoint limit",
-                "The one-hour lifetime"
+                "The 1,024-token minimum prefix size",
+                "The four-breakpoint per-request limit",
+                "The cached prefix must be identical",
+                "The one-hour cache entry lifetime"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "The prefix must match byte for byte. A name at the top changes the very first thing processed."
             },
             {
@@ -232,11 +232,11 @@
               "q": "What is the processing order that caching follows?",
               "options": [
                 "messages → system prompt → tools",
-                "tools → system prompt → messages",
                 "system prompt → tools → messages",
-                "system prompt → messages → tools"
+                "system prompt → messages → tools",
+                "tools → system prompt → messages"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Tools first, which is why they make the natural outermost breakpoint."
             }
           ]
@@ -250,8 +250,13 @@
             {
               "id": "q_rules_2a",
               "q": "How long does the cache live?",
-              "options": ["Five minutes", "One hour", "24 hours", "Until the conversation ends"],
-              "correct": 1,
+              "options": [
+                "One hour",
+                "Five minutes",
+                "24 hours",
+                "Until the conversation ends"
+              ],
+              "correct": 0,
               "explain": "One hour. Useful only if you resend the same prefix within it."
             },
             {
@@ -259,9 +264,9 @@
               "q": "Which of these is safe for a cached prefix?",
               "options": [
                 "A timestamp at the top of the system prompt",
-                "The user's name interpolated into the system prompt",
-                "Volatile content placed after the last breakpoint",
-                "Reordering the tools array per request"
+                "The user's name put into the system prompt",
+                "Volatile content after the last breakpoint",
+                "Reordering the tools array on each request"
               ],
               "correct": 2,
               "explain": "After the breakpoint is the safe place for anything that changes. The other three all alter the prefix."
@@ -273,20 +278,25 @@
         {
           "id": "r_rules_1",
           "q": "How many cache breakpoints may a request carry?",
-          "options": ["1", "2", "4", "Unlimited"],
-          "correct": 2,
+          "options": [
+            "2",
+            "1",
+            "Unlimited",
+            "4"
+          ],
+          "correct": 3,
           "explain": "Up to four."
         },
         {
           "id": "r_rules_2",
           "q": "What is the minimum cacheable size, and how is it measured?",
           "options": [
-            "1,024 tokens, measured on the marked block alone",
-            "1,024 tokens, summed across everything up to the breakpoint",
-            "512 tokens, summed across the whole request",
-            "There is no minimum"
+            "1,024 tokens, summed across the prefix",
+            "1,024 tokens, on the marked block alone",
+            "512 tokens, summed across the request",
+            "There is no minimum size to speak of"
           ],
-          "correct": 1,
+          "correct": 0,
           "explain": "Summed across the prefix — which is why a breakpoint after a short system prompt can still qualify if tools precede it."
         }
       ]
@@ -306,8 +316,8 @@
               "options": [
                 "Compaction; nothing — it is a request field",
                 "The memory tool; you build the storage backend",
-                "Prompt caching; you build a one-hour refresh loop",
-                "Just-in-time; you build a preferences lookup tool"
+                "Prompt caching; build a one-hour refresh loop",
+                "Just-in-time; build a preferences lookup tool"
               ],
               "correct": 1,
               "explain": "Cross-session continuity is memory's job, and the backend is yours to implement."
@@ -316,12 +326,12 @@
               "id": "q_mem_1b",
               "q": "What does Anthropic inject automatically when the memory tool is in use?",
               "options": [
-                "A summary of prior sessions",
-                "An instruction telling Claude to check memory before starting work",
+                "A summary of the user's own prior sessions",
                 "A storage backend with 30-day retention",
-                "A cache breakpoint before the memory directory"
+                "An instruction to check memory up front",
+                "A cache breakpoint before the memory dir"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "The check-memory-first instruction. Without it, memory that exists is memory that goes unread."
             }
           ]
@@ -332,7 +342,7 @@
           "id": "r_mem_1",
           "q": "Name Anthropic's four context-management patterns.",
           "options": [
-            "Just-in-time, compaction, prompt caching, memory",
+            "Just-in-time, compaction, caching, memory",
             "Chunking, retrieval, reranking, caching",
             "Compaction, streaming, caching, batching",
             "Just-in-time, RAG, memory, summarisation"

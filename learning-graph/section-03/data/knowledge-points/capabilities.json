@@ -15,10 +15,10 @@
               "id": "q_svc_1a",
               "q": "Why does a server tool need no loop iteration?",
               "options": [
-                "It is executed before the request is processed",
-                "Anthropic runs it server-side and returns the result in the same response",
-                "It returns no result, only a status",
-                "The SDK loops internally on your behalf"
+                "It executes before the request is processed",
+                "Anthropic runs it and returns the result inline",
+                "It returns no result at all, only a status",
+                "The SDK quietly loops internally for you"
               ],
               "correct": 1,
               "explain": "The round trip happens inside Anthropic's request handling. You get text and tool results together."
@@ -26,8 +26,13 @@
             {
               "id": "q_svc_1b",
               "q": "Which is a client tool?",
-              "options": ["web_search", "code_execution", "bash", "web_fetch"],
-              "correct": 2,
+              "options": [
+                "web_search",
+                "code_execution",
+                "web_fetch",
+                "bash"
+              ],
+              "correct": 3,
               "explain": "bash runs where your code runs. The other three are executed server-side."
             }
           ]
@@ -37,20 +42,25 @@
         {
           "id": "r_svc_1",
           "q": "Which block type signals a tool Anthropic ran for you?",
-          "options": ["tool_use", "server_tool_use", "tool_result", "thinking"],
-          "correct": 1,
+          "options": [
+            "server_tool_use",
+            "tool_result",
+            "tool_use",
+            "thinking"
+          ],
+          "correct": 0,
           "explain": "server_tool_use, paired with a matching tool-result block in the same response."
         },
         {
           "id": "r_svc_2",
           "q": "The SDK ships a schema and a runner for a tool. Does that make it a server tool?",
           "options": [
-            "Yes — anything the SDK provides runs server-side",
-            "No — execution location is what defines the category, and it still runs where your code runs",
-            "Only if you do not override the schema",
-            "Only when used with the tool runner"
+            "Yes — anything the SDK ships runs server-side",
+            "Only if you never override the schema yourself",
+            "No — location is what defines the category",
+            "Only when used with the SDK's tool runner"
           ],
-          "correct": 1,
+          "correct": 2,
           "explain": "Convenience is not location. Memory and bash ship with schemas and are still client tools."
         }
       ]
@@ -68,24 +78,24 @@
               "id": "q_websearch_1a",
               "q": "How do you keep the web search tool inside a set of trusted sites?",
               "options": [
-                "Instruct it in the system prompt",
-                "Set allowed domains on the tool",
+                "Instruct it to, in the system prompt",
                 "Post-filter the citations and retry",
-                "Use web_fetch instead"
+                "Set an allowed-domains list on the tool",
+                "Use web_fetch on those sites instead"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "The tool takes an allowed-domains constraint — configuration, not instruction."
             },
             {
               "id": "q_websearch_1b",
               "q": "What lets you show users where an answer came from?",
               "options": [
+                "Citation blocks within the response",
                 "The server_tool_use block's input",
-                "Citation blocks in the response",
-                "The usage field",
-                "stop_reason"
+                "The usage field on the response",
+                "stop_reason on the final message"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "Citations point at the source behind a claim, which is also how you separate sourced claims from synthesis."
             }
           ]
@@ -96,10 +106,10 @@
           "id": "r_websearch_1",
           "q": "What is max-uses for on the web search tool?",
           "options": [
-            "Capping how many searches a single request may run",
-            "Limiting results per search",
-            "Capping monthly spend on the account",
-            "Restricting how many domains may be searched"
+            "Capping how many searches one request runs",
+            "Limiting the results returned per search",
+            "Capping the monthly spend on the account",
+            "Restricting how many domains are searched"
           ],
           "correct": 0,
           "explain": "A per-request budget on searches — cost and latency control for an agent that could otherwise search indefinitely."
@@ -119,10 +129,10 @@
               "id": "q_codeexec_1a",
               "q": "The code execution sandbox has no network. How does a CSV get into it?",
               "options": [
-                "Base64 in the message, decoded by the generated code",
-                "Uploaded via the Files API, then referenced by file id in a container_upload block",
-                "Fetched by the sandbox from a URL you supply",
-                "Mounted from your server over the control channel"
+                "Base64 in the message, decoded by the code",
+                "Uploaded via the Files API, referenced by id",
+                "Fetched by the sandbox from a URL you give",
+                "Mounted from your server over the channel"
               ],
               "correct": 1,
               "explain": "Files API in, file id referenced. Fetching from a URL is exactly what no network rules out."
@@ -131,12 +141,12 @@
               "id": "q_codeexec_1b",
               "q": "What does the Files API buy you outside the sandbox case?",
               "options": [
-                "Longer retention of conversation history",
-                "Upload once and reference by id, instead of re-encoding base64 into every message",
-                "Automatic chunking for RAG",
-                "Cheaper input tokens for images"
+                "Longer retention of the conversation history",
+                "Automatic chunking of your documents for RAG",
+                "Cheaper input tokens on the images you send",
+                "Upload once, reference by id, skip re-encoding"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "One upload, an id you reuse — a straightforward saving on repeated payloads."
             }
           ]
@@ -147,12 +157,12 @@
           "id": "r_codeexec_1",
           "q": "How do files generated inside the sandbox reach you?",
           "options": [
-            "They are streamed as base64 in the text block",
-            "As file ids in code_execution_output blocks, which you download",
-            "They are written to a bucket you configure",
-            "They cannot leave the sandbox"
+            "As file ids you then download separately",
+            "Streamed back as base64 in the text block",
+            "Written out to a storage bucket you configure",
+            "They cannot ever leave the sandbox at all"
           ],
-          "correct": 1,
+          "correct": 0,
           "explain": "Out by id, the same way they went in."
         }
       ]
@@ -170,10 +180,10 @@
               "id": "q_editor_1a",
               "q": "The text editor tool is 'built in'. What exactly is?",
               "options": [
-                "The schema and the implementation — you just enable it",
-                "The schema only; you write the code that performs the operations",
+                "The schema and implementation; just enable it",
+                "The schema only; you write the operations",
                 "The implementation only; you write the schema",
-                "Neither — the name refers to Claude Code's editor"
+                "Neither — it means Claude Code's own editor"
               ],
               "correct": 1,
               "explain": "Claude knows how to ask. Performing the operation is entirely yours."
@@ -182,12 +192,12 @@
               "id": "q_editor_1b",
               "q": "What safety obligation comes with implementing it?",
               "options": [
-                "Rate-limiting edits per conversation",
-                "Constraining which paths and operations are permitted",
-                "Encrypting file contents in transit",
-                "Logging every view operation"
+                "Rate-limiting the edits per conversation",
+                "Encrypting the file contents in transit",
+                "Constraining which paths and operations run",
+                "Logging every single view operation made"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "Path and operation constraints. The tool can request anything; only your executor decides what happens."
             }
           ]
@@ -198,12 +208,12 @@
           "id": "r_editor_1",
           "q": "Why does the schema stub carry a date, like text_editor_20250124?",
           "options": [
-            "It expires and must be renewed",
-            "The stub is versioned and varies by model",
-            "It records when your implementation was registered",
-            "It sets the cache lifetime"
+            "It expires and then has to be renewed",
+            "It records when you registered your code",
+            "It sets the cache lifetime for the tool",
+            "The stub is versioned and varies by model"
           ],
-          "correct": 1,
+          "correct": 3,
           "explain": "Versioned by model — the identifier you pass depends on which Claude you are calling."
         }
       ]
@@ -221,19 +231,24 @@
               "id": "q_think_1a",
               "q": "Where does the effort parameter go?",
               "options": [
-                "Inside the thinking block, alongside its type",
-                "Inside output_config",
-                "At the top level of the request, beside max_tokens",
-                "In the system prompt"
+                "Inside the thinking block, beside its type",
+                "At the top level, beside max_tokens",
+                "In the system prompt, as an instruction",
+                "Inside output_config on the request"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "output_config — not next to the thinking block, despite controlling how deeply it thinks."
             },
             {
               "id": "q_think_1b",
               "q": "What is the default effort level?",
-              "options": ["low", "medium", "high", "max"],
-              "correct": 2,
+              "options": [
+                "high",
+                "low",
+                "medium",
+                "max"
+              ],
+              "correct": 0,
               "explain": "high is the default, with low and medium below it and xhigh and max above."
             }
           ]
@@ -248,9 +263,9 @@
               "id": "q_think_2a",
               "q": "Name a task where enabling thinking makes the product worse.",
               "options": [
-                "Debugging a failing test",
-                "Classifying a support ticket into one of five categories",
-                "Analysing a regulatory trade-off",
+                "Debugging a test that keeps failing",
+                "Classifying a ticket into five buckets",
+                "Analysing a hard regulatory trade-off",
                 "Working through a multi-step calculation"
               ],
               "correct": 1,
@@ -260,12 +275,12 @@
               "id": "q_think_2b",
               "q": "You enable thinking and your UI starts showing reasoning instead of the answer. Why?",
               "options": [
-                "Thinking replaces the text block",
-                "A thinking block now precedes the text block, and the code reads content[0]",
-                "The answer is returned in a separate field",
-                "max_tokens is consumed before the answer begins"
+                "A thinking block now precedes the text",
+                "Thinking replaces the text block outright",
+                "The answer comes back in a separate field",
+                "max_tokens is consumed before the answer"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "A new block type appeared ahead of the text. Loop and dispatch on block.type instead of indexing."
             }
           ]
@@ -276,12 +291,12 @@
           "id": "r_think_1",
           "q": "What changed about thinking on Opus 4.7?",
           "options": [
-            "It became free",
-            "It became adaptive — no token budget to set, just type: adaptive",
-            "It moved from the API to the SDK",
-            "It became the default for all requests"
+            "It became free of any token charge",
+            "It moved out of the API into the SDK",
+            "It became adaptive — no budget to set",
+            "It became the default on all requests"
           ],
-          "correct": 1,
+          "correct": 2,
           "explain": "Adaptive: the budget parameter is gone, and depth is expressed through effort instead."
         }
       ]
@@ -299,22 +314,22 @@
               "id": "q_image_1a",
               "q": "You send three photos and ask about “the second one”. What should you have done?",
               "options": [
-                "Sent them in separate messages",
-                "Labelled the images, and put each image block before the text describing it",
-                "Used URLs rather than base64",
-                "Downscaled them to a uniform size"
+                "Sent each of them in separate messages",
+                "Used URLs rather than base64 payloads",
+                "Labelled them, image block before text",
+                "Downscaled them all to a uniform size"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "Labels remove the ambiguity, and image-before-text is the ordering convention."
             },
             {
               "id": "q_image_1b",
               "q": "What is the cost consequence of image resolution?",
               "options": [
-                "None — images are billed per image",
-                "Larger and higher-resolution images consume more input tokens",
-                "Resolution affects output tokens only",
-                "Only formats other than JPEG are billed by size"
+                "None — images are billed per image sent",
+                "Bigger, higher-res images cost more input",
+                "Resolution affects the output tokens only",
+                "Only non-JPEG formats are billed by size"
               ],
               "correct": 1,
               "explain": "Resolution is input tokens, so downscale when the detail is not doing any work."
@@ -327,12 +342,12 @@
           "id": "r_image_1",
           "q": "Can Claude refer to an image from an earlier turn?",
           "options": [
-            "No — images are discarded after the response",
-            "Yes, as long as that message is still in the array you send",
+            "No — images are discarded after the reply",
             "Only if it was uploaded via the Files API",
-            "Only within the same message"
+            "Only within the same message it arrived in",
+            "Yes, if that message is still in the array"
           ],
-          "correct": 1,
+          "correct": 3,
           "explain": "Same rule as everything else in a stateless API: it is in context if you resent it."
         }
       ]
@@ -351,23 +366,23 @@
               "q": "A contract's meaning is in its tables. Why not extract the text yourself and send the string?",
               "options": [
                 "Extraction libraries are slower than the API",
-                "A flat string loses the layout — which column a number was in — that the document block preserves",
-                "Extracted text cannot be cached",
+                "Extracted text cannot be cached by the API",
+                "A flat string loses the layout of the tables",
                 "The API rejects plain text over a size limit"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "The document block reads layout as well as text. Flattening a table is exactly the information you would lose."
             },
             {
               "id": "q_pdf_1b",
               "q": "How is a PDF page billed?",
               "options": [
-                "As text tokens only",
-                "Roughly as an image, plus its extracted text tokens",
-                "A flat rate per page",
-                "As output tokens, since it is processed after the prompt"
+                "Roughly as an image, plus its text tokens",
+                "As ordinary text tokens, and nothing else",
+                "At a flat per-page rate set by the tier",
+                "As output tokens, since it is post-prompt"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "Visual tokens plus text tokens — which is why long PDFs get expensive fast."
             }
           ]
@@ -378,10 +393,10 @@
           "id": "r_pdf_1",
           "q": "When is sending a PDF as a document block clearly the right call?",
           "options": [
-            "Whenever the file is a PDF",
-            "When its visual structure — tables, figures — carries meaning a text dump would lose",
-            "Only when it is under one page",
-            "Only when citations are enabled"
+            "Whenever the file happens to be a PDF",
+            "When tables and figures carry the meaning",
+            "Only when it is under one page in length",
+            "Only when you have the citations enabled"
           ],
           "correct": 1,
           "explain": "The value is layout. For a plain prose PDF the difference is much smaller."
@@ -400,20 +415,25 @@
             {
               "id": "q_cite_1a",
               "q": "You enable citations on a PDF. Which location type comes back?",
-              "options": ["citation_char_location", "citation_page_location", "citation_block_index", "Both, for every claim"],
-              "correct": 1,
+              "options": [
+                "citation_char_location",
+                "citation_block_index",
+                "citation_page_location",
+                "Both, for every claim"
+              ],
+              "correct": 2,
               "explain": "PDFs are paged, so citations point at page start and end."
             },
             {
               "id": "q_cite_1b",
               "q": "How are citations turned on?",
               "options": [
-                "A top-level request parameter",
-                "Per document block, with citations: {enabled: true}",
-                "In the system prompt",
-                "They are always on for document blocks"
+                "A top-level parameter on the request",
+                "By asking for them in the system prompt",
+                "They are always on for document blocks",
+                "Per document block, citations: enabled"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Per block, opt-in — so you can cite one source and not another in the same request."
             }
           ]
@@ -424,12 +444,12 @@
           "id": "r_cite_1",
           "q": "What does a claim without a citation tell you?",
           "options": [
-            "The citation failed to generate",
-            "It is the model's own synthesis rather than something traced to a source span",
+            "The citation simply failed to generate",
             "The source document was too short to cite",
-            "Citations were disabled for that turn"
+            "It is the model's own synthesis, untraced",
+            "Citations were disabled for that one turn"
           ],
-          "correct": 1,
+          "correct": 2,
           "explain": "Citations mark the sourced claims, so their absence marks the connective tissue the model supplied."
         }
       ]
@@ -448,9 +468,9 @@
               "q": "What do you send back after performing a Computer Use action?",
               "options": [
                 "A JSON status object describing the action",
-                "A new screenshot, as the tool result",
-                "The mouse coordinates that were used",
-                "Nothing — Claude continues from its own plan"
+                "A new screenshot, sent as the tool result",
+                "The mouse coordinates that you ended up using",
+                "Nothing — Claude continues from its plan"
               ],
               "correct": 1,
               "explain": "A fresh image is the tool result. It is the only way Claude perceives whether anything changed."
@@ -459,10 +479,10 @@
               "id": "q_cu_1b",
               "q": "Where must Computer Use run?",
               "options": [
-                "On the user's own desktop, for realistic testing",
-                "In a sandboxed VM or container, never a production desktop",
-                "On Anthropic's infrastructure, as a server tool",
-                "In a browser tab with restricted permissions"
+                "On the user's own desktop, for realistic tests",
+                "In a sandboxed VM, never on a real desktop",
+                "On Anthropic's own infrastructure, server-side",
+                "In a browser tab with tightly restricted rights"
               ],
               "correct": 1,
               "explain": "Arbitrary UI actions demand a sandbox. This one is not negotiable."
@@ -475,24 +495,24 @@
           "id": "r_cu_1",
           "q": "What is Computer Use for?",
           "options": [
-            "Speeding up API calls by batching them through a UI",
-            "Driving software that has no API, and automating UI-level flows",
-            "Running code in a sandbox without network access",
-            "Editing files on your server"
+            "Driving software that has no API of its own",
+            "Speeding up API calls by batching via a UI",
+            "Running code in a sandbox with no network",
+            "Editing files on your own server more safely"
           ],
-          "correct": 1,
+          "correct": 0,
           "explain": "Legacy apps and consumer GUIs — the cases where no programmatic interface exists to call."
         },
         {
           "id": "r_cu_2",
           "q": "How does the Computer Use loop relate to the ordinary agent loop?",
           "options": [
-            "It is a distinct protocol with its own endpoint",
-            "It is the same loop, with a screenshot in place of the JSON tool result",
-            "It runs server-side and needs no loop",
-            "It replaces stop_reason with a screen-state check"
+            "A distinct protocol with its own endpoint",
+            "It runs server-side and so needs no loop",
+            "It swaps stop_reason for a screen check",
+            "The same loop, with a screenshot as result"
           ],
-          "correct": 1,
+          "correct": 3,
           "explain": "Same five steps, visual environment. The specialisation is what the tool result carries."
         }
       ]

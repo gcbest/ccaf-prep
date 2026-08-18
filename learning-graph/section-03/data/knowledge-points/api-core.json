@@ -16,21 +16,21 @@
               "q": "Which set of arguments must every messages.create call carry?",
               "options": [
                 "model, system, messages",
-                "model, max_tokens, messages",
                 "model, temperature, messages",
-                "api_key, model, messages"
+                "api_key, model, messages",
+                "model, max_tokens, messages"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "model, max_tokens, messages. The system prompt and temperature are optional, and the key is supplied to the client, not to the call."
             },
             {
               "id": "q_create_1b",
               "q": "What is the `messages` argument, structurally?",
               "options": [
-                "A string containing the user's question",
-                "An array of objects, each with a role and content",
+                "A string containing the user's whole question",
+                "An array of objects, each with role and content",
                 "A dictionary mapping usernames to their questions",
-                "A single object with a `user` and an `assistant` key"
+                "A single object with user and assistant keys"
               ],
               "correct": 1,
               "explain": "An array of {role, content} objects. That the conversation is a list is the fact everything about multi-turn state depends on."
@@ -47,22 +47,22 @@
               "id": "q_create_2a",
               "q": "Why is an API key kept in .env.local rather than in the file that calls the API?",
               "options": [
-                "Environment variables are read faster than string literals",
-                "So it is not committed to version control and scraped once the repo is public",
+                "So it never gets committed to version control",
+                "Environment variables are read faster at runtime",
                 "The SDK cannot read a key passed as an argument",
                 "It lets you use a different key per model tier"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "A hardcoded key gets committed and pushed. Public-repo crawlers find keys in minutes."
             },
             {
               "id": "q_create_2b",
               "q": "Your mobile app needs Claude-generated summaries. Where does the API key go?",
               "options": [
-                "Bundled with the app, obfuscated so it cannot be extracted",
+                "Bundled with the app, obfuscated so it cannot leak",
                 "In the app's environment configuration at build time",
-                "On your own server, which the app calls and which calls Anthropic",
-                "In the user's device keychain, entered on first launch"
+                "On your own server, which the app calls in turn",
+                "In the device keychain, entered on first launch"
               ],
               "correct": 2,
               "explain": "Anything shipped to a device you do not control can be extracted, obfuscated or not. The key stays on your server."
@@ -75,12 +75,12 @@
           "id": "r_create_1",
           "q": "A request fails validation before it reaches the model. Which omission would do that?",
           "options": [
-            "No system prompt",
-            "No max_tokens",
-            "No temperature",
-            "No stop_sequences"
+            "No system prompt on the call",
+            "No temperature on the call",
+            "No max_tokens on the call",
+            "No stop_sequences on the call"
           ],
-          "correct": 1,
+          "correct": 2,
           "explain": "max_tokens is one of the three required arguments. The other three named here are all optional."
         }
       ]
@@ -98,24 +98,24 @@
               "id": "q_blocks_1a",
               "q": "Why is `response.content[0].text` described as a latent bug rather than an error?",
               "options": [
-                "It raises an exception on every response that contains a tool call",
-                "It works until a response leads with a non-text block, and then it silently reads the wrong thing",
-                "It only fails when streaming is enabled",
-                "It works but is slower than iterating"
+                "It raises an exception on any response with a tool call",
+                "It only fails when streaming has been switched on",
+                "It works, but is slower than iterating the blocks",
+                "It works until a non-text block leads, then reads wrong"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Latent is the right word: index 0 keeps existing. It just stops being the block you meant once thinking or tool_use blocks appear."
             },
             {
               "id": "q_blocks_1b",
               "q": "What is the safe general shape for reading a response?",
               "options": [
-                "Concatenate every block's text field",
-                "Loop over content and dispatch on each block's type",
-                "Read content[-1], since the final block is always the answer",
+                "Loop over content and dispatch on block type",
+                "Concatenate every block's text field together",
+                "Read content[-1]; the last block is the answer",
                 "Call response.text(), which flattens the blocks"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "Loop and switch on block.type. Blocks are typed precisely so that different kinds get different handling."
             }
           ]
@@ -127,23 +127,23 @@
           "q": "You turn on extended thinking and your UI starts printing reasoning where the answer should be. What happened?",
           "options": [
             "Thinking replaces the text block rather than joining it",
-            "The code reads content[0], which is now a thinking block rather than a text block",
-            "Thinking output is returned in a separate field the UI is not reading",
-            "max_tokens is being consumed by reasoning before the answer starts"
+            "Thinking output goes to a field the UI does not read",
+            "The code reads content[0], now a thinking block",
+            "max_tokens is consumed by reasoning before the answer"
           ],
-          "correct": 1,
+          "correct": 2,
           "explain": "A new block type appeared ahead of the text. Code indexing content[0] follows it straight into the wrong block."
         },
         {
           "id": "r_blocks_2",
           "q": "Which is true of a single Claude response?",
           "options": [
-            "It contains exactly one content block",
+            "It contains exactly one content block, always",
+            "It contains one block per tool in the request",
             "It can contain several blocks of different types",
-            "It contains one block per tool defined in the request",
-            "Block count equals the number of turns in the conversation"
+            "Block count equals the number of turns so far"
           ],
-          "correct": 1,
+          "correct": 2,
           "explain": "One response, several blocks — text and tool_use together is the normal case once tools are in play."
         }
       ]
@@ -161,10 +161,10 @@
               "id": "q_stop_1a",
               "q": "A generated draft ends mid-sentence. Which stop_reason distinguishes a budget problem from a prompt problem, and what value indicates the budget?",
               "options": [
-                "stop_reason == end_turn means the budget ran out",
-                "stop_reason == max_tokens means it hit the ceiling you set",
-                "stop_reason == stop_sequence means the model gave up",
-                "stop_reason is absent when a response is truncated"
+                "end_turn means the token budget has run out",
+                "max_tokens means it hit the ceiling you set",
+                "stop_sequence means the model simply gave up",
+                "stop_reason is absent when output is truncated"
               ],
               "correct": 1,
               "explain": "max_tokens is a ceiling, and hitting it is reported plainly. The prompt was fine; the budget was not."
@@ -172,8 +172,13 @@
             {
               "id": "q_stop_1b",
               "q": "Which stop_reason means your code has more work to do before the turn is over?",
-              "options": ["end_turn", "tool_use", "stop_sequence", "max_tokens"],
-              "correct": 1,
+              "options": [
+                "tool_use",
+                "end_turn",
+                "stop_sequence",
+                "max_tokens"
+              ],
+              "correct": 0,
               "explain": "tool_use: Claude is waiting on a result from you. It is the continue condition of every agent loop."
             }
           ]
@@ -184,24 +189,24 @@
           "id": "r_stop_1",
           "q": "What is the exit condition of an agent loop?",
           "options": [
-            "The tools array is empty",
-            "stop_reason is end_turn",
+            "The tools array comes back empty",
             "The response contains a text block",
-            "max_tokens is reached"
+            "The max_tokens ceiling is reached",
+            "stop_reason comes back as end_turn"
           ],
-          "correct": 1,
+          "correct": 3,
           "explain": "end_turn. A text block can appear alongside a tool_use block, so its presence proves nothing about being finished."
         },
         {
           "id": "r_stop_2",
           "q": "Your summariser has produced clean output for months, then starts truncating on long inputs. What do you check first?",
           "options": [
+            "stop_reason, to see if it is max_tokens",
             "Whether the system prompt has drifted",
-            "stop_reason, to see whether it is max_tokens",
-            "Whether temperature is too high",
-            "The model tier, in case it was downgraded"
+            "Whether temperature is set too high",
+            "The model tier, in case of a downgrade"
           ],
-          "correct": 1,
+          "correct": 0,
           "explain": "The response already carries the diagnosis. max_tokens means the ceiling is now too low for the inputs you are getting."
         }
       ]
@@ -220,9 +225,9 @@
               "q": "Which instruction belongs in the system parameter?",
               "options": [
                 "“Summarise the report below in three bullets.”",
-                "“You are a terse senior code reviewer.”",
-                "“Here is the customer's latest message.”",
-                "“Return valid JSON for this one request.”"
+                "“You are a terse and senior code reviewer.”",
+                "“Here is the customer's most recent message.”",
+                "“Return only valid JSON for this request.”"
               ],
               "correct": 1,
               "explain": "Role and standing behaviour go in system. The other three are about this particular request and belong in the user turn."
@@ -231,12 +236,12 @@
               "id": "q_system_1b",
               "q": "What property of the system prompt makes it the best candidate for caching?",
               "options": [
-                "It is processed last, so the cache is written after the response",
-                "It rarely changes, so the same bytes are re-sent on every call",
-                "It is exempt from the 1,024-token minimum",
-                "It is the only part of a request that can be cached"
+                "It is processed last, so caching happens after",
+                "It is exempt from the 1,024-token cache minimum",
+                "It is the only part of a request that can cache",
+                "It rarely changes, so the same bytes are re-sent"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Stability is the whole criterion. A cache hit requires a byte-identical prefix, and stable content is what stays identical."
             }
           ]
@@ -248,9 +253,9 @@
           "q": "Every request your service makes should be answered in the same clinical, non-speculative register. Where does that instruction go?",
           "options": [
             "Prepended to each user message",
-            "In the system parameter",
-            "In an assistant prefill",
-            "In a stop sequence"
+            "In the system parameter itself",
+            "In an assistant prefill block",
+            "In a stop sequence on the call"
           ],
           "correct": 1,
           "explain": "It holds across every request, so it is standing behaviour — and putting it in system also keeps it cacheable."
@@ -270,22 +275,22 @@
               "id": "q_convo_1a",
               "q": "Your chatbot cannot remember what the user said two messages ago. What is missing?",
               "options": [
-                "A session id on the request",
-                "Your code is not appending previous turns to the messages array",
-                "conversation_memory is not enabled on the account",
-                "The system prompt does not instruct Claude to remember"
+                "Your code is not appending previous turns",
+                "A session id is missing from the request",
+                "conversation_memory is not enabled for you",
+                "The system prompt never tells it to remember"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "The API is stateless. History exists only because you resend it, every time."
             },
             {
               "id": "q_convo_1b",
               "q": "What do you append for the assistant's half of a turn?",
               "options": [
-                "The extracted text string you showed the user",
+                "The extracted text you showed the user",
                 "The complete response.content block array",
-                "A summary of what Claude said, to save tokens",
-                "Nothing — only user turns are appended"
+                "A summary of it, to save on input tokens",
+                "Nothing — only user turns get appended"
               ],
               "correct": 1,
               "explain": "The whole content array. Keeping only the visible text discards tool_use blocks and breaks the next turn."
@@ -299,21 +304,21 @@
           "q": "Which statement about the Messages API is true?",
           "options": [
             "It stores conversation history for 30 days",
-            "It is stateless; conversation history is whatever you resend",
-            "It stores history only when a system prompt is set",
-            "It keeps history per API key automatically"
+            "It stores history only when system is set",
+            "It keeps history per API key automatically",
+            "It is stateless; history is what you resend"
           ],
-          "correct": 1,
+          "correct": 3,
           "explain": "Stateless. Every call is complete on its own, which is also why context cost grows with conversation length."
         },
         {
           "id": "r_convo_2",
           "q": "What is the cost consequence of maintaining conversation history yourself?",
           "options": [
-            "None — history is billed once when it is first sent",
-            "The whole history is re-sent and re-billed as input on every turn",
-            "History is billed at the output rate",
-            "Only the most recent turn is billed"
+            "None — history is billed once, when first sent",
+            "The whole history is re-billed as input each turn",
+            "The history is billed at the output token rate",
+            "Only the most recent turn is ever billed for"
           ],
           "correct": 1,
           "explain": "Everything you resend is input tokens again. It is why compaction and caching exist."
@@ -333,12 +338,12 @@
               "id": "q_sampling_1a",
               "q": "You set max_tokens=4096 and get a 200-token answer. What happened?",
               "options": [
-                "The request failed silently and returned a partial response",
-                "Nothing unusual — max_tokens is a ceiling, and Claude finished early",
+                "Nothing odd — max_tokens is a ceiling, not a target",
+                "The request failed silently and returned partial",
                 "The model tier caps output below your setting",
-                "temperature was too low to produce a longer answer"
+                "temperature was too low for a longer answer"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "A ceiling, not a target. Claude writes what the task needs and stops with end_turn."
             },
             {
@@ -346,8 +351,8 @@
               "q": "What happens when generation reaches max_tokens?",
               "options": [
                 "Claude wraps up with a concluding sentence",
-                "Output stops wherever it is, with stop_reason max_tokens",
-                "The request is retried automatically with a higher limit",
+                "Output stops dead, with stop_reason max_tokens",
+                "The request retries automatically with more room",
                 "An error is returned and no content comes back"
               ],
               "correct": 1,
@@ -366,21 +371,21 @@
               "q": "An extraction pipeline returns slightly different field values run to run. Which setting most directly addresses that?",
               "options": [
                 "Raise max_tokens",
-                "Lower temperature",
                 "Enable streaming",
-                "Add a stop sequence"
+                "Add a stop sequence",
+                "Lower temperature"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Low temperature is the setting for deterministic transformations. It reduces variation — though it does not make the extraction correct."
             },
             {
               "id": "q_sampling_2b",
               "q": "What does temperature 0 guarantee?",
               "options": [
-                "The same answer every time",
-                "A correct answer",
-                "Less randomness in sampling — but neither identical output nor correctness is promised",
-                "That Claude will refuse creative tasks"
+                "The exact same answer every single time",
+                "A correct answer to the question asked",
+                "Less randomness — but not sameness or truth",
+                "That Claude will refuse any creative task"
               ],
               "correct": 2,
               "explain": "It reduces randomness. The course is explicit that it guarantees neither a different answer nor a right one."
@@ -392,8 +397,13 @@
         {
           "id": "r_sampling_1",
           "q": "Which of these is a budget rather than a quality setting?",
-          "options": ["temperature", "max_tokens", "system", "model"],
-          "correct": 1,
+          "options": [
+            "temperature",
+            "system",
+            "max_tokens",
+            "model"
+          ],
+          "correct": 2,
           "explain": "max_tokens caps spend and length. It says nothing about how good the output is."
         }
       ]
@@ -410,15 +420,25 @@
             {
               "id": "q_tiers_1a",
               "q": "Ten thousand support tickets a day need sorting into five categories. Which tier?",
-              "options": ["Fable", "Opus", "Sonnet", "Haiku"],
-              "correct": 3,
+              "options": [
+                "Opus",
+                "Haiku",
+                "Sonnet",
+                "Fable"
+              ],
+              "correct": 1,
               "explain": "High volume, low complexity, and classification by name — Haiku's exact brief."
             },
             {
               "id": "q_tiers_1b",
               "q": "Which tier sits above Opus in capability and cost?",
-              "options": ["Sonnet", "Haiku", "Fable", "Nothing — Opus is the top tier"],
-              "correct": 2,
+              "options": [
+                "Fable",
+                "Sonnet",
+                "Haiku",
+                "Nothing — Opus is the top tier"
+              ],
+              "correct": 0,
               "explain": "Fable is the most capable tier, above Opus, at the highest cost."
             }
           ]
@@ -428,15 +448,25 @@
         {
           "id": "r_tiers_1",
           "q": "Which tier is described as the sweet spot for most production work?",
-          "options": ["Haiku", "Sonnet", "Opus", "Fable"],
-          "correct": 1,
+          "options": [
+            "Haiku",
+            "Fable",
+            "Sonnet",
+            "Opus"
+          ],
+          "correct": 2,
           "explain": "Sonnet is the balanced default. Haiku is below it, Opus and Fable above."
         },
         {
           "id": "r_tiers_2",
           "q": "A one-off multi-step regulatory trade-off analysis. Which tier is the natural fit?",
-          "options": ["Haiku", "Sonnet", "Opus", "Whichever is cheapest — the task is one-off"],
-          "correct": 2,
+          "options": [
+            "Haiku",
+            "Sonnet",
+            "Whichever is cheapest — it is one-off",
+            "Opus"
+          ],
+          "correct": 3,
           "explain": "Deep reasoning and complex analysis is Opus's brief, and being one-off is exactly when its cost is affordable."
         }
       ]
@@ -454,10 +484,10 @@
               "id": "q_select_1a",
               "q": "In what order do you test model tiers for a new feature?",
               "options": [
-                "Opus first for a quality ceiling, then down until quality breaks",
-                "Haiku first, stepping up only when quality does not hold",
-                "Sonnet first, then out to Haiku and Opus in parallel",
-                "Whichever tier the previous feature used"
+                "Opus first for a ceiling, then work downward",
+                "Haiku first, stepping up only if quality fails",
+                "Sonnet first, then Haiku and Opus in parallel",
+                "Whichever tier the previous feature happened to use"
               ],
               "correct": 1,
               "explain": "Cheapest first, stopping as soon as quality holds. Searching downward from the top rarely gets finished."
@@ -466,12 +496,12 @@
               "id": "q_select_1b",
               "q": "What has to exist before the model comparison is meaningful?",
               "options": [
-                "A production traffic sample of at least 1,000 requests",
-                "An eval of 20–30 representative examples to score each model against",
-                "A fine-tuned baseline",
-                "A cost ceiling agreed with finance"
+                "A production sample of at least 1,000 requests",
+                "A fine-tuned baseline to compare against",
+                "An eval set of 20–30 representative examples",
+                "A cost ceiling agreed with the finance team"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "20–30 representative examples. Without a shared scoreboard, 'quality holds' is just an opinion."
             }
           ]
@@ -486,19 +516,24 @@
               "id": "q_select_2a",
               "q": "A support pipeline classifies tickets, drafts most replies, and occasionally writes a full RFP response. What is the sensible model arrangement?",
               "options": [
-                "One tier for the whole pipeline, chosen for the hardest task",
-                "Different tiers per task — Haiku to classify, Sonnet to draft, Opus for the rare hard case",
-                "One tier for the whole pipeline, chosen for the most common task",
-                "Alternate tiers by request to spread cost"
+                "One tier throughout, chosen for the hardest task",
+                "One tier throughout, chosen for the commonest task",
+                "A tier per task — Haiku, Sonnet, Opus by need",
+                "Alternate tiers by request, to spread the cost"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "Route per task type. Sizing everything for the hardest case pays Opus prices on classification."
             },
             {
               "id": "q_select_2b",
               "q": "Which field tells you what a request actually cost you?",
-              "options": ["response.stop_reason", "response.usage", "response.content", "response.model"],
-              "correct": 1,
+              "options": [
+                "response.stop_reason",
+                "response.content",
+                "response.usage",
+                "response.model"
+              ],
+              "correct": 2,
               "explain": "usage reports input and output token counts, which is what the bill is computed from."
             }
           ]
@@ -509,12 +544,12 @@
           "id": "r_select_1",
           "q": "How does the course define the right model for a task?",
           "options": [
-            "The most capable one your budget allows",
-            "The cheapest one whose output you would actually ship",
-            "Sonnet, unless benchmarks say otherwise",
-            "Whichever has the lowest latency at acceptable quality"
+            "The cheapest one whose output you would ship",
+            "The most capable one your budget will allow",
+            "Sonnet, unless the benchmarks say otherwise",
+            "Whichever has the lowest latency at quality"
           ],
-          "correct": 1,
+          "correct": 0,
           "explain": "Cheapest shippable. It makes the decision an evidence question rather than a preference."
         }
       ]
@@ -531,15 +566,25 @@
             {
               "id": "q_stream_1a",
               "q": "Which event carries the text as it is generated?",
-              "options": ["message_start", "content_block_start", "content_block_delta", "message_delta"],
-              "correct": 2,
+              "options": [
+                "message_start",
+                "content_block_start",
+                "message_delta",
+                "content_block_delta"
+              ],
+              "correct": 3,
               "explain": "content_block_delta, repeated. The start and stop events bracket each block."
             },
             {
               "id": "q_stream_1b",
               "q": "A streamed response contains a thinking block and a text block. How many content_block_start events do you see?",
-              "options": ["One", "Two", "One per delta", "None — content_block_start only fires for text"],
-              "correct": 1,
+              "options": [
+                "Two",
+                "One",
+                "One per delta",
+                "None — starts only fire for text"
+              ],
+              "correct": 0,
               "explain": "The block lifecycle repeats per block. Two blocks, two starts."
             }
           ]
@@ -555,11 +600,11 @@
               "q": "What does enabling streaming change?",
               "options": [
                 "Total latency to a complete answer",
-                "Time to first token, and nothing about output quality",
-                "The cost per token",
-                "The likelihood of hitting max_tokens"
+                "The cost per token you are charged",
+                "The likelihood of hitting max_tokens",
+                "Time to first token, and nothing else"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "It is a perceived-latency fix. The response is the same response, arriving in pieces."
             },
             {
@@ -567,9 +612,9 @@
               "q": "Why does streaming make stop_reason handling more important, not less?",
               "options": [
                 "Streamed responses hit max_tokens more often",
-                "The user watches a truncated answer break off in real time",
+                "The user watches the answer break off live",
                 "stop_reason is only available when streaming",
-                "Streaming disables server-side validation"
+                "Streaming turns off the server-side validation"
               ],
               "correct": 1,
               "explain": "The failure is now visible as it happens. Nothing about truncation changed — only who sees it."
@@ -582,10 +627,10 @@
           "id": "r_stream_1",
           "q": "Users complain about thirty seconds of blank screen on long generations. What do you turn on, and what does it not fix?",
           "options": [
-            "Streaming — it does not reduce total generation time",
-            "Streaming — it also reduces total generation time",
+            "Streaming — it does not cut total generation time",
+            "Streaming — it also cuts total generation time",
             "A lower temperature — it does not improve quality",
-            "Compaction — it does not reduce cost"
+            "Compaction — though it does not reduce the cost"
           ],
           "correct": 0,
           "explain": "Streaming fixes the wait, not the work. The last token still arrives when it would have."

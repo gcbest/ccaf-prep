@@ -16,9 +16,9 @@
               "q": "Claude keeps wrapping requested JSON in a sentence of explanation. Which two moves remove it?",
               "options": [
                 "Lower the temperature and raise max_tokens",
-                "Prefill the assistant turn with an opening fence, and set a stop sequence on the closing one",
-                "Move the request into the system prompt and add process steps",
-                "Enable streaming and parse only the first delta"
+                "Prefill with an opening fence; stop on close",
+                "Move the request into the system prompt block",
+                "Enable streaming and parse the first delta"
               ],
               "correct": 1,
               "explain": "Prefill kills the opening preamble; the stop sequence kills the trailing commentary."
@@ -27,12 +27,12 @@
               "id": "q_prefill_1b",
               "q": "How does prefilling actually suppress the preamble?",
               "options": [
-                "It instructs Claude not to write one",
-                "Claude continues from the text you put in the assistant turn, so there is no room before it",
-                "It strips the preamble server-side before returning",
-                "It sets stop_reason to stop_sequence immediately"
+                "It instructs Claude never to write one",
+                "It strips the preamble server-side first",
+                "It sets stop_reason to stop_sequence at once",
+                "Claude continues from the assistant text"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "It is continuation, not instruction. The turn has already started, and it started with a fence."
             }
           ]
@@ -44,9 +44,9 @@
           "q": "Besides JSON, what else can prefill plus a stop sequence constrain?",
           "options": [
             "Nothing — the technique is JSON-specific",
-            "Code, lists, or CSV — anything with an unambiguous delimiter",
-            "Only output whose length is known in advance",
-            "Only tool inputs"
+            "Code, lists, or CSV — anything delimited",
+            "Only output whose length is known first",
+            "Only tool inputs, never the text output"
           ],
           "correct": 1,
           "explain": "The requirement is an unambiguous delimiter to open with and stop on, not a particular format."
@@ -54,8 +54,13 @@
         {
           "id": "r_prefill_2",
           "q": "Which stop_reason do you expect on a successful prefill-and-stop extraction?",
-          "options": ["end_turn", "stop_sequence", "max_tokens", "tool_use"],
-          "correct": 1,
+          "options": [
+            "stop_sequence",
+            "end_turn",
+            "max_tokens",
+            "tool_use"
+          ],
+          "correct": 0,
           "explain": "Generation ended because it hit the string you supplied."
         }
       ]
@@ -73,24 +78,24 @@
               "id": "q_schemaout_1a",
               "q": "Why prefer a tool schema over prefill for high-accuracy production extraction?",
               "options": [
-                "It costs fewer output tokens",
-                "The shape is declared and validated rather than hoped for",
-                "Tool calls are processed by a more capable model",
-                "Prefill is unavailable when tools are defined"
+                "It costs noticeably fewer output tokens",
+                "Tool calls are run on a more capable model",
+                "The shape is declared and validated, not hoped",
+                "Prefill is unavailable once tools are defined"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "A schema turns 'please return this shape' into a contract the API checks."
             },
             {
               "id": "q_schemaout_1b",
               "q": "When is a generic to_json-style tool the better choice over a dedicated schema?",
               "options": [
-                "For complex, high-accuracy production extraction",
-                "For rapid prototypes or requirements that are still changing",
+                "For complex, high-accuracy production work",
                 "Whenever more than three fields are needed",
-                "When the output must be nested"
+                "When the output has to be deeply nested JSON",
+                "For prototypes, or requirements still moving"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Generic for speed and churn; dedicated for accuracy and stability."
             }
           ]
@@ -105,24 +110,24 @@
               "id": "q_schemaout_2a",
               "q": "Your extraction tool returns a well-formed record with a total that is off by a factor of ten. What failed?",
               "options": [
-                "The schema — it should have constrained the range",
-                "Nothing in the schema; shape was valid, and business correctness is your code's job",
-                "The tool_choice setting",
-                "The model tier"
+                "Nothing in the schema; correctness is yours",
+                "The schema — it should have bounded the range",
+                "The tool_choice setting was set wrongly",
+                "The model tier was too small for the maths"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "Shape passed because the shape was fine. Only application-level validation catches a wrong-but-well-typed value."
             },
             {
               "id": "q_schemaout_2b",
               "q": "Which check does a JSON Schema perform?",
               "options": [
-                "That a date is in the future",
-                "That a field is present and is of the declared type",
+                "That a supplied date is in the future",
                 "That an identifier exists in your database",
+                "That a field is present and typed right",
                 "That a total matches the sum of line items"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "Presence and type — structure. The other three are business rules."
             }
           ]
@@ -134,11 +139,11 @@
           "q": "What is the relationship between the tool you define for structured output and a real function?",
           "options": [
             "There must be a function; the API calls it",
-            "There need not be one — the tool exists to give the model a typed shape to fill",
-            "The function must return the same schema it declares",
-            "The function runs server-side at Anthropic"
+            "The function must return the declared schema",
+            "The function is run server-side by Anthropic",
+            "There need not be one; it is a typed shape"
           ],
-          "correct": 1,
+          "correct": 3,
           "explain": "It is a contract, not necessarily an implementation. You read the tool_use input and never dispatch anything."
         }
       ]
@@ -156,22 +161,22 @@
               "id": "q_toolchoice_1a",
               "q": "An endpoint must always return a filled-in record, never prose. Which tool_choice?",
               "options": [
+                "The specific tool, named outright — forced",
                 "auto, so Claude can decline on bad input",
-                "The specific tool, named — forcing it",
-                "any, so Claude picks the closest tool",
-                "auto with a process-step instruction to always use the tool"
+                "any, so Claude picks the closest tool it has",
+                "auto, plus an instruction to always use it"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "Naming the tool is the only setting that guarantees that tool gets called."
             },
             {
               "id": "q_toolchoice_1b",
               "q": "What does tool_choice: \"any\" guarantee?",
               "options": [
-                "Every defined tool is called once",
-                "Some tool is called, but Claude chooses which",
-                "A specific tool is called",
-                "No tool is called unless the input is unambiguous"
+                "Every defined tool gets called exactly once",
+                "Some tool is called; Claude picks which",
+                "One specific named tool is always called",
+                "No tool unless the input is unambiguous"
               ],
               "correct": 1,
               "explain": "any requires a tool call without dictating which one."
@@ -184,12 +189,12 @@
           "id": "r_toolchoice_1",
           "q": "Your extraction endpoint is on tool_choice auto and returns prose on roughly one request in twenty. What is the fix?",
           "options": [
-            "Lower temperature so the tool is chosen more consistently",
-            "Force the tool by name so a structured result is guaranteed",
-            "Improve the tool description and keep auto",
-            "Retry any prose response until it returns a record"
+            "Lower temperature, for a steadier choice",
+            "Improve the tool description, keep auto",
+            "Force the tool by name; it is guaranteed",
+            "Retry any prose response until it works"
           ],
-          "correct": 1,
+          "correct": 2,
           "explain": "If a record is mandatory, do not leave it to judgement. Forcing it is a guarantee rather than a nudge."
         }
       ]

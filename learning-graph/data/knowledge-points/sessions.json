@@ -15,24 +15,24 @@
               "id": "q_sess_1a",
               "q": "You want to continue one specific prior conversation, not the most recent one. Which option?",
               "options": [
-                "continue_conversation",
-                "resume with the session id",
-                "sessionId",
-                "forkSession"
+                "continue: true on the new query",
+                "sessionId set in the options object",
+                "resume set to that conversation's id",
+                "forkSession: true on the new query"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "continue takes whatever ran last. resume names the one you mean."
             },
             {
               "id": "q_sess_1b",
               "q": "What does persistSession: false cost you?",
               "options": [
-                "Nothing; it is purely a performance setting",
-                "The session is not written to disk, so it can never be resumed",
-                "Hooks stop firing",
-                "Tool results are not returned"
+                "Hooks stop firing for the rest of that agent run",
+                "Nothing real; it is purely a performance tuning setting",
+                "Tool results are dropped instead of returned to the model",
+                "The transcript is never on disk, so it can never be resumed"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Useful for sensitive one-off runs; fatal if you later wanted to resume or fork from it."
             }
           ]
@@ -47,12 +47,12 @@
               "id": "q_sess_2a",
               "q": "Your API runs on four instances behind a load balancer and resume sometimes fails. What is missing?",
               "options": [
-                "persistSession: true",
-                "A sessionStore mirroring transcripts to an external backend",
-                "Sticky sessions on the load balancer, which is the only fix",
-                "forkSession"
+                "persistSession: true on every one of the instances",
+                "Sticky sessions on the load balancer, the only real fix",
+                "forkSession: true so each instance gets its own branch",
+                "A sessionStore mirroring transcripts to a shared backend"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Sticky sessions would paper over it. The session store is the fix that makes any host able to resume."
             },
             {
@@ -60,11 +60,11 @@
               "q": "Which utility would you use to show a user their past agent runs?",
               "options": [
                 "getSessionMessages()",
+                "renameSession()",
                 "listSessions()",
-                "tagSession()",
-                "renameSession()"
+                "tagSession()"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "List for the index, getSessionMessages when they open one."
             }
           ]
@@ -75,12 +75,12 @@
           "id": "r_sess_1",
           "q": "continue vs. resume — what is the difference?",
           "options": [
-            "They are aliases",
-            "continue picks up the most recent conversation; resume names a specific session",
-            "continue works only in Python",
-            "resume creates a new session"
+            "continue takes the latest run; resume names one",
+            "They are aliases for the same underlying flag",
+            "continue works in the CLI, resume only in the SDK",
+            "resume always starts a brand-new empty session"
           ],
-          "correct": 1,
+          "correct": 0,
           "explain": "Latest vs. named. resume plus forkSession is a third thing again."
         }
       ]
@@ -99,24 +99,24 @@
               "id": "q_fork_1a",
               "q": "You want two independent explorations that both start from one expensive analysis. What do you pass?",
               "options": [
-                "resume alone, twice",
-                "resume plus forkSession, twice",
-                "forkSession alone, twice",
-                "Two fresh queries with the analysis pasted in"
+                "resume alone, run twice from the same id",
+                "forkSession alone, run twice with no id",
+                "resume plus forkSession, run twice from that id",
+                "Two fresh queries with the analysis text pasted in"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "forkSession without resume has nothing to fork from. With it, both branches share the baseline and diverge cleanly."
             },
             {
               "id": "q_fork_1b",
               "q": "What goes wrong if you resume the same session twice without forking?",
               "options": [
-                "The second resume errors",
-                "Both explorations append to one timeline and contaminate each other",
-                "The first session is deleted",
-                "Nothing; sessions are copy-on-write"
+                "Both runs append to one timeline and contaminate each other",
+                "The second resume errors out with a session lock",
+                "Nothing; resumed sessions are copy-on-write by default",
+                "The first session is deleted when the second one starts"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "One session, one history. Branch A's dead ends become part of branch B's context."
             }
           ]
@@ -127,12 +127,12 @@
           "id": "r_fork_1",
           "q": "State what forkSession does in one sentence.",
           "options": [
-            "It runs two agents in parallel",
-            "Used with resume, it branches to a new session ID from the same baseline instead of appending to the original",
-            "It copies a session's files",
-            "It compacts the session before resuming"
+            "It runs two agents against the same prompt in parallel",
+            "It compacts the session before the resume happens",
+            "It copies the session's files into a new directory",
+            "With resume, it branches a new id off that baseline"
           ],
-          "correct": 1,
+          "correct": 3,
           "explain": "Shared past, separate futures — and only in combination with resume."
         }
       ]
@@ -151,24 +151,24 @@
               "id": "q_compact_1a",
               "q": "You need to save a summary of state before the SDK compacts. Which hook?",
               "options": [
+                "SessionEnd",
                 "PostCompact",
                 "PreCompact",
-                "Stop",
-                "SessionEnd"
+                "Stop"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "PreCompact is the last moment the full history is still there."
             },
             {
               "id": "q_compact_1b",
               "q": "maxTokens in a context-usage response reflects what?",
               "options": [
-                "Always the model's full context window",
-                "The model's context window, or the lower auto-compaction window when one applies",
-                "The maxTokens you passed in options",
-                "The remaining budget in taskBudget"
+                "The window, or the lower auto-compaction one if set",
+                "Always the model's full advertised context window",
+                "The maxTokens value you passed in the options object",
+                "Whatever budget is left in the taskBudget setting"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "The effective ceiling, not the theoretical one — which is what you actually want to reason against."
             }
           ]
@@ -179,10 +179,10 @@
           "id": "r_compact_1",
           "q": "What appears in the message stream when compaction happens?",
           "options": [
-            "Nothing observable",
-            "A compact-boundary message",
-            "A system:init message",
-            "A tool_result with isError: true"
+            "Nothing observable in the message stream",
+            "A compact-boundary message in the stream",
+            "A second system:init message arrives",
+            "A tool_result carrying isError: true"
           ],
           "correct": 1,
           "explain": "It marks where summarised history ends, so downstream code knows what it is looking at."
@@ -203,21 +203,21 @@
               "id": "q_lever_1a",
               "q": "A multi-phase discovery keeps blowing the context window. First structural fix?",
               "options": [
-                "Lower maxTokens so compaction runs sooner",
-                "Delegate the discovery to a subagent so only findings return",
-                "Call /compact manually between phases",
-                "Enable file checkpointing"
+                "Lower maxTokens so that compaction runs much sooner",
+                "Call /compact by hand between each of the phases",
+                "Turn on file checkpointing for the whole run",
+                "Delegate discovery to a subagent; only findings return"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Compaction is a response to a full window. Delegation stops it filling in the first place."
             },
             {
               "id": "q_lever_1b",
               "q": "What is enableFileCheckpointing for?",
               "options": [
-                "Reducing context usage",
-                "Rewinding file changes",
-                "Persisting sessions across hosts",
+                "Reducing how much context a long run uses",
+                "Rewinding file changes the agent made",
+                "Persisting sessions across separate hosts",
                 "Snapshotting the conversation before compaction"
               ],
               "correct": 1,
@@ -231,12 +231,12 @@
           "id": "r_lever_1",
           "q": "Why does delegation beat compaction as a context strategy?",
           "options": [
-            "It is faster",
-            "Compaction summarises a window that already filled; delegation stops it filling",
-            "Compaction is deprecated",
-            "Subagents have larger context windows"
+            "Compaction summarises a full window; delegation avoids one",
+            "Delegation is simply a lot faster than compaction is",
+            "Compaction has been deprecated in the current SDK release",
+            "Subagents are given much larger context windows to use"
           ],
-          "correct": 1,
+          "correct": 0,
           "explain": "Prevention versus damage control. Explore is the built-in expression of it."
         }
       ]
@@ -255,22 +255,22 @@
               "id": "q_stopgate_1a",
               "q": "The agent keeps declaring done without running tests. What do you build?",
               "options": [
+                "A Stop hook that runs the suite and blocks with a reason",
                 "A stronger instruction at the top of the system prompt",
-                "A Stop hook that runs the suite and returns decision: \"block\" with a reason when it fails",
-                "A PreToolUse hook on Bash",
-                "A PostToolUse hook that checks for test output"
+                "A PreToolUse hook on Bash that checks for a test command",
+                "A PostToolUse hook that looks for test output in results"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "The turn is what you want to gate, so Stop is the attachment point. Note the return shape: top-level decision, not permissionDecision."
             },
             {
               "id": "q_stopgate_1b",
               "q": "Why is a Stop hook stronger than the same rule in the system prompt?",
               "options": [
-                "It uses fewer tokens",
-                "It is a condition on ending the turn rather than a request the model may not honour",
-                "It runs on a faster model",
-                "It bypasses permission checks"
+                "It uses fewer tokens than a system-prompt instruction",
+                "It gates the end of the turn instead of asking nicely",
+                "It runs on a faster model than the main loop does",
+                "It bypasses the permission checks the prompt cannot"
               ],
               "correct": 1,
               "explain": "Deterministic compliance versus probabilistic. Same principle as the refund gate, applied one level up."
@@ -283,12 +283,12 @@
           "id": "r_stopgate_1",
           "q": "Which return shape does a Stop hook use to prevent the turn ending?",
           "options": [
-            "hookSpecificOutput.permissionDecision: \"deny\"",
-            "top-level decision: \"block\" with a reason",
-            "updatedInput",
-            "additionalContext"
+            "hookSpecificOutput.permissionDecision set to \"deny\"",
+            "updatedInput with the corrected tool arguments",
+            "additionalContext explaining what still needs doing",
+            "A top-level decision: \"block\" plus a reason string"
           ],
-          "correct": 1,
+          "correct": 3,
           "explain": "Stop is in the top-level-decision family. Getting this wrong fails silently."
         }
       ]
@@ -307,10 +307,10 @@
               "id": "q_posture_1a",
               "q": "First-contact resolution is low because the agent hands off too late. Hook, or prompt?",
               "options": [
-                "A Stop hook requiring an escalation check",
-                "The system prompt, with escalation criteria and few-shot examples demonstrating them",
-                "A PreToolUse hook on the escalation tool",
-                "Lower maxTurns to force earlier handoff"
+                "A Stop hook that requires an escalation check first",
+                "The system prompt, with escalation criteria and examples",
+                "A PreToolUse hook guarding the escalation tool",
+                "A lower maxTurns setting, forcing an earlier handoff"
               ],
               "correct": 1,
               "explain": "The failure is judgment about when to hand off, not a rule being skipped. Hooks enforce invariants; they cannot supply taste."
@@ -319,12 +319,12 @@
               "id": "q_posture_1b",
               "q": "An agent shows 97% overall accuracy. Why might that still be unacceptable?",
               "options": [
-                "97% is below every industry benchmark",
-                "A single category could be failing most of the time and be invisible in the aggregate",
-                "Accuracy is not a valid metric for agents",
-                "It says nothing about latency"
+                "97% sits below every published industry benchmark",
+                "Accuracy is not a valid metric for any agent system",
+                "One category can fail constantly and hide in the average",
+                "It tells you nothing at all about response latency"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "Aggregates hide their worst slice. Evaluate per category or you are measuring the categories that already work."
             }
           ]
@@ -335,10 +335,10 @@
           "id": "r_posture_1",
           "q": "Which failures belong to hooks and which to prompting?",
           "options": [
-            "Hooks for everything; prompting is unreliable",
-            "Hooks for compliance invariants; prompting for judgment calls like when to escalate",
-            "Prompting for tool use; hooks for text",
-            "Hooks for Domain 1; prompting for Domain 3"
+            "Hooks for everything; prompting is simply unreliable",
+            "Hooks for compliance invariants; prompting for judgment",
+            "Prompting for tool use; hooks for anything text-shaped",
+            "Hooks belong to Domain 1; prompting belongs to Domain 3"
           ],
           "correct": 1,
           "explain": "The dividing line the exam keeps drawing: invariants are enforced, judgment is taught."

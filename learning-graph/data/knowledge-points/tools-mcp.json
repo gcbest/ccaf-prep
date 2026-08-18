@@ -15,24 +15,24 @@
               "id": "q_inproc_1a",
               "q": "Your agent needs three custom tools that call functions already in your app. What do you build?",
               "options": [
-                "A stdio MCP server as a separate process",
-                "An in-process SDK MCP server with createSdkMcpServer",
+                "A stdio MCP server running as a separate process",
                 "An HTTP MCP server behind your load balancer",
-                "Nothing — pass the functions directly in the tools option"
+                "An in-process SDK MCP server via createSdkMcpServer",
+                "Nothing — pass the functions in the tools option"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "The functions are already there. A subprocess would only add a serialisation boundary and a deployment."
             },
             {
               "id": "q_inproc_1b",
               "q": "A server registered as name: \"support\" holds a tool named \"lookup_order\". What goes in allowedTools?",
               "options": [
-                "\"lookup_order\"",
-                "\"support.lookup_order\"",
                 "\"mcp__support__lookup_order\"",
-                "\"mcp:support/lookup_order\""
+                "\"mcp:support/lookup_order\"",
+                "\"support.lookup_order\"",
+                "\"support__lookup_order\""
               ],
-              "correct": 2,
+              "correct": 0,
               "explain": "Double underscores, mcp prefix. The same naming applies to any MCP server, in-process or not."
             }
           ]
@@ -43,12 +43,12 @@
           "id": "r_inproc_1",
           "q": "What does an in-process SDK MCP server save you compared with a stdio server?",
           "options": [
-            "Nothing; it is a convenience alias",
-            "A subprocess, a transport, and a separate deployment",
-            "The need to write tool descriptions",
-            "The mcp__ naming prefix"
+            "A subprocess, a transport, and a deployment",
+            "Nothing; it is a convenience alias for stdio",
+            "The need to write out any tool descriptions",
+            "The mcp__ prefix on every one of the names"
           ],
-          "correct": 1,
+          "correct": 0,
           "explain": "Same protocol, no process boundary. The naming prefix stays."
         }
       ]
@@ -67,10 +67,10 @@
               "id": "q_toolshape_1a",
               "q": "In Python, where does the handler live in a @tool definition?",
               "options": [
-                "As the fourth argument to @tool",
+                "As the fourth argument passed to @tool",
                 "It is the decorated async function itself",
-                "In a separate register_handler call",
-                "Inside the input_schema"
+                "In a separate register_handler() call",
+                "Inside the input_schema dictionary"
               ],
               "correct": 1,
               "explain": "Decorator form: the function you decorate is the handler. TypeScript passes it as the 4th argument instead."
@@ -79,12 +79,12 @@
               "id": "q_toolshape_1b",
               "q": "Where do annotations go in each language?",
               "options": [
-                "Fourth positional argument in both",
-                "extras.annotations in TypeScript; fourth positional argument in Python",
-                "extras.annotations in both",
-                "Inside the schema in both"
+                "Fourth positional argument in both languages",
+                "extras.annotations in both of the languages",
+                "extras.annotations in TS; 4th argument in Python",
+                "Inside the input schema in both of the languages"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "The 4th slot is the handler in TypeScript and annotations in Python — which is exactly why this is worth drilling."
             }
           ]
@@ -99,12 +99,12 @@
               "id": "q_toolshape_2a",
               "q": "What is searchHint for?",
               "options": [
-                "Improving the model's search queries",
-                "A one-line capability phrase shown in the deferred-tool list before the full schema loads",
-                "Ranking results returned by the tool",
-                "Documentation for your team"
+                "A one-line capability phrase for deferred tools",
+                "Improving the search queries the model writes",
+                "Ranking the results that the tool sends back",
+                "Documentation for your own team members"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "It is how a deferred tool makes itself findable without paying for its whole schema."
             },
             {
@@ -112,11 +112,11 @@
               "q": "A tool is needed on nearly every turn and you do not want its schema deferred. Which extra?",
               "options": [
                 "searchHint",
-                "alwaysLoad: true",
                 "annotations.idempotentHint",
-                "There is no such option"
+                "There is no such option",
+                "alwaysLoad: true"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "alwaysLoad keeps it in the initial prompt. Use it sparingly — that is context you are spending every turn."
             }
           ]
@@ -127,12 +127,12 @@
           "id": "r_toolshape_1",
           "q": "What do handlers return, in both languages?",
           "options": [
-            "A plain string",
-            "{ content: [{ type: \"text\", text: ... }] }",
-            "{ result: ..., isError: false }",
-            "A Zod-validated object"
+            "{ content: [{ type: \"text\", text }] }",
+            "{ result: ..., isError: false, meta }",
+            "A Zod-validated plain JS object",
+            "A plain string of the output text"
           ],
-          "correct": 1,
+          "correct": 0,
           "explain": "The MCP content-block shape. isError sits alongside it on the result, not in place of it."
         }
       ]
@@ -151,12 +151,12 @@
               "id": "q_annot_1a",
               "q": "Is readOnlyHint: true enough to guarantee a tool cannot modify anything?",
               "options": [
-                "Yes — the SDK enforces it",
-                "No — annotations are hints and must not be relied on for security",
-                "Yes, but only for MCP tools",
-                "Only in plan mode"
+                "No — hints are not a security boundary",
+                "Yes — the SDK enforces the hint for you",
+                "Yes, but only for the MCP tools",
+                "Only when running in plan mode"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "Real restriction comes from tool sets, disallowedTools, and hooks. The hint just tells the model what to expect."
             },
             {
@@ -164,11 +164,11 @@
               "q": "Which two ToolAnnotations default to true?",
               "options": [
                 "readOnlyHint and idempotentHint",
-                "destructiveHint and openWorldHint",
                 "readOnlyHint and openWorldHint",
-                "destructiveHint and idempotentHint"
+                "destructiveHint and idempotentHint",
+                "destructiveHint and openWorldHint"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Pessimistic defaults: assume it breaks things and assume it reaches the outside world until told otherwise."
             }
           ]
@@ -179,10 +179,10 @@
           "id": "r_annot_1",
           "q": "Where does real tool restriction come from, if not annotations?",
           "options": [
-            "The tool's description",
+            "The tool's own description and schema",
             "Tool sets, disallowedTools, and hooks",
-            "The model's judgment",
-            "outputFormat"
+            "The model's judgment at call time",
+            "The outputFormat you declared for it"
           ],
           "correct": 1,
           "explain": "Withhold it, block it, or gate it. Those are the three that actually hold."
@@ -204,11 +204,11 @@
               "q": "Your staging agent keeps picking up a developer's personal MCP server. Which option stops that?",
               "options": [
                 "settingSources: []",
+                "toolAliases on the options",
                 "strictMcpConfig: true",
-                "disallowedTools: [\"mcp__*\"]",
-                "toolAliases"
+                "disallowedTools: [\"mcp__*\"]"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "settingSources governs settings files; strictMcpConfig is the one that shuts out .mcp.json, plugin servers, and connectors as well."
             },
             {
@@ -216,9 +216,9 @@
               "q": "What does toolAliases let you do?",
               "options": [
                 "Rename your MCP tools for readability",
-                "Map a built-in tool name onto an MCP tool so Claude calls yours instead",
+                "Point a built-in tool name at your MCP tool",
                 "Create shorthand aliases in allowedTools",
-                "Alias one MCP server to another"
+                "Alias one MCP server onto another one"
               ],
               "correct": 1,
               "explain": "e.g. { Bash: 'mcp__workspace__bash' } — the model reaches for Bash and gets your sandboxed implementation."
@@ -231,13 +231,13 @@
           "id": "r_wiring_1",
           "q": "Name the four mcpServers config shapes.",
           "options": [
-            "stdio, SSE, HTTP, in-process SDK",
             "stdio, WebSocket, gRPC, in-process",
             "local, remote, hosted, embedded",
-            "stdio and HTTP only"
+            "stdio, SSE, HTTP, in-process SDK",
+            "stdio and HTTP, the only two"
           ],
-          "correct": 0,
-          "explain": "The fourth one — in-process — is the one that only exists inside the SDK."
+          "correct": 2,
+          "explain": "in-process SDK is the one that exists only inside the SDK — the other three are ordinary MCP transports."
         }
       ]
     },
@@ -256,9 +256,9 @@
               "q": "An agent keeps calling search_orders when it should call search_customers. Highest-leverage fix?",
               "options": [
                 "Add few-shot examples to the system prompt",
-                "Expand both descriptions with input formats, example queries, edge cases, and boundaries",
-                "Merge the two tools into one",
-                "Remove search_orders from allowedTools"
+                "Expand both descriptions with formats and limits",
+                "Merge the two tools into one bigger tool",
+                "Take search_orders out of allowedTools entirely"
               ],
               "correct": 1,
               "explain": "Glossary t14, and exam sample question 2. Selection is driven by the description, so that is where the fix belongs."
@@ -267,12 +267,12 @@
               "id": "q_tooldesc_1b",
               "q": "What makes \"Use get_customer first if you only have an email address\" a good line in a description?",
               "options": [
-                "It documents the API for developers",
-                "It tells the model when NOT to use this tool, which is half of selection",
-                "It shortens the schema",
-                "It is required by MCP"
+                "It tells the model when NOT to use the tool",
+                "It documents the API for other developers",
+                "It shortens the schema the model must read",
+                "It is a line MCP requires descriptions to have"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "Boundaries disambiguate. A description that only says what a tool does still competes with its neighbours."
             }
           ]
@@ -283,12 +283,12 @@
           "id": "r_tooldesc_1",
           "q": "Which four things belong in a description that has to disambiguate against a similar tool?",
           "options": [
-            "Author, version, changelog, license",
-            "Input formats, example queries, edge cases, and boundary explanations",
+            "Author, version, changelog, and license",
             "Rate limits, latency, cost, and region",
-            "A JSON schema and nothing else"
+            "Formats, examples, edge cases, boundaries",
+            "A JSON schema, and nothing else at all"
           ],
-          "correct": 1,
+          "correct": 2,
           "explain": "The schema says what is accepted; the description says when to reach for it."
         }
       ]
@@ -307,24 +307,24 @@
               "id": "q_iserror_1a",
               "q": "Which of isError, errorCategory and isRetryable is defined by MCP?",
               "options": [
-                "All three",
-                "isError only",
-                "isError and isRetryable",
-                "None — all three are conventions"
+                "All three are defined by MCP",
+                "isError and isRetryable are defined",
+                "None — all three are conventions",
+                "isError, and only isError"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "One real field, two conventions. The exam names all three, which is exactly why the distinction is tested."
             },
             {
               "id": "q_iserror_1b",
               "q": "Why is returning failure as ordinary success text a problem?",
               "options": [
-                "It costs more tokens",
-                "The agent must infer failure from prose, and your code cannot branch on it",
-                "MCP rejects the result",
-                "It breaks prompt caching"
+                "It costs noticeably more tokens per call",
+                "MCP rejects a result shaped that way",
+                "It breaks prompt caching downstream",
+                "The agent must infer failure from prose"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Both consumers lose. Signalling is cheap; inference is not reliable."
             }
           ]
@@ -336,11 +336,11 @@
           "q": "What is isError for?",
           "options": [
             "Telling the SDK to retry the call",
-            "Signalling failure on a tool result back to the calling agent",
-            "Marking a tool as destructive",
-            "Logging"
+            "Marking a tool as being destructive",
+            "Signalling failure back to the agent",
+            "Logging the failure for your team"
           ],
-          "correct": 1,
+          "correct": 2,
           "explain": "Signalling, not retrying. Whether to retry is your own isRetryable convention."
         }
       ]
@@ -359,24 +359,24 @@
               "id": "q_errconv_1a",
               "q": "A refund is denied by policy. What should isRetryable be, and what should the agent do?",
               "options": [
-                "true — retry with a smaller amount",
-                "false — explain the business-rule violation instead of retrying",
-                "true — the policy engine may be flaky",
-                "Leave it unset; the SDK infers it"
+                "false — explain the rule instead of retrying",
+                "true — retry it with a smaller amount next",
+                "true — the policy engine may just be flaky",
+                "Leave it unset; the SDK will infer it all"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "A business rule will not change on the second attempt. Retrying just burns turns and looks broken to the customer."
             },
             {
               "id": "q_errconv_1b",
               "q": "Where would you find errorCategory in the SDK type definitions?",
               "options": [
-                "On ToolResult",
-                "On HookJSONOutput",
-                "Nowhere — it is a convention you implement in your own payload",
-                "On PermissionResult"
+                "On the ToolResult type definition",
+                "On the HookJSONOutput type union",
+                "On the PermissionResult type union",
+                "Nowhere — it is your own convention"
               ],
-              "correct": 2,
+              "correct": 3,
               "explain": "Exam vocabulary, author-defined field. Knowing that it is a convention is itself the tested fact."
             }
           ]
@@ -391,24 +391,24 @@
               "id": "q_errconv_2a",
               "q": "Which category implies \"fix the arguments and call again\"?",
               "options": [
-                "transient",
                 "validation",
+                "transient",
                 "business",
                 "permission"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "The call was malformed, not forbidden. That is a different recovery from either retry or escalate."
             },
             {
               "id": "q_errconv_2b",
               "q": "What is the actual argument for categorising errors at all?",
               "options": [
-                "It makes logs prettier",
-                "Each category implies a different recovery, so the agent's next move stops being a guess",
-                "MCP requires a category",
-                "It reduces token usage"
+                "It makes the logs a lot prettier",
+                "MCP requires a category on errors",
+                "It reduces the overall token usage a lot",
+                "Each category implies its own recovery"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Undifferentiated failure text gives the model one behaviour for four situations."
             }
           ]
@@ -420,11 +420,11 @@
           "q": "Which of these three is a real MCP field: isError, errorCategory, isRetryable?",
           "options": [
             "errorCategory",
-            "isRetryable",
             "isError",
-            "All three"
+            "isRetryable",
+            "All three of them"
           ],
-          "correct": 2,
+          "correct": 1,
           "explain": "Drill this one — the exam treats all three as named concepts, which makes the distinction easy to lose."
         }
       ]
@@ -443,22 +443,22 @@
               "id": "q_errprop_1a",
               "q": "A subagent times out halfway. What should the coordinator receive?",
               "options": [
-                "An empty result marked successful, so the run continues",
-                "A structured error naming what failed and how far it got",
+                "An empty result marked successful, so it continues",
                 "A generic \"unavailable\" string after silent retries",
-                "Nothing, so the coordinator can time out and retry"
+                "Nothing, so the coordinator times out and retries",
+                "A structured error naming what failed and how far"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Partial progress plus a named failure is the only payload that supports an intelligent next move."
             },
             {
               "id": "q_errprop_1b",
               "q": "Why is 'empty result marked successful' the most dangerous of the four?",
               "options": [
-                "It wastes the most tokens",
-                "It converts a failure into a false finding the coordinator will act on",
-                "It causes the SDK to retry indefinitely",
-                "It breaks context isolation"
+                "It wastes by far the most tokens of the four",
+                "It turns a failure into a finding acted on",
+                "It makes the SDK retry the call indefinitely",
+                "It breaks the context isolation boundary"
               ],
               "correct": 1,
               "explain": "Silence reported as a finding is worse than an error, because nothing downstream will question it."
@@ -471,10 +471,10 @@
           "id": "r_errprop_1",
           "q": "Why do silent retries inside a subagent hurt the coordinator?",
           "options": [
-            "They are slower",
-            "They hide both the failure and the partial progress, leaving the coordinator with nothing to act on",
-            "They violate MCP",
-            "They break the session"
+            "They are slower than failing straight away",
+            "They hide the failure and the partial progress",
+            "They are a violation of the MCP specification",
+            "They break the session the subagent runs in"
           ],
           "correct": 1,
           "explain": "Retrying is fine; retrying invisibly is what destroys the information the coordinator needed."

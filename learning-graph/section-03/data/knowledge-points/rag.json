@@ -15,10 +15,10 @@
               "id": "q_whyrag_1a",
               "q": "Aside from length limits and cost, what is wrong with stuffing everything into the prompt?",
               "options": [
-                "The API rejects prompts over a token threshold",
-                "Effectiveness degrades on very long prompts, so a shorter relevant prompt can answer better",
-                "Long prompts cannot be cached",
-                "Claude processes only the first and last sections"
+                "The API rejects prompts over a threshold",
+                "Effectiveness degrades on very long prompts",
+                "Long prompts simply cannot be cached at all",
+                "Claude reads only the first and last parts"
               ],
               "correct": 1,
               "explain": "Degradation on length is a quality argument, not just a capacity one."
@@ -28,11 +28,11 @@
               "q": "Which is a stated challenge of RAG rather than a benefit?",
               "options": [
                 "It focuses Claude on relevant content",
-                "Included chunks might miss the context they needed",
-                "It scales to many documents",
-                "It is cheaper and faster"
+                "It scales out to a great many documents",
+                "Chunks might lose the context they needed",
+                "It is both cheaper and faster to run overall"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "Cutting a document up can cut a chunk off from what made it interpretable — the problem contextual retrieval later fixes."
             }
           ]
@@ -43,12 +43,12 @@
           "id": "r_whyrag_1",
           "q": "What does RAG actually do?",
           "options": [
-            "Compresses documents so more fits in the window",
-            "Chunks documents and includes only the most relevant chunks per question",
-            "Summarises the conversation once it grows too long",
-            "Moves documents to a server-side store Claude queries directly"
+            "Compresses documents so that more fits in",
+            "Summarises the conversation once it grows",
+            "Chunks documents; includes only relevant ones",
+            "Moves documents to a store Claude queries"
           ],
-          "correct": 1,
+          "correct": 2,
           "explain": "Chunk and select. Compression is a different idea, and summarising history is compaction."
         }
       ]
@@ -66,10 +66,10 @@
               "id": "q_chunk_1a",
               "q": "Which chunking strategy is the production default, and why?",
               "options": [
-                "Semantic — it produces the most relevant chunks",
-                "Size-based with overlap — simple, reliable, works with any document type",
-                "Structure-based — it produces the cleanest chunks",
-                "Sentence-based — it never cuts a sentence in half"
+                "Semantic — it gives the most relevant chunks",
+                "Size-based with overlap — simple and reliable",
+                "Structure-based — it gives the cleanest chunks",
+                "Sentence-based — it never cuts a sentence"
               ],
               "correct": 1,
               "explain": "Reliability across arbitrary input beats chunk quality on a well-behaved subset."
@@ -78,12 +78,12 @@
               "id": "q_chunk_1b",
               "q": "What makes structure-based chunking risky?",
               "options": [
-                "It is computationally expensive",
-                "It depends on document formatting being guaranteed, and fails on unstructured text",
-                "It cannot use overlap",
-                "It produces chunks that are too large to embed"
+                "It is computationally rather expensive",
+                "It cannot make use of any chunk overlap",
+                "It makes the chunks too large to embed",
+                "It assumes formatting that may not hold"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "It is only as reliable as the formatting assumption behind it."
             }
           ]
@@ -94,19 +94,24 @@
           "id": "r_chunk_1",
           "q": "What is overlap for in size-based chunking?",
           "options": [
-            "Increasing recall by duplicating content across chunks",
-            "Avoiding cutting a sentence — or an idea — in half at a chunk boundary",
-            "Making chunks a uniform length",
-            "Reducing the number of chunks"
+            "Keeping a sentence whole across the cut",
+            "Raising recall by duplicating content",
+            "Making every chunk exactly one length",
+            "Reducing the total number of chunks made"
           ],
-          "correct": 1,
+          "correct": 0,
           "explain": "A fixed-length cut lands mid-sentence sooner or later; overlap means the sentence survives in one of the two chunks."
         },
         {
           "id": "r_chunk_2",
           "q": "Which strategy is described as most relevant but computationally expensive?",
-          "options": ["Size-based", "Structure-based", "Sentence-based", "Semantic"],
-          "correct": 3,
+          "options": [
+            "Semantic",
+            "Size-based",
+            "Structure-based",
+            "Sentence-based"
+          ],
+          "correct": 0,
           "explain": "Semantic chunking uses NLP to group by relatedness — best chunks, highest cost and complexity."
         }
       ]
@@ -124,24 +129,24 @@
               "id": "q_embed_1a",
               "q": "Where do embeddings come from in this stack?",
               "options": [
-                "The Anthropic embeddings endpoint",
-                "VoyageAI, with its own account and API key",
-                "They are computed client-side by the SDK",
+                "VoyageAI, with its own account and key",
+                "The Anthropic embeddings endpoint itself",
+                "Computed client-side by the SDK for you",
                 "The Files API generates them on upload"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "Anthropic does not provide embeddings; VoyageAI is the recommended provider."
             },
             {
               "id": "q_embed_1b",
               "q": "What can you read off an individual embedding dimension?",
               "options": [
-                "The document's topic",
-                "Nothing human-interpretable",
+                "The source document's overall topic",
                 "A sentiment score between −1 and +1",
-                "The chunk's position in the source document"
+                "The chunk's position in the source",
+                "Nothing human-interpretable at all"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "The dimensions are not individually meaningful. Only distances between whole vectors carry information."
             }
           ]
@@ -152,12 +157,12 @@
           "id": "r_embed_1",
           "q": "What does semantic search find that keyword search does not?",
           "options": [
-            "Exact identifiers and rare terms",
-            "Chunks related in meaning rather than by shared vocabulary",
-            "The most recently updated documents",
-            "Chunks from the same section of a document"
+            "Exact identifiers and very rare terms",
+            "The most recently updated of documents",
+            "Chunks related in meaning, not wording",
+            "Chunks from the same document section"
           ],
-          "correct": 1,
+          "correct": 2,
           "explain": "Meaning over wording — which is also precisely why it misses exact strings."
         }
       ]
@@ -175,10 +180,10 @@
               "id": "q_bm25_1a",
               "q": "A user searches an exact incident ID and semantic search returns four thematically similar but wrong documents. What fixes it?",
               "options": [
-                "Reranking the semantic results",
-                "BM25, which weights rare terms highly and matches them literally",
-                "Smaller chunks with more overlap",
-                "A more capable embedding model"
+                "Reranking the semantic results returned",
+                "BM25, which matches rare terms literally",
+                "Smaller chunks with a lot more overlap",
+                "A more capable embedding model instead"
               ],
               "correct": 1,
               "explain": "Exact-term precision is a lexical problem. No embedding model fixes it, because the identifier has no meaning to embed."
@@ -187,12 +192,12 @@
               "id": "q_bm25_1b",
               "q": "In BM25, how are common words like “a” treated?",
               "options": [
-                "Removed entirely before scoring",
-                "Given low weight, because rarer terms are weighted higher",
-                "Given high weight, since they appear in every document",
+                "Given low weight; rarer terms score higher",
+                "Removed entirely before the scoring runs",
+                "Given high weight, being in every document",
                 "Weighted by their position in the query"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "Rarity drives weight. Common terms end up contributing almost nothing."
             }
           ]
@@ -203,10 +208,10 @@
           "id": "r_bm25_1",
           "q": "What does BM25 stand for, and what kind of search is it?",
           "options": [
-            "Best Match 25 — lexical, keyword-based search",
-            "Binary Match 25 — a vector quantisation scheme",
-            "Best Match 25 — a reranking model",
-            "Balanced Metric 25 — a hybrid scoring function"
+            "Best Match 25 — lexical keyword search",
+            "Binary Match 25 — a quantisation scheme",
+            "Best Match 25 — a reranking model only",
+            "Balanced Metric 25 — a hybrid scorer"
           ],
           "correct": 0,
           "explain": "Best Match 25, and it is keyword search — the complement to semantic search, not a variant of it."
@@ -226,24 +231,24 @@
               "id": "q_hybrid_1a",
               "q": "Your corpus gets both prose questions and part numbers. What retrieval design covers both?",
               "options": [
-                "Semantic search with a larger candidate set",
-                "Hybrid search — semantic and BM25 in parallel, results merged",
-                "BM25 with query expansion",
-                "Semantic search over contextually-enriched chunks"
+                "Semantic search with a wider candidate set",
+                "BM25 with query expansion on the front",
+                "Hybrid — semantic and BM25 merged together",
+                "Semantic search over contextual chunks"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "Two retrievers, run together and merged. It is the standard production pattern."
             },
             {
               "id": "q_hybrid_1b",
               "q": "How do the two retrievers run in hybrid search?",
               "options": [
-                "Semantic first, then BM25 over its results",
-                "In parallel, with the results merged",
-                "BM25 first, then semantic over its results",
-                "Whichever returns first is used"
+                "Semantic first, then BM25 over its output",
+                "BM25 first, then semantic over its output",
+                "In parallel, with the two results merged",
+                "Whichever one returns first is the one used"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "In parallel. Chaining them would let the first stage's blind spot exclude what the second was for."
             }
           ]
@@ -254,10 +259,10 @@
           "id": "r_hybrid_1",
           "q": "Why not simply improve the embedding model instead of adding BM25?",
           "options": [
-            "Better embeddings are unavailable",
-            "An exact identifier carries little meaning to embed — it is a lexical problem, not a semantic one",
-            "Embeddings cannot be used with chunk overlap",
-            "BM25 is cheaper to run"
+            "Better embeddings are simply unavailable",
+            "An identifier has little meaning to embed",
+            "Embeddings cannot be used with any overlap",
+            "BM25 is cheaper to run than embeddings"
           ],
           "correct": 1,
           "explain": "The failure is categorical rather than a matter of quality, so it needs a different mechanism."
@@ -277,24 +282,24 @@
               "id": "q_rerank_1a",
               "q": "What is the division of labour between retrieval and reranking?",
               "options": [
-                "Retrieval optimises precision, reranking optimises recall",
-                "Retrieval optimises recall over a wide candidate set; reranking optimises precision over that shortlist",
-                "Both optimise precision, at different granularities",
-                "Retrieval handles keywords, reranking handles semantics"
+                "Retrieval for precision, reranking for recall",
+                "Both aim at precision, at different scales",
+                "Retrieval for keywords, reranking semantics",
+                "Retrieval for recall, reranking for precision"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Cast a wide net cheaply, then judge carefully within it."
             },
             {
               "id": "q_rerank_1b",
               "q": "Why is reranking never applied to the whole corpus?",
               "options": [
-                "It requires embeddings the corpus may not have",
-                "It costs latency per candidate, so it is only affordable over a shortlist",
-                "It cannot score documents it has not seen before",
-                "Corpus-wide reranking would exceed the context window"
+                "It needs embeddings the corpus may lack",
+                "It cannot score documents it has not seen",
+                "Corpus-wide, it would blow the context window",
+                "It costs real latency per candidate scored"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "It is the expensive pass by design. The cheap retriever exists precisely to make its input small."
             }
           ]
@@ -304,8 +309,13 @@
         {
           "id": "r_rerank_1",
           "q": "How large is the candidate set typically pulled before reranking?",
-          "options": ["Top 3–5", "Top 20–50", "Top 500", "The entire corpus"],
-          "correct": 1,
+          "options": [
+            "Top 3–5",
+            "Top 500",
+            "Top 20–50",
+            "The entire corpus"
+          ],
+          "correct": 2,
           "explain": "Wide enough that the right chunk is very likely inside, small enough to score carefully."
         }
       ]
@@ -323,12 +333,12 @@
               "id": "q_ctxret_1a",
               "q": "How does contextual retrieval differ from reranking?",
               "options": [
-                "It runs at query time; reranking runs at index time",
-                "It runs at preprocessing time, once per chunk; reranking runs per query",
+                "It runs once per chunk; reranking per query",
+                "It runs at query time; reranking at index",
                 "It uses BM25; reranking uses embeddings",
-                "It replaces chunking entirely"
+                "It replaces the chunking step entirely"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "Preprocessing-time fix versus query-time fix — pay once per chunk, or every time someone searches."
             },
             {
@@ -336,8 +346,8 @@
               "q": "Why does the situating sentence help BM25 as well as semantic search?",
               "options": [
                 "It shortens the chunk, raising term density",
-                "It adds indexable keywords — company, quarter, division — the chunk did not contain",
-                "It normalises the chunk's vocabulary",
+                "It adds indexable keywords the chunk lacked",
+                "It normalises the whole chunk's vocabulary",
                 "It does not; it only helps semantic search"
               ],
               "correct": 1,
@@ -351,12 +361,12 @@
           "id": "r_ctxret_1",
           "q": "What is passed to the LLM when generating a chunk's situating sentence?",
           "options": [
-            "The chunk alone",
-            "The chunk together with the full document or a summary of it",
-            "The chunk and the user's query",
-            "The chunk and its neighbours"
+            "The chunk on its own, and nothing else",
+            "The chunk and the user's eventual query",
+            "The chunk and its immediate neighbours",
+            "The chunk plus the document or a summary"
           ],
-          "correct": 1,
+          "correct": 3,
           "explain": "The whole document is what supplies the context the chunk lost — the query is not known yet at preprocessing time."
         }
       ]

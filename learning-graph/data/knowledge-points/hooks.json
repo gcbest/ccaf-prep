@@ -15,22 +15,22 @@
               "id": "q_determinism_1a",
               "q": "An agent skips identity verification in 12% of refunds. What class of fix actually closes the gap?",
               "options": [
-                "Add few-shot examples showing verification first",
-                "A programmatic prerequisite that blocks the refund tools until identity is verified",
-                "Move the instruction to the top of the system prompt",
-                "Switch to a larger model"
+                "Add more few-shot examples that show verification first",
+                "Switch to a larger and more instruction-following model",
+                "Move the instruction to the very top of the system prompt",
+                "A programmatic gate blocking refunds until identity is checked"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Every option except the hook leaves a residual failure rate. The whole point of the principle is that \"almost always\" is a different category from \"always.\""
             },
             {
               "id": "q_determinism_1b",
               "q": "Which requirement most clearly belongs in a hook rather than a prompt?",
               "options": [
-                "Prefer a friendly tone with frustrated customers",
+                "Prefer a friendly tone with visibly frustrated customers",
                 "Never issue a refund without a verified customer identity",
-                "Summarise long documents before quoting them",
-                "Ask clarifying questions when the request is vague"
+                "Summarise long documents before quoting anything from them",
+                "Ask clarifying questions whenever the request is vague"
               ],
               "correct": 1,
               "explain": "Three of these are judgment, which prompts are good at. One is an invariant, which prompts cannot guarantee."
@@ -43,12 +43,12 @@
           "id": "r_determinism_1",
           "q": "State the principle in one sentence.",
           "options": [
-            "Hooks are faster than prompts",
-            "A hook is code that runs; a prompt is a request — invariants belong in hooks",
-            "Prompts should always be replaced by hooks",
-            "Hooks are for tools, prompts are for text"
+            "Hooks are faster to execute than prompt instructions",
+            "Prompts should always be replaced with hooks where possible",
+            "A hook is code that runs; a prompt is only a request",
+            "Hooks are for tool calls, prompts are for text output"
           ],
-          "correct": 1,
+          "correct": 2,
           "explain": "Glossary t9. Note the limit: judgment still belongs in the prompt."
         }
       ]
@@ -68,21 +68,21 @@
               "q": "You want code to run every time the agent tries to end its turn. Which event?",
               "options": [
                 "PostToolUse",
-                "Stop",
+                "Notification",
                 "SessionEnd",
-                "Notification"
+                "Stop"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Stop fires when the agent attempts to finish — which is what makes it the place to demand evidence before it can."
             },
             {
               "id": "q_events_1b",
               "q": "Which event fires when a tool call has already failed?",
               "options": [
-                "PreToolUse",
                 "PostToolUse",
+                "PermissionRequest",
                 "PostToolUseFailure",
-                "Notification"
+                "UserPromptSubmit"
               ],
               "correct": 2,
               "explain": "A distinct event, so recovery logic does not have to live inside the success path."
@@ -95,12 +95,12 @@
           "id": "r_events_1",
           "q": "Which of these is NOT a Python HookEvent?",
           "options": [
-            "SubagentStart",
-            "PreCompact",
+            "PermissionRequest",
             "ToolResultReceived",
-            "PermissionRequest"
+            "SubagentStart",
+            "UserPromptSubmit"
           ],
-          "correct": 2,
+          "correct": 1,
           "explain": "The one that sounds plausible is the invented one. PostToolUse is what you would use for that moment."
         }
       ]
@@ -119,22 +119,22 @@
               "id": "q_hookreg_1a",
               "q": "Write the matcher that runs a hook on Write and Edit but not Read.",
               "options": [
+                "Omit matcher and filter inside the callback",
                 "matcher=[\"Write\", \"Edit\"]",
-                "matcher=\"Write|Edit\"",
                 "matcher=\"Write,Edit\"",
-                "Omit matcher and filter inside the callback"
+                "matcher=\"Write|Edit\""
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "A pattern string. Omitting the matcher matches every tool, which is the blunt version."
             },
             {
               "id": "q_hookreg_1b",
               "q": "Which fields let a hook know it is firing inside a subagent rather than the main thread?",
               "options": [
-                "session_id and cwd",
-                "agent_id and agent_type on PreToolUseHookInput",
-                "parent_tool_use_id",
-                "permission_mode"
+                "session_id together with the cwd value",
+                "agent_id and agent_type on the hook input",
+                "parent_tool_use_id on the hook input",
+                "permission_mode on the hook input"
               ],
               "correct": 1,
               "explain": "They appear on PreToolUseHookInput specifically when the call originates inside a subagent."
@@ -151,10 +151,10 @@
               "id": "q_hookreg_2a",
               "q": "A command hook prints a warning to stderr and exits 0. What does Claude see?",
               "options": [
-                "The warning, injected next to the tool result",
-                "Nothing — stderr from an exit-0 hook goes only to the debug log",
-                "The warning as a system message",
-                "A blocked tool call"
+                "The warning, injected beside the tool result",
+                "Nothing — exit-0 stderr goes to the debug log",
+                "The warning, delivered as a system message",
+                "A blocked tool call it must work around now"
               ],
               "correct": 1,
               "explain": "Exit 0 means \"fine, carry on.\" If you want the model to read it, exit 2 and block."
@@ -164,11 +164,11 @@
               "q": "Which exit code blocks the action and sends stderr to Claude?",
               "options": [
                 "0",
+                "Any non-zero code",
                 "1",
-                "2",
-                "Any non-zero code"
+                "2"
               ],
-              "correct": 2,
+              "correct": 3,
               "explain": "Specifically 2. Other non-zero codes are treated as hook failure rather than a deliberate block."
             }
           ]
@@ -179,10 +179,10 @@
           "id": "r_hookreg_1",
           "q": "What is the default hook timeout, and which event differs?",
           "options": [
-            "60 seconds; Stop is 600",
+            "30 seconds by default; PreToolUse is 600",
             "600 seconds; UserPromptSubmit is 30",
-            "30 seconds; PreToolUse is 600",
-            "There is no default"
+            "There is no default; each hook sets its own",
+            "60 seconds by default; Stop is 600"
           ],
           "correct": 1,
           "explain": "600s default, UserPromptSubmit at 30 — because a user is sitting there waiting."
@@ -203,24 +203,24 @@
               "id": "q_direction_1a",
               "q": "Several MCP tools return timestamps in different formats. Where do you fix it?",
               "options": [
-                "In the system prompt, explaining each format",
-                "A PostToolUse hook that normalises the results",
-                "A PreToolUse hook that rewrites the request",
-                "By merging the tools into one"
+                "In the system prompt, explaining each of the formats",
+                "A PreToolUse hook that rewrites the outgoing request",
+                "A PostToolUse hook that normalises the returned results",
+                "By merging the tools into a single wrapper tool"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "\"Different tools return inconsistent formats\" is the tell for PostToolUse. Asking the model to reconcile formats is work it should never have to do."
             },
             {
               "id": "q_direction_1b",
               "q": "Block any refund over $500 and route it to a human. Which hook?",
               "options": [
-                "PostToolUse, checking the refund result",
                 "PreToolUse, denying the outgoing call with a reason",
-                "Stop, refusing to end the turn",
-                "UserPromptSubmit, rejecting the request"
+                "PostToolUse, checking the refund result afterwards",
+                "UserPromptSubmit, rejecting the request up front",
+                "Stop, refusing to let the agent end its turn"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "You want the refund never to happen, not to be detected afterwards. That means intercepting on the way out."
             }
           ]
@@ -232,12 +232,12 @@
           "q": "Give the one-line rule for choosing between PreToolUse and PostToolUse.",
           "options": [
             "Pre for cheap checks, Post for expensive ones",
-            "Pre guards what goes out; Post cleans what comes back",
-            "Pre for MCP tools, Post for built-ins",
-            "Pre blocks, Post cannot block"
+            "Pre for MCP tools, Post for the built-in tools",
+            "Pre guards what goes out; Post what comes back",
+            "Pre can block a call, Post can only observe it"
           ],
-          "correct": 1,
-          "explain": "Direction. And note the last option is wrong — PostToolUse can block with decision: \"block\"."
+          "correct": 2,
+          "explain": "Direction. And note that \"Post can only observe\" is wrong — PostToolUse can block with decision: \"block\"."
         }
       ]
     },
@@ -255,10 +255,10 @@
               "id": "q_decisions_1a",
               "q": "Your PostToolUse hook returns hookSpecificOutput.permissionDecision: \"deny\". What happens?",
               "options": [
-                "The tool result is discarded",
-                "Nothing useful — PostToolUse reads a top-level decision: \"block\", not permissionDecision",
-                "The tool call is retried",
-                "A validation error is raised"
+                "The tool result is discarded before the model sees it",
+                "Nothing useful — PostToolUse reads a top-level decision",
+                "The tool call is retried once with the same arguments",
+                "A validation error is raised and the whole run stops"
               ],
               "correct": 1,
               "explain": "Wrong shape for the event, and it fails quietly. PostToolUse blocks via the top-level decision field."
@@ -268,11 +268,11 @@
               "q": "Which events can only add context and never block?",
               "options": [
                 "PreToolUse and PostToolUse",
-                "SessionStart and SubagentStart",
                 "Stop and SubagentStop",
+                "SessionStart and SubagentStart",
                 "PermissionRequest and PreCompact"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "They fire before there is anything to block. additionalContext is all they offer."
             }
           ]
@@ -287,12 +287,12 @@
               "id": "q_decisions_2a",
               "q": "Why does a deny need permissionDecisionReason?",
               "options": [
-                "It is a required field",
-                "The reason is fed back to the model so it can adapt instead of retrying blindly",
-                "It appears in billing records",
-                "It is required for the exit code to be honoured"
+                "The reason goes back to the model so it can adapt",
+                "It is a required field on the response object",
+                "It shows up in the billing and usage records",
+                "Without it the exit code is not honoured at all"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "A denial is a teaching moment. Without the reason, you get the same call again with different phrasing."
             },
             {
@@ -300,11 +300,11 @@
               "q": "Which permissionDecision value hands the call back to the normal permission flow?",
               "options": [
                 "allow",
-                "ask",
+                "deny",
                 "defer",
-                "deny"
+                "ask"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "ask says \"I have no opinion, use the usual rules.\" defer is different — it parks the call for your own UI."
             }
           ]
@@ -315,12 +315,12 @@
           "id": "r_decisions_1",
           "q": "Which field does a Stop hook use to prevent the agent ending its turn?",
           "options": [
+            "exit code 2 from a command hook",
+            "additionalContext with an explanation",
             "hookSpecificOutput.permissionDecision: \"deny\"",
-            "top-level decision: \"block\" with a reason",
-            "exit code 2",
-            "additionalContext"
+            "A top-level decision: \"block\" with a reason"
           ],
-          "correct": 1,
+          "correct": 3,
           "explain": "Stop is in the top-level-decision family, alongside PostToolUse and UserPromptSubmit."
         }
       ]
@@ -339,12 +339,12 @@
               "id": "q_rewrite_1a",
               "q": "An agent keeps calling a search tool without the tenant filter. Deny, or rewrite?",
               "options": [
-                "Deny with a reason, so the model learns",
-                "Rewrite with updatedInput, adding the filter before the call runs",
-                "Block in PostToolUse after seeing the leaked results",
-                "Remove the tool"
+                "Rewrite with updatedInput, adding the filter first",
+                "Deny with a reason, so the model learns the rule",
+                "Remove the search tool from the agent entirely",
+                "Block in PostToolUse once the results have leaked"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "The call is nearly right. Rewriting gets the work done and closes the hole; denial just costs a turn."
             },
             {
@@ -352,11 +352,11 @@
               "q": "What is the cap on additionalContext, and what happens beyond it?",
               "options": [
                 "1,000 characters; the rest is truncated silently",
-                "10,000 characters; longer output is written to a file and replaced with a preview and path",
-                "100,000 tokens; nothing special happens",
-                "There is no cap"
+                "100,000 tokens; nothing special happens at the cap",
+                "10,000 characters; the overflow spills to a file",
+                "There is no cap; long context is passed through"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "10,000 characters, with a spill-to-file fallback so nothing is lost — the model just has to go and read it."
             }
           ]
@@ -368,11 +368,11 @@
           "q": "Which field replaces a tool's arguments before the tool runs?",
           "options": [
             "additionalContext",
-            "updatedInput",
+            "updatedPermissions",
             "permissionDecisionReason",
-            "updatedPermissions"
+            "updatedInput"
           ],
-          "correct": 1,
+          "correct": 3,
           "explain": "updatedInput, on PreToolUse. updatedPermissions is a canUseTool field and does something else."
         }
       ]
@@ -391,24 +391,24 @@
               "id": "q_defer_1a",
               "q": "A manager must approve a refund in your web UI before the tool runs. Which decision value?",
               "options": [
+                "deny with a reason",
                 "ask",
                 "defer",
-                "deny with a reason",
                 "allow, then undo"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "ask routes to the SDK's permission flow. defer hands the pending call to you."
             },
             {
               "id": "q_defer_1b",
               "q": "What stop_reason accompanies a deferred tool call?",
               "options": [
-                "\"end_turn\"",
-                "\"tool_use\"",
                 "\"tool_deferred\"",
-                "\"max_turns\""
+                "\"end_turn\"",
+                "\"max_turns\"",
+                "\"tool_use\""
               ],
-              "correct": 2,
+              "correct": 0,
               "explain": "A dedicated stop_reason, with the pending call in deferred_tool_use so you know what you are approving."
             }
           ]
@@ -419,12 +419,12 @@
           "id": "r_defer_1",
           "q": "After a deferred call is approved, how do you continue?",
           "options": [
-            "Start a new query with the same prompt",
-            "Resume with the same session_id",
-            "Re-run the hook",
+            "Start a fresh query with the same prompt text",
+            "Re-run the hook that deferred the call in the first place",
+            "Resume with the same session_id you were given",
             "Call the tool yourself and inject the result"
           ],
-          "correct": 1,
+          "correct": 2,
           "explain": "Same session, picked up where it stopped."
         }
       ]
@@ -443,22 +443,22 @@
               "id": "q_modes_1a",
               "q": "A nightly unattended agent must never prompt and never do anything you did not pre-approve. Which mode?",
               "options": [
-                "bypassPermissions",
-                "dontAsk",
                 "auto",
-                "acceptEdits"
+                "acceptEdits",
+                "bypassPermissions",
+                "dontAsk"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "dontAsk: no prompts, and anything not pre-approved is denied. bypassPermissions also never prompts — by allowing instead."
             },
             {
               "id": "q_modes_1b",
               "q": "What does bypassPermissions still honour?",
               "options": [
-                "Nothing; it skips every check",
-                "Explicit ask rules, which still prompt",
-                "allowedTools only",
-                "Hooks only"
+                "Nothing; it skips every check there is",
+                "Explicit ask rules, which will still prompt",
+                "The allowedTools list, and nothing else",
+                "Hooks, but none of the permission rules"
               ],
               "correct": 1,
               "explain": "And scoped disallowedTools rules like \"Bash(rm *)\" also still deny — bypass is not total."
@@ -471,12 +471,12 @@
           "id": "r_modes_1",
           "q": "dontAsk vs. bypassPermissions in one line each.",
           "options": [
-            "Both skip prompts and allow everything",
-            "dontAsk never prompts and denies anything unapproved; bypassPermissions skips checks and allows",
-            "dontAsk allows; bypassPermissions denies",
-            "They are aliases"
+            "dontAsk denies the unapproved; bypass allows it",
+            "dontAsk allows everything; bypassPermissions denies",
+            "Both skip prompts and allow whatever is asked for",
+            "They are two names for exactly the same mode"
           ],
-          "correct": 1,
+          "correct": 0,
           "explain": "Same silence, opposite defaults. A classic confusable pair."
         }
       ]
@@ -495,22 +495,22 @@
               "id": "q_canuse_1a",
               "q": "You log every tool call from canUseTool and the log has holes. Why?",
               "options": [
-                "canUseTool is sampled for performance",
-                "Calls approved by allowedTools, settings rules, or a permissive mode never reach it",
-                "Only MCP tools invoke canUseTool",
-                "Logging must be async or entries are dropped"
+                "canUseTool is sampled when call volume is high",
+                "Only MCP tools ever invoke the canUseTool callback",
+                "Logging has to be async or entries get dropped",
+                "Calls auto-approved by rules or mode never reach it"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "It is a prompt replacement, not an interceptor. An audit trail belongs in PreToolUse."
             },
             {
               "id": "q_canuse_1b",
               "q": "Which of these reaches canUseTool even when the tool would otherwise be allowed?",
               "options": [
-                "Bash, when listed in allowedTools",
-                "AskUserQuestion",
-                "Read, in acceptEdits mode",
-                "Any tool in bypassPermissions mode"
+                "Bash, when it is listed in allowedTools",
+                "AskUserQuestion, in any permission mode",
+                "Read, running under acceptEdits mode",
+                "Any tool at all in bypassPermissions mode"
               ],
               "correct": 1,
               "explain": "AskUserQuestion, MCP tools marked requiresUserInteraction, and org-set-to-ask connector tools are the three exceptions."
@@ -523,12 +523,12 @@
           "id": "r_canuse_1",
           "q": "canUseTool vs. a PreToolUse hook — what is the difference in when they fire?",
           "options": [
+            "canUseTool fires only on a prompt; PreToolUse on every call",
             "canUseTool fires on every call; PreToolUse only on writes",
-            "canUseTool fires only when the flow resolves to a prompt; PreToolUse fires on every call",
-            "They fire identically",
-            "PreToolUse fires only in default mode"
+            "They fire at exactly the same point for the same calls",
+            "PreToolUse fires only in default mode; canUseTool always"
           ],
-          "correct": 1,
+          "correct": 0,
           "explain": "Another confusable pair, and the reason audit and enforcement code belongs in the hook."
         }
       ]
@@ -547,24 +547,24 @@
               "id": "q_allow_1a",
               "q": "You put only Read and Grep in allowedTools, in default mode. Can the agent write a file?",
               "options": [
-                "No — allowedTools is a whitelist",
-                "Yes — Write falls through to the permission mode, which may prompt or allow it",
-                "No — unlisted tools are removed from context",
-                "Only if a hook allows it"
+                "No — allowedTools acts as a strict whitelist",
+                "No — unlisted tools are removed from the context",
+                "Only if a hook explicitly allows the write",
+                "Yes — Write falls through to the permission mode"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "The single most common misreading in this whole section. Auto-approval is not restriction."
             },
             {
               "id": "q_allow_1b",
               "q": "Which rule still denies matching calls under bypassPermissions?",
               "options": [
-                "allowedTools: [\"Read\"]",
                 "disallowedTools: [\"Bash(rm *)\"]",
+                "allowedTools: [\"Read\"]",
                 "permissionMode: \"plan\"",
-                "A canUseTool returning deny"
+                "A canUseTool callback returning deny"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "Scoped disallow rules survive bypass. A bare \"Bash\" would remove the tool entirely, which also works but costs you the tool."
             }
           ]
@@ -575,12 +575,12 @@
           "id": "r_allow_1",
           "q": "What is the difference between disallowedTools: [\"Bash\"] and disallowedTools: [\"Bash(rm *)\"]?",
           "options": [
-            "No difference; the second is just more specific",
-            "The bare name removes the tool from context; the scoped rule keeps the tool and denies matching calls in every mode",
-            "The scoped rule only applies in default mode",
-            "The bare name prompts; the scoped rule denies"
+            "No difference; the second one is just more specific",
+            "The bare name prompts; the scoped rule denies outright",
+            "The bare name drops the tool; the scoped rule polices it",
+            "The scoped rule only takes effect in default mode"
           ],
-          "correct": 1,
+          "correct": 2,
           "explain": "One takes the tool away, the other polices it. Both are real restriction, unlike allowedTools."
         }
       ]

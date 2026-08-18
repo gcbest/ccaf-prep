@@ -15,10 +15,10 @@
               "id": "q_evalwhy_1a",
               "q": "What does passing the handful of cases you invented actually establish?",
               "options": [
-                "That the prompt is production-ready for typical input",
-                "Only that it does not fail on cases you already thought of",
+                "That the prompt is ready for typical input",
+                "Only that it survives the cases you imagined",
                 "That the remaining failure rate is under 5%",
-                "That the prompt generalises, since the cases were representative"
+                "That it generalises, the cases being typical"
               ],
               "correct": 1,
               "explain": "Cases you invented are drawn from your imagination, not from production traffic. They cannot speak for what you did not imagine."
@@ -27,12 +27,12 @@
               "id": "q_evalwhy_1b",
               "q": "How do prompt engineering and prompt evaluation differ?",
               "options": [
-                "Engineering is manual, evaluation is automated — otherwise the same activity",
-                "Engineering is techniques for writing better prompts; evaluation is measuring how well one performs",
-                "Engineering happens before deployment, evaluation after",
-                "Engineering applies to system prompts, evaluation to user prompts"
+                "Engineering is manual, evaluation automated",
+                "Engineering is pre-deploy, evaluation is after",
+                "Engineering writes prompts; evaluation measures",
+                "Engineering is for system, evaluation for user"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "One writes, the other measures. The cycle alternates between them."
             }
           ]
@@ -43,12 +43,12 @@
           "id": "r_evalwhy_1",
           "q": "What is the stated cost of the third path?",
           "options": [
-            "It requires a more capable model",
-            "More upfront work and cost, in exchange for much higher confidence",
-            "It cannot be used with prompts containing examples",
+            "More upfront work and cost, for confidence",
+            "It requires a much more capable model",
+            "It cannot handle prompts with examples",
             "It only works for classification tasks"
           ],
-          "correct": 1,
+          "correct": 0,
           "explain": "The trade is explicit: effort and spend now, confidence later."
         }
       ]
@@ -65,20 +65,25 @@
             {
               "id": "q_evalpipe_1a",
               "q": "Which artefact persists across iterations rather than being rebuilt?",
-              "options": ["The prompt", "The dataset", "The grader's reasoning", "The score threshold"],
-              "correct": 1,
+              "options": [
+                "The prompt you are refining",
+                "The grader's own reasoning",
+                "The score threshold you set",
+                "The dataset of test cases"
+              ],
+              "correct": 3,
               "explain": "The dataset is built once and reused, which is what makes it a regression suite."
             },
             {
               "id": "q_evalpipe_1b",
               "q": "What does re-scoring the same dataset after every prompt change catch?",
               "options": [
-                "Rate-limit errors",
-                "A change that fixes one case while breaking others",
-                "Drift in the model itself",
-                "Cases missing from the dataset"
+                "A change fixing one case, breaking others",
+                "Rate-limit errors during a long run",
+                "Drift in the underlying model itself",
+                "Cases missing from the dataset entirely"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "Regression. Without a fixed dataset, a net-negative change can look like a win."
             }
           ]
@@ -89,18 +94,23 @@
           "id": "r_evalpipe_1",
           "q": "Put the pipeline in order: grade, draft, run through Claude, build dataset, revise.",
           "options": [
-            "draft → build dataset → run through Claude → grade → revise",
             "build dataset → draft → grade → run through Claude → revise",
             "draft → run through Claude → build dataset → grade → revise",
+            "draft → build dataset → run through Claude → grade → revise",
             "build dataset → run through Claude → draft → grade → revise"
           ],
-          "correct": 0,
+          "correct": 2,
           "explain": "Draft, dataset, run, grade, revise — then loop back to the run."
         },
         {
           "id": "r_evalpipe_2",
           "q": "What score range does the course use for graders?",
-          "options": ["Pass/fail", "1–10", "0–100", "A letter grade"],
+          "options": [
+            "Pass/fail",
+            "1–10",
+            "0–100",
+            "A letter grade"
+          ],
           "correct": 1,
           "explain": "Typically 1–10, averaged across the dataset."
         }
@@ -119,10 +129,10 @@
               "id": "q_evalds_1a",
               "q": "Which model generates the eval dataset for a Sonnet prompt, and why?",
               "options": [
-                "Sonnet, so the cases match the model under test",
-                "Haiku, because generating cases is not the task being evaluated",
-                "Opus, because case quality determines eval quality",
-                "The same model, to avoid distribution mismatch"
+                "Sonnet, so cases match the model under test",
+                "Haiku — generating cases is not the task",
+                "Opus, since case quality drives eval quality",
+                "The same model, to avoid any mismatch"
               ],
               "correct": 1,
               "explain": "Generation is a separate, cheap task. Applying the cheapest-model rule here is the point."
@@ -131,12 +141,12 @@
               "id": "q_evalds_1b",
               "q": "How large should the dataset be during active prompt iteration?",
               "options": [
-                "Hundreds, so every change is measured reliably",
-                "Two or three cases, so iteration stays fast — scale up for final validation",
-                "Exactly 20–30, matching the model-selection eval",
-                "As large as the rate limit allows"
+                "Hundreds, so every change is measured well",
+                "Exactly 20–30, as for the model selection",
+                "As large as the rate limit will let you go",
+                "Two or three cases, so iteration stays fast"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Small while iterating, large to validate. A slow eval is an eval that gets skipped."
             }
           ]
@@ -151,12 +161,12 @@
               "id": "q_evalds_2a",
               "q": "What is the per-case `format` field for?",
               "options": [
+                "Telling the code grader which validator",
                 "Telling Claude which format to produce",
-                "Telling a code grader which validator to apply to that output",
                 "Recording which model produced the case",
-                "Selecting a temperature per case"
+                "Selecting a temperature for each case"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "It routes the output to the right validator — json.loads, ast.parse, re.compile."
             },
             {
@@ -164,9 +174,9 @@
               "q": "Which three validators does the course name for code grading?",
               "options": [
                 "json.loads, ast.parse, re.compile",
-                "pydantic, mypy, black",
+                "pydantic, mypy, and black",
                 "jsonschema, pytest, flake8",
-                "eval, exec, compile"
+                "eval, exec, and compile"
               ],
               "correct": 0,
               "explain": "One per format: JSON, Python, regular expression."
@@ -179,12 +189,12 @@
           "id": "r_evalds_1",
           "q": "Why generate a dataset with prefill and stop sequences rather than plain prompting?",
           "options": [
-            "It is cheaper per token",
-            "It yields JSON clean enough to parse without stripping commentary",
-            "It is the only way to get more than three cases",
-            "It guarantees the cases are representative"
+            "It is noticeably cheaper per token used",
+            "It is the only way to get more than three",
+            "It guarantees the cases are representative",
+            "It yields JSON clean enough to just parse"
           ],
-          "correct": 1,
+          "correct": 3,
           "explain": "Clean parsing. The technique is the structured-output one, applied to a generation task."
         }
       ]
@@ -202,24 +212,24 @@
               "id": "q_codegrade_1a",
               "q": "Which property can a code grader check?",
               "options": [
-                "Whether the answer is helpful",
+                "Whether the answer is genuinely helpful",
+                "Whether the reasoning behind it is sound",
                 "Whether the output parses as valid JSON",
-                "Whether the tone suits the audience",
-                "Whether the reasoning is sound"
+                "Whether the tone suits its intended audience"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "Syntax validity is exactly its brief. The other three need a model or a human."
             },
             {
               "id": "q_codegrade_1b",
               "q": "Why is a syntax code grader scored 10 or 0 rather than on a scale?",
               "options": [
-                "To make averaging with a model score easier",
-                "Because syntax either parses or it does not — there is no partial validity",
-                "Because the scale is reserved for model graders",
-                "To penalise malformed output more heavily"
+                "To make averaging with a model score easy",
+                "The scale is reserved for model graders",
+                "To penalise malformed output more heavily",
+                "Syntax parses or it does not; no middle"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Binary property, binary score."
             }
           ]
@@ -229,8 +239,13 @@
         {
           "id": "r_codegrade_1",
           "q": "An output is beautifully argued and does not parse. What does a code grader give it?",
-          "options": ["A middling score", "0", "10", "It skips the case"],
-          "correct": 1,
+          "options": [
+            "A middling score",
+            "10",
+            "0",
+            "It skips the case"
+          ],
+          "correct": 2,
           "explain": "0. The grader sees the parse failure and nothing else — which is precisely why you combine it with a model score."
         }
       ]
@@ -249,21 +264,21 @@
               "q": "Every output in your eval scores between 5 and 7. What is most likely wrong?",
               "options": [
                 "The dataset is too small to separate them",
-                "The grading prompt asks for a bare score, so the model defaults to the middle",
-                "The temperature of the graded model is too low",
-                "The outputs genuinely are all mediocre"
+                "The graded model's temperature is too low",
+                "The outputs genuinely are all mediocre",
+                "The grading prompt asks for a bare score"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "A flat band around 6 is the documented signature of a grader asked for a number and nothing else."
             },
             {
               "id": "q_modelgrade_1b",
               "q": "What should a model grader be asked to return?",
               "options": [
-                "A score only, for consistency",
-                "Strengths, weaknesses, reasoning, and a score",
-                "A pass/fail verdict and a rewritten answer",
-                "A score and a confidence interval"
+                "A score only, for consistency's sake",
+                "Strengths, weaknesses, reasoning, score",
+                "A pass/fail verdict plus a rewrite",
+                "A score and its confidence interval"
               ],
               "correct": 1,
               "explain": "All four. The reasoning is what stops the score collapsing to the middle."
@@ -276,24 +291,24 @@
           "id": "r_modelgrade_1",
           "q": "What should be stored per test case from a model grader?",
           "options": [
-            "The score only",
             "The score and the reasoning",
-            "The full graded output and the score",
+            "The score, and nothing else",
+            "The graded output and the score",
             "The score and the grader's model id"
           ],
-          "correct": 1,
+          "correct": 0,
           "explain": "Score plus reasoning, averaged across the dataset — the reasoning is what tells you where a prompt is failing."
         },
         {
           "id": "r_modelgrade_2",
           "q": "Which qualities is a model grader suited to judging?",
           "options": [
-            "Syntax validity and length",
-            "Response quality, instruction-following, completeness, safety",
-            "Token cost and latency",
-            "Schema conformance"
+            "Quality, instruction-following, safety",
+            "Syntax validity and output length",
+            "Token cost and end-to-end latency",
+            "Schema conformance of the output"
           ],
-          "correct": 1,
+          "correct": 0,
           "explain": "The judgement calls. Anything mechanically checkable belongs to the code grader, which is cheaper and never wrong."
         }
       ]
@@ -312,23 +327,23 @@
               "q": "Outputs must be valid Python and must actually solve the problem. How do you grade that?",
               "options": [
                 "A model grader, since it can read code",
-                "A code grader for syntax and a model grader for quality, averaged",
-                "A human grader, since both criteria are subjective",
-                "A code grader with a stricter validator"
+                "A human grader; both criteria are subjective",
+                "A code grader with a much stricter validator",
+                "Code for syntax, model for quality, averaged"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Two criteria of different kinds, so two graders — combined, e.g. (model_score + syntax_score) / 2."
             },
             {
               "id": "q_gradechoice_1b",
               "q": "What is the human grader's stated trade-off?",
               "options": [
-                "Cheapest but least accurate",
-                "Most flexible — good at nuance, depth and relevance — but slow and tedious",
-                "Fastest for large datasets",
-                "Only usable for safety review"
+                "Cheapest but also the least accurate",
+                "The fastest option for large datasets",
+                "Most flexible on nuance, but very slow",
+                "Only usable for a final safety review"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "Flexibility at the cost of throughput, which is why it is reserved for nuance."
             }
           ]
@@ -339,10 +354,10 @@
           "id": "r_gradechoice_1",
           "q": "Why average a code score with a model score rather than using whichever is lower?",
           "options": [
-            "Averaging is cheaper to compute",
-            "Each grader's blind spot is the other's specialty, so the average reflects both dimensions",
+            "Averaging is simply cheaper to compute",
+            "Each grader's blind spot is the other's",
             "The minimum would always be the code score",
-            "Averaging keeps scores inside 1–10"
+            "Averaging keeps every score inside 1–10"
           ],
           "correct": 1,
           "explain": "You are measuring two different things and want both represented, not the worse of them."

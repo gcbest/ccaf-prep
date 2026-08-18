@@ -15,10 +15,10 @@
               "id": "q_mgd_1a",
               "q": "What replaces the while loop when using managed agents?",
               "options": [
-                "A callback registered with the SDK",
-                "An event stream — you send events in and read events out",
-                "A polling endpoint you check for completion",
-                "Nothing; you still write the loop, it just runs remotely"
+                "A callback you register with the SDK",
+                "An event stream — events in, events out",
+                "A polling endpoint you check regularly",
+                "Nothing; the loop just runs remotely"
               ],
               "correct": 1,
               "explain": "The loop runs inside the session. Your app's relationship to it is a stream of events."
@@ -27,12 +27,12 @@
               "id": "q_mgd_1b",
               "q": "How do you get access to managed agents?",
               "options": [
-                "Request access through the Console",
-                "They are enabled by default for every API account",
-                "They require an enterprise agreement",
-                "They are available only through Bedrock and Vertex"
+                "Request access through the Console first",
+                "They require an enterprise agreement first",
+                "Enabled by default on every API account",
+                "Only available via Bedrock and Vertex"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "On by default, for everyone."
             }
           ]
@@ -47,24 +47,24 @@
               "id": "q_mgd_2a",
               "q": "A migration agent runs for two hours across hundreds of files and must survive a dropped connection. Managed or manual?",
               "options": [
-                "Manual — you need control over a task that long",
-                "Managed — long-running, many files, and resumability are its three conditions",
+                "Manual — you need control over a task this long",
                 "Manual, with a resume token you implement",
-                "Either; the choice is about cost only"
+                "Managed — long-running, many files, resumable",
+                "Either; the choice here is about cost alone"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "All three conditions at once. Resumability in particular is expensive to build and free here."
             },
             {
               "id": "q_mgd_2b",
               "q": "When is a manual loop still the right choice?",
               "options": [
-                "When the task is simple enough not to need tools",
-                "When you want full control",
-                "When the agent must run in your own region",
-                "When the conversation exceeds the context window"
+                "When the task needs no tools of any kind",
+                "When the agent must run in your region",
+                "When the conversation exceeds the window",
+                "When you want full control of the loop"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "Control is what you give up by hosting, and it is the stated reason to keep the loop yourself."
             }
           ]
@@ -75,9 +75,9 @@
           "id": "r_mgd_1",
           "q": "What does the container an agent runs in provide?",
           "options": [
-            "File system access, bash execution, and web search",
-            "A GPU for local inference",
-            "A persistent database",
+            "File system, bash execution, and web search",
+            "A GPU for running inference locally",
+            "A persistent database for the agent",
             "Direct access to your production network"
           ],
           "correct": 0,
@@ -98,19 +98,24 @@
               "id": "q_prim_1a",
               "q": "Which primitive is reusable across many runs, and which is a single run?",
               "options": [
-                "Session is reusable; agent is a single run",
-                "Agent is reusable; session is a single run",
-                "Environment is reusable; agent is a single run",
-                "Both agent and session are reusable"
+                "Session is reusable; agent is one run",
+                "Environment is reusable; agent is one run",
+                "Agent is reusable; session is one run",
+                "Both the agent and session are reusable"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "The agent is the persona you define once. Each session is one run of it."
             },
             {
               "id": "q_prim_1b",
               "q": "Which primitive is described as the unit of work?",
-              "options": ["Agent", "Environment", "Session", "Event"],
-              "correct": 2,
+              "options": [
+                "Session",
+                "Agent",
+                "Environment",
+                "Event"
+              ],
+              "correct": 0,
               "explain": "A session is one run of one agent in one environment — the thing you start, track, and finish."
             }
           ]
@@ -121,10 +126,10 @@
           "id": "r_prim_1",
           "q": "What does the environment primitive hold?",
           "options": [
-            "The system prompt and toolset",
-            "Where the agent runs — cloud or local — and its networking config",
-            "The event history for a run",
-            "The rubric the output is graded against"
+            "The system prompt and the agent toolset",
+            "Where it runs, plus its networking config",
+            "The complete event history for that run",
+            "The rubric that the output is graded on"
           ],
           "correct": 1,
           "explain": "Location and networking. Persona lives on the agent."
@@ -134,11 +139,11 @@
           "q": "Name the four primitives in order.",
           "options": [
             "Environment, agent, session, events",
-            "Agent, environment, session, events",
             "Agent, session, environment, events",
-            "Session, agent, environment, events"
+            "Session, agent, environment, events",
+            "Agent, environment, session, events"
           ],
-          "correct": 1,
+          "correct": 3,
           "explain": "Agent, environment, session, events — which is also the order you create them in."
         }
       ]
@@ -156,19 +161,24 @@
               "id": "q_order_1a",
               "q": "Your managed agent runs correctly but your app sees none of the first few events. What did you get wrong?",
               "options": [
+                "You sent the kickoff before opening the stream",
                 "You created the session before the environment",
-                "You sent the kickoff message before opening the event stream",
                 "You did not subscribe to agent.tool_use events",
-                "You polled instead of streaming"
+                "You polled the session instead of streaming"
               ],
-              "correct": 1,
+              "correct": 0,
               "explain": "The stream only delivers what happens after it opens. Open first, then kick off."
             },
             {
               "id": "q_order_1b",
               "q": "Which event tells you the agent has finished?",
-              "options": ["agent.message", "agent.tool_use", "session.status_idle", "session.complete"],
-              "correct": 2,
+              "options": [
+                "agent.message",
+                "agent.tool_use",
+                "session.complete",
+                "session.status_idle"
+              ],
+              "correct": 3,
               "explain": "session.status_idle — the agent has nothing left to do."
             }
           ]
@@ -179,10 +189,10 @@
           "id": "r_order_1",
           "q": "What does the bundled agent toolset provide?",
           "options": [
-            "File, bash and web tools, without writing your own",
-            "A set of MCP server connections",
-            "Pre-built rubrics and graders",
-            "Client-side tool schemas for your functions"
+            "File, bash and web tools, ready-made",
+            "A set of MCP server connections to use",
+            "Pre-built rubrics and output graders",
+            "Client-side schemas for your functions"
           ],
           "correct": 0,
           "explain": "The common agent tools, ready-made — which is what makes the smallest managed agent genuinely small."
@@ -190,7 +200,12 @@
         {
           "id": "r_order_2",
           "q": "Which event carries the name of the tool the agent picked?",
-          "options": ["agent.message", "agent.tool_use", "session.status_idle", "agent.action"],
+          "options": [
+            "agent.message",
+            "agent.tool_use",
+            "session.status_idle",
+            "agent.action"
+          ],
           "correct": 1,
           "explain": "agent.tool_use. agent.message carries Claude's text."
         }
@@ -210,11 +225,11 @@
               "q": "Your managed agent must never post to Slack without sign-off, and must remember last week's prices. Which two building blocks?",
               "options": [
                 "Rubrics and multi-agent coordination",
-                "Permissions policies and memory",
-                "Memory and rubrics",
-                "Permissions policies and multi-agent coordination"
+                "Memory and rubrics used together",
+                "Permissions and multi-agent coordination",
+                "Permissions policies plus memory"
               ],
-              "correct": 1,
+              "correct": 3,
               "explain": "A permissions policy pauses the sensitive action; memory carries knowledge across sessions."
             },
             {
@@ -222,11 +237,11 @@
               "q": "Why does a grader get its own context window?",
               "options": [
                 "To keep the producer's context small",
-                "So it judges the output independently rather than having watched the reasoning that produced it",
-                "Because graders run on a different model tier",
-                "To allow the grade to be cached"
+                "Because graders run on a different tier",
+                "So it judges independently of the reasoning",
+                "To allow the grade itself to be cached"
               ],
-              "correct": 1,
+              "correct": 2,
               "explain": "Independence. A grader that saw every justification has already been argued into agreement."
             }
           ]
@@ -237,10 +252,10 @@
           "id": "r_blocks2_1",
           "q": "In managed multi-agent coordination, how do specialists share their work?",
           "options": [
-            "Through a shared context window",
-            "Over a shared file system, with the coordinator synthesising their findings",
+            "Through a single shared context window",
+            "Over a shared file system the coordinator reads",
             "By passing messages directly to each other",
-            "Through a shared memory store only"
+            "Through a shared memory store, and only that"
           ],
           "correct": 1,
           "explain": "Own context windows, shared file system, coordinator synthesises — hub-and-spoke, with the file system as the medium."
@@ -249,12 +264,12 @@
           "id": "r_blocks2_2",
           "q": "Can managed sessions run in parallel?",
           "options": [
-            "No — one session per agent at a time",
-            "Yes — multiple tasks at once, each in its own container",
-            "Only within the same environment",
-            "Only for read-only agents"
+            "No — only one session per agent at a time",
+            "Only within one and the same environment",
+            "Only for the agents that are read-only",
+            "Yes — many at once, each in its container"
           ],
-          "correct": 1,
+          "correct": 3,
           "explain": "Parallel sessions, isolated containers — which is much of the point of hosting them."
         }
       ]
