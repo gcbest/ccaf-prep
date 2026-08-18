@@ -1,0 +1,397 @@
+{
+  "$comment": "Teaching content for cl_orchestration. The workflow-versus-agent distinction is the most heavily tested idea in Section 3.",
+  "cluster": "cl_orchestration",
+  "topics": [
+    {
+      "topicId": "mt_workflow_vs_agent",
+      "knowledgePoints": [
+        {
+          "id": "kp_wva_1",
+          "name": "One question separates them",
+          "keyPrerequisites": ["mt_agent_loop"],
+          "teach": "<p><strong>Workflow</strong> — a predefined series of Claude calls solving a <em>known</em> problem. You can picture the exact steps ahead of time.</p><p><strong>Agent</strong> — Claude gets a goal and a set of tools and figures out its own path. Used when you <em>don't</em> know what task or parameters will come in.</p><p class='kp-key'>Can you picture the steps in advance? Yes → workflow. No → agent.</p><p>Everything else follows from that. A workflow's steps are known, so they can be tested individually, optimised individually, and reasoned about when they fail. An agent's cannot, because they do not exist until it runs.</p>",
+          "questions": [
+            {
+              "id": "q_wva_1a",
+              "q": "What single question separates a workflow design from an agent design?",
+              "options": [
+                "Does the task need more than one Claude call?",
+                "Can you picture the exact steps in advance?",
+                "Does the task require tools?",
+                "Is the output structured or free-form?"
+              ],
+              "correct": 1,
+              "explain": "Knowability of the steps. Both may use several calls and both may use tools."
+            },
+            {
+              "id": "q_wva_1b",
+              "q": "How is a workflow defined?",
+              "options": [
+                "Any pipeline with more than three Claude calls",
+                "A predefined series of Claude calls solving a known problem",
+                "A loop that terminates on a fixed iteration count",
+                "A single call with process steps in the prompt"
+              ],
+              "correct": 1,
+              "explain": "Predefined and known — that is what makes the steps designable ahead of time."
+            }
+          ]
+        },
+        {
+          "id": "kp_wva_2",
+          "name": "The trade, and the default",
+          "keyPrerequisites": [],
+          "teach": "<table class='kp-table'><tr><th></th><th>Benefits</th><th>Downsides</th></tr><tr><td><strong>Workflows</strong></td><td>higher accuracy (focus per subtask), easier to test and evaluate, more predictable, better for well-defined problems</td><td>less flexible, more constrained UX, more upfront design work</td></tr><tr><td><strong>Agents</strong></td><td>flexible UX, can combine tools in unexpected ways, handles novel situations, can ask for more input</td><td>lower success rate, harder to test and instrument, less predictable</td></tr></table><p class='kp-key'>Prefer workflows where possible. Only reach for agents when truly required.</p><p>The course's argument for the default is blunt: <strong>users want reliability, not a fancy agent</strong>. “Lower success rate” is not a footnote — it is the price of the flexibility, paid on every request including the ordinary ones.</p>",
+          "questions": [
+            {
+              "id": "q_wva_2a",
+              "q": "Which does the course recommend by default?",
+              "options": [
+                "Agents, since they handle more cases",
+                "Workflows, reaching for agents only when truly required",
+                "Whichever is cheaper to run",
+                "Agents for user-facing work, workflows for batch"
+              ],
+              "correct": 1,
+              "explain": "Workflows by default. Users want reliability, and agents trade success rate for flexibility."
+            },
+            {
+              "id": "q_wva_2b",
+              "q": "Which is a stated downside of workflows?",
+              "options": [
+                "Lower success rate",
+                "More upfront design work and a more constrained UX",
+                "Harder to test",
+                "Cannot use tools"
+              ],
+              "correct": 1,
+              "explain": "You pay in design effort and flexibility. Testability and predictability are what you get back."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_wva_1",
+          "q": "Which is a benefit unique to agents?",
+          "options": [
+            "Higher accuracy per subtask",
+            "Can combine tools in unexpected ways and handle novel situations",
+            "Easier to evaluate",
+            "More predictable behaviour"
+          ],
+          "correct": 1,
+          "explain": "Novelty handling is the thing you are buying. The other three are workflow advantages."
+        },
+        {
+          "id": "r_wva_2",
+          "q": "Why are agents harder to instrument than workflows?",
+          "options": [
+            "They run on a different endpoint",
+            "The steps are not known ahead of time, so there is no fixed set of stages to measure",
+            "Their tool calls are executed server-side",
+            "They do not emit stop_reason"
+          ],
+          "correct": 1,
+          "explain": "You cannot put a metric on a stage that does not exist until runtime."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_parallelization",
+      "knowledgePoints": [
+        {
+          "id": "kp_par_1",
+          "name": "Fan out, then aggregate",
+          "keyPrerequisites": ["mt_workflow_vs_agent"],
+          "teach": "<p><strong>Parallelization</strong> splits one complex task into multiple <em>independent</em> sub-tasks, runs them <strong>simultaneously</strong>, and <strong>aggregates</strong> the results into a final decision.</p><pre class='kp-code'>            ┌── credit check ────┐\nloan app ───┼── fraud check ─────┼──→ aggregate ──→ decision\n            └── affordability ───┘</pre><p>The sub-tasks need <strong>not be identical</strong> — they are just meaningfully independent evaluations of the same thing.</p><p class='kp-key'>Use it when a decision can be broken into independent evaluations. The aggregation step is part of the pattern, not an afterthought.</p><p>Two things it buys: latency, since the branches run at once, and accuracy, since each branch is a focused prompt rather than one prompt asked to weigh three concerns at the same time.</p>",
+          "questions": [
+            {
+              "id": "q_par_1a",
+              "q": "A loan decision needs a credit check, a fraud check, and an affordability check. Which pattern, and what is the final step?",
+              "options": [
+                "Routing; the final step is selecting a pipeline",
+                "Parallelization; the final step is aggregating the results into a decision",
+                "Chaining; the final step is a revision pass",
+                "Evaluator–optimizer; the final step is a grade"
+              ],
+              "correct": 1,
+              "explain": "Independent evaluations run at once, then aggregated. Aggregation is part of the pattern."
+            },
+            {
+              "id": "q_par_1b",
+              "q": "Must parallelized sub-tasks be identical?",
+              "options": [
+                "Yes — the same prompt run on different inputs",
+                "No — they need only be meaningfully independent",
+                "Yes, unless they use different models",
+                "No, but they must return the same output schema"
+              ],
+              "correct": 1,
+              "explain": "Independence is the requirement, not sameness."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_par_1",
+          "q": "Besides latency, what does parallelization buy?",
+          "options": [
+            "Lower token cost",
+            "Accuracy, since each branch is a focused prompt rather than one prompt weighing everything",
+            "Guaranteed structured output",
+            "Fewer round trips to the API"
+          ],
+          "correct": 1,
+          "explain": "Focus per subtask — the same reason workflows generally beat one large prompt."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_chaining",
+      "knowledgePoints": [
+        {
+          "id": "kp_chain_1",
+          "name": "The long-prompt problem",
+          "keyPrerequisites": ["mt_workflow_vs_agent"],
+          "teach": "<p><strong>Chaining</strong> breaks a large task into smaller <strong>sequential</strong> subtasks that build on each other.</p><p>It exists to solve one specific failure:</p><p class='kp-key'>A single prompt with many constraints often gets some of them partially ignored.</p><p>Eight rules in one prompt reliably produces output obeying five. Not because any rule was unclear, but because attention is finite and they compete.</p><p>The two-step fix:</p><ol><li><strong>Generate</strong> the content — imperfectly, that is expected.</li><li><strong>Revise</strong> in a focused pass targeting specific fixes only.</li></ol><p>The second call is not the first call again. It carries the output and a short list of what to check, so nothing competes for attention.</p>",
+          "questions": [
+            {
+              "id": "q_chain_1a",
+              "q": "A prompt with eight rules obeys five of them. What pattern fixes it?",
+              "options": [
+                "Parallelization — evaluate each rule independently",
+                "Chaining — generate first, then a focused revision pass targeting specific fixes",
+                "Routing — send each rule to its own pipeline",
+                "Evaluator–optimizer — grade until all eight pass"
+              ],
+              "correct": 1,
+              "explain": "Chaining is the named fix for the long-prompt problem: generate, then revise with focus."
+            },
+            {
+              "id": "q_chain_1b",
+              "q": "What does the second call in a two-step chain do?",
+              "options": [
+                "Re-runs the original prompt at a lower temperature",
+                "Takes the first output and revises it against specific targeted fixes",
+                "Grades the first output and returns a score",
+                "Splits the output into sections for parallel processing"
+              ],
+              "correct": 1,
+              "explain": "A focused revision pass. Only a few concerns compete for attention, so they all get it."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_chain_1",
+          "q": "How does chaining differ from parallelization?",
+          "options": [
+            "Chaining is sequential and each step builds on the last; parallelization runs independent steps at once",
+            "Chaining uses one model, parallelization uses several",
+            "Chaining is for known steps, parallelization for unknown ones",
+            "Chaining aggregates results, parallelization does not"
+          ],
+          "correct": 0,
+          "explain": "Sequence and dependence versus simultaneity and independence."
+        },
+        {
+          "id": "r_chain_2",
+          "q": "Why does one prompt with many constraints drop some of them?",
+          "options": [
+            "The API truncates long prompts",
+            "The constraints compete for finite attention, so some are only partially applied",
+            "Later instructions overwrite earlier ones",
+            "Constraints past a count of five are ignored"
+          ],
+          "correct": 1,
+          "explain": "Competition, not truncation — which is why splitting the work rather than rewording it is the fix."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_routing",
+      "knowledgePoints": [
+        {
+          "id": "kp_route_1",
+          "name": "Classify, then send down exactly one path",
+          "keyPrerequisites": ["mt_workflow_vs_agent"],
+          "teach": "<p><strong>Routing</strong> categorises the input first — with a Claude call — then forwards it to <strong>one specialised pipeline</strong> built for that category.</p><pre class='kp-code'>                    ┌→ refund pipeline\ninbox → classify ───┼→ bug-report pipeline\n                    └→ sales pipeline</pre><p class='kp-key'>Input goes to exactly ONE pipeline. That is what lets each be deeply optimised for its own case.</p><p>Contrast with parallelization, where the input goes to <em>all</em> branches and the results are combined. Same fan shape on a diagram, opposite semantics.</p><p>The classification step is also where per-task model choice gets applied in practice: classify with Haiku, handle most categories with Sonnet, and let only the rare hard category reach Opus.</p>",
+          "questions": [
+            {
+              "id": "q_route_1a",
+              "q": "One inbox receives refund requests, bug reports, and sales enquiries. Which pattern, and how many pipelines does a message reach?",
+              "options": [
+                "Parallelization; all three",
+                "Routing; exactly one",
+                "Chaining; all three in sequence",
+                "Routing; one or more, depending on the classification confidence"
+              ],
+              "correct": 1,
+              "explain": "Routing sends each input down a single branch, which is what allows each branch to specialise."
+            },
+            {
+              "id": "q_route_1b",
+              "q": "What distinguishes routing from parallelization?",
+              "options": [
+                "Routing is sequential, parallelization is not",
+                "Routing sends the input to one branch; parallelization sends it to all and aggregates",
+                "Routing requires structured output",
+                "Routing uses one model, parallelization uses several"
+              ],
+              "correct": 1,
+              "explain": "One branch versus all branches. The diagrams look alike; the semantics are opposite."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_route_1",
+          "q": "What does the classification step in routing typically run on?",
+          "options": [
+            "The same tier as the pipelines, for consistency",
+            "A cheap tier such as Haiku — classification is exactly its brief",
+            "Opus, since a misroute is expensive",
+            "A non-LLM classifier"
+          ],
+          "correct": 1,
+          "explain": "Classification is Haiku's named workload, and routing is where per-task model choice actually gets used."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_evaluator_optimizer",
+      "knowledgePoints": [
+        {
+          "id": "kp_evopt_1",
+          "name": "The loop that grades its own homework",
+          "keyPrerequisites": ["mt_workflow_vs_agent", "mt_model_grader"],
+          "teach": "<p><strong>Evaluator–optimizer</strong>: a producer creates output, a grader evaluates it against criteria, and if it is rejected the feedback loops back to the producer for revision. Repeat until accepted.</p><pre class='kp-code'>produce ──→ grade ──→ accepted? ──yes──→ done\n   ↑                    │\n   └────── feedback ────no</pre><p>The course's example is an image-to-CAD workflow: describe the object, model it, render the model, grade the rendering against the original image, fix the issues, repeat.</p><p class='kp-key'>It is the only one of the four patterns with a feedback edge back to its own first step.</p><p>The evaluator half is a model grader — and it inherits the model grader's rule: ask it for strengths, weaknesses and reasoning, not a bare number. Feedback that says “6/10” gives the producer nothing to act on.</p>",
+          "questions": [
+            {
+              "id": "q_evopt_1a",
+              "q": "Which workflow pattern has a feedback edge back to its own first step?",
+              "options": ["Parallelization", "Chaining", "Routing", "Evaluator–optimizer"],
+              "correct": 3,
+              "explain": "Rejection sends feedback back to the producer. The other three flow forwards only."
+            },
+            {
+              "id": "q_evopt_1b",
+              "q": "What must the evaluator return for the loop to work?",
+              "options": [
+                "A bare score, so acceptance is a simple threshold",
+                "Reasoning about strengths and weaknesses, not just a number — the producer needs something to act on",
+                "A rewritten version of the output",
+                "A confidence interval on its grade"
+              ],
+              "correct": 1,
+              "explain": "It is a model grader, and the same rule applies: a bare number is uninformative and drifts to the middle."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_evopt_1",
+          "q": "In the image-to-CAD example, what is graded against what?",
+          "options": [
+            "The CAD model against a specification document",
+            "A rendering of the model against the original image",
+            "The description against the image",
+            "The final model against a previous version"
+          ],
+          "correct": 1,
+          "explain": "Render, then compare the render to the original — a check in the same medium as the input."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_pattern_choice",
+      "knowledgePoints": [
+        {
+          "id": "kp_choice_1",
+          "name": "The decision rule, and the four shapes",
+          "keyPrerequisites": ["mt_workflow_vs_agent"],
+          "teach": "<p class='kp-key'>Given a scenario: if the steps are knowable in advance → design a workflow. If they are not, and the model must improvise across a flexible toolset → design an agent.</p><p>When the answer is workflow, pick by <strong>shape</strong>:</p><table class='kp-table'><tr><th>The scenario looks like…</th><th>Pattern</th></tr><tr><td>independent evaluations to combine into one decision</td><td><strong>Parallelization</strong></td></tr><tr><td>stages that build on each other; a prompt overloaded with rules</td><td><strong>Chaining</strong></td></tr><tr><td>distinct categories, each needing different handling</td><td><strong>Routing</strong></td></tr><tr><td>quality that has to be iterated toward against criteria</td><td><strong>Evaluator–optimizer</strong></td></tr></table><p>Two questions, in order. Which kind of thing, then which shape.</p>",
+          "questions": [
+            {
+              "id": "q_choice_1a",
+              "q": "What is the first question to ask of an orchestration scenario?",
+              "options": [
+                "How many Claude calls will it need?",
+                "Are the steps knowable in advance?",
+                "Which model tier does it need?",
+                "Does it require tools?"
+              ],
+              "correct": 1,
+              "explain": "Knowability first. Only once it is a workflow does the shape question apply."
+            },
+            {
+              "id": "q_choice_1b",
+              "q": "A scenario needs quality iterated toward against explicit criteria. Which pattern?",
+              "options": ["Parallelization", "Chaining", "Routing", "Evaluator–optimizer"],
+              "correct": 3,
+              "explain": "Criteria plus iteration until accepted is the evaluator–optimizer signature."
+            }
+          ]
+        },
+        {
+          "id": "kp_choice_2",
+          "name": "What you hand an agent",
+          "keyPrerequisites": ["mt_abstract_tools"],
+          "teach": "<p>When the rule does land on <em>agent</em>, the design is not finished — it has just moved.</p><p>An agent is a <strong>goal plus a tool set</strong>. Claude figures out the combination of calls itself, including recognising when it needs more information from the user: asked to calculate a warranty expiry, it will ask for the purchase date rather than inventing one.</p><p class='kp-key'>Design tools to be abstract and combinable, not hyper-specialised — the same principle, arrived at from the orchestration side.</p><p>Which closes the circle. The reason to prefer workflows is that agents have a lower success rate; the main lever you have on an agent's success rate is the quality and generality of its toolset.</p>",
+          "questions": [
+            {
+              "id": "q_choice_2a",
+              "q": "What do you actually hand an agent?",
+              "options": [
+                "A sequence of steps and a tool set",
+                "A goal and a tool set",
+                "A goal and a maximum iteration count",
+                "A classified input and a specialised pipeline"
+              ],
+              "correct": 1,
+              "explain": "Goal plus tools. If you could hand it steps, you would be building a workflow."
+            },
+            {
+              "id": "q_choice_2b",
+              "q": "An agent is asked to calculate a warranty expiry and lacks the purchase date. What is the expected behaviour?",
+              "options": [
+                "It fails with an error",
+                "It asks the user for the purchase date",
+                "It assumes today's date",
+                "It calls every tool until one supplies a date"
+              ],
+              "correct": 1,
+              "explain": "Recognising it needs more input is part of what an agent does — and a listed benefit of the approach."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_choice_1",
+          "q": "A scenario describes triaging incoming documents into three types, each handled by a different specialised prompt. Which pattern?",
+          "options": ["Parallelization", "Routing", "Chaining", "An agent"],
+          "correct": 1,
+          "explain": "Distinct categories, different handling, one branch each — routing."
+        },
+        {
+          "id": "r_choice_2",
+          "q": "A scenario says the system must handle requests the team cannot enumerate ahead of time, combining tools as needed. Workflow or agent?",
+          "options": [
+            "Workflow — enumerate the common cases and default the rest",
+            "Agent — the steps are not knowable in advance",
+            "Workflow, using routing with an 'other' category",
+            "Either; the distinction is a matter of preference"
+          ],
+          "correct": 1,
+          "explain": "'Cannot be enumerated ahead of time' is the rule's second branch, stated almost verbatim."
+        }
+      ]
+    }
+  ]
+}

@@ -1,21 +1,39 @@
-# Section 8 learning graph — The Claude Agent SDK
+# Learning graphs
 
-A knowledge graph for Section 8 of this study system, plus a browser app that teaches
-through it. The method is from [*The Math Academy Way*](https://mathacademy.com/) (Justin
-Skycak); the data format follows [`withmarbleapp/os-taxonomy`](https://github.com/withmarbleapp/os-taxonomy),
+Knowledge graphs for the two heaviest sections of this study system, plus a browser app
+that teaches through them. The method is from [*The Math Academy Way*](https://mathacademy.com/)
+(Justin Skycak); the data format follows [`withmarbleapp/os-taxonomy`](https://github.com/withmarbleapp/os-taxonomy),
 with one file added that os-taxonomy does not have.
 
-Open [`index.html`](index.html) to use it. Everything is static — no build step is needed
-to *run* it, only to *change* it.
+| Section | Page | Data | Storage key |
+|---|---|---|---|
+| **8** · The Claude Agent SDK | [`index.html`](index.html) | `data/` | `ccaf_learning_graph_v1` |
+| **3** · Building with the Claude API | [`section-03/index.html`](section-03/index.html) | `section-03/data/` | `ccaf_learning_graph_03_v1` |
+
+Section 8 lives at the root because its URL predates the second graph. One `app.js` and one
+`scripts/` directory serve both; everything section-specific — topics, names, storage key —
+arrives in that section's `graph-data.js`, built from its own `data/section.json`.
+
+Progress is tracked separately per section, so working through one never marks anything
+complete in the other.
+
+Everything is static — no build step is needed to *run* it, only to *change* it.
 
 ## What is here
 
 ```
 learning-graph/
-├── index.html                     the app
-├── app.js                         scheduler, task runner, views
+├── app.js                         SHARED — scheduler, task runner, views
+├── schema/*.schema.json           SHARED — JSON Schema for each data file
+├── scripts/                       SHARED
+│   ├── validate.mjs               check without writing
+│   ├── build-web-data.mjs         regenerate graph-data.js + manifest.json
+│   └── lib/graph.mjs              loader, validator, derived metrics
+│
+├── index.html                     Section 8's app
 ├── graph-data.js                  GENERATED — the whole graph, inlined for <script>
-├── data/                          source of truth
+├── data/                          Section 8's source of truth
+│   ├── section.json               identity: name, storage key, notes path
 │   ├── topics.json                micro-topics (nodes)
 │   ├── dependencies.json          prerequisite edges
 │   ├── encompassings.json         encompassing edges  ← not in os-taxonomy
@@ -23,15 +41,25 @@ learning-graph/
 │   ├── curriculum-standards.json  CCA-F domains + glossary terms
 │   ├── knowledge-points/*.json    teaching content, one file per cluster
 │   └── manifest.json              GENERATED — stats + checksums
-├── schema/*.schema.json           JSON Schema for each data file
-└── scripts/
-    ├── validate.mjs               check without writing
-    ├── build-web-data.mjs         regenerate graph-data.js + manifest.json
-    └── lib/graph.mjs              shared loader, validator, metrics
+│
+└── section-03/                    Section 3, same layout
+    ├── index.html
+    ├── graph-data.js
+    └── data/…
 ```
 
-At the time of writing: **44 topics, 64 prerequisite edges (49 hard), 48 encompassings,
-60 knowledge points, 164 questions, 8 layers deep.**
+At the time of writing:
+
+| | Section 8 | Section 3 |
+|---|---|---|
+| topics | 44 | 68 |
+| clusters | 5 | 11 |
+| prerequisite edges | 64 (49 hard) | 99 (79 hard) |
+| encompassings | 48 | 77 |
+| knowledge points | 60 | 83 |
+| questions | 164 | 254 |
+| layers deep | 8 | 9 |
+| entry topics | 1 | 1 |
 
 ## The data model
 
@@ -146,9 +174,15 @@ same `assets/js/gist-sync.js` the rest of the site uses.
 
 ## Working on it
 
+Both scripts take a section argument. With none, they act on Section 8 at the root.
+
 ```bash
-node learning-graph/scripts/validate.mjs        # check, write nothing
-node learning-graph/scripts/build-web-data.mjs  # regenerate graph-data.js + manifest
+node learning-graph/scripts/validate.mjs                    # Section 8
+node learning-graph/scripts/validate.mjs section-03         # Section 3
+node learning-graph/scripts/validate.mjs all                # every section
+
+node learning-graph/scripts/build-web-data.mjs              # Section 8
+node learning-graph/scripts/build-web-data.mjs section-03   # Section 3
 ```
 
 **Edit the JSON, never `graph-data.js`.** The build inlines the data into a `<script>` tag
@@ -171,10 +205,30 @@ has knowledge points with enough questions. It exits non-zero on any error, and
 4. Write its knowledge points in the matching `data/knowledge-points/*.json`.
 5. Run the build.
 
+### Adding a section
+
+1. `mkdir -p learning-graph/section-NN/data/knowledge-points`.
+2. Write `data/section.json` — the id, the display names, a **unique** `storageKey`, and the
+   `buildArg` the build script is invoked with.
+3. Write the other five data files and the knowledge points.
+4. Copy an existing `index.html`, fix the relative paths (`../../` for site assets, `../app.js`
+   for the engine), and rewrite the section-specific copy.
+5. `node learning-graph/scripts/build-web-data.mjs section-NN`.
+
+A duplicated `storageKey` would silently merge two sections' progress, which is why the
+build writes it into `graph-data.js` rather than letting the page guess.
+
 ## Sources
 
-Content comes from [`08-claude-agent-sdk/notes.md`](../08-claude-agent-sdk/notes.md), built
+**Section 8** comes from [`08-claude-agent-sdk/notes.md`](../08-claude-agent-sdk/notes.md), built
 from the official Agent SDK TypeScript and Python references and the Subagents, Hooks, and
 Permissions guides on `docs.claude.com`, cross-checked against the CCA-F Exam Guide v1.0.
 Where the shipping SDK and the exam guide disagree — most importantly the `Task` → `Agent`
 tool rename — the graph teaches both and says which belongs on the exam.
+
+**Section 3** comes from [`03-building-with-the-claude-api/notes.md`](../03-building-with-the-claude-api/notes.md),
+built from the Anthropic Academy course *Building with the Claude API* with Claude Platform 101
+background folded in, and cross-checked against the same exam guide. It is the widest section
+on the list — it feeds four of the five exam domains — which is why it earned a graph of its own:
+read in lesson order it is three long lessons, but the dependency structure underneath is nine
+layers deep from a single entry point (`messages.create`).

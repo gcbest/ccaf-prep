@@ -1,6 +1,10 @@
-/* Section 8 learning graph — scheduler, task runner, and views.
+/* Learning graph — scheduler, task runner, and views.
 
-   The graph itself is generated data (graph-data.js, built from learning-graph/data/*.json).
+   Section-agnostic: everything specific to a section (its topics, its name, and the
+   localStorage key its progress lives under) arrives in graph-data.js, so the same
+   file drives Section 8 at learning-graph/ and Section 3 at learning-graph/section-03/.
+
+   The graph itself is generated data (graph-data.js, built from a section's data/*.json).
    This file is the part that behaves: it decides what you should do next, teaches it,
    records the result, and propagates repetition credit through the encompassing edges.
 
@@ -18,7 +22,8 @@
   var G = window.CCAF_GRAPH;
   if (!G) return;
 
-  var STORAGE_KEY = "ccaf_learning_graph_v1";
+  var STORAGE_KEY = G.storageKey || "ccaf_learning_graph_v1";
+  var SECTION = G.sectionShort || "Section 8";
   var DAY = 86400000;
   var INTERVALS = [1, 3, 7, 16, 35, 75, 160];
   var DAILY_GOAL = 100;
@@ -398,7 +403,7 @@
       doneCard.appendChild(el("span", "kicker", "Nothing due"));
       doneCard.appendChild(el("p", null,
         c.mastered === G.topics.length
-          ? "Every topic in Section 8 is mastered and nothing is due for review yet. Come back when the schedule brings something round."
+          ? "Every topic in " + SECTION + " is mastered and nothing is due for review yet. Come back when the schedule brings something round."
           : "Nothing is due and no topic is unlocked right now — finish the lesson you have in progress from the Topics tab."));
       root.appendChild(doneCard);
       return;
@@ -776,7 +781,7 @@
     var box = el("div", "card");
     box.appendChild(el("span", "kicker", "Placement complete"));
     box.appendChild(el("p", null, known === 0
-      ? "Nothing placed as already known, so you start at the entry point of the graph and work outwards. That is the normal result if Section 8 is new to you."
+      ? "Nothing placed as already known, so you start at the entry point of the graph and work outwards. That is the normal result if " + SECTION + " is new to you."
       : known + " of " + G.topics.length + " topics placed as already known — most of them inferred from the graph rather than asked about directly. " +
         "Inferred topics are scheduled for an early review, so a wrong inference surfaces fast instead of quietly sitting there."));
     renderToday(box);
@@ -851,7 +856,7 @@
     var svg = svgEl("svg", {
       width: G.layout.width, height: G.layout.height,
       viewBox: "0 0 " + G.layout.width + " " + G.layout.height,
-      role: "img", "aria-label": "Prerequisite graph of Section 8 topics"
+      role: "img", "aria-label": "Prerequisite graph of " + SECTION + " topics"
     });
 
     var hot = {};

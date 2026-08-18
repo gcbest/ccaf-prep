@@ -1,14 +1,31 @@
-/* Shared loader, validator, and derived-metric calculations for the Section 8 learning graph.
+/* Shared loader, validator, and derived-metric calculations for the learning graphs.
    Both scripts/validate.mjs and scripts/build-web-data.mjs go through here so the
-   checks and the published data can never drift apart. */
+   checks and the published data can never drift apart.
 
-import { readFileSync, readdirSync } from "node:fs";
+   One engine serves several sections. A section is a directory holding `data/` and
+   the `graph-data.js` built from it: the repo root of this folder is Section 8, and
+   `section-03/` is Building with the Claude API. Resolve one with sectionRoot(). */
+
+import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const ROOT = join(HERE, "..", "..");
-export const DATA = join(ROOT, "data");
+
+/* A section is named by its directory under learning-graph/, or by nothing at all
+   for Section 8, which lives at the root because its URL predates the second graph. */
+export function sectionRoot(name) {
+  if (!name || name === "." || name === "08") return ROOT;
+  const dir = join(ROOT, name.startsWith("section-") ? name : `section-${name}`);
+  if (!existsSync(join(dir, "data"))) throw new Error(`no such section: ${name}`);
+  return dir;
+}
+
+/* The section named on the command line, defaulting to Section 8 at the root. */
+export function sectionFromArgv(argv = process.argv) {
+  return sectionRoot(argv[2]);
+}
 
 function readJson(path) {
   try {
@@ -18,7 +35,9 @@ function readJson(path) {
   }
 }
 
-export function load() {
+export function load(root = ROOT) {
+  const DATA = join(root, "data");
+  const meta = readJson(join(DATA, "section.json"));
   const clusters = readJson(join(DATA, "clusters.json")).clusters;
   const standards = readJson(join(DATA, "curriculum-standards.json")).standards;
   const topics = readJson(join(DATA, "topics.json")).topics;
@@ -38,7 +57,7 @@ export function load() {
     }
   }
 
-  return { clusters, standards, topics, dependencies, encompassings, kpByTopic, kpFiles };
+  return { root, data: DATA, meta, clusters, standards, topics, dependencies, encompassings, kpByTopic, kpFiles };
 }
 
 /* ---------- validation ---------- */

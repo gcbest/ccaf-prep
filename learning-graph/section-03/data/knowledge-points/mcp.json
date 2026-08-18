@@ -1,0 +1,159 @@
+{
+  "$comment": "Teaching content for cl_mcp — MCP as seen from the Messages API. Server-building lives in section 6.",
+  "cluster": "cl_mcp",
+  "topics": [
+    {
+      "topicId": "mt_tools_skills_mcp",
+      "knowledgePoints": [
+        {
+          "id": "kp_tsm_1",
+          "name": "Your stuff, your processes, everyone else's stuff",
+          "keyPrerequisites": ["mt_tool_anatomy"],
+          "teach": "<table class='kp-table'><tr><th></th><th>connects Claude to</th><th>who maintains it</th></tr><tr><td><strong>Tools</strong></td><td>your systems — your database, your APIs</td><td>you own the code and the maintenance</td></tr><tr><td><strong>Skills</strong></td><td>a procedure — your report template, your checklist</td><td>you, but they are instructions, not integrations</td></tr><tr><td><strong>MCP</strong></td><td>third-party services</td><td>the provider maintains the integration</td></tr></table><p class='kp-key'>Tools are for your stuff, skills are for your processes, MCP is for everyone else's stuff.</p><p>The maintenance column is the one that decides most real cases. Writing a Slack tool yourself means owning its schema, its auth, and its breakage every time Slack changes something — which is precisely the work an MCP server exists to absorb.</p>",
+          "questions": [
+            {
+              "id": "q_tsm_1a",
+              "q": "Claude must follow your firm's report template, query your internal database, and read Slack. Which mechanism for each?",
+              "options": [
+                "Skill, tool, MCP",
+                "Tool, skill, MCP",
+                "Skill, MCP, tool",
+                "MCP, tool, skill"
+              ],
+              "correct": 0,
+              "explain": "Template is a procedure (skill), your database is your system (tool), Slack is third-party (MCP)."
+            },
+            {
+              "id": "q_tsm_1b",
+              "q": "What is the practical argument for MCP over writing the tool yourself?",
+              "options": [
+                "MCP tools run faster",
+                "The provider maintains the integration, including schema and auth changes",
+                "MCP tools do not consume context",
+                "MCP tools can be called without a loop"
+              ],
+              "correct": 1,
+              "explain": "Maintenance moves to whoever owns the service."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_tsm_1",
+          "q": "A skill is best described as…",
+          "options": [
+            "An integration with an external service",
+            "Instructions teaching Claude a procedure, not necessarily an integration",
+            "A tool with its schema generated automatically",
+            "A server-side tool run by Anthropic"
+          ],
+          "correct": 1,
+          "explain": "Procedure, not plumbing — your template or checklist expressed as instructions."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_mcp_connector",
+      "knowledgePoints": [
+        {
+          "id": "kp_conn_1",
+          "name": "Two fields, and a schema you never write",
+          "keyPrerequisites": ["mt_tools_skills_mcp"],
+          "teach": "<p>Connecting a remote MCP server takes two pieces in the request.</p><p><strong>1. Declare the connection</strong> — <code>mcp_servers</code>:</p><pre class='kp-code'>\"mcp_servers\": [{\n  \"type\": \"url\",\n  \"url\":  \"https://mcp.example.com/slack\",\n  \"name\": \"slack\",\n  \"authorization_token\": \"...\"      # optional\n}]</pre><p><strong>2. Grant access</strong> — a tool entry pointing at it:</p><pre class='kp-code'>\"tools\": [{\"type\": \"mcp_toolset\", \"mcp_server_name\": \"slack\"}]</pre><p>Default is <em>all</em> tools on that server.</p><p class='kp-key'>Claude introspects the server and discovers the tools and schemas itself. You never write a tool schema by hand for an MCP-provided tool.</p><p>(As of the course, the MCP connector required a beta header.)</p>",
+          "questions": [
+            {
+              "id": "q_conn_1a",
+              "q": "Which two request fields connect a remote MCP server?",
+              "options": [
+                "mcp_servers and a tools entry of type mcp_toolset",
+                "mcp_servers and mcp_tools",
+                "servers and tool_choice",
+                "mcp_config and allowed_tools"
+              ],
+              "correct": 0,
+              "explain": "One declares the connection, the other grants access to it."
+            },
+            {
+              "id": "q_conn_1b",
+              "q": "Who writes the schemas for MCP-provided tools?",
+              "options": [
+                "You, mirroring the server's documentation",
+                "Nobody — Claude introspects the server and discovers them",
+                "The SDK, from the server's OpenAPI spec",
+                "Anthropic, from a registry of known servers"
+              ],
+              "correct": 1,
+              "explain": "Introspection is the point of the protocol. Hand-writing schemas is what MCP removes."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_conn_1",
+          "q": "What does an mcp_toolset entry grant by default?",
+          "options": [
+            "No tools until each is enabled",
+            "All tools on the named server",
+            "Only read-only tools",
+            "Only tools whose schemas Claude can validate"
+          ],
+          "correct": 1,
+          "explain": "All of them — which is exactly why scoping down is a separate, deliberate step."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_mcp_scoping",
+      "knowledgePoints": [
+        {
+          "id": "kp_scope_1",
+          "name": "Disable everything, then enable a few",
+          "keyPrerequisites": ["mt_mcp_connector"],
+          "teach": "<p>Since the default grants every tool on the server, you invert it:</p><pre class='kp-code'>\"default_config\": {\"enabled\": False},\n\"configs\": {\n    \"search_messages\": {\"enabled\": True},\n    \"list_channels\":   {\"enabled\": True}\n}</pre><p class='kp-key'>Deny by default, then allow by name. A Slack connection becomes read-only: search and list reachable, post and delete not.</p><p>Why deny-by-default rather than listing what to block? Because a block list is only correct until the provider adds a tool. The server gains <code>delete_channel</code> in a release you did not read about, and an allow list still does not include it while a block list silently does not exclude it.</p><p>And note what this is <em>not</em>: an instruction. Telling the agent in its system prompt never to post is a request that untrusted content in context can argue with. Configuration cannot be argued with.</p>",
+          "questions": [
+            {
+              "id": "q_scope_1a",
+              "q": "You connect a Slack MCP server and the agent must never post. What do you do?",
+              "options": [
+                "Add a system-prompt rule forbidding posting",
+                "Set default_config disabled, then enable only the read tools by name",
+                "List the posting tools in a blocked set",
+                "Use tool_choice to restrict which tools may be called"
+              ],
+              "correct": 1,
+              "explain": "Deny by default, allow by name. It is configuration, and it survives the provider adding new tools."
+            },
+            {
+              "id": "q_scope_1b",
+              "q": "Why is a block list worse than an allow list here?",
+              "options": [
+                "It is more verbose",
+                "A new tool added by the provider is permitted by default under a block list",
+                "Block lists are not supported by the API",
+                "Block lists cannot be combined with authorization tokens"
+              ],
+              "correct": 1,
+              "explain": "Anything unlisted is allowed, and the list of things to block grows without you."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_scope_1",
+          "q": "Why is scoping configuration rather than a prompt instruction?",
+          "options": [
+            "Prompt instructions cost tokens",
+            "Configuration is enforced; an instruction is a request untrusted content can compete with",
+            "Instructions are ignored for MCP tools",
+            "Configuration is cached and instructions are not"
+          ],
+          "correct": 1,
+          "explain": "The same programmatic-enforcement-versus-instruction line that runs through the whole certification."
+        }
+      ]
+    }
+  ]
+}

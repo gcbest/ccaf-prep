@@ -1,0 +1,263 @@
+{
+  "$comment": "Teaching content for cl_managed. Bonus material from Claude Platform 101, folded in because managed agents are the hosted form of the agent loop the exam's Domain 1 is about.",
+  "cluster": "cl_managed",
+  "topics": [
+    {
+      "topicId": "mt_managed_agents",
+      "knowledgePoints": [
+        {
+          "id": "kp_mgd_1",
+          "name": "The loop, hosted",
+          "keyPrerequisites": ["mt_agent_loop"],
+          "teach": "<p>Managed agents are a suite of APIs for building and deploying agents <strong>at scale on Anthropic's infrastructure</strong> instead of your own server.</p><p>You define an agent — tools, persona, capabilities — configure a sandbox environment, and fire off sessions from your app. Claude runs the agent loop inside an isolated container with file system access, bash execution and web search, and you stream events back out.</p><p class='kp-key'>You send events in and read events out. There is no manual while loop.</p><p>It is <strong>enabled by default for every API account</strong> — not a separate product to buy or a preview to request.</p>",
+          "questions": [
+            {
+              "id": "q_mgd_1a",
+              "q": "What replaces the while loop when using managed agents?",
+              "options": [
+                "A callback registered with the SDK",
+                "An event stream — you send events in and read events out",
+                "A polling endpoint you check for completion",
+                "Nothing; you still write the loop, it just runs remotely"
+              ],
+              "correct": 1,
+              "explain": "The loop runs inside the session. Your app's relationship to it is a stream of events."
+            },
+            {
+              "id": "q_mgd_1b",
+              "q": "How do you get access to managed agents?",
+              "options": [
+                "Request access through the Console",
+                "They are enabled by default for every API account",
+                "They require an enterprise agreement",
+                "They are available only through Bedrock and Vertex"
+              ],
+              "correct": 1,
+              "explain": "On by default, for everyone."
+            }
+          ]
+        },
+        {
+          "id": "kp_mgd_2",
+          "name": "Three conditions",
+          "keyPrerequisites": [],
+          "teach": "<p>Reach for managed agents when the loop would:</p><ul><li>run <strong>too long</strong> — minutes or hours,</li><li>touch <strong>too many files or tools</strong>,</li><li>need to <strong>survive a network hiccup</strong> — that is, need resumability.</li></ul><p class='kp-key'>Reach for a manual loop when you want full control.</p><p>Notice that all three conditions are about <em>operational</em> difficulty, not about the task being intellectually harder. A two-hour migration and a two-second lookup can be the same agent design; only one of them cares whether your process stays up for the duration.</p><p>Sessions can also run <strong>in parallel</strong> — many tickets or tasks at once, each in its own container.</p>",
+          "questions": [
+            {
+              "id": "q_mgd_2a",
+              "q": "A migration agent runs for two hours across hundreds of files and must survive a dropped connection. Managed or manual?",
+              "options": [
+                "Manual — you need control over a task that long",
+                "Managed — long-running, many files, and resumability are its three conditions",
+                "Manual, with a resume token you implement",
+                "Either; the choice is about cost only"
+              ],
+              "correct": 1,
+              "explain": "All three conditions at once. Resumability in particular is expensive to build and free here."
+            },
+            {
+              "id": "q_mgd_2b",
+              "q": "When is a manual loop still the right choice?",
+              "options": [
+                "When the task is simple enough not to need tools",
+                "When you want full control",
+                "When the agent must run in your own region",
+                "When the conversation exceeds the context window"
+              ],
+              "correct": 1,
+              "explain": "Control is what you give up by hosting, and it is the stated reason to keep the loop yourself."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_mgd_1",
+          "q": "What does the container an agent runs in provide?",
+          "options": [
+            "File system access, bash execution, and web search",
+            "A GPU for local inference",
+            "A persistent database",
+            "Direct access to your production network"
+          ],
+          "correct": 0,
+          "explain": "An isolated sandbox with the tools an agent typically needs — and isolation is the point of it."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_managed_primitives",
+      "knowledgePoints": [
+        {
+          "id": "kp_prim_1",
+          "name": "Four things, in order",
+          "keyPrerequisites": ["mt_managed_agents"],
+          "teach": "<table class='kp-table'><tr><th>#</th><th>Primitive</th><th>What it is</th></tr><tr><td>1</td><td><strong>Agent</strong></td><td>the persona: model, system prompt, toolset. <em>Reusable across many runs.</em></td></tr><tr><td>2</td><td><strong>Environment</strong></td><td>where it runs: cloud or local, networking config</td></tr><tr><td>3</td><td><strong>Session</strong></td><td>a single run of an agent inside an environment. <em>The unit of work.</em></td></tr><tr><td>4</td><td><strong>Events</strong></td><td>messages flowing in and out: actions, tool calls, results, replies</td></tr></table><p class='kp-key'>Agent is reusable. Session is one run. Those two are the pair most often confused.</p><p>The flow: your app talks to a <em>session</em> → the session drives work inside the <em>environment</em> → everything comes back out through the <em>event</em> stream.</p>",
+          "questions": [
+            {
+              "id": "q_prim_1a",
+              "q": "Which primitive is reusable across many runs, and which is a single run?",
+              "options": [
+                "Session is reusable; agent is a single run",
+                "Agent is reusable; session is a single run",
+                "Environment is reusable; agent is a single run",
+                "Both agent and session are reusable"
+              ],
+              "correct": 1,
+              "explain": "The agent is the persona you define once. Each session is one run of it."
+            },
+            {
+              "id": "q_prim_1b",
+              "q": "Which primitive is described as the unit of work?",
+              "options": ["Agent", "Environment", "Session", "Event"],
+              "correct": 2,
+              "explain": "A session is one run of one agent in one environment — the thing you start, track, and finish."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_prim_1",
+          "q": "What does the environment primitive hold?",
+          "options": [
+            "The system prompt and toolset",
+            "Where the agent runs — cloud or local — and its networking config",
+            "The event history for a run",
+            "The rubric the output is graded against"
+          ],
+          "correct": 1,
+          "explain": "Location and networking. Persona lives on the agent."
+        },
+        {
+          "id": "r_prim_2",
+          "q": "Name the four primitives in order.",
+          "options": [
+            "Environment, agent, session, events",
+            "Agent, environment, session, events",
+            "Agent, session, environment, events",
+            "Session, agent, environment, events"
+          ],
+          "correct": 1,
+          "explain": "Agent, environment, session, events — which is also the order you create them in."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_managed_build_order",
+      "knowledgePoints": [
+        {
+          "id": "kp_order_1",
+          "name": "Five steps, one of them a trap",
+          "keyPrerequisites": ["mt_managed_primitives"],
+          "teach": "<ol><li><strong>Create the agent</strong> — <code>client.beta.agents.create(name, model, system, tools=[...])</code>. The bundled agent toolset gives file, bash and web tools without writing your own.</li><li><strong>Create the environment</strong> — <code>client.beta.environments.create(name, config={\"type\": \"cloud\", \"networking\": {...}})</code>.</li><li><strong>Create the session</strong> — <code>client.beta.sessions.create(agent=agent.id, environment_id=env.id, title=...)</code>.</li><li><strong>Open the event stream FIRST, then send the kickoff message.</strong></li><li><strong>Consume the stream.</strong></li></ol><p class='kp-key'>The stream only delivers events that occur after it opens. Send the kickoff first and you miss the beginning of your own run.</p><p>The failure is confusing precisely because the agent works: it runs correctly, does the job, and your application simply never saw the first few events. Watch for <code>agent.message</code> (Claude's text), <code>agent.tool_use</code> (which tool it picked) and <code>session.status_idle</code> (it is done).</p>",
+          "questions": [
+            {
+              "id": "q_order_1a",
+              "q": "Your managed agent runs correctly but your app sees none of the first few events. What did you get wrong?",
+              "options": [
+                "You created the session before the environment",
+                "You sent the kickoff message before opening the event stream",
+                "You did not subscribe to agent.tool_use events",
+                "You polled instead of streaming"
+              ],
+              "correct": 1,
+              "explain": "The stream only delivers what happens after it opens. Open first, then kick off."
+            },
+            {
+              "id": "q_order_1b",
+              "q": "Which event tells you the agent has finished?",
+              "options": ["agent.message", "agent.tool_use", "session.status_idle", "session.complete"],
+              "correct": 2,
+              "explain": "session.status_idle — the agent has nothing left to do."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_order_1",
+          "q": "What does the bundled agent toolset provide?",
+          "options": [
+            "File, bash and web tools, without writing your own",
+            "A set of MCP server connections",
+            "Pre-built rubrics and graders",
+            "Client-side tool schemas for your functions"
+          ],
+          "correct": 0,
+          "explain": "The common agent tools, ready-made — which is what makes the smallest managed agent genuinely small."
+        },
+        {
+          "id": "r_order_2",
+          "q": "Which event carries the name of the tool the agent picked?",
+          "options": ["agent.message", "agent.tool_use", "session.status_idle", "agent.action"],
+          "correct": 1,
+          "explain": "agent.tool_use. agent.message carries Claude's text."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_managed_blocks",
+      "knowledgePoints": [
+        {
+          "id": "kp_blocks2_1",
+          "name": "What turns a demo into an operation",
+          "keyPrerequisites": ["mt_managed_primitives"],
+          "teach": "<table class='kp-table'><tr><th>Building block</th><th>What it gives you</th></tr><tr><td><strong>Rubrics &amp; graders</strong></td><td>success criteria, plus a grader with <em>its own context window</em> that evaluates output against them; Claude iterates until it passes</td></tr><tr><td><strong>Memory</strong></td><td>read a store before starting, write when done — cross-session continuity, so it knows prices are 15% lower than last week rather than repeating a stale figure</td></tr><tr><td><strong>Multi-agent coordination</strong></td><td>a coordinator delegates to specialists, each in its own context window over a <em>shared file system</em>; the coordinator synthesises their findings</td></tr><tr><td><strong>Permissions policies</strong></td><td>sensitive actions — posting to Slack, say — pause for human approval before executing</td></tr></table><p class='kp-key'>The grader gets its own context window so it judges the output, not the reasoning that produced it.</p><p>A grader sharing the producer's context has already been persuaded — it saw every justification along the way. Isolation is what makes the grade independent.</p>",
+          "questions": [
+            {
+              "id": "q_blocks2_1a",
+              "q": "Your managed agent must never post to Slack without sign-off, and must remember last week's prices. Which two building blocks?",
+              "options": [
+                "Rubrics and multi-agent coordination",
+                "Permissions policies and memory",
+                "Memory and rubrics",
+                "Permissions policies and multi-agent coordination"
+              ],
+              "correct": 1,
+              "explain": "A permissions policy pauses the sensitive action; memory carries knowledge across sessions."
+            },
+            {
+              "id": "q_blocks2_1b",
+              "q": "Why does a grader get its own context window?",
+              "options": [
+                "To keep the producer's context small",
+                "So it judges the output independently rather than having watched the reasoning that produced it",
+                "Because graders run on a different model tier",
+                "To allow the grade to be cached"
+              ],
+              "correct": 1,
+              "explain": "Independence. A grader that saw every justification has already been argued into agreement."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_blocks2_1",
+          "q": "In managed multi-agent coordination, how do specialists share their work?",
+          "options": [
+            "Through a shared context window",
+            "Over a shared file system, with the coordinator synthesising their findings",
+            "By passing messages directly to each other",
+            "Through a shared memory store only"
+          ],
+          "correct": 1,
+          "explain": "Own context windows, shared file system, coordinator synthesises — hub-and-spoke, with the file system as the medium."
+        },
+        {
+          "id": "r_blocks2_2",
+          "q": "Can managed sessions run in parallel?",
+          "options": [
+            "No — one session per agent at a time",
+            "Yes — multiple tasks at once, each in its own container",
+            "Only within the same environment",
+            "Only for read-only agents"
+          ],
+          "correct": 1,
+          "explain": "Parallel sessions, isolated containers — which is much of the point of hosting them."
+        }
+      ]
+    }
+  ]
+}

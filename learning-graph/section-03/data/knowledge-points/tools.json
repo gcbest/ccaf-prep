@@ -1,0 +1,604 @@
+{
+  "$comment": "Teaching content for cl_tools.",
+  "cluster": "cl_tools",
+  "topics": [
+    {
+      "topicId": "mt_agent_loop",
+      "knowledgePoints": [
+        {
+          "id": "kp_loop_1",
+          "name": "What an agent is",
+          "keyPrerequisites": ["mt_stop_reason", "mt_conversation_state"],
+          "teach": "<p>An agent is not a model. It is <strong>an autonomous version of Claude running both sides of the messaging loop with no human in the middle</strong>: it receives a task, picks a tool, and keeps going until it decides the task is done.</p><p>The word that does the work there is <em>both</em>. In a chat application a person supplies every user turn. In an agent, your code supplies them — and what it supplies is tool results.</p><p class='kp-key'>You own the loop and the tools. Claude owns the reasoning.</p><p>Nothing about the API changes. It is the same stateless <code>messages.create</code>, called repeatedly, with the array growing each time.</p>",
+          "questions": [
+            {
+              "id": "q_loop_1a",
+              "q": "What distinguishes an agent from an ordinary chat integration?",
+              "options": [
+                "It uses a more capable model tier",
+                "Claude runs both sides of the loop — your code supplies the user turns as tool results, with no human in the middle",
+                "It maintains conversation state server-side",
+                "It streams rather than returning a single response"
+              ],
+              "correct": 1,
+              "explain": "The human turn is replaced by a tool result your code produces. That is the whole structural difference."
+            },
+            {
+              "id": "q_loop_1b",
+              "q": "In an agent, who owns what?",
+              "options": [
+                "Claude owns the loop; you own the reasoning",
+                "You own the loop and the tools; Claude owns the reasoning",
+                "Anthropic owns the loop; you own the tools",
+                "You own the tools; Claude owns the loop and the reasoning"
+              ],
+              "correct": 1,
+              "explain": "Loop and tools yours, reasoning Claude's — and that split is exactly what managed agents later renegotiate."
+            }
+          ]
+        },
+        {
+          "id": "kp_loop_2",
+          "name": "The five steps",
+          "keyPrerequisites": ["mt_stop_reason"],
+          "teach": "<ol><li>Send a message to Claude with <code>tools</code> available.</li><li>Claude responds with either a final answer or a tool-use request.</li><li>Your code executes that tool.</li><li>You send the result back as a <code>tool_result</code> block.</li><li>Repeat until <code>stop_reason</code> is <code>end_turn</code>.</li></ol><pre class='kp-code'>while True:\n    resp = client.messages.create(model=M, max_tokens=1024,\n                                  messages=messages, tools=tools)\n    if resp.stop_reason != \"tool_use\":\n        break                                   # ← step 5\n    messages.append({\"role\": \"assistant\", \"content\": resp.content})\n    results = [run(b) for b in resp.content if b.type == \"tool_use\"]\n    messages.append({\"role\": \"user\", \"content\": results})</pre><p class='kp-key'>The loop's continue condition is stop_reason == tool_use. Its exit condition is end_turn.</p><p>Everything else in this cluster is a refinement of these five lines.</p>",
+          "questions": [
+            {
+              "id": "q_loop_2a",
+              "q": "What ends an agent loop?",
+              "options": [
+                "The tools array is exhausted",
+                "stop_reason is end_turn",
+                "A maximum iteration count is reached",
+                "The response contains a text block"
+              ],
+              "correct": 1,
+              "explain": "end_turn. An iteration cap is a sensible safety net you add, but it is not what the loop is defined by."
+            },
+            {
+              "id": "q_loop_2b",
+              "q": "In which step does your own code do the work?",
+              "options": [
+                "Step 2, where Claude decides which tool to use",
+                "Step 3, where the requested tool is executed",
+                "Step 5, where the loop condition is evaluated",
+                "Step 1, where the tools are defined"
+              ],
+              "correct": 1,
+              "explain": "Claude asks; you execute. Step 3 is where your function actually runs."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_loop_1",
+          "q": "Which sequence is correct?",
+          "options": [
+            "Send with tools → tool_use → execute → tool_result → repeat until end_turn",
+            "Send with tools → execute → tool_use → end_turn → repeat",
+            "Execute → send with tools → tool_result → tool_use → end_turn",
+            "Send with tools → end_turn → execute → tool_result → repeat"
+          ],
+          "correct": 0,
+          "explain": "Claude requests before you execute, and end_turn is the exit rather than a stage."
+        },
+        {
+          "id": "r_loop_2",
+          "q": "Does the agent loop require a different API endpoint?",
+          "options": [
+            "Yes — /agents rather than /messages",
+            "No — it is messages.create called repeatedly with a growing array",
+            "Yes, when more than one tool is defined",
+            "No, but it requires the streaming endpoint"
+          ],
+          "correct": 1,
+          "explain": "Same stateless call, called in a loop. The agency is in your code, not in a different endpoint."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_tool_anatomy",
+      "knowledgePoints": [
+        {
+          "id": "kp_anatomy_1",
+          "name": "Name, description, input_schema",
+          "keyPrerequisites": ["mt_agent_loop"],
+          "teach": "<p>A tool is a JSON object with three parts:</p><pre class='kp-code'>{\n  \"name\":        \"get_weather\",\n  \"description\": \"Get the current weather for a city. Use when the user asks\n                  about conditions, temperature, or whether to bring a coat.\n                  Returns temperature in Celsius and a one-word condition.\",\n  \"input_schema\": {\n    \"type\": \"object\",\n    \"properties\": {\"city\": {\"type\": \"string\"}},\n    \"required\": [\"city\"]\n  }\n}</pre><p><code>input_schema</code> is <strong>standard JSON Schema</strong> — a general data-validation specification that long predates any of this and is not AI-specific. If you have written an OpenAPI spec, you already know it.</p><p>Convention: name a schema <code>function_name_schema</code> so it pairs visibly with the function it describes. And you can hand your function's source to Claude and ask it to generate the schema.</p>",
+          "questions": [
+            {
+              "id": "q_anatomy_1a",
+              "q": "What are the three parts of a tool definition?",
+              "options": [
+                "name, handler, output_schema",
+                "name, description, input_schema",
+                "name, input_schema, output_schema",
+                "description, input_schema, tool_choice"
+              ],
+              "correct": 1,
+              "explain": "Name, description, input_schema. There is no output schema — what a tool returns is described in prose, in the description."
+            },
+            {
+              "id": "q_anatomy_1b",
+              "q": "What kind of specification is input_schema?",
+              "options": [
+                "An Anthropic-specific format for tool arguments",
+                "Standard JSON Schema, a general data-validation spec",
+                "A TypeScript type definition",
+                "OpenAPI, restricted to request bodies"
+              ],
+              "correct": 1,
+              "explain": "Plain JSON Schema. Nothing about it is AI-specific."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_anatomy_1",
+          "q": "Which field describes what a tool returns?",
+          "options": [
+            "output_schema",
+            "The description — in prose, since there is no output schema",
+            "input_schema's `returns` property",
+            "Nothing; Claude infers it from the result"
+          ],
+          "correct": 1,
+          "explain": "The description carries it. That is one reason the guidance is three or four sentences rather than one."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_tool_description",
+      "knowledgePoints": [
+        {
+          "id": "kp_desc_1",
+          "name": "The field Claude actually reads",
+          "keyPrerequisites": ["mt_tool_anatomy"],
+          "teach": "<p class='kp-key'>The description is what Claude reads to decide whether and when to call the tool.</p><p>Not the name. Not the schema. The description. Which makes it the single highest-leverage string in an agent, and:</p><p><strong>Vague descriptions are the number one cause of agents misfiring or not using available tools.</strong></p><p>The symptom is distinctive: nothing errors. The tool works perfectly when called. It just never gets called, or gets called for the wrong requests, and the agent produces a confident answer it invented instead.</p><p>Aim for <strong>three or four sentences</strong> covering:</p><ul><li><strong>what it does</strong>,</li><li><strong>when to use it</strong> — the part most people omit,</li><li><strong>what it returns</strong>.</li></ul><table class='kp-table'><tr><th>Weak</th><th>Strong</th></tr><tr><td>“Searches the database.”</td><td>“Search customer orders by email address. Use when the user asks about a past order, a delivery date, or a refund status. Returns up to 10 orders, newest first, each with an order id, status, and total.”</td></tr></table>",
+          "questions": [
+            {
+              "id": "q_desc_1a",
+              "q": "An agent has a working search tool and never calls it. Where do you look first?",
+              "options": [
+                "The input_schema, for a required field it cannot fill",
+                "The description, which is what Claude reads to decide whether to call it",
+                "The model tier, which may be too small to use tools",
+                "The temperature, which may be suppressing tool calls"
+              ],
+              "correct": 1,
+              "explain": "Selection is a description problem. It is named as the number one cause of agents ignoring tools they have."
+            },
+            {
+              "id": "q_desc_1b",
+              "q": "Which three things should a tool description cover?",
+              "options": [
+                "What it does, when to use it, what it returns",
+                "What it does, who owns it, how long it takes",
+                "Its name, its arguments, its error codes",
+                "What it does, what it costs, when it was last updated"
+              ],
+              "correct": 0,
+              "explain": "Three or four sentences on those three points. 'When to use it' is the one most often missing."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_desc_1",
+          "q": "Why is a tool that is never called a hard bug to notice?",
+          "options": [
+            "The API returns a warning that is easy to miss",
+            "Nothing errors — the agent just answers without it, often confidently",
+            "It only manifests under load",
+            "The tool_use block is returned but discarded"
+          ],
+          "correct": 1,
+          "explain": "There is no failure signal. The agent produces a plausible invented answer instead of a grounded one."
+        },
+        {
+          "id": "r_desc_2",
+          "q": "Two tools have overlapping purposes and Claude keeps picking the wrong one. What do you fix?",
+          "options": [
+            "Rename them so they sort differently",
+            "Sharpen both descriptions, especially the 'when to use it' clause",
+            "Remove one and merge their schemas",
+            "Set tool_choice to any"
+          ],
+          "correct": 1,
+          "explain": "Selection between tools is decided by description. Making each one's applicability explicit is the fix."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_tool_result_protocol",
+      "knowledgePoints": [
+        {
+          "id": "kp_proto_1",
+          "name": "Four invariants",
+          "keyPrerequisites": ["mt_agent_loop", "mt_content_blocks"],
+          "teach": "<p>The reliable sequence, stated precisely:</p><ol><li>Send the user's request and the tool definitions.</li><li>Receive an assistant response containing text and/or <code>tool_use</code> blocks.</li><li>Execute each requested tool.</li><li>Send the <strong>complete assistant content</strong> back, then a user message containing matching <code>tool_result</code> blocks.</li><li>Request the final answer.</li></ol><p>Four things must hold, and each has a characteristic failure:</p><table class='kp-table'><tr><th>Invariant</th><th>Break it and…</th></tr><tr><td>Preserve the complete assistant content array, not just the visible text</td><td>the tool_use block vanishes and the tool_result has nothing to answer</td></tr><tr><td>Each tool_result references its matching <code>tool_use</code> id</td><td>the request is rejected as malformed</td></tr><tr><td>Every tool_use in a turn gets a result</td><td>the request is rejected — no partial answers</td></tr><tr><td>The original tool schemas stay on the follow-up request</td><td>Claude no longer knows what the tools were</td></tr></table>",
+          "questions": [
+            {
+              "id": "q_proto_1a",
+              "q": "You append only the assistant's text to the history and send a tool_result. What breaks?",
+              "options": [
+                "Nothing — the text is what matters",
+                "The tool_use block is gone, so the tool_result has no request to answer",
+                "The tool schemas are lost",
+                "stop_reason becomes end_turn prematurely"
+              ],
+              "correct": 1,
+              "explain": "Preserve the complete content array. The tool_use block is part of the conversation, not presentation."
+            },
+            {
+              "id": "q_proto_1b",
+              "q": "Claude requests three tools in one turn and you return two results. What happens?",
+              "options": [
+                "Claude proceeds with the two it has",
+                "The request is rejected — every tool_use needs a matching result",
+                "The third is retried automatically",
+                "The third is treated as an error result"
+              ],
+              "correct": 1,
+              "explain": "All or nothing. Each tool_use id must be answered."
+            }
+          ]
+        },
+        {
+          "id": "kp_proto_2",
+          "name": "Tool input is untrusted input",
+          "keyPrerequisites": [],
+          "teach": "<p>The arguments in a <code>tool_use</code> block were produced by a model, from text that may have come from a user. They are not from your code, and they are not vetted.</p><p class='kp-key'>Treat tool inputs as untrusted data. Validate authorisation, arguments, timeouts, and side effects before execution.</p><pre class='kp-code'>def run_refund(args, ctx):\n    order = db.get(args[\"order_id\"])\n    if order.customer_id != ctx.customer_id:   # authorisation — not the model's job\n        return error(\"not your order\")\n    if args[\"amount_cents\"] > order.total_cents:\n        return error(\"amount exceeds order total\")\n    ...</pre><p>The schema already checked that <code>order_id</code> is a string and <code>amount_cents</code> is an integer. It has no opinion about whether <em>this</em> user may refund <em>that</em> order — and neither does the model. Authorisation lives in your executor or it lives nowhere.</p><p>The prompt-injection case makes this concrete: a document Claude reads can contain instructions, and if reading it can cause a refund, the document can cause a refund.</p>",
+          "questions": [
+            {
+              "id": "q_proto_2a",
+              "q": "Where does authorisation for a tool call belong?",
+              "options": [
+                "In the tool description, as an instruction Claude follows",
+                "In your executor, checked before the side effect happens",
+                "In the input_schema, as a required field",
+                "In the system prompt, as a standing rule"
+              ],
+              "correct": 1,
+              "explain": "Only code can enforce. A prompt-level rule is a request, and untrusted content in context can compete with it."
+            },
+            {
+              "id": "q_proto_2b",
+              "q": "The schema validated the tool input. What has that established?",
+              "options": [
+                "That the arguments are safe to act on",
+                "That the arguments are the right type and shape — nothing about whether the action is permitted",
+                "That the user authorised the action",
+                "That the values exist in your database"
+              ],
+              "correct": 1,
+              "explain": "Shape, not permission. Same boundary as structured output: schemas check structure, code checks truth."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_proto_1",
+          "q": "Which must accompany the follow-up request after a tool runs?",
+          "options": [
+            "Only the tool_result blocks",
+            "The original tool schemas, still in the tools array",
+            "A fresh system prompt describing the result",
+            "The tool's source code"
+          ],
+          "correct": 1,
+          "explain": "The schemas stay. Each call is stateless, so dropping them leaves Claude without the definitions it is reasoning about."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_multiple_tools",
+      "knowledgePoints": [
+        {
+          "id": "kp_many_1",
+          "name": "Two changes, no more",
+          "keyPrerequisites": ["mt_tool_result_protocol", "mt_tool_description"],
+          "teach": "<p>Claude reads <em>all</em> the descriptions you provide and picks per turn — sometimes several tools at once, sometimes one after another across turns.</p><p>Adding a tool is two edits:</p><pre class='kp-code'>tools.append(get_weather_schema)         # 1. declare it\n\ndef dispatch(block):                      # 2. add a case\n    if   block.name == \"get_weather\": return get_weather(**block.input)\n    elif block.name == \"search_orders\": return search_orders(**block.input)\n    ...</pre><p class='kp-key'>Declare it, dispatch it. Nothing about the loop changes.</p><p>That is the payoff of the loop being generic: it does not know or care how many tools exist. Which also means the thing that scales badly is not your code — it is the quality of your descriptions, since every added tool makes selection harder.</p>",
+          "questions": [
+            {
+              "id": "q_many_1a",
+              "q": "What has to change to go from one tool to five?",
+              "options": [
+                "The loop, to handle multiple tool_use blocks per turn",
+                "The tools array and the dispatch function — nothing else",
+                "The model tier, to handle the larger schema set",
+                "tool_choice, which must be set to any"
+              ],
+              "correct": 1,
+              "explain": "Declare and dispatch. The loop is already generic over the tool set."
+            },
+            {
+              "id": "q_many_1b",
+              "q": "How does Claude decide which of several tools to call?",
+              "options": [
+                "In the order they appear in the tools array",
+                "By reading all the descriptions and choosing per turn",
+                "By schema similarity to the user's phrasing",
+                "By whichever was used most recently"
+              ],
+              "correct": 1,
+              "explain": "Descriptions, every turn. It is why description quality gets more important as the toolbox grows."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_many_1",
+          "q": "Can Claude call more than one tool in a single turn?",
+          "options": [
+            "No — one tool_use block per response",
+            "Yes, though it often calls them one at a time across turns instead",
+            "Only when tool_choice is any",
+            "Only for server-side tools"
+          ],
+          "correct": 1,
+          "explain": "It can, and often does not — the conservatism that the batch tool exists to work around."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_tool_runner",
+      "knowledgePoints": [
+        {
+          "id": "kp_runner_1",
+          "name": "Hand it functions, not schemas",
+          "keyPrerequisites": ["mt_tool_result_protocol"],
+          "teach": "<p>The TypeScript, Python and Ruby SDKs ship a tool runner that takes your <em>actual functions</em>, generates the JSON schema from their types and docstrings, and runs the whole exchange internally:</p><pre class='kp-code'>const runner = client.beta.messages.toolRunner({\n  model, messages, tools: [getWeather, searchOrders],   // real functions\n});\nconst final = await runner.untilDone();                 // settled final message</pre><p>What disappears from your code:</p><ul><li>the <code>while</code> loop,</li><li>the <code>stop_reason</code> switch,</li><li>hand-written JSON schemas,</li><li>manual appending to the message array.</li></ul><p class='kp-key'>The protocol does not go away. It goes somewhere else.</p><p>Which is why the invariants are still worth knowing: when a runner-based agent misbehaves, you are debugging a loop you did not write.</p>",
+          "questions": [
+            {
+              "id": "q_runner_1a",
+              "q": "What does the SDK tool runner take over?",
+              "options": [
+                "Tool execution, running your functions on Anthropic's servers",
+                "The loop, the stop_reason switch, schema generation, and message-array management",
+                "Tool selection, by ranking descriptions before Claude sees them",
+                "Authorisation checks on tool arguments"
+              ],
+              "correct": 1,
+              "explain": "Four pieces of mechanism. Your functions still run where your code runs, and authorisation is still yours."
+            },
+            {
+              "id": "q_runner_1b",
+              "q": "What does runner.untilDone() return?",
+              "options": [
+                "A stream of every intermediate message",
+                "The final assistant message, after all tool exchanges have settled",
+                "The list of tools that were called",
+                "The last tool_result"
+              ],
+              "correct": 1,
+              "explain": "The settled final message — the loop has already run to end_turn inside it."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_runner_1",
+          "q": "Where do the schemas come from when using the tool runner?",
+          "options": [
+            "You still write them and pass them alongside the functions",
+            "They are generated from your functions' types and docstrings",
+            "Claude infers them at call time from the function name",
+            "They are fetched from a registry"
+          ],
+          "correct": 1,
+          "explain": "Generated from your code — which is also a reason to keep docstrings good, since they become the description Claude reads."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_abstract_tools",
+      "knowledgePoints": [
+        {
+          "id": "kp_abstract_1",
+          "name": "Primitives beat operations",
+          "keyPrerequisites": ["mt_tool_description"],
+          "teach": "<p>The instinct when an agent fails at a task is to build a tool for that task. Do it a dozen times and you have a dozen narrow tools and an agent that still fails on anything slightly new.</p><p>Claude Code's own toolset is the counter-example:</p><pre class='kp-code'>bash   read   write   edit   glob   grep</pre><p>Not <code>refactor_code</code>. Not <code>install_dependencies</code>. Not <code>run_the_tests</code>. Six primitives that <strong>compose</strong>, which is how it handles situations nobody designed for: a refactor is grep, then read, then edit, then bash.</p><p class='kp-key'>Give Claude abstract, combinable tools rather than hyper-specialised ones.</p><p>The trade is real. A narrow tool is more reliable at its one job and needs less reasoning to use correctly. What you buy by giving it up is coverage of the long tail — which, for an agent, is most of what it will meet.</p>",
+          "questions": [
+            {
+              "id": "q_abstract_1a",
+              "q": "Your agent has twelve narrow tools and still fails on anything slightly novel. What principle was violated?",
+              "options": [
+                "Tools should be few enough to fit in context",
+                "Tools should be abstract and combinable, not hyper-specialised",
+                "Tools should be server-side wherever possible",
+                "Tools should each do one thing"
+              ],
+              "correct": 1,
+              "explain": "Specialised tools only cover the cases you predicted. Primitives compose into the ones you did not."
+            },
+            {
+              "id": "q_abstract_1b",
+              "q": "Which set illustrates the principle?",
+              "options": [
+                "refactor_code, install_dependencies, run_tests",
+                "bash, read, write, edit, glob, grep",
+                "search_orders, refund_order, cancel_order",
+                "summarise, translate, classify"
+              ],
+              "correct": 1,
+              "explain": "Claude Code's own toolset — deliberately generic so it can be combined."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_abstract_1",
+          "q": "What does abstraction cost you?",
+          "options": [
+            "Nothing — abstract tools are strictly better",
+            "Reliability on any single predefined job, in exchange for coverage of the long tail",
+            "The ability to validate tool inputs",
+            "Compatibility with the tool runner"
+          ],
+          "correct": 1,
+          "explain": "A narrow tool is more reliable at its one job. Abstraction trades that for handling what you did not plan for."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_environment_inspection",
+      "knowledgePoints": [
+        {
+          "id": "kp_inspect_1",
+          "name": "Before acting, look; after acting, look again",
+          "keyPrerequisites": ["mt_agent_loop"],
+          "teach": "<p class='kp-key'>Claude can only perceive its environment through tool results.</p><p>That sentence is the whole topic. An agent has no eyes. If the loop does not feed it fresh state, it is reasoning about the state it last saw — which may be the state it <em>assumed</em> its last action produced.</p><p>Concretely:</p><table class='kp-table'><tr><th>Before</th><th>After</th></tr><tr><td>read a file before editing it, so the edit targets current content</td><td>read it back, or check the write's return</td></tr><tr><td>list a directory before deciding whether to create a file</td><td>list again to confirm it exists</td></tr><tr><td>screenshot before clicking</td><td>screenshot after, to confirm the click landed</td></tr></table><p>Skipping this is a common source of agent failure. The agent flies blind, repeating or compounding an action that silently failed — and reports success, because from inside the loop nothing contradicted it.</p>",
+          "questions": [
+            {
+              "id": "q_inspect_1a",
+              "q": "An agent reports it saved the file. It did not. Which principle would have caught it?",
+              "options": [
+                "Abstract tools — a narrower save tool would have failed loudly",
+                "Environment inspection — look again after acting, rather than assuming the action landed",
+                "Forced tool choice, so the save could not be skipped",
+                "A lower temperature, for more deterministic tool use"
+              ],
+              "correct": 1,
+              "explain": "Without an inspection step, nothing in the loop ever contradicts the agent's assumption that the write worked."
+            },
+            {
+              "id": "q_inspect_1b",
+              "q": "Why can an agent not simply know whether its action succeeded?",
+              "options": [
+                "Tool results are asynchronous and may arrive late",
+                "It perceives the environment only through tool results — if you do not send fresh state, it has none",
+                "The model does not retain the previous turn",
+                "Success is only reported when stop_reason is end_turn"
+              ],
+              "correct": 1,
+              "explain": "There is no channel other than tool results. Perception is something the loop provides or withholds."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_inspect_1",
+          "q": "Why read a file before editing it?",
+          "options": [
+            "To warm the cache for the edit call",
+            "So the edit targets current content rather than a stale assumption about it",
+            "Because edit tools require the file's contents as an argument",
+            "To confirm authorisation"
+          ],
+          "correct": 1,
+          "explain": "The 'before' half of look-act-look. An edit built on remembered content is an edit built on a guess."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_batch_tool",
+      "knowledgePoints": [
+        {
+          "id": "kp_batch_1",
+          "name": "One tool that holds many calls",
+          "keyPrerequisites": ["mt_multiple_tools"],
+          "teach": "<p>Claude <em>can</em> call several tools in one turn. It often plays it safe and calls them one at a time, across several turns — and each turn is a full round trip.</p><p>The trick is to give it a single tool whose input schema takes an <strong>array of sub-invocations</strong>:</p><pre class='kp-code'>{\n  \"name\": \"batch_tool\",\n  \"description\": \"Run several independent tool calls at once.\",\n  \"input_schema\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"invocations\": {\n        \"type\": \"array\",\n        \"items\": {\"type\": \"object\", \"properties\": {\n          \"name\":  {\"type\": \"string\"},\n          \"input\": {\"type\": \"object\"}\n        }}\n      }\n    }\n  }\n}</pre><p>Your code unpacks the array, executes each sub-call — optionally in parallel — and returns all the results together as one <code>tool_result</code>.</p><p class='kp-key'>Use it when the calls are known to be independent. Five city lookups become one round trip instead of five.</p><p>The precondition matters: if call two depends on call one's result, batching them is wrong regardless of how much latency it would save.</p>",
+          "questions": [
+            {
+              "id": "q_batch_1a",
+              "q": "What does batch_tool's input schema accept?",
+              "options": [
+                "A list of tool names to enable for this turn",
+                "An array of sub-invocations, each with its own name and input",
+                "A single tool name and a repeat count",
+                "A nested conversation to run in a subprocess"
+              ],
+              "correct": 1,
+              "explain": "An array of {name, input} pairs, which your code unpacks and executes."
+            },
+            {
+              "id": "q_batch_1b",
+              "q": "When is batching the wrong move?",
+              "options": [
+                "When the calls hit the same backend service",
+                "When one call's input depends on another call's result",
+                "When there are more than five calls",
+                "When the tools are server-side"
+              ],
+              "correct": 1,
+              "explain": "Independence is the precondition. Dependent calls have to be sequential — that is what the sequencing is for."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_batch_1",
+          "q": "What problem does the batch tool solve?",
+          "options": [
+            "Claude calling too many tools at once and exhausting rate limits",
+            "Claude calling independent tools serially across turns, costing a round trip each",
+            "Tool results arriving out of order",
+            "Tool schemas taking up too much context"
+          ],
+          "correct": 1,
+          "explain": "It collapses N round trips into one by giving the conservative serial habit a single call to express itself through."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_fine_grained_streaming",
+      "knowledgePoints": [
+        {
+          "id": "kp_fine_1",
+          "name": "Buffering, and what turning it off costs",
+          "keyPrerequisites": ["mt_streaming", "mt_tool_anatomy"],
+          "teach": "<p>By default, when a tool's input JSON streams, the API <strong>buffers and validates</strong> it — sending only complete top-level key/value pairs at a time.</p><p>That produces the delay-then-burst pattern people notice on a large tool input: nothing, nothing, nothing, then a whole field appears at once.</p><pre class='kp-code'>fine_grained = True   # stream chunks as generated; no server-side JSON validation</pre><p class='kp-key'>You gain immediacy. You lose the API's validation safety net.</p><p>With it off, your code may observe <strong>invalid or partial JSON</strong> — Claude might emit a malformed value such as <code>undefined</code> mid-stream — so it must buffer, validate, and recover deliberately rather than parsing each chunk as it lands.</p><p>Worth it for a UI that shows arguments filling in live. Not worth it if you were going to wait for the complete input anyway.</p>",
+          "questions": [
+            {
+              "id": "q_fine_1a",
+              "q": "What causes the delay-then-burst pattern when streaming a large tool input?",
+              "options": [
+                "Network buffering between the SDK and the API",
+                "The API buffers and validates the JSON, emitting only complete top-level key/value pairs",
+                "The model generates tool inputs after the text blocks",
+                "Rate limiting on streamed tool calls"
+              ],
+              "correct": 1,
+              "explain": "Server-side validation holds each pair until it is complete."
+            },
+            {
+              "id": "q_fine_1b",
+              "q": "What must your code handle once fine-grained streaming is on?",
+              "options": [
+                "Out-of-order content blocks",
+                "Partial or invalid JSON, including malformed values",
+                "Duplicate tool_use ids",
+                "Missing stop_reason values"
+              ],
+              "correct": 1,
+              "explain": "You disabled the validation, so its job is now yours: buffer, validate, recover."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_fine_1",
+          "q": "What is the trade-off fine-grained tool streaming makes?",
+          "options": [
+            "Lower cost against higher latency",
+            "Faster, more granular streaming against losing server-side JSON validation",
+            "Better tool selection against slower responses",
+            "Larger tool inputs against fewer tools"
+          ],
+          "correct": 1,
+          "explain": "Immediacy for safety. The validation does not disappear — it moves to your code."
+        }
+      ]
+    }
+  ]
+}

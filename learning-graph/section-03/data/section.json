@@ -1,0 +1,11 @@
+{
+  "$comment": "Identity of this graph. One engine (../app.js, ../scripts/) serves several sections; this file is what tells them apart. storageKey must be unique per section or two graphs would share progress.",
+  "id": "03",
+  "subject": "Building with the Claude API",
+  "section": "Section 3 · Building with the Claude API",
+  "sectionShort": "Section 3",
+  "storageKey": "ccaf_learning_graph_03_v1",
+  "notesPath": "03-building-with-the-claude-api/notes.md",
+  "dataPath": "learning-graph/section-03/data",
+  "buildArg": "section-03"
+}

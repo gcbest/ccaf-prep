@@ -1,0 +1,198 @@
+{
+  "$comment": "Teaching content for cl_structured.",
+  "cluster": "cl_structured",
+  "topics": [
+    {
+      "topicId": "mt_prefill_stop",
+      "knowledgePoints": [
+        {
+          "id": "kp_prefill_1",
+          "name": "Start the answer for it",
+          "keyPrerequisites": ["mt_conversation_state"],
+          "teach": "<p>Asking for “JSON only” gets you JSON wrapped in a helpful sentence. Asking more firmly gets you a shorter sentence.</p><p>The mechanical fix is to <strong>write the beginning of the assistant turn yourself</strong>. Claude continues from where you left it, so the preamble never gets a place to exist:</p><pre class='kp-code'>messages = [\n    {\"role\": \"user\",      \"content\": \"Extract the invoice fields as JSON.\"},\n    {\"role\": \"assistant\", \"content\": \"```json\"},        # ← prefill\n]\n\nresp = client.messages.create(\n    model=M, max_tokens=1024, messages=messages,\n    stop_sequences=[\"```\"],                              # ← stop at the fence\n)\n\ndata = json.loads(resp.content[0].text.strip())</pre><p class='kp-key'>Prefill removes the preamble. The stop sequence removes the trailing commentary.</p><p>The same trick constrains code, lists, or CSV — anything whose delimiter is unambiguous.</p>",
+          "questions": [
+            {
+              "id": "q_prefill_1a",
+              "q": "Claude keeps wrapping requested JSON in a sentence of explanation. Which two moves remove it?",
+              "options": [
+                "Lower the temperature and raise max_tokens",
+                "Prefill the assistant turn with an opening fence, and set a stop sequence on the closing one",
+                "Move the request into the system prompt and add process steps",
+                "Enable streaming and parse only the first delta"
+              ],
+              "correct": 1,
+              "explain": "Prefill kills the opening preamble; the stop sequence kills the trailing commentary."
+            },
+            {
+              "id": "q_prefill_1b",
+              "q": "How does prefilling actually suppress the preamble?",
+              "options": [
+                "It instructs Claude not to write one",
+                "Claude continues from the text you put in the assistant turn, so there is no room before it",
+                "It strips the preamble server-side before returning",
+                "It sets stop_reason to stop_sequence immediately"
+              ],
+              "correct": 1,
+              "explain": "It is continuation, not instruction. The turn has already started, and it started with a fence."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_prefill_1",
+          "q": "Besides JSON, what else can prefill plus a stop sequence constrain?",
+          "options": [
+            "Nothing — the technique is JSON-specific",
+            "Code, lists, or CSV — anything with an unambiguous delimiter",
+            "Only output whose length is known in advance",
+            "Only tool inputs"
+          ],
+          "correct": 1,
+          "explain": "The requirement is an unambiguous delimiter to open with and stop on, not a particular format."
+        },
+        {
+          "id": "r_prefill_2",
+          "q": "Which stop_reason do you expect on a successful prefill-and-stop extraction?",
+          "options": ["end_turn", "stop_sequence", "max_tokens", "tool_use"],
+          "correct": 1,
+          "explain": "Generation ended because it hit the string you supplied."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_tool_schema_output",
+      "knowledgePoints": [
+        {
+          "id": "kp_schemaout_1",
+          "name": "The tool that is never called",
+          "keyPrerequisites": ["mt_tool_anatomy"],
+          "teach": "<p>For production extraction there is a sturdier option than hoping prose parses. Define a tool whose <code>input_schema</code> <strong>is the output contract</strong>, and read the structured input off the <code>tool_use</code> block:</p><pre class='kp-code'>tools = [{\n  \"name\": \"record_invoice\",\n  \"description\": \"Record the fields extracted from an invoice.\",\n  \"input_schema\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"invoice_number\": {\"type\": \"string\"},\n      \"total_cents\":    {\"type\": \"integer\"},\n      \"due_date\":       {\"type\": \"string\", \"format\": \"date\"}\n    },\n    \"required\": [\"invoice_number\", \"total_cents\"]\n  }\n}]</pre><p>There need not be a real function behind it. The tool exists so the model has a typed shape to fill, and the API validates the shape on the way out.</p><p class='kp-key'>Prefill hopes for valid JSON. A schema asks the API to enforce it.</p><p>Use a generic <code>to_json</code>-style tool for a quick prototype or changing requirements; use a dedicated schema for complex, high-accuracy production work.</p>",
+          "questions": [
+            {
+              "id": "q_schemaout_1a",
+              "q": "Why prefer a tool schema over prefill for high-accuracy production extraction?",
+              "options": [
+                "It costs fewer output tokens",
+                "The shape is declared and validated rather than hoped for",
+                "Tool calls are processed by a more capable model",
+                "Prefill is unavailable when tools are defined"
+              ],
+              "correct": 1,
+              "explain": "A schema turns 'please return this shape' into a contract the API checks."
+            },
+            {
+              "id": "q_schemaout_1b",
+              "q": "When is a generic to_json-style tool the better choice over a dedicated schema?",
+              "options": [
+                "For complex, high-accuracy production extraction",
+                "For rapid prototypes or requirements that are still changing",
+                "Whenever more than three fields are needed",
+                "When the output must be nested"
+              ],
+              "correct": 1,
+              "explain": "Generic for speed and churn; dedicated for accuracy and stability."
+            }
+          ]
+        },
+        {
+          "id": "kp_schemaout_2",
+          "name": "Shape is not truth",
+          "keyPrerequisites": [],
+          "teach": "<p>A JSON Schema validates <strong>structure</strong>. It has nothing to say about whether the values are right.</p><table class='kp-table'><tr><th>The schema catches</th><th>The schema misses</th></tr><tr><td><code>total_cents</code> is a string, not an integer</td><td><code>total_cents</code> is 1200 when the invoice says 12000</td></tr><tr><td><code>due_date</code> is missing</td><td><code>due_date</code> is in the past</td></tr><tr><td>an unknown field appeared</td><td><code>invoice_number</code> belongs to a different customer</td></tr></table><p class='kp-key'>Validate the returned values in application code. A schema validates shape, not business truth.</p><p>This is the same boundary as everywhere else in the section: the model's output is input to your system, and input gets checked.</p>",
+          "questions": [
+            {
+              "id": "q_schemaout_2a",
+              "q": "Your extraction tool returns a well-formed record with a total that is off by a factor of ten. What failed?",
+              "options": [
+                "The schema — it should have constrained the range",
+                "Nothing in the schema; shape was valid, and business correctness is your code's job",
+                "The tool_choice setting",
+                "The model tier"
+              ],
+              "correct": 1,
+              "explain": "Shape passed because the shape was fine. Only application-level validation catches a wrong-but-well-typed value."
+            },
+            {
+              "id": "q_schemaout_2b",
+              "q": "Which check does a JSON Schema perform?",
+              "options": [
+                "That a date is in the future",
+                "That a field is present and is of the declared type",
+                "That an identifier exists in your database",
+                "That a total matches the sum of line items"
+              ],
+              "correct": 1,
+              "explain": "Presence and type — structure. The other three are business rules."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_schemaout_1",
+          "q": "What is the relationship between the tool you define for structured output and a real function?",
+          "options": [
+            "There must be a function; the API calls it",
+            "There need not be one — the tool exists to give the model a typed shape to fill",
+            "The function must return the same schema it declares",
+            "The function runs server-side at Anthropic"
+          ],
+          "correct": 1,
+          "explain": "It is a contract, not necessarily an implementation. You read the tool_use input and never dispatch anything."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_tool_choice",
+      "knowledgePoints": [
+        {
+          "id": "kp_toolchoice_1",
+          "name": "Three settings, three guarantees",
+          "keyPrerequisites": ["mt_tool_schema_output"],
+          "teach": "<table class='kp-table'><tr><th>tool_choice</th><th>guarantee</th><th>use when</th></tr><tr><td><code>auto</code></td><td>Claude may call a tool, or may answer in prose</td><td>Claude should judge whether the tool applies</td></tr><tr><td><code>any</code></td><td>Some tool will be called</td><td>a tool is required, but which one is Claude's call</td></tr><tr><td>naming a tool</td><td><em>That</em> tool will be called</td><td>structured output is mandatory</td></tr></table><p class='kp-key'>Force the tool when the endpoint must always return a record. Leave it auto when 'no structured answer applies' is a legitimate outcome.</p><p>The failure mode of leaving it on <code>auto</code> for a mandatory-extraction endpoint is intermittent and unpleasant: it works on the clear cases and returns prose on exactly the ambiguous inputs where you most needed a record.</p>",
+          "questions": [
+            {
+              "id": "q_toolchoice_1a",
+              "q": "An endpoint must always return a filled-in record, never prose. Which tool_choice?",
+              "options": [
+                "auto, so Claude can decline on bad input",
+                "The specific tool, named — forcing it",
+                "any, so Claude picks the closest tool",
+                "auto with a process-step instruction to always use the tool"
+              ],
+              "correct": 1,
+              "explain": "Naming the tool is the only setting that guarantees that tool gets called."
+            },
+            {
+              "id": "q_toolchoice_1b",
+              "q": "What does tool_choice: \"any\" guarantee?",
+              "options": [
+                "Every defined tool is called once",
+                "Some tool is called, but Claude chooses which",
+                "A specific tool is called",
+                "No tool is called unless the input is unambiguous"
+              ],
+              "correct": 1,
+              "explain": "any requires a tool call without dictating which one."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_toolchoice_1",
+          "q": "Your extraction endpoint is on tool_choice auto and returns prose on roughly one request in twenty. What is the fix?",
+          "options": [
+            "Lower temperature so the tool is chosen more consistently",
+            "Force the tool by name so a structured result is guaranteed",
+            "Improve the tool description and keep auto",
+            "Retry any prose response until it returns a record"
+          ],
+          "correct": 1,
+          "explain": "If a record is mandatory, do not leave it to judgement. Forcing it is a guarantee rather than a nudge."
+        }
+      ]
+    }
+  ]
+}

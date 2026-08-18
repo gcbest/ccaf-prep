@@ -1,0 +1,23 @@
+{
+  "$comment": "Source standards this graph is aligned to. Two families: CCA-F exam-guide domains (ccaf:*) and the study-reference glossary terms (ccaf-glossary:*). Topics reference these by id in their `standards` array. Only the glossary terms Section 3 actually teaches are listed.",
+  "standards": [
+    { "id": "ccaf:d1", "family": "ccaf", "code": "Domain 1", "name": "Agentic Architecture & Orchestration", "weight": 0.27, "source": "CCA-F Exam Guide v1.0 (effective July 2026)" },
+    { "id": "ccaf:d2", "family": "ccaf", "code": "Domain 2", "name": "Tool Design & MCP Integration", "weight": 0.18, "source": "CCA-F Exam Guide v1.0 (effective July 2026)" },
+    { "id": "ccaf:d3", "family": "ccaf", "code": "Domain 3", "name": "Prompt Engineering & Structured Output", "weight": 0.20, "source": "CCA-F Exam Guide v1.0 (effective July 2026)" },
+    { "id": "ccaf:d4", "family": "ccaf", "code": "Domain 4", "name": "Claude Code Configuration & Workflows", "weight": 0.20, "source": "CCA-F Exam Guide v1.0 (effective July 2026)" },
+    { "id": "ccaf:d5", "family": "ccaf", "code": "Domain 5", "name": "Context Management & Reliability", "weight": 0.15, "source": "CCA-F Exam Guide v1.0 (effective July 2026)" },
+
+    { "id": "ccaf-glossary:t1", "family": "ccaf-glossary", "code": "t1", "name": "Agentic loop", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t2", "family": "ccaf-glossary", "code": "t2", "name": "stop_reason", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t12", "family": "ccaf-glossary", "code": "t12", "name": "Prompt chaining", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t14", "family": "ccaf-glossary", "code": "t14", "name": "Tool description as the selection mechanism", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t18", "family": "ccaf-glossary", "code": "t18", "name": "tool_choice: \"auto\"", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t19", "family": "ccaf-glossary", "code": "t19", "name": "tool_choice: \"any\"", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t20", "family": "ccaf-glossary", "code": "t20", "name": "Forced tool selection", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t44", "family": "ccaf-glossary", "code": "t44", "name": "Few-shot prompting", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t45", "family": "ccaf-glossary", "code": "t45", "name": "tool_use with a JSON schema", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t48", "family": "ccaf-glossary", "code": "t48", "name": "Retry with error feedback", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t54", "family": "ccaf-glossary", "code": "t54", "name": "Lost in the middle effect", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t63", "family": "ccaf-glossary", "code": "t63", "name": "Claim–source mapping", "source": "study-reference/ccaf_study_reference.md" }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "$comment": "Domain summaries. A cluster is a human-facing grouping of micro-topics; the graph, not the cluster, is the source of truth for ordering. Colours are chosen to stay legible against both the light and dark page background.",
+  "clusters": [
+    {
+      "id": "cl_api_core",
+      "name": "The request/response contract",
+      "subject": "Building with the Claude API",
+      "summary": "One call — client.messages.create — and the four things about its answer that everything else in the section is built on: content is a list of blocks, stop_reason is the control signal, the conversation is a array you maintain, and the model tier is a cost decision you make with evidence.",
+      "color": "#3f6b86",
+      "colorDark": "#5f9cc0",
+      "notesPart": "Your first API call · Choosing the right model"
+    },
+    {
+      "id": "cl_prompting",
+      "name": "Prompt engineering",
+      "subject": "Building with the Claude API",
+      "summary": "The four techniques the course measures — clear and direct, specific, XML-structured, exemplified — and the iteration loop that is the reason they are worth knowing in that order.",
+      "color": "#7a4a6b",
+      "colorDark": "#a8779a",
+      "notesPart": "Prompt engineering techniques"
+    },
+    {
+      "id": "cl_structured",
+      "name": "Structured output",
+      "subject": "Building with the Claude API",
+      "summary": "Two ways to make Claude return something a parser can trust — prefill with a stop sequence, or a tool schema that is the output contract — and the rule for choosing between them.",
+      "color": "#8a5a2b",
+      "colorDark": "#c08a4d",
+      "notesPart": "Structured output choices"
+    },
+    {
+      "id": "cl_evaluation",
+      "name": "Prompt evaluation",
+      "subject": "Building with the Claude API",
+      "summary": "Turning \"the prompt seems better\" into a number: the five-step pipeline, where the dataset comes from, and the three kinds of grader — including the one that quietly returns 6 out of 10 for everything unless you ask it for reasoning.",
+      "color": "#5f6b3a",
+      "colorDark": "#8ba055",
+      "notesPart": "Prompt evaluation"
+    },
+    {
+      "id": "cl_tools",
+      "name": "Tool use & the agent loop",
+      "subject": "Building with the Claude API",
+      "summary": "The five-step loop you own, the three-part tool definition Claude reads to decide what to call, the invariants that make the loop actually work, and the design principles that decide whether an agent succeeds at anything you did not anticipate.",
+      "color": "#8f3f3f",
+      "colorDark": "#c67878",
+      "notesPart": "Agent loop & tool use"
+    },
+    {
+      "id": "cl_capabilities",
+      "name": "Built-in capabilities & multimodal input",
+      "subject": "Building with the Claude API",
+      "summary": "What Anthropic runs for you and what you still have to implement: server tools, extended thinking, images, PDFs, citations, the text editor whose schema ships without its body, and Computer Use.",
+      "color": "#2f6b6b",
+      "colorDark": "#4f9c9c",
+      "notesPart": "Multimodal input · Computer Use · Built-in tools"
+    },
+    {
+      "id": "cl_mcp",
+      "name": "MCP from the API side",
+      "subject": "Building with the Claude API",
+      "summary": "When a tool should be a tool, a skill, or an MCP server; the two request fields that connect one; and how to keep a connected server read-only.",
+      "color": "#4a5a8a",
+      "colorDark": "#8091c4",
+      "notesPart": "Tool design & MCP integration"
+    },
+    {
+      "id": "cl_context",
+      "name": "Context management",
+      "subject": "Building with the Claude API",
+      "summary": "What counts as context, the four patterns Anthropic names for managing it, and the caching rules — one hour, four breakpoints, 1,024 tokens, byte-identical prefix — that are the most testable details in the section.",
+      "color": "#6b5a2f",
+      "colorDark": "#a89150",
+      "notesPart": "Context management & reliability"
+    },
+    {
+      "id": "cl_rag",
+      "name": "Retrieval & agentic search",
+      "subject": "Building with the Claude API",
+      "summary": "Why you chunk, the four chunking strategies and which one to default to, and the retrieval stack — embeddings, BM25, hybrid, reranking, contextual retrieval — each of which exists to fix a specific failure of the one before it.",
+      "color": "#3d7a5a",
+      "colorDark": "#63b088",
+      "notesPart": "Retrieval Augmented Generation (RAG) & agentic search"
+    },
+    {
+      "id": "cl_orchestration",
+      "name": "Workflows & agents",
+      "subject": "Building with the Claude API",
+      "summary": "The single distinction the exam keeps asking about — are the steps knowable in advance? — the four workflow patterns that answer it when they are, and the decision rule that picks between them.",
+      "color": "#a84e31",
+      "colorDark": "#d4805f",
+      "notesPart": "Agentic orchestration patterns"
+    },
+    {
+      "id": "cl_managed",
+      "name": "Managed agents",
+      "subject": "Building with the Claude API",
+      "summary": "The agent loop hosted on Anthropic's infrastructure: four primitives in a fixed order, one build sequence with a step that must not be reordered, and the conditions that make hosting worth it.",
+      "color": "#7a3f5a",
+      "colorDark": "#b8748f",
+      "notesPart": "[Bonus] Managed agents"
+    }
+  ]
+}

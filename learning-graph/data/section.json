@@ -1,0 +1,11 @@
+{
+  "$comment": "Identity of this graph. One engine (app.js, scripts/) serves several sections; this file is what tells them apart. storageKey must be unique per section or two graphs would share progress.",
+  "id": "08",
+  "subject": "Claude Agent SDK",
+  "section": "Section 8 · The Claude Agent SDK",
+  "sectionShort": "Section 8",
+  "storageKey": "ccaf_learning_graph_v1",
+  "notesPath": "08-claude-agent-sdk/notes.md",
+  "dataPath": "learning-graph/data",
+  "buildArg": ""
+}

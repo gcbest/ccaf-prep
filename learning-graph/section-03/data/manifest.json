@@ -1,0 +1,33 @@
+{
+  "builtAt": "2026-08-18",
+  "stats": {
+    "topics": 68,
+    "clusters": 11,
+    "dependencies": 99,
+    "hardDependencies": 79,
+    "encompassings": 77,
+    "knowledgePoints": 83,
+    "questions": 254,
+    "layers": 9,
+    "coreTopics": 49,
+    "estimatedMinutes": 505
+  },
+  "checksums": {
+    "topics.json": "sha256:775f89bf659b2e75",
+    "dependencies.json": "sha256:10881db1e9fc8791",
+    "encompassings.json": "sha256:c0173f37b5226700",
+    "clusters.json": "sha256:86821ce4481ec45c",
+    "curriculum-standards.json": "sha256:328c9bd917e59331",
+    "knowledge-points/api-core.json": "sha256:b47db04b7d8a1050",
+    "knowledge-points/capabilities.json": "sha256:1e353a8b3ac102ef",
+    "knowledge-points/context.json": "sha256:71b0aab2faad7f4b",
+    "knowledge-points/evaluation.json": "sha256:382f79a9c4958d00",
+    "knowledge-points/managed.json": "sha256:bdc3e41df21cadb7",
+    "knowledge-points/mcp.json": "sha256:8882726795b57cc6",
+    "knowledge-points/orchestration.json": "sha256:2a336a84b00f9bfb",
+    "knowledge-points/prompting.json": "sha256:d1f7b53f18bad530",
+    "knowledge-points/rag.json": "sha256:f222682bd099934b",
+    "knowledge-points/structured.json": "sha256:c53b817618c46f13",
+    "knowledge-points/tools.json": "sha256:af25c5ff5c2c1e56"
+  }
+}

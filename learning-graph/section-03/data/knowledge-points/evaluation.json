@@ -1,0 +1,353 @@
+{
+  "$comment": "Teaching content for cl_evaluation.",
+  "cluster": "cl_evaluation",
+  "topics": [
+    {
+      "topicId": "mt_eval_why",
+      "knowledgePoints": [
+        {
+          "id": "kp_evalwhy_1",
+          "name": "Three paths after writing a prompt",
+          "keyPrerequisites": ["mt_prompt_iteration"],
+          "teach": "<p>There are exactly three things people do once a prompt seems to work.</p><ol><li><strong>Test once, ship it.</strong> High risk: real input is stranger than anything you invented.</li><li><strong>Test a few times, patch a corner case or two.</strong> Better. Users will still surprise you.</li><li><strong>Run it through an evaluation pipeline, score it, iterate on objective metrics.</strong> More upfront work and cost, much higher confidence.</li></ol><p class='kp-key'>Most engineers default to 1 and 2, and underestimate real-world edge cases.</p><p>Worth being precise about what “it works on the three cases I tried” establishes: that the prompt fails on none of three cases you thought of. It says nothing about the cases you did not think of, which is the entire population you are about to serve.</p><p>The distinction underneath all this: <strong>prompt engineering</strong> is techniques for writing better prompts. <strong>Prompt evaluation</strong> is measuring whether they worked.</p>",
+          "questions": [
+            {
+              "id": "q_evalwhy_1a",
+              "q": "What does passing the handful of cases you invented actually establish?",
+              "options": [
+                "That the prompt is production-ready for typical input",
+                "Only that it does not fail on cases you already thought of",
+                "That the remaining failure rate is under 5%",
+                "That the prompt generalises, since the cases were representative"
+              ],
+              "correct": 1,
+              "explain": "Cases you invented are drawn from your imagination, not from production traffic. They cannot speak for what you did not imagine."
+            },
+            {
+              "id": "q_evalwhy_1b",
+              "q": "How do prompt engineering and prompt evaluation differ?",
+              "options": [
+                "Engineering is manual, evaluation is automated — otherwise the same activity",
+                "Engineering is techniques for writing better prompts; evaluation is measuring how well one performs",
+                "Engineering happens before deployment, evaluation after",
+                "Engineering applies to system prompts, evaluation to user prompts"
+              ],
+              "correct": 1,
+              "explain": "One writes, the other measures. The cycle alternates between them."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_evalwhy_1",
+          "q": "What is the stated cost of the third path?",
+          "options": [
+            "It requires a more capable model",
+            "More upfront work and cost, in exchange for much higher confidence",
+            "It cannot be used with prompts containing examples",
+            "It only works for classification tasks"
+          ],
+          "correct": 1,
+          "explain": "The trade is explicit: effort and spend now, confidence later."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_eval_pipeline",
+      "knowledgePoints": [
+        {
+          "id": "kp_evalpipe_1",
+          "name": "Five steps",
+          "keyPrerequisites": ["mt_eval_why"],
+          "teach": "<ol><li><strong>Draft a prompt</strong> — the baseline.</li><li><strong>Create an eval dataset</strong> — sample inputs representative of production traffic.</li><li><strong>Feed through Claude</strong> — merge each input into the prompt template, collect outputs.</li><li><strong>Feed through a grader</strong> — score each output, typically 1–10.</li><li><strong>Change the prompt and repeat</strong> — compare average scores.</li></ol><p class='kp-key'>Step 2 happens once. Steps 3 to 5 run again on every iteration.</p><p>That asymmetry is what turns the dataset into a <strong>regression suite</strong>: because the same inputs are re-scored after every change, a technique that fixes one case and breaks two others shows up as a lower average rather than as a success story.</p>",
+          "questions": [
+            {
+              "id": "q_evalpipe_1a",
+              "q": "Which artefact persists across iterations rather than being rebuilt?",
+              "options": ["The prompt", "The dataset", "The grader's reasoning", "The score threshold"],
+              "correct": 1,
+              "explain": "The dataset is built once and reused, which is what makes it a regression suite."
+            },
+            {
+              "id": "q_evalpipe_1b",
+              "q": "What does re-scoring the same dataset after every prompt change catch?",
+              "options": [
+                "Rate-limit errors",
+                "A change that fixes one case while breaking others",
+                "Drift in the model itself",
+                "Cases missing from the dataset"
+              ],
+              "correct": 1,
+              "explain": "Regression. Without a fixed dataset, a net-negative change can look like a win."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_evalpipe_1",
+          "q": "Put the pipeline in order: grade, draft, run through Claude, build dataset, revise.",
+          "options": [
+            "draft → build dataset → run through Claude → grade → revise",
+            "build dataset → draft → grade → run through Claude → revise",
+            "draft → run through Claude → build dataset → grade → revise",
+            "build dataset → run through Claude → draft → grade → revise"
+          ],
+          "correct": 0,
+          "explain": "Draft, dataset, run, grade, revise — then loop back to the run."
+        },
+        {
+          "id": "r_evalpipe_2",
+          "q": "What score range does the course use for graders?",
+          "options": ["Pass/fail", "1–10", "0–100", "A letter grade"],
+          "correct": 1,
+          "explain": "Typically 1–10, averaged across the dataset."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_eval_dataset",
+      "knowledgePoints": [
+        {
+          "id": "kp_evalds_1",
+          "name": "Generate it cheaply, keep it small at first",
+          "keyPrerequisites": ["mt_eval_pipeline", "mt_prefill_stop"],
+          "teach": "<p>Datasets can be hand-written, but generating them is normal — and the model that generates is <strong>not</strong> the model under test.</p><p class='kp-key'>Use Haiku to generate. The dataset is not the thing being evaluated, so it does not need the expensive tier.</p><p>Generate with <strong>prefill plus stop sequences</strong> so the result parses cleanly: prefill the assistant turn with <code>```json</code>, set <code>stop_sequences=[\"```\"]</code>, then <code>json.loads</code>.</p><p>On size: keep it to <strong>two or three cases while you are actively iterating</strong>, so a run is fast and cheap enough that you actually do it. Scale up to tens or hundreds for final validation. Real production datasets run to hundreds or thousands of records.</p>",
+          "questions": [
+            {
+              "id": "q_evalds_1a",
+              "q": "Which model generates the eval dataset for a Sonnet prompt, and why?",
+              "options": [
+                "Sonnet, so the cases match the model under test",
+                "Haiku, because generating cases is not the task being evaluated",
+                "Opus, because case quality determines eval quality",
+                "The same model, to avoid distribution mismatch"
+              ],
+              "correct": 1,
+              "explain": "Generation is a separate, cheap task. Applying the cheapest-model rule here is the point."
+            },
+            {
+              "id": "q_evalds_1b",
+              "q": "How large should the dataset be during active prompt iteration?",
+              "options": [
+                "Hundreds, so every change is measured reliably",
+                "Two or three cases, so iteration stays fast — scale up for final validation",
+                "Exactly 20–30, matching the model-selection eval",
+                "As large as the rate limit allows"
+              ],
+              "correct": 1,
+              "explain": "Small while iterating, large to validate. A slow eval is an eval that gets skipped."
+            }
+          ]
+        },
+        {
+          "id": "kp_evalds_2",
+          "name": "The format field",
+          "keyPrerequisites": [],
+          "teach": "<p>Give each test case a <code>format</code> field — <code>\"python\"</code>, <code>\"json\"</code>, <code>\"regex\"</code>:</p><pre class='kp-code'>{\n  \"input\": \"Match any UK postcode\",\n  \"format\": \"regex\"      ← tells the grader which validator to run\n}</pre><p>A code grader has several validators available — <code>json.loads</code>, <code>ast.parse</code>, <code>re.compile</code> — and no way to guess which one applies to a given output. The field is how the dataset tells it.</p><p>Without it, a mixed dataset either needs one grader per format (and a way to split the cases) or a grader that tries everything and cannot distinguish 'not valid Python' from 'not Python at all'.</p>",
+          "questions": [
+            {
+              "id": "q_evalds_2a",
+              "q": "What is the per-case `format` field for?",
+              "options": [
+                "Telling Claude which format to produce",
+                "Telling a code grader which validator to apply to that output",
+                "Recording which model produced the case",
+                "Selecting a temperature per case"
+              ],
+              "correct": 1,
+              "explain": "It routes the output to the right validator — json.loads, ast.parse, re.compile."
+            },
+            {
+              "id": "q_evalds_2b",
+              "q": "Which three validators does the course name for code grading?",
+              "options": [
+                "json.loads, ast.parse, re.compile",
+                "pydantic, mypy, black",
+                "jsonschema, pytest, flake8",
+                "eval, exec, compile"
+              ],
+              "correct": 0,
+              "explain": "One per format: JSON, Python, regular expression."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_evalds_1",
+          "q": "Why generate a dataset with prefill and stop sequences rather than plain prompting?",
+          "options": [
+            "It is cheaper per token",
+            "It yields JSON clean enough to parse without stripping commentary",
+            "It is the only way to get more than three cases",
+            "It guarantees the cases are representative"
+          ],
+          "correct": 1,
+          "explain": "Clean parsing. The technique is the structured-output one, applied to a generation task."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_code_grader",
+      "knowledgePoints": [
+        {
+          "id": "kp_codegrade_1",
+          "name": "Objective, instant, and blind",
+          "keyPrerequisites": ["mt_eval_pipeline"],
+          "teach": "<p>A code grader is a programmatic check. It handles anything with a right answer a computer can verify:</p><ul><li>length,</li><li>keyword presence or absence,</li><li>syntax validity — JSON, Python, regex,</li><li>readability scores.</li></ul><pre class='kp-code'>def syntax_score(output, fmt):\n    try:\n        {\"json\": json.loads, \"python\": ast.parse, \"regex\": re.compile}[fmt](output)\n        return 10\n    except Exception:\n        return 0</pre><p>Note the shape: <strong>try/except, 10 on success, 0 on failure</strong>. It is deliberately binary, because syntax is binary.</p><p class='kp-key'>A code grader can tell you the output parses. It cannot tell you the output is any good.</p><p>One useful adjunct: improve format compliance by pre-filling the response with a code-block opener, forcing raw code and nothing else.</p>",
+          "questions": [
+            {
+              "id": "q_codegrade_1a",
+              "q": "Which property can a code grader check?",
+              "options": [
+                "Whether the answer is helpful",
+                "Whether the output parses as valid JSON",
+                "Whether the tone suits the audience",
+                "Whether the reasoning is sound"
+              ],
+              "correct": 1,
+              "explain": "Syntax validity is exactly its brief. The other three need a model or a human."
+            },
+            {
+              "id": "q_codegrade_1b",
+              "q": "Why is a syntax code grader scored 10 or 0 rather than on a scale?",
+              "options": [
+                "To make averaging with a model score easier",
+                "Because syntax either parses or it does not — there is no partial validity",
+                "Because the scale is reserved for model graders",
+                "To penalise malformed output more heavily"
+              ],
+              "correct": 1,
+              "explain": "Binary property, binary score."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_codegrade_1",
+          "q": "An output is beautifully argued and does not parse. What does a code grader give it?",
+          "options": ["A middling score", "0", "10", "It skips the case"],
+          "correct": 1,
+          "explain": "0. The grader sees the parse failure and nothing else — which is precisely why you combine it with a model score."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_model_grader",
+      "knowledgePoints": [
+        {
+          "id": "kp_modelgrade_1",
+          "name": "Ask for reasoning, not a number",
+          "keyPrerequisites": ["mt_eval_pipeline"],
+          "teach": "<p>A model grader is a second Claude call that scores the first one's output — for quality, instruction-following, completeness, helpfulness, safety. Things no <code>try/except</code> can reach.</p><p>There is one failure mode that catches everybody:</p><p class='kp-key'>Ask a model for a bare score and it returns about 6 out of 10, regardless of actual quality.</p><p>The fix is to ask for the reasoning as well as the number:</p><pre class='kp-code'>Evaluate the response below.\n\nReturn:\n  strengths:   what it does well\n  weaknesses:  where it falls short\n  reasoning:   how you weighed those against the criteria\n  score:       1-10</pre><p>Storing the reasoning alongside the score is not just for auditing. It is what makes the score real: a model that has to justify a 9 will not award one to a mediocre answer, and a flat distribution of 6s is a symptom you can now see the cause of.</p>",
+          "questions": [
+            {
+              "id": "q_modelgrade_1a",
+              "q": "Every output in your eval scores between 5 and 7. What is most likely wrong?",
+              "options": [
+                "The dataset is too small to separate them",
+                "The grading prompt asks for a bare score, so the model defaults to the middle",
+                "The temperature of the graded model is too low",
+                "The outputs genuinely are all mediocre"
+              ],
+              "correct": 1,
+              "explain": "A flat band around 6 is the documented signature of a grader asked for a number and nothing else."
+            },
+            {
+              "id": "q_modelgrade_1b",
+              "q": "What should a model grader be asked to return?",
+              "options": [
+                "A score only, for consistency",
+                "Strengths, weaknesses, reasoning, and a score",
+                "A pass/fail verdict and a rewritten answer",
+                "A score and a confidence interval"
+              ],
+              "correct": 1,
+              "explain": "All four. The reasoning is what stops the score collapsing to the middle."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_modelgrade_1",
+          "q": "What should be stored per test case from a model grader?",
+          "options": [
+            "The score only",
+            "The score and the reasoning",
+            "The full graded output and the score",
+            "The score and the grader's model id"
+          ],
+          "correct": 1,
+          "explain": "Score plus reasoning, averaged across the dataset — the reasoning is what tells you where a prompt is failing."
+        },
+        {
+          "id": "r_modelgrade_2",
+          "q": "Which qualities is a model grader suited to judging?",
+          "options": [
+            "Syntax validity and length",
+            "Response quality, instruction-following, completeness, safety",
+            "Token cost and latency",
+            "Schema conformance"
+          ],
+          "correct": 1,
+          "explain": "The judgement calls. Anything mechanically checkable belongs to the code grader, which is cheaper and never wrong."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_grader_choice",
+      "knowledgePoints": [
+        {
+          "id": "kp_gradechoice_1",
+          "name": "Three graders, and the combination",
+          "keyPrerequisites": ["mt_code_grader", "mt_model_grader"],
+          "teach": "<table class='kp-table'><tr><th>grader</th><th>how</th><th>best at</th></tr><tr><td><strong>Code</strong></td><td>programmatic checks</td><td>length, keywords, syntax validity, readability</td></tr><tr><td><strong>Model</strong></td><td>another Claude call</td><td>quality, instruction-following, completeness, safety</td></tr><tr><td><strong>Human</strong></td><td>manual review</td><td>nuance, comprehensiveness, depth, relevance — most flexible, slowest</td></tr></table><p>In practice you combine the first two:</p><pre class='kp-code'>final = (model_score + syntax_score) / 2</pre><p class='kp-key'>An eloquent answer that does not parse now scores 5, not 10 — and a parseable answer that says nothing scores 5, not 10.</p><p>Each grader's blind spot is the other's specialty, which is the whole reason to average them rather than pick one.</p>",
+          "questions": [
+            {
+              "id": "q_gradechoice_1a",
+              "q": "Outputs must be valid Python and must actually solve the problem. How do you grade that?",
+              "options": [
+                "A model grader, since it can read code",
+                "A code grader for syntax and a model grader for quality, averaged",
+                "A human grader, since both criteria are subjective",
+                "A code grader with a stricter validator"
+              ],
+              "correct": 1,
+              "explain": "Two criteria of different kinds, so two graders — combined, e.g. (model_score + syntax_score) / 2."
+            },
+            {
+              "id": "q_gradechoice_1b",
+              "q": "What is the human grader's stated trade-off?",
+              "options": [
+                "Cheapest but least accurate",
+                "Most flexible — good at nuance, depth and relevance — but slow and tedious",
+                "Fastest for large datasets",
+                "Only usable for safety review"
+              ],
+              "correct": 1,
+              "explain": "Flexibility at the cost of throughput, which is why it is reserved for nuance."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_gradechoice_1",
+          "q": "Why average a code score with a model score rather than using whichever is lower?",
+          "options": [
+            "Averaging is cheaper to compute",
+            "Each grader's blind spot is the other's specialty, so the average reflects both dimensions",
+            "The minimum would always be the code score",
+            "Averaging keeps scores inside 1–10"
+          ],
+          "correct": 1,
+          "explain": "You are measuring two different things and want both represented, not the worse of them."
+        }
+      ]
+    }
+  ]
+}

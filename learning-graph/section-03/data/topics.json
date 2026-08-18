@@ -1,0 +1,1747 @@
+{
+  "$comment": "Micro-topics for Section 3. Each is small enough to teach in one sitting and to assess on its own. `centrality` and `layer` are derived — scripts/build-web-data.mjs writes them back.",
+  "subject": "Building with the Claude API",
+  "sourceSection": "03-building-with-the-claude-api",
+  "topics": [
+    {
+      "id": "mt_messages_create",
+      "type": "PROCEDURAL",
+      "cluster": "cl_api_core",
+      "name": "The one call: messages.create",
+      "description": "Every request in this section is client.messages.create with three required arguments — model, max_tokens, messages — where messages is an array of {role, content} objects. The key that authorises it lives in the environment, never in the source.",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "Name the three required arguments and what each one is for",
+        "Explain why an API key belongs in .env.local rather than in the file that calls the API"
+      ],
+      "assessmentPrompt": "What are the three arguments every Claude API request must carry, and where does the key that authorises it live?",
+      "standards": [
+        "ccaf:d3"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Four setup steps and three required arguments",
+          "href": "../../lessons/0003-claude-api-the-first-integration.html#scene4"
+        },
+        {
+          "label": "Lesson · Theo wants to call Anthropic from the phone app",
+          "href": "../../lessons/0003-claude-api-the-first-integration.html#scene2"
+        }
+      ],
+      "centrality": 1,
+      "layer": 0
+    },
+    {
+      "id": "mt_content_blocks",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_api_core",
+      "name": "response.content is a list of blocks",
+      "description": "The response body is not a string. content is an array of typed blocks — text, tool_use, thinking, server_tool_use, and more — and one response can carry several at once. Code that reads content[0].text works until the day it doesn't.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Explain why indexing content[0].text is a latent bug",
+        "Write the loop shape that dispatches on block.type"
+      ],
+      "assessmentPrompt": "Why is `response.content[0].text` a fragile way to read a Claude response?",
+      "standards": [
+        "ccaf:d3",
+        "ccaf:d2"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · One response, several blocks",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene2"
+        }
+      ],
+      "centrality": 0.791,
+      "layer": 1
+    },
+    {
+      "id": "mt_stop_reason",
+      "type": "FACTUAL",
+      "cluster": "cl_api_core",
+      "name": "stop_reason: what actually ended the turn",
+      "description": "stop_reason reports why generation stopped: end_turn (Claude is finished), tool_use (Claude wants a tool run), max_tokens (it hit your ceiling mid-sentence), stop_sequence. It is the field every loop branches on and the field that distinguishes a finished answer from a truncated one.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Map each stop_reason value to the action your code should take",
+        "Diagnose a response that ends mid-sentence from its stop_reason alone"
+      ],
+      "assessmentPrompt": "A response ends mid-sentence. Which field tells you whether that is a bug in your prompt or a budget you set, and what value would it hold?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf-glossary:t2"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · “Why does the draft stop mid-sentence?”",
+          "href": "../../lessons/0003-claude-api-the-first-integration.html#scene9"
+        }
+      ],
+      "centrality": 0.687,
+      "layer": 2
+    },
+    {
+      "id": "mt_system_parameter",
+      "type": "PROCEDURAL",
+      "cluster": "cl_api_core",
+      "name": "The system prompt is its own parameter",
+      "description": "Stable instructions about role, domain, and behaviour go in the top-level system parameter, not in the first user message. It is separate because it is stable — which is also what makes it the best thing in a request to cache.",
+      "core": true,
+      "estMinutes": 5,
+      "evidence": [
+        "Decide whether an instruction belongs in system or in the user turn",
+        "Explain what makes the system prompt the natural first cache breakpoint"
+      ],
+      "assessmentPrompt": "You want Claude to answer as a terse senior code reviewer for every request your service makes. Where does that instruction go, and why not in the user message?",
+      "standards": [
+        "ccaf:d3"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Ines wants a different kind of answer",
+          "href": "../../lessons/0003-claude-api-the-first-integration.html#scene6"
+        }
+      ],
+      "centrality": 0.06,
+      "layer": 1
+    },
+    {
+      "id": "mt_conversation_state",
+      "type": "PROCEDURAL",
+      "cluster": "cl_api_core",
+      "name": "The conversation is an array you maintain",
+      "description": "The API is stateless. Multi-turn memory exists only because you append both sides of every turn — the user message you sent and the complete assistant content you got back — to the messages array before the next call.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Explain why Claude 'forgot' a previous turn in a stateless API",
+        "State what exactly gets appended after an assistant response, and in what form"
+      ],
+      "assessmentPrompt": "Your chatbot answers each question as if it were the first. Nothing is broken in the API. What is missing from your code?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · “It answered the first question and forgot it existed”",
+          "href": "../../lessons/0003-claude-api-the-first-integration.html#scene5"
+        }
+      ],
+      "centrality": 0.672,
+      "layer": 1
+    },
+    {
+      "id": "mt_sampling_controls",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_api_core",
+      "name": "max_tokens and temperature",
+      "description": "max_tokens is a safety ceiling on output length, not a target — hit it and the response is truncated with stop_reason max_tokens. temperature (0–1) changes sampling randomness: low for extraction and code, high for brainstorming. Neither guarantees correctness.",
+      "core": false,
+      "estMinutes": 7,
+      "evidence": [
+        "Choose a temperature for a given task and justify it",
+        "Explain what max_tokens does and does not promise"
+      ],
+      "assessmentPrompt": "Which of max_tokens and temperature would you change to make an extraction pipeline more consistent, and which one is a budget rather than a quality setting?",
+      "standards": [
+        "ccaf:d3"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Two features, two very different needs",
+          "href": "../../lessons/0003-claude-api-the-first-integration.html#scene7"
+        }
+      ],
+      "centrality": 0,
+      "layer": 1
+    },
+    {
+      "id": "mt_model_tiers",
+      "type": "FACTUAL",
+      "cluster": "cl_api_core",
+      "name": "The four model tiers",
+      "description": "Fable (most capable, above Opus, highest cost), Opus (deep reasoning and multi-step coding), Sonnet (balanced, the production default), Haiku (fastest and cheapest — classification, extraction, routing).",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "Order the four tiers by capability and by cost",
+        "Name the workload each tier is the natural fit for"
+      ],
+      "assessmentPrompt": "Which tier would you reach for to classify ten thousand support tickets a day, and which for a one-off regulatory trade-off analysis?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · “Which Claude does Rooftop actually run on?”",
+          "href": "../../lessons/0003-claude-api-the-first-integration.html#scene1"
+        }
+      ],
+      "centrality": 0.06,
+      "layer": 1
+    },
+    {
+      "id": "mt_model_selection",
+      "type": "PROCEDURAL",
+      "cluster": "cl_api_core",
+      "name": "Choosing a model with evidence",
+      "description": "Build a 20–30 example eval first, then run Haiku; if quality holds, stop. Step up to Sonnet only when it does not, and to Opus only when the task truly needs it. The right model is the cheapest one whose output you would ship — and response.usage is how you see what it cost.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "State the escalation order and its stopping rule",
+        "Explain why the same endpoint might route different task types to different tiers"
+      ],
+      "assessmentPrompt": "How do you decide which model a new feature should use, and in which direction do you search?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · “Which Claude does Rooftop actually run on?”",
+          "href": "../../lessons/0003-claude-api-the-first-integration.html#scene1"
+        }
+      ],
+      "centrality": 0.045,
+      "layer": 2
+    },
+    {
+      "id": "mt_streaming",
+      "type": "PROCEDURAL",
+      "cluster": "cl_api_core",
+      "name": "Streaming and the message lifecycle",
+      "description": "Streaming emits the response as a lifecycle of events — message_start, content_block_start, content_block_delta, content_block_stop, message_delta, message_stop. It improves time-to-first-token and nothing else: same quality, same errors, same need to handle incomplete output.",
+      "core": false,
+      "estMinutes": 7,
+      "evidence": [
+        "Name the event sequence in order",
+        "State what streaming does not change"
+      ],
+      "assessmentPrompt": "A long generation makes users stare at a spinner for thirty seconds. What do you turn on, and what does it not fix?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Thirty seconds of nothing",
+          "href": "../../lessons/0003-claude-api-the-first-integration.html#scene8"
+        }
+      ],
+      "centrality": 0.015,
+      "layer": 2
+    },
+    {
+      "id": "mt_prompt_iteration",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_prompting",
+      "name": "The improvement cycle",
+      "description": "Set a goal, write an initial prompt, evaluate it, apply one technique, re-evaluate. The loop is what makes the techniques worth learning: each is applied one at a time so its effect on the score is attributable.",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "Name the five steps and which two repeat",
+        "Explain why techniques are applied one at a time"
+      ],
+      "assessmentPrompt": "Why does the course apply prompt techniques one at a time rather than rewriting the whole prompt at once?",
+      "standards": [
+        "ccaf:d3"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · 2.32 was never the point",
+          "href": "../../lessons/0003-claude-api-the-first-integration.html#scene17"
+        }
+      ],
+      "centrality": 0.209,
+      "layer": 1
+    },
+    {
+      "id": "mt_clear_and_direct",
+      "type": "PROCEDURAL",
+      "cluster": "cl_prompting",
+      "name": "Clear and direct",
+      "description": "The first line is the most important part of the prompt. Clear means simple language and no ambiguity; direct means an instruction, not a question, opening with an action verb — Write, Create, Generate, Identify.",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "Rewrite a rambling question as a direct instruction",
+        "Say which line of a prompt carries the most weight"
+      ],
+      "assessmentPrompt": "Turn “I was reading about renewable energy — what countries use it?” into a clear, direct prompt.",
+      "standards": [
+        "ccaf:d3"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Nadia scores the first prompt",
+          "href": "../../lessons/0003-claude-api-the-first-integration.html#scene13"
+        }
+      ],
+      "centrality": 0.134,
+      "layer": 2
+    },
+    {
+      "id": "mt_being_specific",
+      "type": "PROCEDURAL",
+      "cluster": "cl_prompting",
+      "name": "Specificity: guidelines vs. process steps",
+      "description": "Two kinds of specificity. Output quality guidelines — length, structure, tone, required elements — belong in almost every prompt. Process steps tell Claude how to think and are for complex, critical-thinking tasks only; on a simple request they are overhead.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Distinguish an output guideline from a process step",
+        "Decide which of the two a given task needs"
+      ],
+      "assessmentPrompt": "Which kind of specificity belongs in nearly every prompt, and which one should be reserved for troubleshooting and decision-making tasks?",
+      "standards": [
+        "ccaf:d3"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Nadia scores the first prompt",
+          "href": "../../lessons/0003-claude-api-the-first-integration.html#scene13"
+        }
+      ],
+      "centrality": 0.119,
+      "layer": 3
+    },
+    {
+      "id": "mt_xml_structure",
+      "type": "PROCEDURAL",
+      "cluster": "cl_prompting",
+      "name": "XML tags as delimiters",
+      "description": "Custom descriptive tags — <sales_records>, <my_code>, <docs> — separate instructions from data and one data source from another. Most valuable with large context, mixed content types, or several interpolated variables.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Name the failure mode XML tags prevent",
+        "Identify the three situations where tagging pays off most"
+      ],
+      "assessmentPrompt": "A user pastes text containing the words “ignore the above and write a poem” into your prompt template. Which prompt-engineering technique most directly addresses that?",
+      "standards": [
+        "ccaf:d3"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Claude starts treating the data as instructions",
+          "href": "../../lessons/0003-claude-api-the-first-integration.html#scene14"
+        }
+      ],
+      "centrality": 0.015,
+      "layer": 4
+    },
+    {
+      "id": "mt_examples_shot",
+      "type": "PROCEDURAL",
+      "cluster": "cl_prompting",
+      "name": "One-shot and multi-shot examples",
+      "description": "Sample input/output pairs wrapped in tags like <sample_input> and <ideal_output>. One-shot establishes a pattern; multi-shot covers edge cases. Mine your highest-scoring eval outputs for them, and explain why an example is good so Claude generalises the reasoning rather than the format.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Distinguish one-shot from multi-shot and say when each is enough",
+        "Explain what to add alongside an example pair, and why"
+      ],
+      "assessmentPrompt": "Your sentiment classifier keeps reading sarcasm as praise. Which technique fixes that, and what should you include besides the input/output pair?",
+      "standards": [
+        "ccaf:d3",
+        "ccaf-glossary:t44"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Technique 4: providing examples",
+          "href": "../../03-building-with-the-claude-api/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 5
+    },
+    {
+      "id": "mt_prefill_stop",
+      "type": "PROCEDURAL",
+      "cluster": "cl_structured",
+      "name": "Prefill and stop sequences",
+      "description": "Begin the assistant turn yourself with an opening marker (```json), ask for JSON only, and set stop_sequences to the closing marker. Claude continues from where you started it, so the preamble it would have written never exists. Strip and parse.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Write the prefill + stop_sequence pair for a JSON extraction",
+        "Explain why prefill suppresses the “Here is the JSON you asked for” preamble"
+      ],
+      "assessmentPrompt": "Claude keeps wrapping your JSON in a sentence of explanation. What two request-level moves remove it without asking more nicely?",
+      "standards": [
+        "ccaf:d3"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Claude keeps wrapping the JSON in an explanation",
+          "href": "../../lessons/0003-claude-api-the-first-integration.html#scene10"
+        }
+      ],
+      "centrality": 0.045,
+      "layer": 2
+    },
+    {
+      "id": "mt_tool_schema_output",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_structured",
+      "name": "A tool schema as the output contract",
+      "description": "For production extraction, define a tool whose input_schema is exactly the shape you want back, and read the structured tool_use input instead of parsing prose. More reliable than hoping free-form text is valid JSON — but a schema validates shape, not business truth, so your code still validates values.",
+      "core": true,
+      "estMinutes": 9,
+      "evidence": [
+        "Explain why a tool schema beats prefill for high-accuracy production extraction",
+        "State what a JSON Schema does not check"
+      ],
+      "assessmentPrompt": "You need a customer record extracted from free text with high reliability. Why reach for a tool definition rather than asking for JSON, and what must your code still do?",
+      "standards": [
+        "ccaf:d3",
+        "ccaf-glossary:t45"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Tools as an output contract",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene5"
+        }
+      ],
+      "centrality": 0.015,
+      "layer": 5
+    },
+    {
+      "id": "mt_tool_choice",
+      "type": "FACTUAL",
+      "cluster": "cl_structured",
+      "name": "tool_choice: auto, any, and forced",
+      "description": "auto lets Claude decide whether to call a tool at all; any requires some tool; naming a tool forces that specific one. Force it when structured output is mandatory; leave it auto when Claude should judge whether the tool applies.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Map each tool_choice value to the guarantee it gives",
+        "Choose a value for a mandatory-extraction endpoint"
+      ],
+      "assessmentPrompt": "An endpoint must always return a filled-in record, never prose. Which tool_choice setting, and why not auto?",
+      "standards": [
+        "ccaf:d2",
+        "ccaf-glossary:t18",
+        "ccaf-glossary:t19",
+        "ccaf-glossary:t20"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Tools as an output contract",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene5"
+        }
+      ],
+      "centrality": 0,
+      "layer": 6
+    },
+    {
+      "id": "mt_eval_why",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_evaluation",
+      "name": "Why evaluate: the three paths",
+      "description": "After writing a prompt you can ship it, patch a corner case or two, or run it through an evaluation pipeline and iterate on objective metrics. Most engineers stop at the first two and underestimate the real-world inputs that break them.",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "Name the three paths and the risk each carries",
+        "Explain what “it works on the three cases I tried” actually establishes"
+      ],
+      "assessmentPrompt": "Your prompt passes the handful of cases you invented. What does that tell you about production, and what is the third path?",
+      "standards": [
+        "ccaf:d3",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · “It works on the three cases I tried”",
+          "href": "../../lessons/0003-claude-api-the-first-integration.html#scene15"
+        }
+      ],
+      "centrality": 0.119,
+      "layer": 2
+    },
+    {
+      "id": "mt_eval_pipeline",
+      "type": "PROCEDURAL",
+      "cluster": "cl_evaluation",
+      "name": "The five-step evaluation pipeline",
+      "description": "Draft a prompt, create a dataset of representative inputs, feed each through Claude, feed each output through a grader, then change the prompt and repeat. The dataset survives every iteration, which is what turns it into a regression suite.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "List the five steps in order",
+        "Explain which artefact persists across iterations and why that matters"
+      ],
+      "assessmentPrompt": "Name the five steps of an evaluation run, and say which one you do not redo when you change the prompt.",
+      "standards": [
+        "ccaf:d3",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · “It works on the three cases I tried”",
+          "href": "../../lessons/0003-claude-api-the-first-integration.html#scene15"
+        }
+      ],
+      "centrality": 0.104,
+      "layer": 3
+    },
+    {
+      "id": "mt_eval_dataset",
+      "type": "PROCEDURAL",
+      "cluster": "cl_evaluation",
+      "name": "Building the eval dataset",
+      "description": "Generate cases with a cheap model — Haiku, since the dataset is not the thing under test — using prefill and stop sequences for clean JSON. Keep it to two or three cases while iterating fast, scale to tens or hundreds for final validation, and give each case a format field so a code grader knows which validator applies.",
+      "core": false,
+      "estMinutes": 8,
+      "evidence": [
+        "Justify using Haiku to generate a dataset that will test a Sonnet prompt",
+        "Explain what the per-case format field is for"
+      ],
+      "assessmentPrompt": "Which model generates your eval dataset, and why is that not the same decision as which model the eval is testing?",
+      "standards": [
+        "ccaf:d3"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · “It works on the three cases I tried”",
+          "href": "../../lessons/0003-claude-api-the-first-integration.html#scene15"
+        }
+      ],
+      "centrality": 0,
+      "layer": 4
+    },
+    {
+      "id": "mt_code_grader",
+      "type": "PROCEDURAL",
+      "cluster": "cl_evaluation",
+      "name": "Code graders",
+      "description": "Programmatic checks: length, keyword presence, and syntax validity via json.loads, ast.parse or re.compile wrapped in try/except — success scores 10, failure scores 0. Objective, free, and instant, but blind to whether the output is any good.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Name three properties a code grader can check",
+        "Name a property it cannot"
+      ],
+      "assessmentPrompt": "Which grader do you use to check that every output parses as valid JSON, and what can it not tell you about those outputs?",
+      "standards": [
+        "ccaf:d3"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Who decides whether an output is any good?",
+          "href": "../../lessons/0003-claude-api-the-first-integration.html#scene16"
+        }
+      ],
+      "centrality": 0.015,
+      "layer": 4
+    },
+    {
+      "id": "mt_model_grader",
+      "type": "PROCEDURAL",
+      "cluster": "cl_evaluation",
+      "name": "Model graders and the middling-score trap",
+      "description": "A second Claude call scores quality, instruction-following and completeness. Ask it for strengths, weaknesses, reasoning and a score — without that structure, models default to about 6 out of 10 regardless of actual quality. Store the reasoning next to the score.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "State what a model grader must be asked for beyond the number",
+        "Recognise a flat distribution of ~6s as a symptom rather than a result"
+      ],
+      "assessmentPrompt": "Every output in your eval scores between 5 and 7. What is most likely wrong with the grading prompt?",
+      "standards": [
+        "ccaf:d3",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Who decides whether an output is any good?",
+          "href": "../../lessons/0003-claude-api-the-first-integration.html#scene16"
+        }
+      ],
+      "centrality": 0.06,
+      "layer": 4
+    },
+    {
+      "id": "mt_grader_choice",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_evaluation",
+      "name": "Choosing and combining graders",
+      "description": "Human graders are the most flexible and the slowest — reserve them for nuance. In practice you combine: average a code score and a model score, e.g. (model_score + syntax_score) / 2, so an unparseable but eloquent answer cannot score well.",
+      "core": false,
+      "estMinutes": 7,
+      "evidence": [
+        "Match each grader type to what it is best at judging",
+        "Explain why combining a code and a model score beats either alone"
+      ],
+      "assessmentPrompt": "Your outputs must be valid Python and also actually solve the problem. How do you grade that?",
+      "standards": [
+        "ccaf:d3"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Who decides whether an output is any good?",
+          "href": "../../lessons/0003-claude-api-the-first-integration.html#scene16"
+        }
+      ],
+      "centrality": 0,
+      "layer": 5
+    },
+    {
+      "id": "mt_agent_loop",
+      "type": "PROCEDURAL",
+      "cluster": "cl_tools",
+      "name": "The agent loop, all five steps",
+      "description": "An agent is Claude running both sides of the conversation without a human in the middle. Send a message with tools; Claude answers or requests a tool; your code runs it; you send the result back as a tool_result block; repeat until stop_reason is end_turn. You own the loop and the tools; Claude owns the reasoning.",
+      "core": true,
+      "estMinutes": 9,
+      "evidence": [
+        "Recite the five steps and the exit condition",
+        "Say which parts of the loop are yours and which are Claude's"
+      ],
+      "assessmentPrompt": "Walk through the agent loop from the first request to the final answer. What ends it?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf-glossary:t1"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · “It writes lovely paragraphs about a database it cannot see”",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene0"
+        }
+      ],
+      "centrality": 0.627,
+      "layer": 3
+    },
+    {
+      "id": "mt_tool_anatomy",
+      "type": "FACTUAL",
+      "cluster": "cl_tools",
+      "name": "Anatomy of a tool definition",
+      "description": "Three parts: name, description, and input_schema — standard JSON Schema, a general data-validation spec rather than anything AI-specific. Convention is to name a schema function_name_schema so it pairs with the function it describes.",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "Name the three parts of a tool definition",
+        "Say what kind of thing input_schema is"
+      ],
+      "assessmentPrompt": "What are the three fields of a tool definition, and which specification does input_schema follow?",
+      "standards": [
+        "ccaf:d2"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · The tool nobody called",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene1"
+        }
+      ],
+      "centrality": 0.388,
+      "layer": 4
+    },
+    {
+      "id": "mt_tool_description",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_tools",
+      "name": "The description is the selection mechanism",
+      "description": "The description is what Claude reads to decide whether and when to call a tool — vague descriptions are the single most common cause of an agent ignoring a tool it has or reaching for the wrong one. Aim for three or four sentences: what it does, when to use it, what it returns.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Diagnose an unused tool as a description problem",
+        "State the three things a good description covers"
+      ],
+      "assessmentPrompt": "An agent has a perfectly working search tool and never calls it. Where do you look first, and what do you write there?",
+      "standards": [
+        "ccaf:d2",
+        "ccaf-glossary:t14"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · The tool nobody called",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene1"
+        }
+      ],
+      "centrality": 0.179,
+      "layer": 5
+    },
+    {
+      "id": "mt_tool_result_protocol",
+      "type": "PROCEDURAL",
+      "cluster": "cl_tools",
+      "name": "The tool_result protocol and its invariants",
+      "description": "Append the complete assistant content array — not just the visible text — then send a user message whose tool_result blocks each reference the matching tool_use id, keeping the original tool schemas on the follow-up request. Tool inputs are untrusted data: validate arguments, authorisation, timeouts and side effects before executing.",
+      "core": true,
+      "estMinutes": 10,
+      "evidence": [
+        "List what must be preserved and matched when returning a tool result",
+        "Explain why tool input is a security boundary"
+      ],
+      "assessmentPrompt": "You send a tool result back and the API rejects the request. Name the three invariants most likely violated — and separately, why you validate the tool's arguments before running it.",
+      "standards": [
+        "ccaf:d2",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · One response, several blocks",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene2"
+        },
+        {
+          "label": "Lesson · Kwame asks the security question",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene6"
+        }
+      ],
+      "centrality": 0.045,
+      "layer": 4
+    },
+    {
+      "id": "mt_multiple_tools",
+      "type": "PROCEDURAL",
+      "cluster": "cl_tools",
+      "name": "Many tools, one dispatch",
+      "description": "Claude reads every description and picks per turn, sometimes several tools at once, sometimes serially. Adding a tool means adding it to the tools array and adding a case to your dispatch function — nothing else changes.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Describe the two code changes needed to add a tool",
+        "Explain how Claude chooses between several available tools"
+      ],
+      "assessmentPrompt": "Your agent has one tool and you want it to have five. What has to change in your code?",
+      "standards": [
+        "ccaf:d2"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · The toolbox that kept growing",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene9"
+        }
+      ],
+      "centrality": 0.015,
+      "layer": 6
+    },
+    {
+      "id": "mt_tool_runner",
+      "type": "PROCEDURAL",
+      "cluster": "cl_tools",
+      "name": "The SDK tool runner",
+      "description": "client.beta.messages.toolRunner takes your actual functions, generates their schemas from types and docstrings, and runs the whole tool-use/tool-result exchange internally; runner.untilDone() returns the settled final message. It removes the while loop, the stop_reason switch, hand-written schemas and manual message appending.",
+      "core": false,
+      "estMinutes": 7,
+      "evidence": [
+        "Name what the tool runner removes from your code",
+        "Say what untilDone() returns"
+      ],
+      "assessmentPrompt": "What four pieces of the hand-rolled loop does the SDK tool runner take over?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d2"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · “What day is 103 days from today?”",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene3"
+        }
+      ],
+      "centrality": 0,
+      "layer": 5
+    },
+    {
+      "id": "mt_abstract_tools",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_tools",
+      "name": "Keep tools abstract and combinable",
+      "description": "Give Claude generic primitives rather than hyper-specialised operations. Claude Code's own toolset is bash, read, write, edit, glob, grep — not refactor_code or install_dependencies — precisely so Claude can combine them for situations nobody designed for.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Rewrite a set of over-specific tools as combinable primitives",
+        "State the benefit abstraction buys and what it costs"
+      ],
+      "assessmentPrompt": "Your agent has twelve narrow tools and still fails on anything slightly novel. What is the design principle you have violated?",
+      "standards": [
+        "ccaf:d2",
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · The toolbox that kept growing",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene9"
+        }
+      ],
+      "centrality": 0.015,
+      "layer": 6
+    },
+    {
+      "id": "mt_environment_inspection",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_tools",
+      "name": "Environment inspection: look, act, look again",
+      "description": "Claude perceives its environment only through tool results, so the loop must feed it fresh state rather than assume an action landed. Read a file before editing it, list a directory before creating in it, screenshot after a click. Skipping this is how an agent flies blind and compounds a silent failure.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Explain why an agent cannot know an action succeeded without being told",
+        "Add the missing inspection step to a described agent flow"
+      ],
+      "assessmentPrompt": "An agent reports it saved the file. It did not. What design principle would have caught that, and what does it look like in the loop?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · The agent that thought it had saved the file",
+          "href": "../../lessons/0005-claude-api-agentic-orchestration.html#scene9"
+        }
+      ],
+      "centrality": 0.015,
+      "layer": 4
+    },
+    {
+      "id": "mt_batch_tool",
+      "type": "PROCEDURAL",
+      "cluster": "cl_tools",
+      "name": "The batch tool trick",
+      "description": "Claude can call several tools in one turn but often plays it safe and calls them one at a time, costing a round trip each. Give it a single batch_tool whose schema takes an array of sub-invocations; your code unpacks, executes them (optionally in parallel) and returns all results as one tool_result. N round trips become one.",
+      "core": false,
+      "estMinutes": 8,
+      "evidence": [
+        "Describe the shape of batch_tool's input schema",
+        "State the precondition that makes batching safe"
+      ],
+      "assessmentPrompt": "Five independent lookups take five round trips. What tool do you add, and when is that transformation valid?",
+      "standards": [
+        "ccaf:d2",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · The latency nobody could explain",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene4"
+        }
+      ],
+      "centrality": 0,
+      "layer": 7
+    },
+    {
+      "id": "mt_fine_grained_streaming",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_tools",
+      "name": "Fine-grained tool streaming",
+      "description": "By default the API buffers and validates tool-input JSON, emitting complete key/value pairs — which is why streaming a large tool input stutters then bursts. fine_grained disables that validation so chunks arrive as generated, and hands you the job of tolerating partial or malformed JSON.",
+      "core": false,
+      "estMinutes": 7,
+      "evidence": [
+        "Explain the delay-then-burst pattern in default tool streaming",
+        "Name what you give up by enabling fine-grained streaming"
+      ],
+      "assessmentPrompt": "A tool-argument panel freezes then fills all at once. What causes it, what turns it off, and what must your code then handle?",
+      "standards": [
+        "ccaf:d2",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · “Why does the argument panel freeze and then explode?”",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene8"
+        }
+      ],
+      "centrality": 0,
+      "layer": 5
+    },
+    {
+      "id": "mt_server_vs_client_tools",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_capabilities",
+      "name": "Server tools vs. client tools",
+      "description": "Server tools — web_search, code_execution, web_fetch — are declared by you and run by Anthropic: no agent loop, the result comes back in the same response as server_tool_use and tool-result blocks. Client tools run where your code runs; the SDK may ship the schema and a runner, but execution is still yours.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Classify a named tool as server-side or client-side",
+        "Explain why a server tool needs no loop iteration"
+      ],
+      "assessmentPrompt": "Which built-in tools return their result inside the same response, and what does that remove from your code?",
+      "standards": [
+        "ccaf:d2"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Built-in (server) tools vs. client tools",
+          "href": "../../03-building-with-the-claude-api/notes.md"
+        }
+      ],
+      "centrality": 0.075,
+      "layer": 4
+    },
+    {
+      "id": "mt_web_search",
+      "type": "PROCEDURAL",
+      "cluster": "cl_capabilities",
+      "name": "The web search server tool",
+      "description": "A server-side tool with a name, a type and a max-uses limit, optionally narrowed to allowed domains. The response mixes server tool-use/result blocks, text, and citation blocks — inspect the citations to tell a sourced claim apart from Claude's own synthesis.",
+      "core": false,
+      "estMinutes": 6,
+      "evidence": [
+        "Name the knobs on the web search tool",
+        "Explain how to distinguish a sourced claim from synthesis in the response"
+      ],
+      "assessmentPrompt": "You enable web search for a research feature. Which part of the response lets you show users where an answer came from?",
+      "standards": [
+        "ccaf:d2",
+        "ccaf-glossary:t63"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Web search",
+          "href": "../../03-building-with-the-claude-api/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 5
+    },
+    {
+      "id": "mt_code_execution_files",
+      "type": "PROCEDURAL",
+      "cluster": "cl_capabilities",
+      "name": "Code execution and the Files API",
+      "description": "Code execution runs Python in an isolated Docker sandbox with no network access, repeatedly within one conversation. Because there is no network, the Files API is how data gets in and out: upload once for a file id, reference it in a container_upload block, and pull generated files back out by id.",
+      "core": false,
+      "estMinutes": 8,
+      "evidence": [
+        "State the sandbox's defining constraint",
+        "Explain why the Files API and code execution are used together"
+      ],
+      "assessmentPrompt": "You want Claude to analyse a CSV with Python. The sandbox has no network. How does the file get in, and how do the results get out?",
+      "standards": [
+        "ccaf:d2",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · A CSV, a sandbox, and no network",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene19"
+        }
+      ],
+      "centrality": 0,
+      "layer": 5
+    },
+    {
+      "id": "mt_text_editor_tool",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_capabilities",
+      "name": "The text editor tool: a schema without a body",
+      "description": "Claude ships knowing how to ask for file operations — view, replace, create, insert, undo — via a versioned schema stub such as text_editor_20250124. It does not ship the implementation. Your code performs the operations, and should constrain paths and operations while doing so.",
+      "core": false,
+      "estMinutes": 7,
+      "evidence": [
+        "State which half of the text editor tool Anthropic provides",
+        "Name the safety constraint the implementer owns"
+      ],
+      "assessmentPrompt": "The text editor tool is described as built in. What exactly is built in, and what is still your job?",
+      "standards": [
+        "ccaf:d2"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · The text editor tool arrives pre-assembled and unbuilt",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene7"
+        }
+      ],
+      "centrality": 0,
+      "layer": 5
+    },
+    {
+      "id": "mt_extended_thinking",
+      "type": "PROCEDURAL",
+      "cluster": "cl_capabilities",
+      "name": "Extended thinking and effort",
+      "description": "Claude reasons step by step before answering, emitting visible thinking blocks. On Opus 4.7 thinking is adaptive — no token budget to set, just thinking: {\"type\": \"adaptive\"} — and depth is controlled by effort (low, medium, high, xhigh, max) which lives inside output_config, not beside the thinking block. Worth it for multi-step logic and debugging; pure latency on classification.",
+      "core": false,
+      "estMinutes": 8,
+      "evidence": [
+        "Place the effort parameter in the right part of the request",
+        "Decide whether a given task should have thinking enabled at all"
+      ],
+      "assessmentPrompt": "Where does the effort parameter go, and name a task where turning thinking on makes the product worse.",
+      "standards": [
+        "ccaf:d3",
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · “Should we just turn on thinking?”",
+          "href": "../../lessons/0003-claude-api-the-first-integration.html#scene11"
+        }
+      ],
+      "centrality": 0,
+      "layer": 2
+    },
+    {
+      "id": "mt_image_blocks",
+      "type": "PROCEDURAL",
+      "cluster": "cl_capabilities",
+      "name": "Images in the messages array",
+      "description": "Image content blocks sit alongside text as base64 or a URL — JPEG, PNG, GIF, WebP — several per message if needed. Put the image block before the text describing it, label multiple images so Claude can refer to them unambiguously, and downscale when full resolution buys nothing, because resolution is input tokens.",
+      "core": false,
+      "estMinutes": 7,
+      "evidence": [
+        "State the ordering convention for an image and its description",
+        "Explain the cost consequence of image resolution"
+      ],
+      "assessmentPrompt": "You send three photos and a question about “the second one”. What two things should you have done when constructing the message?",
+      "standards": [
+        "ccaf:d3"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Rooftop finally sees what the surveyor saw",
+          "href": "../../lessons/0003-claude-api-the-first-integration.html#scene12"
+        }
+      ],
+      "centrality": 0.045,
+      "layer": 2
+    },
+    {
+      "id": "mt_pdf_documents",
+      "type": "PROCEDURAL",
+      "cluster": "cl_capabilities",
+      "name": "PDFs as document blocks",
+      "description": "A PDF goes in as a document content block and Claude reads both the extracted text and the visual layout — tables, charts, embedded figures — not an OCR dump. Each page bills roughly as an image plus its text. Preferable to pre-extracting text whenever the layout carries meaning.",
+      "core": false,
+      "estMinutes": 6,
+      "evidence": [
+        "Say what a document block gives you that a text extraction does not",
+        "Describe roughly how a PDF page is billed"
+      ],
+      "assessmentPrompt": "A contract PDF's meaning lives in its tables. Why not run your own text extractor and send the string?",
+      "standards": [
+        "ccaf:d3",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Rooftop finally sees what the surveyor saw",
+          "href": "../../lessons/0003-claude-api-the-first-integration.html#scene12"
+        }
+      ],
+      "centrality": 0.015,
+      "layer": 3
+    },
+    {
+      "id": "mt_citations",
+      "type": "FACTUAL",
+      "cluster": "cl_capabilities",
+      "name": "Citations and the two location types",
+      "description": "Opt in per document block with citations: {enabled: true} and the response carries citation blocks pointing at the exact source span. Two location types by source format: citation_page_location for PDFs (page start/end) and citation_char_location for plain text (character indices).",
+      "core": false,
+      "estMinutes": 6,
+      "evidence": [
+        "Name both citation location types and which source each belongs to",
+        "Explain what citations enable in a user interface"
+      ],
+      "assessmentPrompt": "You want users to click a claim and land on the passage backing it. What do you enable, and which location type comes back for a PDF?",
+      "standards": [
+        "ccaf:d5",
+        "ccaf-glossary:t63"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Rooftop finally sees what the surveyor saw",
+          "href": "../../lessons/0003-claude-api-the-first-integration.html#scene12"
+        }
+      ],
+      "centrality": 0,
+      "layer": 4
+    },
+    {
+      "id": "mt_computer_use",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_capabilities",
+      "name": "Computer Use",
+      "description": "Claude drives a screen the way a person does — screenshot, click, type, key, scroll, shell — for software that has no API. The loop is the agent loop wearing a camera: you send a screenshot, Claude requests an action, you perform it and send a fresh screenshot as the result. It must run against a sandboxed VM or container, never a production desktop.",
+      "core": false,
+      "estMinutes": 8,
+      "evidence": [
+        "Describe the Computer Use loop and what plays the role of the tool result",
+        "State the non-negotiable deployment constraint"
+      ],
+      "assessmentPrompt": "In a Computer Use loop, what do you send back after performing an action, and where must the whole thing run?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Computer Use: the loop, wearing a camera",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene10"
+        }
+      ],
+      "centrality": 0,
+      "layer": 5
+    },
+    {
+      "id": "mt_tools_skills_mcp",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_mcp",
+      "name": "Tools vs. skills vs. MCP",
+      "description": "Tools connect Claude to your systems and you maintain the code. Skills teach Claude a procedure — your template, your checklist — and are instructions, not integrations. MCP connects Claude to third-party services whose provider maintains the integration. Your stuff, your processes, everyone else's stuff.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Assign a given integration need to tool, skill or MCP",
+        "State who owns maintenance in each case"
+      ],
+      "assessmentPrompt": "You need Claude to follow your firm's report template, query your internal database, and read Slack. Which of the three mechanisms for each?",
+      "standards": [
+        "ccaf:d2"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Tool, Skill, or MCP server?",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene11"
+        }
+      ],
+      "centrality": 0.03,
+      "layer": 5
+    },
+    {
+      "id": "mt_mcp_connector",
+      "type": "PROCEDURAL",
+      "cluster": "cl_mcp",
+      "name": "Connecting an MCP server from the API",
+      "description": "Two pieces in the request: mcp_servers declares the connection (type, url, name, optional authorization_token), and a tool entry of type mcp_toolset naming that server grants access — all of its tools by default. Claude introspects the server and discovers the schemas, so you never hand-write a schema for an MCP tool.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Name both request fields and what each one does",
+        "Explain why no tool schema is written by hand here"
+      ],
+      "assessmentPrompt": "What two fields connect a remote MCP server to a Messages API request, and who writes the tool schemas?",
+      "standards": [
+        "ccaf:d2"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Connecting the Slack server — carefully",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene12"
+        }
+      ],
+      "centrality": 0.015,
+      "layer": 6
+    },
+    {
+      "id": "mt_mcp_scoping",
+      "type": "PROCEDURAL",
+      "cluster": "cl_mcp",
+      "name": "Scoping MCP tool access down",
+      "description": "Because the default grants every tool on a server, you invert it: default_config disabled, then configs enabling only the named tools. That is how a Slack connection becomes read-only — search and list allowed, post and delete never reachable.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Write the deny-by-default configuration shape",
+        "Explain why deny-by-default rather than listing what to block"
+      ],
+      "assessmentPrompt": "You connect a Slack MCP server but the agent must never post. How do you configure the toolset, and why not just tell it not to?",
+      "standards": [
+        "ccaf:d2",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Connecting the Slack server — carefully",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene12"
+        }
+      ],
+      "centrality": 0,
+      "layer": 7
+    },
+    {
+      "id": "mt_what_is_context",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_context",
+      "name": "What counts as context",
+      "description": "Everything Claude sees on a turn: system prompt, message history, tool definitions and results, attached files and skills, thinking blocks. You pay for all of it, and when the window fills the request fails. The goal is to fit the right things in, not everything.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Enumerate what occupies the context window besides the conversation",
+        "State the goal that replaces “fit everything in”"
+      ],
+      "assessmentPrompt": "Name five things that occupy the context window, and say what happens when it fills.",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · What actually counts as context",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene17"
+        }
+      ],
+      "centrality": 0.194,
+      "layer": 2
+    },
+    {
+      "id": "mt_just_in_time",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_context",
+      "name": "Just-in-time context",
+      "description": "A design pattern, not an API feature: don't preload everything, load what is needed now and let the agent pull more through tools when it asks. A lookup_building_code tool instead of the whole code book pasted into the system prompt.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Recognise just-in-time as a pattern rather than a parameter",
+        "Convert a preloaded blob of reference material into a just-in-time design"
+      ],
+      "assessmentPrompt": "A 200-page manual sits in your system prompt “just in case”. What is the pattern that replaces it, and what makes it a pattern rather than a setting?",
+      "standards": [
+        "ccaf:d5",
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · The rules Dara pins above the desk",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene18"
+        }
+      ],
+      "centrality": 0.104,
+      "layer": 3
+    },
+    {
+      "id": "mt_server_compaction",
+      "type": "PROCEDURAL",
+      "cluster": "cl_context",
+      "name": "Server-side compaction",
+      "description": "Opt in with context_management: {edits: [{type: \"compact\"}]} and the API summarises older turns automatically once input crosses a trigger threshold — so you stop tracking conversation length yourself. Managed agents ship with it on.",
+      "core": false,
+      "estMinutes": 6,
+      "evidence": [
+        "Name the request field that enables compaction",
+        "State what compaction takes off your plate"
+      ],
+      "assessmentPrompt": "A long-running conversation keeps approaching the context limit. Which opt-in handles it server-side, and what were you doing manually before?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · The rules Dara pins above the desk",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene18"
+        }
+      ],
+      "centrality": 0,
+      "layer": 3
+    },
+    {
+      "id": "mt_prompt_caching",
+      "type": "PROCEDURAL",
+      "cluster": "cl_context",
+      "name": "Prompt caching: the breakpoint",
+      "description": "Caching is not automatic. You mark a block with cache_control: {type: \"ephemeral\"} in its longhand form, and everything before and including that breakpoint is cached; content after it is processed normally. System prompts and tool definitions are the best candidates because they rarely change.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Explain what a cache breakpoint caches — and what it does not",
+        "Pick the parts of a request most worth caching"
+      ],
+      "assessmentPrompt": "You add a cache breakpoint after your tool definitions. What is now cached, and what still costs full price?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · The rules Dara pins above the desk",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene18"
+        }
+      ],
+      "centrality": 0.015,
+      "layer": 3
+    },
+    {
+      "id": "mt_caching_rules",
+      "type": "FACTUAL",
+      "cluster": "cl_context",
+      "name": "The caching rules that get tested",
+      "description": "The cache lives one hour. Processing order is tools, then system prompt, then messages. Up to four breakpoints. Minimum 1,024 tokens up to the breakpoint or nothing is cached. And the prefix must be byte-identical — adding “please” invalidates the hit.",
+      "core": true,
+      "estMinutes": 9,
+      "evidence": [
+        "Recall the lifetime, the breakpoint limit, and the minimum size",
+        "Diagnose a cache that never hits from a described change to the prompt"
+      ],
+      "assessmentPrompt": "Your cache hit rate is zero even though you send the same system prompt every call — except you now interpolate the user's first name at the top. Which rule did you break?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · The rules Dara pins above the desk",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene18"
+        }
+      ],
+      "centrality": 0,
+      "layer": 4
+    },
+    {
+      "id": "mt_memory_tool",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_context",
+      "name": "The memory tool",
+      "description": "For context that must survive across sessions — preferences, running notes. Claude reads and writes a memory directory through tool calls and Anthropic auto-injects an instruction telling it to check memory before starting work, but you implement the storage backend: file system, database, whatever you run.",
+      "core": false,
+      "estMinutes": 7,
+      "evidence": [
+        "State which half of the memory tool you implement",
+        "Distinguish memory from compaction by what problem each solves"
+      ],
+      "assessmentPrompt": "Your agent should remember a user's preferences next week, not just later in this conversation. Which of the four context patterns, and what do you have to build?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · The rules Dara pins above the desk",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene18"
+        }
+      ],
+      "centrality": 0.015,
+      "layer": 3
+    },
+    {
+      "id": "mt_why_rag",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_rag",
+      "name": "Why RAG",
+      "description": "Stuffing everything into the prompt hits hard length limits, degrades on very long prompts, costs more and runs slower. RAG breaks documents into chunks and includes only the relevant ones per question — at the price of a preprocessing step, a search mechanism, and chunks that may miss the context they needed.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Name the four problems with stuffing the prompt",
+        "Name the costs RAG introduces in exchange"
+      ],
+      "assessmentPrompt": "Why not just paste the whole manual into the prompt? Give both the reasons against and what you take on instead.",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · “Just put the manual in the prompt”",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene13"
+        }
+      ],
+      "centrality": 0.09,
+      "layer": 3
+    },
+    {
+      "id": "mt_chunking",
+      "type": "PROCEDURAL",
+      "cluster": "cl_rag",
+      "name": "Four chunking strategies",
+      "description": "Size-based (fixed length with overlap — the production default: simple, reliable, works on anything including code), structure-based (split on headers; clean when formatting is guaranteed), sentence-based (regex into sentences, grouped with overlap), and semantic (group by relatedness — most relevant, most expensive).",
+      "core": true,
+      "estMinutes": 9,
+      "evidence": [
+        "Name all four strategies and the trade-off of each",
+        "State the default and justify it"
+      ],
+      "assessmentPrompt": "Which chunking strategy do you reach for first in production, and what specifically makes the structure-based one risky?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · “Just put the manual in the prompt”",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene13"
+        }
+      ],
+      "centrality": 0.075,
+      "layer": 4
+    },
+    {
+      "id": "mt_embeddings",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_rag",
+      "name": "Embeddings and semantic search",
+      "description": "An embedding is a numerical vector standing for a text's meaning; individual dimensions mean nothing to a human. Semantic search compares those vectors to find chunks related in meaning rather than wording. Anthropic does not provide embeddings — the recommended provider is VoyageAI, with its own key and models such as voyage-3-large.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Define an embedding without appealing to interpretable dimensions",
+        "Name who supplies embeddings in this stack"
+      ],
+      "assessmentPrompt": "What does semantic search compare, and which vendor do you go to for the vectors?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Embeddings, and the flow end to end",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene14"
+        }
+      ],
+      "centrality": 0.06,
+      "layer": 5
+    },
+    {
+      "id": "mt_bm25",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_rag",
+      "name": "BM25 and what semantic search misses",
+      "description": "Semantic search optimises for conceptual similarity, so it can miss an exact string like INC-2023-Q4-011. BM25 tokenises the query, counts term frequency across documents, weights rarer terms higher, and returns the documents richest in the highest-weighted terms.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Name the retrieval failure BM25 exists to fix",
+        "Describe BM25's four steps, especially the weighting of rare terms"
+      ],
+      "assessmentPrompt": "A user searches for a specific incident ID and semantic search returns four thematically similar but wrong documents. What algorithm fixes this, and what does it weight highly?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · The search that understood everything except the answer",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene15"
+        }
+      ],
+      "centrality": 0.045,
+      "layer": 6
+    },
+    {
+      "id": "mt_hybrid_search",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_rag",
+      "name": "Hybrid search",
+      "description": "Run semantic search and BM25 in parallel and merge the results, getting conceptual relevance and exact-term precision at once. This is the standard production pattern for robust RAG retrieval.",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "Say what hybrid search combines and why neither half suffices",
+        "Identify it as the production default"
+      ],
+      "assessmentPrompt": "Your corpus contains both prose questions and part numbers. What retrieval design covers both, and how does it run?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · The search that understood everything except the answer",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene15"
+        }
+      ],
+      "centrality": 0.015,
+      "layer": 7
+    },
+    {
+      "id": "mt_reranking",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_rag",
+      "name": "Reranking: recall, then precision",
+      "description": "A second, more expensive pass after retrieval. Pull a wide candidate set — top 20 to 50, optimised for recall — then score those candidates for actual relevance with an LLM call or dedicated reranker and send only the reordered top-K to Claude. Applied to the shortlist, never the corpus, because it costs latency per query.",
+      "core": false,
+      "estMinutes": 8,
+      "evidence": [
+        "Explain the recall-then-precision split across the two stages",
+        "State why reranking is never applied to the whole corpus"
+      ],
+      "assessmentPrompt": "Your first-pass retriever keeps ranking a mediocre chunk above the right one. What stage do you add, and what does it run over?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Reranking results",
+          "href": "../../03-building-with-the-claude-api/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 8
+    },
+    {
+      "id": "mt_contextual_retrieval",
+      "type": "PROCEDURAL",
+      "cluster": "cl_rag",
+      "name": "Contextual retrieval",
+      "description": "An isolated chunk loses what made it findable — “revenue grew 3%” says nothing about whose or when. Before embedding, run each chunk through an LLM with the whole document and prepend a generated situating sentence. It improves the embedding and adds indexable keywords for BM25 at once, and it is a preprocessing-time fix rather than a query-time one.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Describe what gets prepended to a chunk and when",
+        "Contrast it with reranking on the axis of when the work happens"
+      ],
+      "assessmentPrompt": "A chunk reading “revenue grew 3%” is never retrieved for “Acme Q4 automotive revenue”. What preprocessing step fixes that, and how does it differ from reranking?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · “Revenue grew 3%.” Whose revenue? Which quarter?",
+          "href": "../../lessons/0004-claude-api-tools-retrieval-and-context.html#scene16"
+        }
+      ],
+      "centrality": 0,
+      "layer": 6
+    },
+    {
+      "id": "mt_workflow_vs_agent",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_orchestration",
+      "name": "Workflows vs. agents",
+      "description": "A workflow is a predefined series of Claude calls for a problem whose steps you can picture in advance. An agent gets a goal and a toolset and finds its own path. Workflows are more accurate, testable and predictable but less flexible; agents handle novelty at a lower success rate and are harder to instrument. Prefer workflows; reach for agents only when required.",
+      "core": true,
+      "estMinutes": 9,
+      "evidence": [
+        "State the distinguishing question between the two",
+        "Give the benefits and downsides of each and the default recommendation"
+      ],
+      "assessmentPrompt": "What single question separates a workflow design from an agent design, and which does the course recommend by default?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Workflow or agent?",
+          "href": "../../lessons/0005-claude-api-agentic-orchestration.html#scene1"
+        }
+      ],
+      "centrality": 0.134,
+      "layer": 4
+    },
+    {
+      "id": "mt_parallelization",
+      "type": "PROCEDURAL",
+      "cluster": "cl_orchestration",
+      "name": "Parallelization",
+      "description": "Split one complex task into independent sub-tasks, run them simultaneously, then aggregate the results into a final decision. The sub-tasks need not be identical — they just have to be genuinely independent evaluations of the same thing.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Recognise the pattern from its shape: fan out, then aggregate",
+        "State the precondition that makes it applicable"
+      ],
+      "assessmentPrompt": "A loan decision needs a credit check, a fraud check and an affordability check. Which workflow pattern, and what is the final step?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Four analyses, one decision",
+          "href": "../../lessons/0005-claude-api-agentic-orchestration.html#scene4"
+        }
+      ],
+      "centrality": 0.015,
+      "layer": 5
+    },
+    {
+      "id": "mt_chaining",
+      "type": "PROCEDURAL",
+      "cluster": "cl_orchestration",
+      "name": "Chaining",
+      "description": "Break a large task into sequential subtasks that build on each other. It exists to solve the long-prompt problem: one prompt carrying many constraints tends to satisfy some and quietly drop others. Step one generates imperfectly; step two is a focused revision pass targeting specific fixes.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Name the failure mode chaining addresses",
+        "Describe the two-step generate-then-revise shape"
+      ],
+      "assessmentPrompt": "A prompt with eight rules obeys five of them. What pattern fixes that, and what does each step do?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf-glossary:t12"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · The prompt that ignores half its own rules",
+          "href": "../../lessons/0005-claude-api-agentic-orchestration.html#scene3"
+        }
+      ],
+      "centrality": 0.015,
+      "layer": 5
+    },
+    {
+      "id": "mt_routing",
+      "type": "PROCEDURAL",
+      "cluster": "cl_orchestration",
+      "name": "Routing",
+      "description": "Classify the input with a Claude call, then forward it to exactly one specialised pipeline built for that category. Input reaches one branch only, which is what lets each branch be optimised deeply for its own case — and lets cheap categories run on cheap models.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Describe the two stages and the one-branch property",
+        "Distinguish routing from parallelization by where the input goes"
+      ],
+      "assessmentPrompt": "One inbox receives refund requests, bug reports and sales enquiries. Which pattern, and how many pipelines does a given message reach?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · One inbox, three very different jobs",
+          "href": "../../lessons/0005-claude-api-agentic-orchestration.html#scene5"
+        }
+      ],
+      "centrality": 0.015,
+      "layer": 5
+    },
+    {
+      "id": "mt_evaluator_optimizer",
+      "type": "PROCEDURAL",
+      "cluster": "cl_orchestration",
+      "name": "Evaluator–optimizer",
+      "description": "A producer creates output, a grader evaluates it against criteria, and rejection sends feedback back to the producer for revision until it passes. The image-to-CAD loop is the canonical example: describe, model, render, grade the render against the original, fix, repeat.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Describe the loop and what closes it",
+        "Say what the evaluator half has in common with a model grader"
+      ],
+      "assessmentPrompt": "Which workflow pattern has a feedback edge back to its own first step, and what decides whether that edge is taken?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf-glossary:t48"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · The part that grades its own homework",
+          "href": "../../lessons/0005-claude-api-agentic-orchestration.html#scene6"
+        }
+      ],
+      "centrality": 0.03,
+      "layer": 5
+    },
+    {
+      "id": "mt_pattern_choice",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_orchestration",
+      "name": "Choosing the pattern",
+      "description": "The exam's decision rule. If the steps are knowable in advance, design a workflow and pick the pattern by shape: independent evaluations to aggregate (parallelization), stages that build on each other (chaining), categories with different handling (routing), quality that needs iterating toward (evaluator–optimizer). If the steps are not knowable and the model must improvise across a toolset, design an agent.",
+      "core": true,
+      "estMinutes": 9,
+      "evidence": [
+        "Apply the rule to an unseen scenario and name the pattern",
+        "Separate a scenario that needs an agent from one that merely sounds like it"
+      ],
+      "assessmentPrompt": "Given a scenario, what is the first question you ask, and what are the four shapes you choose between if the answer is yes?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Callum wants a rule he can put in a doc",
+          "href": "../../lessons/0005-claude-api-agentic-orchestration.html#scene13"
+        }
+      ],
+      "centrality": 0,
+      "layer": 6
+    },
+    {
+      "id": "mt_managed_agents",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_managed",
+      "name": "What managed agents are, and when",
+      "description": "APIs for running the agent loop on Anthropic's infrastructure instead of your server: you define the agent and a sandbox, fire off sessions, and stream events back. Enabled by default on every API account. Reach for them when the loop would run for minutes or hours, touch many files or tools, or need to survive a network hiccup; keep the manual loop when you want full control.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "State what managed agents host and what you still write",
+        "Name the three conditions that favour them over a manual loop"
+      ],
+      "assessmentPrompt": "A migration agent runs for two hours across hundreds of files and must survive a dropped connection. Manual loop or managed agent, and why?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · “Who runs the loop at three in the morning?”",
+          "href": "../../lessons/0005-claude-api-agentic-orchestration.html#scene10"
+        }
+      ],
+      "centrality": 0.045,
+      "layer": 4
+    },
+    {
+      "id": "mt_managed_primitives",
+      "type": "FACTUAL",
+      "cluster": "cl_managed",
+      "name": "Agent, environment, session, events",
+      "description": "Four primitives in order. Agent is the persona: model, system prompt, toolset, reusable across runs. Environment is where it runs: cloud or local, networking config. Session is a single run of an agent inside an environment — the unit of work. Events are the messages flowing in and out. You send events in and read events out; there is no while loop.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Name the four primitives in order and what each holds",
+        "Identify which one is the unit of work"
+      ],
+      "assessmentPrompt": "Name the four managed-agent primitives in order, and say which is reusable across many runs and which is a single run.",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · “Who runs the loop at three in the morning?”",
+          "href": "../../lessons/0005-claude-api-agentic-orchestration.html#scene10"
+        }
+      ],
+      "centrality": 0.03,
+      "layer": 5
+    },
+    {
+      "id": "mt_managed_build_order",
+      "type": "PROCEDURAL",
+      "cluster": "cl_managed",
+      "name": "The build order, and the step you cannot reorder",
+      "description": "Create the agent, create the environment, create the session, open the event stream, then send the kickoff message. The stream only delivers events that occur after it opens — open it first or you miss the beginning of your own run. Then consume, watching for agent.message, agent.tool_use and session.status_idle.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Give the five steps in order and name the ordering trap",
+        "Name the event that signals the agent is finished"
+      ],
+      "assessmentPrompt": "Your managed agent runs correctly but your app sees none of the first few events. Which two steps did you swap?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · Five steps, and one of them is an ordering trap",
+          "href": "../../lessons/0005-claude-api-agentic-orchestration.html#scene11"
+        }
+      ],
+      "centrality": 0,
+      "layer": 6
+    },
+    {
+      "id": "mt_managed_blocks",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_managed",
+      "name": "Rubrics, memory, coordination, permissions",
+      "description": "What turns a demo into an operation. Rubrics and graders define success and evaluate in their own context window until output passes. Memory gives cross-session continuity. A coordinator delegates to specialists, each in its own context window over a shared file system. Permissions policies pause sensitive actions for human approval. Sessions run in parallel, each in its own container.",
+      "core": false,
+      "estMinutes": 8,
+      "evidence": [
+        "Match a production requirement to the building block that meets it",
+        "Explain why a grader gets its own context window"
+      ],
+      "assessmentPrompt": "Your managed agent must never post to Slack without sign-off, and must remember last week's prices. Which two building blocks?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Lesson · What turns a demo into an operation",
+          "href": "../../lessons/0005-claude-api-agentic-orchestration.html#scene12"
+        }
+      ],
+      "centrality": 0,
+      "layer": 6
+    }
+  ]
+}

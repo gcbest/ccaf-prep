@@ -1,0 +1,346 @@
+{
+  "$comment": "Teaching content for cl_context.",
+  "cluster": "cl_context",
+  "topics": [
+    {
+      "topicId": "mt_what_is_context",
+      "knowledgePoints": [
+        {
+          "id": "kp_ctx_1",
+          "name": "The full inventory",
+          "keyPrerequisites": ["mt_conversation_state", "mt_content_blocks"],
+          "teach": "<p>Context is <strong>everything Claude sees on a turn</strong>:</p><ul><li>the system prompt,</li><li>the message history,</li><li><strong>tool definitions</strong> and tool results,</li><li>attached files and skills,</li><li>thinking blocks.</li></ul><p>The two people forget are tool definitions and thinking blocks, because neither appears in the conversation as a user would read it. Twenty tools with four-sentence descriptions is a fixed cost on every single request.</p><p>You pay for all of it, in and out. Once the window is full, the request <strong>fails</strong> — it does not silently truncate.</p><p class='kp-key'>The goal is to fit the right things in, not everything.</p>",
+          "questions": [
+            {
+              "id": "q_ctx_1a",
+              "q": "Which of these occupies the context window?",
+              "options": [
+                "Only the message history",
+                "System prompt, message history, tool definitions and results, attached files and skills, thinking blocks",
+                "Message history and system prompt only",
+                "Everything except tool definitions, which are processed separately"
+              ],
+              "correct": 1,
+              "explain": "All of it. Tool definitions in particular are a fixed cost people routinely overlook."
+            },
+            {
+              "id": "q_ctx_1b",
+              "q": "What happens when the context window fills?",
+              "options": [
+                "The oldest turns are dropped automatically",
+                "The request fails",
+                "The response is truncated with stop_reason max_tokens",
+                "Claude summarises the history on its own"
+              ],
+              "correct": 1,
+              "explain": "It fails. Automatic summarisation is compaction, which is an opt-in you have to ask for."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_ctx_1",
+          "q": "How does the course state the goal of context management?",
+          "options": [
+            "Fit everything in",
+            "Fit the right things in, not everything",
+            "Keep every request under half the window",
+            "Minimise total tokens per request"
+          ],
+          "correct": 1,
+          "explain": "Selection, not compression. Cost is a consequence; relevance is the objective."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_just_in_time",
+      "knowledgePoints": [
+        {
+          "id": "kp_jit_1",
+          "name": "A pattern, not a parameter",
+          "keyPrerequisites": ["mt_what_is_context"],
+          "teach": "<p class='kp-key'>Just-in-time context is a design pattern, not an API feature. There is no field to set.</p><p>The move: don't preload everything. Load what is needed now, and let the agent pull more through tools when it asks.</p><table class='kp-table'><tr><th>Preloaded</th><th>Just-in-time</th></tr><tr><td>the entire building code pasted into the system prompt</td><td>a <code>lookup_building_code</code> tool the agent calls when a question needs it</td></tr></table><p>Note the dependency this creates: the pattern only works if the agent actually reaches for the tool, which makes it a <strong>tool description</strong> problem. A perfect just-in-time architecture with a vague description is an agent answering from nothing.</p><p>Of Anthropic's four context-management patterns this is the only one that is purely architectural. The other three — compaction, caching, memory — all have a request field or an implementation behind them.</p>",
+          "questions": [
+            {
+              "id": "q_jit_1a",
+              "q": "A 200-page manual sits in your system prompt “just in case”. What replaces it?",
+              "options": [
+                "Server-side compaction, which will summarise it",
+                "A lookup tool the agent calls when a question needs the manual",
+                "A cache breakpoint after the manual",
+                "The memory tool"
+              ],
+              "correct": 1,
+              "explain": "Just-in-time: don't preload, let the agent pull. Caching would make re-sending it cheaper without making it necessary."
+            },
+            {
+              "id": "q_jit_1b",
+              "q": "What makes just-in-time different from the other three context patterns?",
+              "options": [
+                "It is the only one that reduces cost",
+                "It is a design pattern with no API feature behind it",
+                "It is enabled by default",
+                "It only applies to agents, not to workflows"
+              ],
+              "correct": 1,
+              "explain": "Nothing to switch on. It is a decision about architecture."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_jit_1",
+          "q": "Your just-in-time design is sound but the agent answers without ever calling the lookup tool. Where is the fault?",
+          "options": [
+            "The context window is too small",
+            "The tool description — Claude reads it to decide whether to call the tool",
+            "The tool schema is too complex",
+            "Compaction removed the tool definition"
+          ],
+          "correct": 1,
+          "explain": "The pattern depends on the agent choosing to pull, and that choice is made from the description."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_server_compaction",
+      "knowledgePoints": [
+        {
+          "id": "kp_compact_1",
+          "name": "Let the API do the summarising",
+          "keyPrerequisites": ["mt_what_is_context"],
+          "teach": "<p>Opt in on the request:</p><pre class='kp-code'>\"context_management\": {\"edits\": [{\"type\": \"compact\"}]}</pre><p>Once input crosses a trigger threshold, the API automatically summarises older turns. What that takes off your plate is the bookkeeping: you stop tracking conversation length, stop deciding when to trim, and stop writing the summarisation call yourself.</p><p class='kp-key'>Compaction manages the conversation you already have. It does not decide what to load in the first place.</p><p>That is the line between it and just-in-time, and the two compose: pull data on demand, and compact the history of having pulled it.</p><p>Managed agents ship with compaction — and caching — on by default.</p>",
+          "questions": [
+            {
+              "id": "q_compact_1a",
+              "q": "Which field enables server-side compaction?",
+              "options": [
+                "context_management with an edits entry of type compact",
+                "compaction: true",
+                "auto_summarise on the system prompt",
+                "A cache_control block of type compact"
+              ],
+              "correct": 0,
+              "explain": "context_management: {edits: [{type: \"compact\"}]}."
+            },
+            {
+              "id": "q_compact_1b",
+              "q": "What does compaction take off your plate?",
+              "options": [
+                "Deciding what to load into context in the first place",
+                "Tracking conversation length and deciding when to summarise",
+                "Paying for input tokens",
+                "Validating tool inputs"
+              ],
+              "correct": 1,
+              "explain": "The bookkeeping. What to load is a different problem, and just-in-time's."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_compact_1",
+          "q": "Which context features do managed agents enable by default?",
+          "options": [
+            "Compaction only",
+            "Caching and compaction",
+            "Memory and compaction",
+            "None — all are opt-in everywhere"
+          ],
+          "correct": 1,
+          "explain": "Both, since a hosted long-running loop needs them almost by definition."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_prompt_caching",
+      "knowledgePoints": [
+        {
+          "id": "kp_cache_1",
+          "name": "Nothing is cached until you say so",
+          "keyPrerequisites": ["mt_what_is_context"],
+          "teach": "<p class='kp-key'>Caching is not automatic. You add a breakpoint by hand.</p><p>You mark a block using its longhand form:</p><pre class='kp-code'>\"system\": [{\n  \"type\": \"text\",\n  \"text\": long_stable_instructions,\n  \"cache_control\": {\"type\": \"ephemeral\"}     # ← the breakpoint\n}]</pre><p>Then:</p><p><strong>Everything before and including the breakpoint gets cached. Content after it is processed normally.</strong></p><p>So the breakpoint is a <em>prefix</em> marker, not a tag on one block. Placing it after your tool definitions caches the tools and everything ahead of them; placing it at the end of the system prompt caches the tools and the system prompt both.</p><p>Best candidates are the things that rarely change: <strong>system prompts and tool definitions</strong>. The user's message, which is different every time, is not one.</p>",
+          "questions": [
+            {
+              "id": "q_cache_1a",
+              "q": "You put a cache breakpoint at the end of your tool definitions. What is cached?",
+              "options": [
+                "Only the tool definitions",
+                "Everything up to and including the tool definitions",
+                "Everything after the tool definitions",
+                "The whole request"
+              ],
+              "correct": 1,
+              "explain": "A breakpoint caches the prefix — everything before and including it."
+            },
+            {
+              "id": "q_cache_1b",
+              "q": "Which parts of a request are the best caching candidates?",
+              "options": [
+                "The user's most recent message",
+                "System prompts and tool definitions",
+                "Tool results, which repeat across turns",
+                "Whichever part is largest"
+              ],
+              "correct": 1,
+              "explain": "Stability is the criterion, and those two rarely change."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_cache_1",
+          "q": "Which block form is required to add a cache breakpoint?",
+          "options": [
+            "The shorthand string form",
+            "The longhand block form, carrying cache_control",
+            "Either — cache_control is a top-level parameter",
+            "A dedicated cache block type"
+          ],
+          "correct": 1,
+          "explain": "cache_control hangs off a longhand block, so a plain string system prompt has to be rewritten as one."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_caching_rules",
+      "knowledgePoints": [
+        {
+          "id": "kp_rules_1",
+          "name": "The five numbers",
+          "keyPrerequisites": ["mt_prompt_caching"],
+          "teach": "<table class='kp-table'><tr><th>Rule</th><th>Value</th></tr><tr><td>Cache lifetime</td><td><strong>one hour</strong></td></tr><tr><td>Processing order</td><td><strong>tools → system prompt → messages</strong></td></tr><tr><td>Maximum breakpoints</td><td><strong>4</strong></td></tr><tr><td>Minimum cacheable size</td><td><strong>1,024 tokens</strong> up to the breakpoint</td></tr><tr><td>Prefix match</td><td><strong>identical</strong> — byte for byte</td></tr></table><p>Breakpoints can span multiple messages and types: text blocks, system prompts, tool definitions, image blocks, tool use and tool result blocks.</p><p>Two consequences worth holding:</p><ul><li>The <strong>1,024-token minimum</strong> is summed across everything up to the breakpoint, so a short “Hi there!” system prompt will not qualify no matter how often you send it.</li><li>The processing order is why tools are the natural first breakpoint: they are processed first, so they are the outermost prefix.</li></ul>",
+          "questions": [
+            {
+              "id": "q_rules_1a",
+              "q": "Your cache never hits, though the system prompt is identical — except you now interpolate the user's first name at the top. Which rule did you break?",
+              "options": [
+                "The 1,024-token minimum",
+                "The requirement that the cached prefix be identical",
+                "The four-breakpoint limit",
+                "The one-hour lifetime"
+              ],
+              "correct": 1,
+              "explain": "The prefix must match byte for byte. A name at the top changes the very first thing processed."
+            },
+            {
+              "id": "q_rules_1b",
+              "q": "What is the processing order that caching follows?",
+              "options": [
+                "messages → system prompt → tools",
+                "tools → system prompt → messages",
+                "system prompt → tools → messages",
+                "system prompt → messages → tools"
+              ],
+              "correct": 1,
+              "explain": "Tools first, which is why they make the natural outermost breakpoint."
+            }
+          ]
+        },
+        {
+          "id": "kp_rules_2",
+          "name": "One hour, and why 'please' costs money",
+          "keyPrerequisites": [],
+          "teach": "<p>The cache lives <strong>one hour</strong>, so it only helps if you resend the same content inside that window. A batch job running nightly gets nothing from it; a chat service under steady load gets a great deal.</p><p class='kp-key'>Follow-up requests only hit the cache if the content up to the breakpoint is identical. Adding “please” invalidates it.</p><p>That is the rule that catches people, because the changes that break it are ones that feel harmless: a timestamp in the system prompt, a personalised greeting, a version string, a reordered tool array. Each of them is a different prefix, and a different prefix is a cache miss on <em>everything</em> behind it.</p><p>The practical discipline: put everything volatile <em>after</em> the last breakpoint, and keep the prefix byte-stable even when it feels over-careful.</p>",
+          "questions": [
+            {
+              "id": "q_rules_2a",
+              "q": "How long does the cache live?",
+              "options": ["Five minutes", "One hour", "24 hours", "Until the conversation ends"],
+              "correct": 1,
+              "explain": "One hour. Useful only if you resend the same prefix within it."
+            },
+            {
+              "id": "q_rules_2b",
+              "q": "Which of these is safe for a cached prefix?",
+              "options": [
+                "A timestamp at the top of the system prompt",
+                "The user's name interpolated into the system prompt",
+                "Volatile content placed after the last breakpoint",
+                "Reordering the tools array per request"
+              ],
+              "correct": 2,
+              "explain": "After the breakpoint is the safe place for anything that changes. The other three all alter the prefix."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_rules_1",
+          "q": "How many cache breakpoints may a request carry?",
+          "options": ["1", "2", "4", "Unlimited"],
+          "correct": 2,
+          "explain": "Up to four."
+        },
+        {
+          "id": "r_rules_2",
+          "q": "What is the minimum cacheable size, and how is it measured?",
+          "options": [
+            "1,024 tokens, measured on the marked block alone",
+            "1,024 tokens, summed across everything up to the breakpoint",
+            "512 tokens, summed across the whole request",
+            "There is no minimum"
+          ],
+          "correct": 1,
+          "explain": "Summed across the prefix — which is why a breakpoint after a short system prompt can still qualify if tools precede it."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_memory_tool",
+      "knowledgePoints": [
+        {
+          "id": "kp_mem_1",
+          "name": "Context that outlives the session",
+          "keyPrerequisites": ["mt_what_is_context"],
+          "teach": "<p>Compaction and caching both operate on a conversation. Memory is for what must survive <em>after</em> it: preferences, running notes, anything you want available next week.</p><p>Claude reads and writes a memory directory through tool calls, and Anthropic auto-injects an instruction telling it to <strong>check memory before starting work</strong>.</p><p class='kp-key'>You implement the storage backend — file system, database, whatever you run.</p><p>Same division as the text editor tool: the interface is supplied, the substance is yours. Which also means the retention policy, the access control, and the question of what happens when two sessions write at once are all yours.</p>",
+          "questions": [
+            {
+              "id": "q_mem_1a",
+              "q": "Your agent should remember a user's preferences next week. Which pattern, and what do you build?",
+              "options": [
+                "Compaction; nothing — it is a request field",
+                "The memory tool; you build the storage backend",
+                "Prompt caching; you build a one-hour refresh loop",
+                "Just-in-time; you build a preferences lookup tool"
+              ],
+              "correct": 1,
+              "explain": "Cross-session continuity is memory's job, and the backend is yours to implement."
+            },
+            {
+              "id": "q_mem_1b",
+              "q": "What does Anthropic inject automatically when the memory tool is in use?",
+              "options": [
+                "A summary of prior sessions",
+                "An instruction telling Claude to check memory before starting work",
+                "A storage backend with 30-day retention",
+                "A cache breakpoint before the memory directory"
+              ],
+              "correct": 1,
+              "explain": "The check-memory-first instruction. Without it, memory that exists is memory that goes unread."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_mem_1",
+          "q": "Name Anthropic's four context-management patterns.",
+          "options": [
+            "Just-in-time, compaction, prompt caching, memory",
+            "Chunking, retrieval, reranking, caching",
+            "Compaction, streaming, caching, batching",
+            "Just-in-time, RAG, memory, summarisation"
+          ],
+          "correct": 0,
+          "explain": "In production you typically layer all four — cache the stable prefix, pull data just-in-time, compact the history, persist across sessions."
+        }
+      ]
+    }
+  ]
+}

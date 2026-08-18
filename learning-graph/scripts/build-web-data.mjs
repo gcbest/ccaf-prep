@@ -1,22 +1,26 @@
 #!/usr/bin/env node
-/* Regenerate learning-graph/graph-data.js and data/manifest.json from the JSON
+/* Regenerate a section's graph-data.js and data/manifest.json from the JSON
    source of truth, and write the derived centrality/layer values back into
    topics.json so the taxonomy files stay self-describing.
 
    The site loads graph-data.js with a <script> tag rather than fetching the JSON,
    so the page works from file:// as well as from GitHub Pages.
 
-   Usage: node learning-graph/scripts/build-web-data.mjs */
+   Usage: node learning-graph/scripts/build-web-data.mjs [section]
+            (no argument) → Section 8, at learning-graph/
+            section-03    → Building with the Claude API */
 
 import { writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 import {
-  ROOT, DATA, load, validate, allQuestions,
+  load, validate, allQuestions, sectionFromArgv,
   computeLayers, computeCentrality, computeLayout,
 } from "./lib/graph.mjs";
 
-const g = load();
+const ROOT = sectionFromArgv();
+const g = load(ROOT);
+const DATA = g.data;
 const { errors, warnings } = validate(g);
 for (const w of warnings) console.warn(`warning: ${w}`);
 if (errors.length) {
@@ -52,8 +56,11 @@ const topics = g.topics.map((t) => ({
 const payload = {
   version: 1,
   builtAt: new Date().toISOString().slice(0, 10),
-  subject: "Claude Agent SDK",
-  section: "Section 8 · The Claude Agent SDK",
+  subject: g.meta.subject,
+  section: g.meta.section,
+  sectionShort: g.meta.sectionShort,
+  storageKey: g.meta.storageKey,
+  notesPath: g.meta.notesPath,
   clusters: g.clusters,
   standards: g.standards,
   topics,
@@ -64,8 +71,9 @@ const payload = {
 
 const banner =
   "/* GENERATED FILE — do not edit.\n" +
-  "   Source of truth: learning-graph/data/*.json\n" +
-  "   Rebuild with: node learning-graph/scripts/build-web-data.mjs */\n";
+  `   Source of truth: ${g.meta.dataPath}/*.json\n` +
+  `   Rebuild with: node learning-graph/scripts/build-web-data.mjs ${g.meta.buildArg}`.trimEnd() +
+  " */\n";
 
 writeFileSync(
   join(ROOT, "graph-data.js"),
@@ -99,5 +107,5 @@ const manifest = {
 };
 writeFileSync(join(DATA, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
 
-console.log("wrote graph-data.js, data/manifest.json, and derived fields in data/topics.json");
+console.log(`${g.meta.section}: wrote graph-data.js, data/manifest.json, and derived fields in data/topics.json`);
 console.table(manifest.stats);
