@@ -13,27 +13,27 @@
           "questions": [
             {
               "id": "q_mgd_1a",
-              "q": "What replaces the while loop when using managed agents?",
+              "q": "Your team is migrating an internal support bot from a self-hosted agent loop, where your server calls the Claude API in a while loop and manually re-invokes it after each tool result, onto Anthropic's managed agents platform. After the migration, your application code no longer contains a while loop at all. What replaced it in the new architecture?",
               "options": [
-                "A callback you register with the SDK",
-                "An event stream — events in, events out",
-                "A polling endpoint you check regularly",
-                "Nothing; the loop just runs remotely"
+                "A callback function you register once, which the managed agents SDK invokes synchronously after each tool call completes.",
+                "A polling endpoint your application calls on a fixed interval to check whether the current session has produced new output.",
+                "An event stream: your application sends events into the session and reads back the events the running agent loop produces.",
+                "Nothing changes structurally; the while loop still runs, just on Anthropic's servers instead of yours, invisible to your code."
               ],
-              "correct": 1,
-              "explain": "The loop runs inside the session. Your app's relationship to it is a stream of events."
+              "correct": 2,
+              "explain": "The managed agents model replaces the while loop with an event stream — you send events into the session and consume events as they come back out, rather than writing any loop yourself. Registering a callback and polling an endpoint both describe control patterns managed agents don't expose; there is no callback hook or polling API to check for output. And the loop isn't merely relocated to Anthropic's servers — the architecture is event-based rather than loop-based, so there is no while loop running anywhere in the flow you interact with."
             },
             {
               "id": "q_mgd_1b",
-              "q": "How do you get access to managed agents?",
+              "q": "A developer on your team wants to prototype a managed agent for an internal tool but is blocked waiting on what they assume is a required approval step before they can call the agents API. What is actually true about access to managed agents on a standard API account?",
               "options": [
-                "Request access through the Console first",
-                "They require an enterprise agreement first",
-                "Enabled by default on every API account",
-                "Only available via Bedrock and Vertex"
+                "Managed agents are enabled by default on every API account; no separate purchase, approval, or preview request is needed to start calling the agents endpoints.",
+                "Managed agents require submitting a request through the Console and waiting for Anthropic to grant preview access before the endpoints become callable.",
+                "Managed agents are gated behind a separate enterprise agreement and procurement process, distinct from the standard pay-as-you-go API plan.",
+                "Managed agents are currently available only through Amazon Bedrock and Google Cloud Vertex integrations, not through the direct Anthropic API."
               ],
-              "correct": 2,
-              "explain": "On by default, for everyone."
+              "correct": 0,
+              "explain": "Managed agents ship enabled by default for every API account, so the developer can call the agents endpoints immediately without any Console request, enterprise agreement, or preview approval. Framing it as a Console-gated preview or an enterprise-only feature both describe access models Anthropic doesn't use for this API. And while managed agents are also reachable through Bedrock and Vertex, that isn't a restriction — they're available directly through the Anthropic API as well."
             }
           ]
         },
@@ -45,27 +45,27 @@
           "questions": [
             {
               "id": "q_mgd_2a",
-              "q": "A migration agent runs for two hours across hundreds of files and must survive a dropped connection. Managed or manual?",
+              "q": "Your team is designing a data migration agent that will run for roughly two hours, touch several hundred files across the codebase, and must be able to resume cleanly if the network connection drops partway through. A colleague argues that because the task is conceptually simple — copy and transform files — a manual agent loop you host yourself is the better fit. Which response best evaluates that argument?",
               "options": [
-                "Manual — you need control over a task this long",
-                "Manual, with a resume token you implement",
-                "Managed — long-running, many files, resumable",
-                "Either; the choice here is about cost alone"
+                "The colleague is right: task complexity, not runtime duration or resumability, is the deciding factor, and a copy-and-transform task is simple enough for a manual loop.",
+                "A manual loop is still preferable here, but only if you additionally implement your own resume token and checkpointing logic to survive dropped connections.",
+                "Either approach works equally well; the choice between managed and manual agents in this case comes down to relative API cost, not operational requirements.",
+                "The colleague is wrong: the two-hour runtime, the file count, and the resumability requirement are exactly the operational conditions managed agents are designed for."
               ],
-              "correct": 2,
-              "explain": "All three conditions at once. Resumability in particular is expensive to build and free here."
+              "correct": 3,
+              "explain": "All three signals — long runtime, a large number of files touched, and the need to survive a dropped connection — are the operational conditions that call for managed agents, regardless of how conceptually simple the underlying transformation is; task complexity and operational difficulty are separate axes. Building your own resume token and checkpointing logic is exactly the expensive, already-solved problem managed agents remove, so it isn't a reason to stay manual. And framing the decision as purely about cost ignores that resumability and container isolation aren't things a manual loop gets for free at any price point."
             },
             {
               "id": "q_mgd_2b",
-              "q": "When is a manual loop still the right choice?",
+              "q": "Your platform team already has a working managed-agent pipeline for long migrations, but for a new lightweight feature — a single agent that answers one internal question per invocation and finishes in under a second — an engineer proposes hand-rolling a manual while loop instead, specifically to retain fine-grained control over every step of the loop. Is retaining that control a valid reason to choose the manual approach?",
               "options": [
-                "When the task needs no tools of any kind",
-                "When the agent must run in your region",
-                "When the conversation exceeds the window",
-                "When you want full control of the loop"
+                "Yes: wanting full control over each step of the loop is itself the stated reason to keep the loop manual, independent of the task's runtime or file count.",
+                "No: control over the loop is not a real tradeoff between the two approaches, since managed agents expose the same low-level hooks a manual loop would.",
+                "Yes, but only because the task runs in under a second; short runtime, not the desire for control, is what actually justifies a manual loop here.",
+                "No: the engineer should default to managed agents regardless of the reason given, since Anthropic's infrastructure is more reliable than a hand-rolled loop."
               ],
-              "correct": 3,
-              "explain": "Control is what you give up by hosting, and it is the stated reason to keep the loop yourself."
+              "correct": 0,
+              "explain": "Wanting full control of the loop is the reason given for staying manual — it's independent of the three operational conditions (long runtime, many files or tools, resumability) that push toward managed agents, so a short, simple task can still justify a manual loop on control grounds alone. Managed agents don't expose the same low-level loop hooks a manual implementation gives you, so framing control as a non-issue misses the actual tradeoff. And short runtime by itself isn't the stated justification — a two-second task could just as easily run as a managed session; the reason here is specifically the engineer's desire for control, not the clock."
             }
           ]
         }
@@ -73,15 +73,15 @@
       "reviewQuestions": [
         {
           "id": "r_mgd_1",
-          "q": "What does the container an agent runs in provide?",
+          "q": "You're reviewing the security boundary of a managed agent session before granting it access to a customer-facing workflow. According to how managed agent sessions execute, what does the isolated container the agent loop runs inside actually give the agent?",
           "options": [
-            "File system, bash execution, and web search",
-            "A GPU for running inference locally",
-            "A persistent database for the agent",
-            "Direct access to your production network"
+            "Direct network access to your production databases and internal services, scoped by the IAM role attached to your API key.",
+            "File system access, bash execution, and web search, contained within an isolated sandbox rather than your own infrastructure.",
+            "A dedicated GPU allocation so the agent can run model inference locally instead of calling back to Anthropic's servers.",
+            "A persistent database tied to the session ID, letting the agent store structured records across every future run."
           ],
-          "correct": 0,
-          "explain": "An isolated sandbox with the tools an agent typically needs — and isolation is the point of it."
+          "correct": 1,
+          "explain": "The container gives the agent a sandboxed environment with file system access, bash execution, and web search — the common tools an agent loop needs — isolated from your own infrastructure rather than plugged directly into it. It does not hand the agent direct production network access, a local GPU for inference, or a persistent database; those aren't part of what the sandbox provides, and conflating them with the container's actual scope would understate the isolation that makes it safe to run untrusted or exploratory work in it."
         }
       ]
     },
@@ -96,27 +96,27 @@
           "questions": [
             {
               "id": "q_prim_1a",
-              "q": "Which primitive is reusable across many runs, and which is a single run?",
+              "q": "You're documenting your team's managed-agents architecture and need to clarify a distinction two junior engineers keep confusing: they assume that because you configure an agent once and then start it multiple times, both the definition and each individual run are the same reusable object. Which primitive is actually reused across many runs, and which represents a single run?",
               "options": [
-                "Session is reusable; agent is one run",
-                "Environment is reusable; agent is one run",
-                "Agent is reusable; session is one run",
-                "Both the agent and session are reusable"
+                "The environment is the reusable object across runs, while the session represents the toolset and persona configured for a single run.",
+                "The agent — its model, system prompt, and toolset — is reusable across many runs; each session represents one single run of it.",
+                "The session is reusable across many runs, while the agent itself must be redefined — model, prompt, and tools — before each new run.",
+                "Both the agent and the session are reusable objects; only the environment and the event stream are scoped to a single run."
               ],
-              "correct": 2,
-              "explain": "The agent is the persona you define once. Each session is one run of it."
+              "correct": 1,
+              "explain": "The agent is the persona — model, system prompt, and toolset — that you define once and reuse across many runs, while each session is a single run of that agent. Casting the environment or the session itself as the reusable piece inverts that relationship: the environment describes where a run happens, not something you carry across runs, and a session is scoped to exactly one run by definition. Treating both the agent and the session as reusable also collapses the very distinction the primitives are designed to keep separate."
             },
             {
               "id": "q_prim_1b",
-              "q": "Which primitive is described as the unit of work?",
+              "q": "In the four managed-agents primitives — agent, environment, session, and events — one is described as 'the unit of work': the thing your application starts, tracks, and eventually sees finish. Which primitive is that?",
               "options": [
-                "Session",
-                "Agent",
-                "Environment",
-                "Event"
+                "The agent, since it's the object your application creates first and configures with a model, system prompt, and toolset.",
+                "The environment, since it's the container your application provisions before any actual work can begin running.",
+                "The events, since each individual event your application receives represents one discrete unit of completed work.",
+                "The session, since it's a single run of one agent inside one environment — the thing you start, track, and finish."
               ],
-              "correct": 0,
-              "explain": "A session is one run of one agent in one environment — the thing you start, track, and finish."
+              "correct": 3,
+              "explain": "A session is one run of one agent inside one environment, which makes it the concrete thing your application starts, monitors, and eventually sees reach session.status_idle — the unit of work. The agent is reused across many such runs rather than being one run itself, and the environment is where a run happens rather than the run. Individual events are the messages that stream out of a run, not units of work in themselves — a single session can produce many events before it's done."
             }
           ]
         }
@@ -124,27 +124,27 @@
       "reviewQuestions": [
         {
           "id": "r_prim_1",
-          "q": "What does the environment primitive hold?",
+          "q": "A teammate is filling in a config object and asks which primitive is the right place to set cloud-vs-local execution and networking rules for a managed agent, as opposed to the model and system prompt. What does the environment primitive actually hold?",
           "options": [
-            "The system prompt and the agent toolset",
-            "Where it runs, plus its networking config",
-            "The complete event history for that run",
-            "The rubric that the output is graded on"
+            "The system prompt and the toolset the agent is allowed to call during a session, separate from any networking concerns.",
+            "The complete history of events — messages, tool calls, and results — produced by every session run inside it.",
+            "Where the agent runs — cloud or local — along with its networking configuration, separate from the agent's persona.",
+            "The rubric and grading criteria a session's output is checked against once the agent reports itself finished."
           ],
-          "correct": 1,
-          "explain": "Location and networking. Persona lives on the agent."
+          "correct": 2,
+          "explain": "The environment holds where the agent runs — cloud or local — and its networking configuration, distinct from the persona (model, system prompt, toolset) that lives on the agent object. System prompt and toolset belong to the agent, not the environment, and event history belongs to a session's event stream rather than to the environment itself. Rubrics and grading criteria are a separate building block layered on top for evaluation, not something the environment primitive stores."
         },
         {
           "id": "r_prim_2",
-          "q": "Name the four primitives in order.",
+          "q": "You're writing setup documentation and want to list the four managed-agents primitives in the order you actually create and use them, from first defined to what streams out last. What is that order?",
           "options": [
-            "Environment, agent, session, events",
-            "Agent, session, environment, events",
-            "Session, agent, environment, events",
-            "Agent, environment, session, events"
+            "Agent, environment, session, events — you define the persona and its environment, then start a session, then consume the stream.",
+            "Environment, agent, session, events — you provision where things run before defining the persona that will run there.",
+            "Session, agent, environment, events — you start a session first, then attach the agent and environment configuration to it.",
+            "Agent, session, environment, events — you define the persona, start a run immediately, then configure where it executes."
           ],
-          "correct": 3,
-          "explain": "Agent, environment, session, events — which is also the order you create them in."
+          "correct": 0,
+          "explain": "The natural build order is agent, then environment, then session, then events: you define the reusable persona first, provision where it will run, start a single run inside that environment, and finally consume the event stream that run produces. Provisioning the environment before the agent, or starting a session before either exists, both invert dependencies that the primitives actually require in that direction. A session also can't be configured with an environment after the fact — the environment has to already exist for the session to be created inside it."
         }
       ]
     },
@@ -159,27 +159,27 @@
           "questions": [
             {
               "id": "q_order_1a",
-              "q": "Your managed agent runs correctly but your app sees none of the first few events. What did you get wrong?",
+              "q": "A managed agent session completes its task correctly end to end, but your application's logs show it never received the first several events — no early agent.message or agent.tool_use entries, even though the session clearly did that work. What is the most likely cause?",
               "options": [
-                "You sent the kickoff before opening the stream",
-                "You created the session before the environment",
-                "You did not subscribe to agent.tool_use events",
-                "You polled the session instead of streaming"
+                "The session was created without an environment attached, so early events were dropped before the container finished provisioning.",
+                "The kickoff message was sent before the event stream was opened, so the stream only delivered events that occurred after it opened.",
+                "The application subscribed to agent.tool_use but never subscribed to agent.message, so only tool-call events were logged.",
+                "The session polled for status instead of streaming, so events emitted before the first poll were never retrieved at all."
               ],
-              "correct": 0,
-              "explain": "The stream only delivers what happens after it opens. Open first, then kick off."
+              "correct": 1,
+              "explain": "The event stream only delivers events that occur after it's opened, so sending the kickoff message before opening the stream means the application misses whatever happens in those first moments — even though the session itself runs and finishes correctly. Missing environment attachment would prevent the session from being created at all, not silently drop early events from a session that clearly ran. Selectively subscribing to one event type would explain missing agent.message entries specifically, not a gap across every event type. And polling isn't the architecture in play here at all — the failure mode described is specific to how the streaming subscription was sequenced."
             },
             {
               "id": "q_order_1b",
-              "q": "Which event tells you the agent has finished?",
+              "q": "You're building a dashboard that needs to flip a session's status from 'running' to 'complete' the moment a managed agent has nothing left to do. Which event in the stream should trigger that transition?",
               "options": [
-                "agent.message",
-                "agent.tool_use",
-                "session.complete",
-                "session.status_idle"
+                "agent.message, since Claude emits that event whenever it produces a text reply, which typically signals the end of a turn.",
+                "agent.tool_use, since that event fires each time the agent selects a tool, signaling that the current step of work is done.",
+                "session.complete, since that event name most directly matches the finished state your dashboard is trying to represent.",
+                "session.status_idle, since that event specifically indicates the agent has no further work queued and the run has finished."
               ],
               "correct": 3,
-              "explain": "session.status_idle — the agent has nothing left to do."
+              "explain": "session.status_idle is the event that specifically signals the agent has nothing left to do, which is exactly the finished state the dashboard needs to detect. agent.message only marks that Claude produced a reply, not that the whole run is over — a session can emit many messages before it's actually done. agent.tool_use marks a single tool selection mid-run, not completion. And despite how natural the name sounds, session.complete isn't one of the events the stream actually emits — only session.status_idle carries that meaning."
             }
           ]
         }
@@ -187,27 +187,27 @@
       "reviewQuestions": [
         {
           "id": "r_order_1",
-          "q": "What does the bundled agent toolset provide?",
+          "q": "You're scoping the work for a new managed agent and budgeting time to write custom file-editing, shell-execution, and web-search tool implementations from scratch. Before starting that work, what should you check about the bundled agent toolset?",
           "options": [
-            "File, bash and web tools, ready-made",
-            "A set of MCP server connections to use",
-            "Pre-built rubrics and output graders",
-            "Client-side schemas for your functions"
+            "It already provides file, bash, and web tools ready-made, so building custom implementations of those three isn't necessary.",
+            "It provides a set of pre-configured MCP server connections that your agent can attach to, but no built-in tools of its own.",
+            "It provides pre-built rubrics and output graders, which is unrelated to file, shell, or web tool implementations entirely.",
+            "It provides client-side schemas you can extend, but the actual tool execution logic still needs to be written by your team."
           ],
           "correct": 0,
-          "explain": "The common agent tools, ready-made — which is what makes the smallest managed agent genuinely small."
+          "explain": "The bundled agent toolset already gives you file, bash, and web tools ready-made, which is exactly the custom implementation work the plan was about to duplicate. It isn't a set of MCP server connections — those are a separate integration path — nor is it the rubrics-and-graders building block, which addresses evaluation rather than tool access. And there's no leftover execution logic left for your team to write; the bundled tools are usable as-is, not schemas requiring a backing implementation."
         },
         {
           "id": "r_order_2",
-          "q": "Which event carries the name of the tool the agent picked?",
+          "q": "Your logging pipeline needs to record which specific tool a managed agent invoked at each step, for later auditing. Which event in the stream carries that information?",
           "options": [
-            "agent.message",
-            "agent.tool_use",
-            "session.status_idle",
-            "agent.action"
+            "agent.message, since every text reply the agent produces includes a summary of any tool it used just before that reply.",
+            "session.status_idle, since it fires once per tool call and includes the name of the tool that was most recently used.",
+            "agent.tool_use, since that event is emitted specifically when the agent selects a tool, and it carries which tool was picked.",
+            "agent.action, since it is the general-purpose event that logs every decision the agent makes, tool selection included."
           ],
-          "correct": 1,
-          "explain": "agent.tool_use. agent.message carries Claude's text."
+          "correct": 2,
+          "explain": "agent.tool_use is emitted specifically when the agent picks a tool, and it's the event that carries which tool that was — exactly what the audit log needs. agent.message carries Claude's text output, not a structured record of tool selection, so relying on it for auditing means parsing prose rather than reading a dedicated field. session.status_idle only indicates the run has finished, unrelated to any single tool call. And agent.action isn't one of the events the stream actually emits — tool selection specifically surfaces through agent.tool_use."
         }
       ]
     },
@@ -222,27 +222,27 @@
           "questions": [
             {
               "id": "q_blocks2_1a",
-              "q": "Your managed agent must never post to Slack without sign-off, and must remember last week's prices. Which two building blocks?",
+              "q": "You're designing a managed agent that posts pricing updates to a public Slack channel and needs to reference last week's prices — for example, noting that today's price is 15% lower — without a human re-typing that figure into the prompt every run. The agent must also never post to Slack without a person explicitly signing off first. Which two building blocks address these two requirements?",
               "options": [
-                "Rubrics and multi-agent coordination",
-                "Memory and rubrics used together",
-                "Permissions and multi-agent coordination",
-                "Permissions policies plus memory"
+                "Rubrics and graders for the sign-off requirement, paired with multi-agent coordination to track last week's prices across specialists.",
+                "Permissions policies to pause the Slack post for approval, paired with memory to carry last week's prices across sessions.",
+                "Multi-agent coordination to route the sign-off through a specialist agent, paired with rubrics to validate the remembered price.",
+                "Memory alone: storing both last week's prices and the outstanding sign-off requirement in the same cross-session store."
               ],
-              "correct": 3,
-              "explain": "A permissions policy pauses the sensitive action; memory carries knowledge across sessions."
+              "correct": 1,
+              "explain": "A permissions policy is what pauses a sensitive action like a Slack post until a human approves it, and memory is what lets the agent read a value like last week's price back out in a later session instead of it being retyped into the prompt — together they cover both requirements. Rubrics and graders evaluate output against success criteria, which doesn't gate an action behind human sign-off. Multi-agent coordination is about delegating subtasks across specialists over a shared file system, not approval gating. And memory alone has no mechanism for pausing an action pending human approval — it stores and retrieves state, it doesn't enforce a sign-off step."
             },
             {
               "id": "q_blocks2_1b",
-              "q": "Why does a grader get its own context window?",
+              "q": "Your team built a rubric-based grader for a managed agent's output, but gave it access to the same context window the producing agent used — including all of its intermediate reasoning and self-justification — rather than a separate one. Reviewing the design, why is that likely to undermine the grader?",
               "options": [
-                "To keep the producer's context small",
-                "Because graders run on a different tier",
-                "So it judges independently of the reasoning",
-                "To allow the grade itself to be cached"
+                "It isn't a problem at all: sharing the context window mainly reduces token usage, and grading accuracy doesn't depend on which window the grader reads from.",
+                "It's a problem, but only because it doubles API cost — the same context gets billed twice, once when producing output and again when grading it.",
+                "It's a problem because a shared context window leaves a smaller token budget for the grader, causing it to truncate its own evaluation partway through.",
+                "A grader sharing the producer's context has already seen every justification along the way, so it can't judge independently of the reasoning it's supposed to evaluate."
               ],
-              "correct": 2,
-              "explain": "Independence. A grader that saw every justification has already been argued into agreement."
+              "correct": 3,
+              "explain": "The reason for giving the grader its own context window is independence: a grader that shares the producer's context has already been walked through every justification, so it's no longer judging the output on its own terms — it's grading reasoning it was already exposed to. Token usage and cost are real considerations but not the stated reason for isolation, and a shared context wouldn't reliably leave less room specifically for the grader's evaluation — the actual risk is that its judgment is compromised, not that it runs out of space."
             }
           ]
         }
@@ -250,27 +250,27 @@
       "reviewQuestions": [
         {
           "id": "r_blocks2_1",
-          "q": "In managed multi-agent coordination, how do specialists share their work?",
+          "q": "In a managed multi-agent setup, a coordinator delegates three subtasks to specialist agents, each running in its own isolated context window. How do those specialists' findings actually reach the coordinator for it to synthesize?",
           "options": [
-            "Through a single shared context window",
-            "Over a shared file system the coordinator reads",
-            "By passing messages directly to each other",
-            "Through a shared memory store, and only that"
+            "Each specialist writes its findings to a shared file system that the coordinator reads from, rather than passing them through a shared context.",
+            "Each specialist appends its findings directly into the coordinator's own context window, which grows as each specialist finishes.",
+            "Each specialist sends its findings to the other specialists first, who forward a consolidated version on to the coordinator.",
+            "Each specialist writes its findings only to the shared memory store, which is the same store used for cross-session continuity."
           ],
-          "correct": 1,
-          "explain": "Own context windows, shared file system, coordinator synthesises — hub-and-spoke, with the file system as the medium."
+          "correct": 0,
+          "explain": "Specialists each run in their own context window but write their findings to a shared file system, which is the medium the coordinator reads from to synthesize the results — hub-and-spoke, with the file system as the channel. Findings don't get appended into the coordinator's own context window directly, since that would defeat the point of giving each specialist an isolated window. Specialists also don't pass results to each other before reaching the coordinator; the coordination is centralized, not peer-to-peer. And the shared file system used here is a distinct mechanism from the memory building block, which is specifically for cross-session continuity rather than in-run coordination."
         },
         {
           "id": "r_blocks2_2",
-          "q": "Can managed sessions run in parallel?",
+          "q": "Your support team wants to process 50 open tickets simultaneously, each handled by its own managed agent session, rather than working through them one at a time. Does the managed agents platform support that?",
           "options": [
-            "No — only one session per agent at a time",
-            "Only within one and the same environment",
-            "Only for the agents that are read-only",
-            "Yes — many at once, each in its container"
+            "No — only one session can be active per agent at any time, so the 50 tickets would have to be processed one after another.",
+            "Only if all 50 sessions are placed inside a single shared environment; running them across separate environments isn't supported.",
+            "Yes — many sessions can run in parallel at once, with each one executing independently inside its own isolated container.",
+            "Only for agents configured without any tools attached, since tool-using sessions are limited to one active run at a time."
           ],
-          "correct": 3,
-          "explain": "Parallel sessions, isolated containers — which is much of the point of hosting them."
+          "correct": 2,
+          "explain": "Managed agent sessions can run in parallel — many at once, each in its own isolated container — which is much of the point of hosting them, so all 50 tickets can be processed simultaneously. There's no one-session-per-agent limit forcing sequential processing, and parallel sessions aren't restricted to sharing a single environment. Nor is parallelism gated on whether a session uses tools; tool-using and tool-free sessions are both able to run concurrently."
         }
       ]
     }

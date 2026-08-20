@@ -13,27 +13,27 @@
           "questions": [
             {
               "id": "q_subwhy_1a",
-              "q": "Which is NOT one of the four reasons to delegate to a subagent?",
+              "q": "A tech lead proposes delegating a formatting cleanup task to a subagent, arguing that subagents are billed at a discounted per-token rate compared to the main conversation. The task requires no isolation, no parallel work, no special expertise, and identical tool access to the main thread. How should this justification be evaluated?",
               "options": [
-                "Getting a cheaper per-token rate for the subtask",
-                "Keeping verbose exploration out of the main context",
-                "Making a capability impossible by withholding tools",
-                "Running independent subtasks alongside each other"
+                "Justified — subagents are billed at a cheaper per-token rate than the main session, and that saving alone is worth the round trip.",
+                "Not justified — none of the four reasons applies here, and per-token pricing was never one of the four in the first place.",
+                "Justified — delegating always frees up the main conversation's context window, regardless of whether any of the four reasons apply.",
+                "Not justified — but only because the task is too small; a larger formatting job would justify the same delegation on cost grounds alone."
               ],
-              "correct": 0,
-              "explain": "You can set a cheaper model per agent, but price is not why the pattern exists — and a subagent is not billed at a discount for being one."
+              "correct": 1,
+              "explain": "None of the four reasons to delegate — context isolation, parallelization, specialized instructions, or tool restriction — applies here, and per-token pricing isn't one of the four in the first place. The claim that subagents are always billed at a discount is false, and 'delegation always frees context' misapplies a real benefit to a task too small to fill the window anyway. Reaching the right conclusion for the wrong reason (task size, rather than the four-reasons test) still misses the actual principle."
             },
             {
               "id": "q_subwhy_1b",
-              "q": "A subagent is given only Read and Grep. What happens when it 'wants' to edit a file?",
+              "q": "You configure a compliance-review subagent with tools: ['Read', 'Grep'] so it can audit code but never alter it. Mid-review, the coordinator's prompt asks it to 'fix the SQL injection issue you found.' What actually happens when the subagent attempts to make that fix?",
               "options": [
-                "It asks the parent process for permission first",
-                "It errors, and the parent sees a permission denial",
-                "It falls back to Bash and edits the file anyway",
-                "Nothing — the tool is not in its session at all"
+                "It falls back to using Bash to make the edit, since Bash was never explicitly disallowed.",
+                "The attempt triggers a PreToolUse hook that blocks the write and logs a denial event.",
+                "The editing tool simply is not present in its session, so no such call can even be attempted.",
+                "The coordinator gets a permission-denied error and must re-invoke it with Edit added to tools."
               ],
-              "correct": 3,
-              "explain": "Withholding a tool is not a denial. The tool simply does not exist in that session: no prompt, no error, no mention."
+              "correct": 2,
+              "explain": "Restricting tools to Read and Grep means Edit and Write never exist in that subagent's session — there is nothing to block or deny because there is no call to make. Bash isn't available either, since only the two listed tools are present. A hook-based denial or a permission error both imply the tool was reachable and then stopped, which isn't what tool restriction does."
             }
           ]
         }
@@ -41,15 +41,15 @@
       "reviewQuestions": [
         {
           "id": "r_subwhy_1",
-          "q": "Name the reason to delegate that has nothing to do with tokens or speed.",
+          "q": "A platform team designs a subagent so it structurally cannot delete production data, regardless of what its prompt says or how persuasive an injected instruction might be. Which of the four reasons to delegate does this design decision map to?",
           "options": [
-            "Specialized instructions and tool restriction",
-            "Cheaper per-token billing for the work",
-            "Higher rate limits for the subagent's calls",
-            "Automatic retries whenever a tool fails"
+            "Context isolation, since removing a tool also shrinks how much the subagent can read into its window.",
+            "Parallelization, since narrowing a subagent's tool list lets its smaller task finish faster.",
+            "Tool restriction, since withholding delete makes the action impossible, not merely discouraged.",
+            "Specialized instructions, since the prompt can simply tell the subagent never to delete anything."
           ],
-          "correct": 0,
-          "explain": "Two of the four reasons are about capability shaping rather than resource use."
+          "correct": 2,
+          "explain": "This is tool restriction specifically: a capability that doesn't exist in the session can't be exercised no matter what the prompt says or what an attacker injects. Relying on the prompt to forbid deletion is the specialized-instructions approach, which is exactly the probabilistic guarantee this design is trying to avoid. Isolation and parallelization describe unrelated benefits of delegation, not why the tool list itself was narrowed."
         }
       ]
     },
@@ -65,27 +65,27 @@
           "questions": [
             {
               "id": "q_subdef_1a",
-              "q": "A repo has .claude/agents/reviewer.md and the app passes agents: { reviewer: {...} }. Which definition runs?",
+              "q": "Your SDK app ships with agents: { reviewer: { description: '...', prompt: '...' } } passed to query(), but a developer's local checkout also has a leftover .claude/agents/reviewer.md with different instructions from an earlier experiment. When that developer runs the app, which reviewer definition actually executes?",
               "options": [
-                "The filesystem one, because disk always wins",
-                "The programmatic one, which takes precedence",
-                "Both of them, merged together field by field",
-                "Neither — the name collision raises an error"
+                "The filesystem definition, because .claude/agents files always take precedence over code.",
+                "The programmatic definition, since same-named programmatic definitions win over filesystem agents.",
+                "Both definitions run in sequence, with the filesystem one refining the programmatic one's output.",
+                "Neither runs at all — the SDK raises a name-collision error and query() fails to start immediately."
               ],
               "correct": 1,
-              "explain": "Programmatic wins. That is what makes a shipped agent immune to whatever is in someone's working copy."
+              "explain": "Programmatic definitions win over a same-named filesystem agent, so the shipped reviewer definition runs unshadowed by whatever happens to sit in the developer's working copy. There's no merge and no collision error — precedence is resolved silently and deterministically. This is what makes a packaged app's agent behavior predictable regardless of what stray files exist on a given machine."
             },
             {
               "id": "q_subdef_1b",
-              "q": "Which subagent can Claude spawn with no definition anywhere?",
+              "q": "A developer writes a coordinator prompt that says 'delegate exploratory research to a subagent' but never defines any agent named research-assistant, either programmatically or under .claude/agents/. When Claude tries to delegate, which agent can it fall back to without any definition existing anywhere?",
               "options": [
-                "general-purpose",
-                "research-assistant",
-                "None — every subagent needs a definition",
-                "reviewer"
+                "general-purpose, the built-in agent Claude can spawn with no definition at all.",
+                "research-assistant, since Claude auto-generates a definition from the prompt's wording.",
+                "None — delegation fails outright whenever the named agent has no definition.",
+                "reviewer, the other built-in agent that ships ready-made with the SDK by default."
               ],
               "correct": 0,
-              "explain": "general-purpose is built in. Explore and Plan are also built in, but they are one-shot and return no agentId."
+              "explain": "general-purpose is the one subagent that needs no definition anywhere — programmatic, filesystem, or otherwise — because it's built into the SDK itself. Claude doesn't invent a definition to match a name mentioned in prose; it falls back to the built-in agent instead. Nothing named 'reviewer' is built in the same way, so it isn't available without someone defining it."
             }
           ]
         }
@@ -93,15 +93,15 @@
       "reviewQuestions": [
         {
           "id": "r_subdef_1",
-          "q": "Which definition source should a shipped SDK product prefer, and why?",
+          "q": "Your company is shipping a packaged SDK application to customers who will run it in their own environments, some of which may already contain unrelated .claude/agents/ files from other tools. Which definition source should you use for the app's own agents, and why?",
           "options": [
-            "Programmatic, so it ships with the code unshadowed",
-            "Filesystem, so ops can tune agents without a deploy",
-            "Built-in general-purpose, to avoid the maintenance",
-            "Whichever definition the CLI happened to use last"
+            "Programmatic definitions passed to query(), since they win over any same-named filesystem agent a customer's setup contains.",
+            "Filesystem definitions under .claude/agents/, because customers can then tune agent behavior without your team pushing a new release.",
+            "The built-in general-purpose agent for every single role, since it requires no ongoing maintenance as the product evolves.",
+            "Whichever source the CLI resolves first at startup, since precedence order doesn't matter once the app is deployed."
           ],
           "correct": 0,
-          "explain": "Reproducibility again — the same reason production apps pass settingSources: []."
+          "explain": "Programmatic definitions ship with the code and take precedence over a same-named filesystem agent, so a stray .claude/agents/ file in a customer's environment can't quietly override the app's intended behavior. Relying on filesystem agents inverts that guarantee, and general-purpose can't substitute for a role-specific description or prompt. This is the same reproducibility concern that leads production apps to pass settingSources: [] as well."
         }
       ]
     },
@@ -117,27 +117,27 @@
           "questions": [
             {
               "id": "q_agentdef_1a",
-              "q": "Claude never delegates to your security-reviewer agent. Which field do you fix first?",
+              "q": "You define a subagent named security-reviewer with description: 'Reviews things' and a detailed 40-line prompt covering SQL injection, unsafe deserialization, and secrets handling. In practice, Claude almost never delegates security reviews to it, even on PRs that clearly need one. Which field should you fix first?",
               "options": [
-                "description — it is what Claude matches against",
-                "prompt — it must not be instructing the agent well",
-                "model — the agent is too small ever to be selected",
-                "tools — Claude skips agents with restricted tools"
+                "description, since that is the text Claude matches against when deciding whether to delegate.",
+                "prompt, since an agent that is never selected almost always has a poorly written system prompt.",
+                "model, since the agent may be assigned a model too small to ever be chosen for delegation.",
+                "tools, since Claude avoids delegating to agents whose tool list looks overly restrictive."
               ],
               "correct": 0,
-              "explain": "Selection happens before the prompt is ever used. If the description does not describe the situation you are in, the agent is invisible."
+              "explain": "Claude matches against description to decide whether an agent applies to the current situation, and the prompt is never even read until after that match succeeds. A vague description like 'Reviews things' competes with everything and wins nothing, no matter how detailed the prompt underneath it is. Model size and tool restrictions don't factor into selection at all."
             },
             {
               "id": "q_agentdef_1b",
-              "q": "Which two AgentDefinition fields are required?",
+              "q": "You are writing a minimal AgentDefinition for a new subagent and want to know the smallest set of fields the SDK will actually accept. Which two fields are mandatory?",
               "options": [
-                "name and prompt only",
-                "description and tools",
-                "prompt and model name",
-                "description and prompt"
+                "name and prompt — every agent needs an identifying key and its own instructions.",
+                "description and tools — Claude needs to know when to use it and what it can touch.",
+                "prompt and model — instructions and a model must both be pinned explicitly.",
+                "description and prompt — what Claude matches on, and what the subagent runs with."
               ],
               "correct": 3,
-              "explain": "The name is the key you register it under; description and prompt are the required contents."
+              "explain": "description and prompt are the two required fields: one drives selection, the other drives execution once selected. tools, model, and the rest of the optional fields all have sensible defaults if omitted, so they aren't required. The registration key is a separate concern from the definition's own required contents."
             }
           ]
         },
@@ -149,27 +149,27 @@
           "questions": [
             {
               "id": "q_agentdef_2a",
-              "q": "You set initialPrompt on an agent that is only ever invoked as a subagent. What happens?",
+              "q": "You set initialPrompt: 'Start by listing all TODO comments in the repo' on an AgentDefinition, intending to prime its very first turn. This particular agent is only ever invoked as a subagent via the Agent tool, never as the main thread agent. What actually happens to that initialPrompt value at runtime?",
               "options": [
-                "It is submitted as the subagent's first user turn",
-                "It replaces the agent's prompt field entirely",
-                "It raises a validation error at construction",
-                "It is ignored — initialPrompt is for main agents"
+                "It is submitted automatically as the subagent's first user turn, ahead of the Agent tool's own prompt string.",
+                "It replaces the prompt field entirely, so the subagent runs with only initialPrompt as its instructions.",
+                "The SDK raises a validation error at construction time, since initialPrompt requires a main-thread agent.",
+                "It is silently ignored, because initialPrompt only takes effect when the agent runs as the main thread agent."
               ],
               "correct": 3,
-              "explain": "Silently ignored. If you need the subagent to start with specific content, it goes in the Agent tool's prompt string instead."
+              "explain": "initialPrompt is only auto-submitted when the agent is the main thread agent; as a subagent it is silently ignored, with no error to signal the mismatch. If a subagent needs to start with specific content, that content has to go into the Agent tool's own prompt string instead. Nothing about this raises a construction-time error or touches the prompt field."
             },
             {
               "id": "q_agentdef_2b",
-              "q": "Which value of `model` makes a subagent explicitly track whatever the main session is using?",
+              "q": "You are writing a reusable AgentDefinition template shared across several projects, each of which may run its main session on a different model. You want the subagent's model choice to explicitly and visibly track whatever the main session is using, rather than relying on an implicit default. Which value of model achieves that?",
               "options": [
-                "'inherit'",
-                "'auto'",
-                "'default'",
-                "Omitting the field, the only way"
+                "'inherit', which states on purpose that the subagent should track the main session's model.",
+                "'auto', which lets the SDK pick the cheapest model capable of the task at hand.",
+                "'default', which pins the subagent to whatever model the CLI ships with by default.",
+                "Omitting the field is the only way to track the main session's model at all."
               ],
               "correct": 0,
-              "explain": "Omitting also uses the main model, but 'inherit' says so on purpose — useful when a template might otherwise be given a fixed model."
+              "explain": "'inherit' produces the same result as omitting the field — tracking the main session's model — but does so explicitly rather than by accident of a missing value. That distinction matters for a shared template, where a future edit could otherwise leave the field blank without anyone noticing why. 'auto' and 'default' aren't real values this field accepts."
             }
           ]
         }
@@ -177,15 +177,15 @@
       "reviewQuestions": [
         {
           "id": "r_agentdef_1",
-          "q": "What is AgentDefinition.description actually for?",
+          "q": "A teammate argues that AgentDefinition.description is just internal documentation for the team, similar to a code comment, and suggests writing it loosely since 'the prompt is what actually matters.' What is description actually used for at runtime?",
           "options": [
-            "Documentation for your own team to read",
-            "The subagent's system prompt at runtime",
-            "The label that gets shown for it in the CLI",
-            "The text Claude matches on when delegating"
+            "Documentation for the team maintaining the agent, with no effect on runtime behavior.",
+            "It becomes the subagent's system prompt once Claude decides to delegate to it.",
+            "The label shown for that agent's entry in the CLI's own agent-selection menu.",
+            "The text Claude matches against when deciding whether to delegate to that agent."
           ],
           "correct": 3,
-          "explain": "It is a selection mechanism, not a comment — the same role a tool description plays for tool choice."
+          "explain": "description is a selection mechanism, not a comment — it plays the same role a tool description plays when Claude decides which tool to call. Writing it loosely means the agent competes poorly against better-described agents and general-purpose fallback, regardless of how good the prompt underneath it is. The prompt field, not description, is what runs once selection has already happened."
         }
       ]
     },
@@ -201,27 +201,27 @@
           "questions": [
             {
               "id": "q_casetrap_1a",
-              "q": "In Python, which object takes max_turns and which takes maxTurns?",
+              "q": "You are writing Python code that both constructs an AgentDefinition for a subagent and passes ClaudeAgentOptions to configure the main query() call, and you want each object's turn cap set correctly using its own naming convention. Which pairing is correct?",
               "options": [
-                "Both objects take max_turns, as Python usually does",
-                "ClaudeAgentOptions max_turns; AgentDefinition maxTurns",
-                "AgentDefinition max_turns; ClaudeAgentOptions maxTurns",
-                "Both objects take maxTurns, matching the wire format"
+                "Both objects take max_turns, since Python conventionally uses snake_case throughout.",
+                "ClaudeAgentOptions takes max_turns, while AgentDefinition instead takes maxTurns.",
+                "AgentDefinition takes max_turns, while ClaudeAgentOptions instead takes maxTurns.",
+                "Both objects take maxTurns, since both map onto the exact same underlying wire format."
               ],
               "correct": 1,
-              "explain": "AgentDefinition keeps camelCase because it maps straight to the wire format shared with TypeScript."
+              "explain": "ClaudeAgentOptions follows ordinary Python snake_case, so it wants max_turns, while AgentDefinition keeps camelCase because its fields map directly onto the wire format shared with TypeScript. Swapping the two, or assuming both use the same case, produces a TypeError at construction rather than a runtime surprise. Only AgentDefinition carries the wire-format naming — ClaudeAgentOptions does not."
             },
             {
               "id": "q_casetrap_1b",
-              "q": "Why does AgentDefinition keep camelCase in Python at all?",
+              "q": "A reviewer flags AgentDefinition's camelCase field names (disallowedTools, permissionMode, maxTurns) as inconsistent with the rest of the Python SDK's snake_case style and asks whether it should be 'fixed' in a wrapper. What is the actual reason those fields stay camelCase?",
               "options": [
-                "Its fields map onto the wire format TypeScript uses",
-                "An oversight that is being fixed in a later release",
-                "Python dataclasses are not able to use snake_case",
-                "To match the .claude/agents markdown front matter"
+                "AgentDefinition's fields map onto the wire format shared with the TypeScript SDK.",
+                "It is a known inconsistency that a future SDK release is already planning to correct.",
+                "Python dataclasses are simply not able to declare any fields using snake_case names.",
+                "The fields are named to match the front matter keys in .claude/agents markdown files."
               ],
               "correct": 0,
-              "explain": "It is a serialisation boundary showing through. Knowing why makes it stick better than memorising the list."
+              "explain": "The camelCase naming is a serialization boundary showing through: AgentDefinition's fields travel over the same wire format the TypeScript SDK uses, so keeping the names aligned avoids a translation layer. It isn't a bug awaiting a fix, and Python dataclasses have no trouble declaring snake_case fields — this one just chose not to. The markdown front matter in .claude/agents is a separate, unrelated convention."
             }
           ]
         }
@@ -229,15 +229,15 @@
       "reviewQuestions": [
         {
           "id": "r_casetrap_1",
-          "q": "AgentDefinition(prompt=..., description=..., permission_mode='plan') — what happens?",
+          "q": "In Python, a developer writes AgentDefinition(description='...', prompt='...', permission_mode='plan'), intending to restrict the subagent to plan mode. What happens when this line runs?",
           "options": [
-            "It works exactly as you would expect it to",
-            "It works, but the permission mode is ignored",
-            "TypeError at construction — it is permissionMode",
-            "It constructs fine and raises later, at query time"
+            "It works exactly as intended in this case, and the subagent starts up already in plan mode.",
+            "It constructs successfully, but the permission mode setting is silently ignored at runtime.",
+            "It raises a TypeError at construction, since AgentDefinition expects permissionMode instead.",
+            "It constructs without error, but raises a separate error later, once query() actually runs."
           ],
           "correct": 2,
-          "explain": "Construction-time TypeError. ClaudeAgentOptions is the one that wants permission_mode."
+          "explain": "AgentDefinition keeps camelCase field names, so passing permission_mode instead of permissionMode raises a TypeError immediately at construction — before the object is ever used. This is the merciful version of the bug: it fails loudly at the point of the mistake rather than silently dropping the setting or surfacing an error much later at query time. ClaudeAgentOptions is the object that actually wants permission_mode in snake_case."
         }
       ]
     },
@@ -253,27 +253,27 @@
           "questions": [
             {
               "id": "q_toolscope_1a",
-              "q": "You define a doc-reviewer subagent and omit the tools field entirely. What can it do?",
+              "q": "You define a doc-reviewer AgentDefinition and, since documentation review only needs to read files, you leave the tools field out of the definition entirely rather than listing anything. What tool access does the resulting subagent actually have?",
               "options": [
-                "Nothing at all, until you list some tools",
-                "Only Read, Grep and Glob, the safe defaults",
-                "It inherits every tool available to subagents",
-                "Only the tools the parent put in allowedTools"
+                "None at all, until you explicitly list the tools it should have access to.",
+                "Only Read, Grep, and Glob, the conventional safe defaults for review agents.",
+                "Every tool available to subagents, since omitting the field is maximal, not minimal.",
+                "Only whatever subset the parent's own allowedTools happens to contain."
               ],
               "correct": 2,
-              "explain": "Omission is maximal, not minimal. Listing is how you restrict."
+              "explain": "Omitting tools is a maximal grant, not a minimal one — the subagent inherits every tool available to subagents, which is almost certainly more than a doc reviewer needs. Getting a read-only agent requires actively listing Read, Grep, and Glob rather than leaving the field blank. The parent's own allowedTools has no bearing on what a child subagent inherits by default."
             },
             {
               "id": "q_toolscope_1b",
-              "q": "Which tool set makes it structurally impossible for a subagent to modify the repo?",
+              "q": "A security team wants a code-audit subagent whose inability to modify the repository is guaranteed structurally, not just discouraged by policy or caught by a hook that could be misconfigured. Which tools configuration provides that guarantee?",
               "options": [
-                "Read, Grep, Glob, Bash",
-                "Read, Grep, Glob",
-                "Omit tools and set permissionMode: 'plan'",
-                "Read, Edit, guarded by a PreToolUse hook"
+                "tools: ['Read', 'Grep', 'Glob', 'Bash'], since Bash output can be reviewed before any command executes.",
+                "tools: ['Read', 'Grep', 'Glob'], since no tool in that set can write to the filesystem at all.",
+                "Omitting tools entirely and setting permissionMode: 'plan' to block writes at the policy layer.",
+                "tools: ['Read', 'Edit'], guarded by a PreToolUse hook that rejects any write outside a scratch directory."
               ],
               "correct": 1,
-              "explain": "Bash re-opens every door. Plan mode and hooks are policy layers that can be misconfigured; a missing tool cannot be."
+              "explain": "Read, Grep, and Glob contain no tool capable of writing anything, so the guarantee holds structurally regardless of prompt content. Including Bash reopens every door a shell can open, no matter how carefully its output is reviewed. Plan mode and PreToolUse hooks are both policy layers sitting on top of a tool that still exists — they can be bypassed or misconfigured in a way a genuinely absent tool cannot."
             }
           ]
         }
@@ -281,15 +281,15 @@
       "reviewQuestions": [
         {
           "id": "r_toolscope_1",
-          "q": "tools omitted vs. tools: [] — what is the difference?",
+          "q": "Two AgentDefinitions differ only in one field: the first leaves tools out entirely, and the second sets tools: []. A developer assumes these behave the same way, since 'nothing was listed' in both cases. What is the actual difference in tool access between the two?",
           "options": [
-            "Omitted inherits everything; [] means no tools",
-            "No difference; both of them mean default tools",
-            "Omitted means none; [] inherits everything there is",
-            "Both of them raise a validation error at once"
+            "Omitting the field inherits every tool available to subagents; tools: [] leaves the subagent with none at all.",
+            "There is no real difference — both configurations produce a subagent restricted to the same safe default set.",
+            "Omitting the field leaves the subagent with no tools; tools: [] inherits every tool there is.",
+            "Both configurations cause the SDK to raise a validation error before the subagent ever runs."
           ],
           "correct": 0,
-          "explain": "One of the confusable pairs the exam likes: absence and emptiness mean opposite things here."
+          "explain": "Absence and emptiness mean opposite things here: an omitted tools field is a maximal grant, while an explicit empty array is a minimal one that leaves the subagent with nothing but its own reasoning. Assuming they behave the same way produces either an unintentionally over-privileged agent or an unintentionally powerless one. Neither configuration is invalid, so no error fires at construction."
         }
       ]
     },
@@ -305,27 +305,27 @@
           "questions": [
             {
               "id": "q_tasktool_1a",
-              "q": "A coordinator's subagents never run and nothing errors. What is the most likely cause?",
+              "q": "A coordinator's prompt clearly instructs it to delegate research to a subagent, the AgentDefinition is well-formed, and yet in production no subagent ever actually spawns — with no error, warning, or denial appearing anywhere in the logs. What is the most likely cause?",
               "options": [
-                "The subagent definitions are invalid somehow",
-                "The spawn tool is missing from allowedTools",
-                "maxTurns is set too low for the delegation",
-                "The subagents have no tools of their own"
+                "The subagent's own AgentDefinition has a subtle validation problem that silently voids it.",
+                "The spawn tool (Agent, or Task in older releases) isn't in the coordinator's allowedTools.",
+                "maxTurns on the subagent itself is set too low for it to ever complete useful work.",
+                "The subagent's tools list is completely empty, so Claude declines to delegate to it."
               ],
               "correct": 1,
-              "explain": "Silent is the tell. An unapproved spawn tool does not error — the delegation simply never happens."
+              "explain": "An unapproved spawn tool doesn't error — it simply isn't in the session, so the delegation attempt never surfaces anywhere. A malformed AgentDefinition or a too-low maxTurns would typically fail loudly once the subagent actually starts, and an empty tools list still lets a subagent be spawned, just with nothing to do once it's running. Silence with no denial is the specific signature of a missing spawn tool."
             },
             {
               "id": "q_tasktool_1b",
-              "q": "Your parser looks for delegation in the message stream. Which tool names should it match?",
+              "q": "You are writing a UI layer that watches the SDK message stream and shows 'delegating to research-assistant…' whenever a subagent spawns. To detect every delegation reliably across current releases, which tool_use names should your matcher check for?",
               "options": [
-                "Only \"Agent\", the current name",
-                "Only \"Task\", the older name",
-                "\"Subagent\", used in the stream",
-                "Both — the old name still appears"
+                "Only \"Agent\", since that is the current, correct tool name after the rename.",
+                "Only \"Task\", since that name is what the official documentation still uses.",
+                "\"Subagent\", the generic name the stream uses for any delegation event.",
+                "Both \"Agent\" and \"Task\", since the older name still appears in current releases."
               ],
               "correct": 3,
-              "explain": "Match both. The rename landed in v2.1.63 but the old name persists in several places in the stream."
+              "explain": "The spawn tool was renamed from Task to Agent in v2.1.63, but current releases still emit \"Task\" in the system:init tools list and in permission_denials, so matching only one name misses real delegation events. \"Subagent\" isn't a name the stream actually uses. A parser built for detection has to track both names even though allowedTools only needs the current one."
             }
           ]
         },
@@ -337,27 +337,27 @@
           "questions": [
             {
               "id": "q_tasktool_2a",
-              "q": "On the CCA-F exam, what must a coordinator's allowedTools include so it can spawn subagents?",
+              "q": "You are answering a CCA-F exam question about a coordinator that needs to spawn subagents, and the question asks which tool name must appear in that coordinator's allowedTools. The exam guide (v1.0, July 2026) was written before a certain SDK rename landed. What is the expected exam answer?",
               "options": [
-                "\"Task\"",
-                "\"Agent\"",
-                "\"Subagent\"",
-                "\"Delegate\""
+                "\"Task\", the name the exam guide's glossary keys the answer to.",
+                "\"Agent\", the name that current SDK releases actually require.",
+                "\"Subagent\", a placeholder name used only in the guide's prose.",
+                "\"Delegate\", the name used throughout the guide's worked examples."
               ],
               "correct": 0,
-              "explain": "Exam answer: Task. The exam guide v1.0 predates the v2.1.63 rename, and glossary t4 keys to it."
+              "explain": "The exam guide v1.0 predates the v2.1.63 rename and glossary term t4 keys its answer to \"Task,\" so that's the expected answer on the exam itself, even though it no longer matches current code. \"Agent\" is correct for production code but not for this exam question. Neither \"Subagent\" nor \"Delegate\" appear in the guide at all."
             },
             {
               "id": "q_tasktool_2b",
-              "q": "You are writing production code today against a current SDK. Which name goes in allowedTools?",
+              "q": "You are configuring allowedTools for a coordinator in a codebase running a current release of the SDK, well after the Task-to-Agent rename in v2.1.63. Which name must you list so the coordinator can actually spawn subagents?",
               "options": [
-                "\"Agent\", the current tool name",
-                "\"Task\", to match the exam guide",
-                "Both of them, listed in an array",
-                "Neither — the spawn tool is always approved"
+                "\"Agent\", the current tool name that current SDK releases require.",
+                "\"Task\", to stay consistent with the CCA-F exam guide's terminology.",
+                "Both \"Agent\" and \"Task\" together, since either name alone is unreliable.",
+                "Neither — the spawn tool is auto-approved regardless of allowedTools."
               ],
               "correct": 0,
-              "explain": "\"Agent\" is the current tool. Listing \"Task\" as well is harmless but only \"Agent\" is doing the work; matching both matters when parsing, not when allowing."
+              "explain": "Current releases use \"Agent\" as the actual spawn tool name, so that's what has to be in allowedTools for delegation to be approved. Listing \"Task\" as well is harmless but does no work, since only \"Agent\" is what current code checks. Matching both names matters for parsing the message stream, not for granting permission — that distinction is exactly what trips people up."
             }
           ]
         }
@@ -365,15 +365,15 @@
       "reviewQuestions": [
         {
           "id": "r_tasktool_1",
-          "q": "Give both answers to \"what is the subagent spawn tool called?\" and say which context each belongs to.",
+          "q": "A study guide claims the subagent spawn tool has always been called the same thing in both the CCA-F exam guide and the current SDK. Is that true, and if not, what are the two correct names and where does each apply?",
           "options": [
-            "Agent on the exam, Task in production code",
-            "Task on the exam, Agent in production code",
-            "Task in both the exam and the current SDK",
-            "Agent in both the exam and the current SDK"
+            "True, but only one-way: \"Agent\" is correct on the exam, \"Task\" in production code.",
+            "False: the exam guide answer is \"Task\", while current production code requires \"Agent\".",
+            "True — both the exam guide and the current SDK consistently use \"Task\" in every case.",
+            "True — both the exam guide and the current SDK consistently use \"Agent\" in every case."
           ],
           "correct": 1,
-          "explain": "Exam guide v1.0 says Task; the shipping SDK renamed it to Agent in v2.1.63."
+          "explain": "The claim is false — the exam guide v1.0 predates the rename and its glossary keys the answer to \"Task\", while the shipping SDK renamed the tool to \"Agent\" in v2.1.63. Getting the exam question right means answering \"Task\" even though real code should write \"Agent\". Treating the two names as interchangeable in either direction gets one context or the other wrong."
         }
       ]
     },
@@ -389,27 +389,27 @@
           "questions": [
             {
               "id": "q_isolation_1a",
-              "q": "Which of these does a subagent inherit from its parent?",
+              "q": "A coordinator has spent its session accumulating conversation history — dozens of tool results, its own system prompt, and a running analysis — before delegating a follow-up task to a fresh subagent through the Agent tool. Which of the following does that subagent's context actually start with?",
               "options": [
-                "The parent's conversation history so far",
-                "The parent's own system prompt",
-                "The definitions of the tools",
-                "The parent's earlier tool results"
+                "The parent's conversation history and tool results, carried over automatically since delegation preserves session state.",
+                "The parent's own system prompt, layered underneath the subagent's own AgentDefinition.prompt for that run.",
+                "Definitions of the tools it can call, either the full inherited set or the narrower subset listed in its tools field.",
+                "Any skill content the parent had already preloaded into its window, even when the subagent's skills field leaves it out."
               ],
               "correct": 2,
-              "explain": "Tools cross; conversation does not. That asymmetry is the whole design."
+              "explain": "Tool definitions cross from parent to subagent, either the full inherited set or the subset named in tools — that's the one item on this list a subagent actually starts with. Conversation history, tool results, and the parent's own system prompt all stay behind, since a subagent's context window starts fresh rather than continuing the parent's. Preloaded skill content likewise doesn't carry over unless the subagent's own skills field names it."
             },
             {
               "id": "q_isolation_1b",
-              "q": "Under what condition does a subagent see the project CLAUDE.md?",
+              "q": "Your project's CLAUDE.md contains repo-specific conventions, and a teammate assumes a subagent will pick it up automatically the same way the main thread does. Under what condition does a subagent actually see the project CLAUDE.md?",
               "options": [
-                "Always, in every subagent run",
-                "Only if the parent read it into context",
-                "Only if settingSources loaded it",
-                "Never — CLAUDE.md is main-thread only"
+                "Only when settingSources loads it into the subagent's context — the same rule the main thread follows.",
+                "Always, on every subagent run, since CLAUDE.md is applied globally across the whole SDK by default.",
+                "Only if the parent had already read the file into its own conversation before it delegated the task.",
+                "Never at all — CLAUDE.md is scoped only to the main thread and has no path to reach any subagent."
               ],
-              "correct": 2,
-              "explain": "The same settingSources rule that governs the main thread governs the subagent."
+              "correct": 0,
+              "explain": "CLAUDE.md reaches a subagent only through settingSources, the same mechanism that governs whether the main thread loads it — there's no separate always-on or never-on rule for subagents specifically. It isn't a global default applied to every run, and the parent having read it earlier doesn't transfer anything, since conversation history doesn't cross either. The file isn't main-thread-exclusive; it's settingSources-gated in both places."
             }
           ]
         },
@@ -421,15 +421,15 @@
           "questions": [
             {
               "id": "q_isolation_2a",
-              "q": "How does a subagent receive context from prior research findings?",
+              "q": "A research subagent spends its entire run investigating a bug and reaches a solid diagnosis. The coordinator then delegates a second subagent to write the fix, but writes only \"implement the fix based on the research\" as that subagent's prompt. How does the second subagent actually receive the first subagent's findings?",
               "options": [
-                "It reads the parent's transcript automatically",
-                "The findings go explicitly into its prompt",
-                "Through shared memory between the two agents",
-                "Via the parent's system prompt, which it inherits"
+                "It automatically receives the first subagent's final message, since the SDK links delegations made within the same coordinator turn.",
+                "It reads the first subagent's session transcript directly, using the session_id the coordinator had already captured.",
+                "It inherits the diagnosis through the coordinator's own conversation history, which both subagents share by default.",
+                "It receives nothing beyond that one sentence — the findings had to be written explicitly into its prompt to cross over at all."
               ],
-              "correct": 1,
-              "explain": "Exam glossary t6. The Agent tool's prompt string is the only channel in."
+              "correct": 3,
+              "explain": "This is exam glossary t6: the only channel from parent to subagent is the Agent tool's prompt string, so a vague instruction like \"based on the research\" leaves the second subagent with no actual findings to work from. There's no automatic linking between sibling delegations, no transcript the second subagent can read on its own, and no shared conversation history between the two — each subagent's context starts fresh. Whatever the coordinator wants carried forward has to be written into the prompt in full."
             },
             {
               "id": "q_isolation_2b",
@@ -449,15 +449,15 @@
       "reviewQuestions": [
         {
           "id": "r_isolation_1",
-          "q": "Name the only content that crosses from parent to subagent.",
+          "q": "A subagent keeps behaving as if it has no idea what the coordinator already discovered earlier in the session, even though the coordinator's own context is full of relevant detail. What is the only channel through which content actually crosses from a coordinator to a subagent it spawns?",
           "options": [
-            "The parent's last five messages",
-            "The Agent tool's prompt string",
-            "The parent's own system prompt",
-            "Any file the parent has read"
+            "The parent's most recent conversation turns, copied automatically into the subagent's context.",
+            "The prompt string passed to the Agent tool call that spawns that particular subagent instance.",
+            "The parent's own system prompt, which every subagent inherits alongside its own AgentDefinition.prompt.",
+            "Any file the parent has already read during the session, since file reads are cached at the session level."
           ],
           "correct": 1,
-          "explain": "One string. Everything else must be written into it."
+          "explain": "The Agent tool's prompt string is the single channel in — whatever the coordinator writes into that string is all the subagent has to work with. Nothing about recent turns, the parent's system prompt, or previously read files carries over automatically, because the subagent's context starts fresh rather than continuing the parent's. If the coordinator's discovery matters to the subagent, it has to be typed into that one prompt."
         }
       ]
     },
@@ -473,15 +473,15 @@
           "questions": [
             {
               "id": "q_return_1a",
-              "q": "A research subagent reads 50 files and reports back. What lands in the parent's context?",
+              "q": "A research-assistant subagent reads 50 files across a repository, running dozens of tool calls in the process, before finishing its investigation and returning to the coordinator. What actually lands in the coordinator's context as a result?",
               "options": [
-                "All 50 of the file contents that it read",
-                "The subagent's full transcript of the run",
-                "Nothing, until the parent asks for it",
-                "The subagent's final message, nothing else"
+                "All 50 files' contents, since intermediate tool results get appended to the parent's context.",
+                "The subagent's complete transcript, including every one of the dozens of tool calls it made.",
+                "Nothing at all, until the coordinator goes back and explicitly asks it to resend its findings.",
+                "Only the subagent's final message — its tool calls and their results stay inside its own context."
               ],
               "correct": 3,
-              "explain": "Final message only. This is exactly why delegation is the primary context lever."
+              "explain": "Only the final message crosses back to the coordinator; the fifty file reads and every intermediate tool call stay inside the subagent's own context and never touch the parent's window. This is exactly why delegation is the primary lever for keeping a coordinator's context small — the reading happens, but the parent only sees the conclusion. Nothing is withheld pending a request, and nothing about the run gets appended automatically as it happens."
             },
             {
               "id": "q_return_1b",
@@ -501,15 +501,15 @@
       "reviewQuestions": [
         {
           "id": "r_return_1",
-          "q": "What does the parent receive as the Agent tool result?",
+          "q": "You're building a UI that displays the result of each subagent delegation as soon as it completes, reading directly off the Agent tool's result content. What does that result content actually contain?",
           "options": [
-            "The subagent's full transcript",
-            "A structured summary from the SDK",
-            "The subagent's final message",
-            "A session id to fetch results with"
+            "The subagent's full transcript, reconstructed from every message it produced during the run.",
+            "A structured summary the SDK generates by condensing the subagent's tool calls and results.",
+            "The subagent's final message — nothing about its intermediate tool calls or their results.",
+            "A session id the UI can use to separately fetch the subagent's complete results afterward."
           ],
           "correct": 2,
-          "explain": "Final message. Everything else stayed inside."
+          "explain": "The Agent tool result is the subagent's final message and nothing more — every intermediate tool call and result stayed inside the subagent and never surfaces in this content. There's no SDK-generated summary standing in for it, no full transcript bundled alongside it, and no extra fetch step needed to retrieve it. Whatever the subagent decided to say at the end is exactly what the UI receives."
         }
       ]
     },
@@ -525,27 +525,27 @@
           "questions": [
             {
               "id": "q_runtime_1a",
-              "q": "How deep can subagents nest by default, and what changes it?",
+              "q": "Your orchestration design has a coordinator spawn a subagent, which itself spawns a further subagent to handle a narrower piece of work. You want to know how many layers deep this nesting is allowed to go with no special configuration, and how to change that limit if it becomes a problem.",
               "options": [
-                "One layer; nesting cannot be turned on",
-                "Unlimited; capped only by the maxTurns value",
-                "Two layers; set by AgentDefinition.maxTurns",
-                "Three; CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH"
+                "Three layers deep by default; the CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH variable changes that limit.",
+                "One layer deep by default, with no environment variable or setting able to enable deeper nesting.",
+                "Unlimited by default, effectively capped only indirectly by each subagent's own maxTurns setting.",
+                "Two layers deep by default, a limit controlled by the maxTurns field on the AgentDefinition itself."
               ],
-              "correct": 3,
-              "explain": "Three by default. Setting the variable to 1 is how you flatten the topology."
+              "correct": 0,
+              "explain": "Subagents can nest three layers deep by default, and CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH is the setting that changes it — setting it to 1 is how you flatten the topology entirely. Nesting is neither unlimited nor capped at one or two layers out of the box, and maxTurns governs how long a single agent runs, not how many layers of delegation are permitted. The two concerns — turn budget and spawn depth — are controlled separately."
             },
             {
               "id": "q_runtime_1b",
-              "q": "Claude needs a subagent's answer before it can continue. What does it do?",
+              "q": "Since v2.1.198, subagents run in the background by default whenever an Agent tool call omits run_in_background. Your coordinator needs a particular subagent's answer immediately, before it can decide what to do next. What does Claude actually do differently on that call to get a blocking result?",
               "options": [
-                "Sets run_in_background: false on the call",
-                "Sets background: true on the definition",
-                "Polls the subagent's session id for it",
-                "Nothing — subagents always block anyway"
+                "It polls the subagent's session id repeatedly in a loop until a final message becomes available.",
+                "It sets background: true on that subagent's AgentDefinition to force synchronous execution.",
+                "Nothing — subagents always block the coordinator by default, regardless of any setting used.",
+                "It sets run_in_background: false on that specific Agent tool call, overriding the default."
               ],
-              "correct": 0,
-              "explain": "Background is the default; blocking is the explicit choice Claude makes when the result is needed inline."
+              "correct": 3,
+              "explain": "Claude sets run_in_background: false on the individual call when it needs the result before continuing, which overrides the background-by-default behavior for that one delegation. background: true on the definition does the opposite — it forces background regardless of what the call sets — so that wouldn't produce a blocking result here. There's no polling loop involved, and background is the default, not universal blocking."
             }
           ]
         }
@@ -553,15 +553,15 @@
       "reviewQuestions": [
         {
           "id": "r_runtime_1",
-          "q": "Since v2.1.198, do subagents block the parent by default?",
+          "q": "A developer who worked with an earlier version of the SDK assumes every subagent still blocks the coordinator until it finishes, the same way it always used to. Since v2.1.198, is that assumption still correct?",
           "options": [
-            "Yes, they always block the parent",
-            "No — background unless told to block",
-            "Only when they are nested inside another",
-            "Only when they have tools of their own"
+            "Yes — every subagent still blocks the coordinator until it returns a final message, regardless of settings.",
+            "No — subagents run in the background by default now, and blocking only happens when explicitly requested.",
+            "Only when the subagent is nested inside another subagent rather than spawned directly by the coordinator.",
+            "Only when the subagent's own AgentDefinition sets its tools field to a restricted, non-empty list."
           ],
           "correct": 1,
-          "explain": "Background by default; blocking on demand."
+          "explain": "The assumption is out of date: since v2.1.198, subagents run in the background by default, and blocking happens only when Claude deliberately sets run_in_background: false on that call. It has nothing to do with nesting depth or how a subagent's tools field is configured — those are separate concerns from background versus blocking behavior. The old always-blocks behavior no longer holds."
         }
       ]
     },
@@ -577,27 +577,27 @@
           "questions": [
             {
               "id": "q_detect_1a",
-              "q": "Which field tells you a message came from inside a subagent rather than the main thread?",
+              "q": "You're building a UI that renders a live tree of agent activity and need to attribute each incoming message to the correct subagent rather than the main thread. Which field on a message tells you it was produced inside a subagent?",
               "options": [
-                "parent_tool_use_id",
-                "parent_session_id",
-                "is_subagent: true",
-                "spawned_by_agent"
+                "parent_session_id, which links every message back to the session that spawned it.",
+                "A boolean is_subagent flag set to true on messages produced inside a subagent.",
+                "parent_tool_use_id, which points back at the Agent tool call that spawned that subagent.",
+                "spawned_by_agent, an identifier naming which AgentDefinition produced the message."
               ],
-              "correct": 0,
-              "explain": "parent_tool_use_id points back at the Agent tool call that spawned it."
+              "correct": 2,
+              "explain": "parent_tool_use_id points back at the specific Agent tool call that spawned the subagent, which is exactly the attribution a UI needs to build a tree of activity. There is no is_subagent boolean or spawned_by_agent field in the message stream, and parent_session_id isn't the mechanism the SDK actually uses for this. Tracking parent_tool_use_id per message is how you correctly nest activity under the right delegation."
             },
             {
               "id": "q_detect_1b",
-              "q": "In TypeScript, how do you reach the content blocks of an SDK message?",
+              "q": "You're writing a TypeScript handler that inspects an SDK message to pull out its content blocks, knowing the SDK message type wraps the underlying API message rather than exposing it directly. How do you reach those content blocks in TypeScript?",
               "options": [
-                "message.content",
-                "message.data.content",
-                "message.message.content",
-                "message.content.blocks"
+                "message.content, the same flattened path that works in the Python SDK.",
+                "message.data.content, since the SDK wraps the API message inside a data field.",
+                "message.content.blocks, an array nested one level deeper than top-level content.",
+                "message.message.content, since the SDK message wraps the underlying API message."
               ],
-              "correct": 2,
-              "explain": "The SDK message wraps the API message in TypeScript. Python flattens it to message.content."
+              "correct": 3,
+              "explain": "In TypeScript, message.message.content is correct because the SDK message wraps the API message as a nested field, unlike Python where message.content reaches it directly. There's no data field or a content.blocks sub-array in either SDK's message shape. Mixing up the two access patterns is a common source of bugs when porting detection code between the two SDKs."
             }
           ]
         },
@@ -609,27 +609,27 @@
           "questions": [
             {
               "id": "q_detect_2a",
-              "q": "What two identifiers do you need to resume a specific subagent?",
+              "q": "You want to send a follow-up prompt to the exact same subagent instance that already ran once, rather than spawning a brand-new subagent with no memory of the first run. Which two identifiers do you need to have captured from that first run to do this?",
               "options": [
-                "The session_id and the agentId",
-                "parent_tool_use_id and tool_use_id",
-                "The agentId on its own is enough",
-                "session_id and the agent's name"
+                "The session_id from the run and the agentId identifying that particular subagent within it.",
+                "The parent_tool_use_id from the first call together with the tool_use_id of its result.",
+                "The agentId alone — it is sufficient on its own to resume the correct subagent.",
+                "The session_id together with the human-readable name assigned to that agent."
               ],
               "correct": 0,
-              "explain": "Session to get back to the conversation, agentId to name which agent inside it."
+              "explain": "Resuming needs both identifiers: session_id to get back into the right conversation, and agentId to name which specific agent inside that session to resume. agentId alone can't locate the conversation it belongs to, and neither parent_tool_use_id/tool_use_id nor a human-readable name are what the resume mechanism actually keys on. Both pieces have to be captured at the time the first run completes, since they aren't retrievable later otherwise."
             },
             {
               "id": "q_detect_2b",
-              "q": "Why can you not resume an Explore agent?",
+              "q": "A developer tries to resume a previous Explore agent run the same way they'd resume a custom research-assistant subagent — capturing its session_id and looking for an agentId in the result. There's no agentId to find. Why can't a built-in Explore agent be resumed this way?",
               "options": [
-                "It runs in a completely separate process",
-                "Its session is never persisted to disk",
-                "It is one-shot and returns no agentId",
-                "It has no tools, so there is no state"
+                "Explore runs in a completely separate process that the main SDK session cannot reach afterward.",
+                "Explore's session data is discarded immediately and is never written to disk at all.",
+                "Explore is one-shot and its result contains no agentId, so there is nothing to resume.",
+                "Explore has no tools of its own, so there is no session state left behind to resume."
               ],
               "correct": 2,
-              "explain": "Explore and Plan are both one-shot built-ins. No agentId, nothing to resume."
+              "explain": "Explore, like Plan, is a one-shot built-in agent whose result carries no agentId, which is precisely the identifier a resume attempt needs — so there is genuinely nothing to resume, not a bug in how the developer looked for it. It isn't about a separate process or discarded disk state, and Explore does use tools during its single run; the absence of an agentId is the actual reason. Custom subagents defined with an AgentDefinition are the ones that return an agentId and can be resumed."
             }
           ]
         }
@@ -637,15 +637,15 @@
       "reviewQuestions": [
         {
           "id": "r_detect_1",
-          "q": "Where does agentId come from?",
+          "q": "You want to resume a specific subagent later, which means capturing its agentId at the time it first runs, before that information disappears. Where does agentId actually come from?",
           "options": [
-            "The system:init message at startup",
-            "The AgentDefinition that you wrote",
-            "A text block in the Agent tool result",
-            "The parent_tool_use_id on the message"
+            "The system:init message that Claude Code emits once at the very start of the session.",
+            "The AgentDefinition you wrote when configuring that subagent ahead of time.",
+            "A text block embedded in the Agent tool's result once that subagent's run completes.",
+            "The parent_tool_use_id field attached to messages produced inside the subagent."
           ],
           "correct": 2,
-          "explain": "It comes back with the result, which is why you have to capture it at the time."
+          "explain": "agentId is delivered inside a text block in the Agent tool result, which is exactly why it has to be captured at completion time — it isn't available anywhere before or after that point in a more durable form. It doesn't come from system:init, since that message fires at session startup before any subagent has run, and it isn't part of the AgentDefinition you authored, which has no knowledge of a specific run's id. parent_tool_use_id identifies the spawning call, not the agent instance itself."
         }
       ]
     },
@@ -661,27 +661,27 @@
           "questions": [
             {
               "id": "q_hub_1a",
-              "q": "Three subagents each need a fact the first one discovered. How does it reach them?",
+              "q": "You've split a research task across three subagents, and the second and third each need a fact the first one discovered while investigating. None of the three subagents can message each other directly. How does that fact actually reach the second and third subagents?",
               "options": [
-                "The first subagent broadcasts it to its siblings",
-                "Shared session memory makes it available to all",
-                "The coordinator writes it into each later prompt",
-                "Each subagent re-derives the fact independently"
+                "The first subagent broadcasts the fact to its siblings through a shared event channel.",
+                "All three subagents share a common session, so the fact is visible to each automatically.",
+                "Each of the later subagents independently re-derives the same fact during its own investigation.",
+                "The coordinator reads the first subagent's final message and writes the fact into each later prompt."
               ],
-              "correct": 2,
-              "explain": "Hub-and-spoke, forced by isolation. Every fact that moves between workers moves through the coordinator."
+              "correct": 3,
+              "explain": "Hub-and-spoke is forced by context isolation: since subagents have no sibling channel, the coordinator has to read the first subagent's final message and explicitly write the fact into each subsequent prompt. There is no shared event channel or common session linking the three subagents together. Relying on each one to independently re-derive the fact wastes work and risks the three landing on inconsistent answers."
             },
             {
               "id": "q_hub_1b",
-              "q": "Why can't you build a mesh of subagents that message each other directly?",
+              "q": "A teammate proposes letting subagents message each other directly in a mesh, rather than routing every exchange back through the coordinator, arguing it would cut a step out of multi-agent workflows. Why isn't that architecture actually available to build?",
               "options": [
-                "The SDK rate-limits agent-to-agent calls hard",
-                "There is no sibling channel; only the prompt",
-                "Mesh topologies need the separate Workflow tool",
-                "Only three agents may ever be running at once"
+                "The SDK technically allows it but rate-limits agent-to-agent calls heavily enough to make it impractical.",
+                "Mesh topologies are supported, but only through the separate Workflow tool rather than the Agent tool.",
+                "There is no channel between siblings at all — the only channel that exists is a parent's prompt to a child.",
+                "Only three subagents are permitted to run concurrently, which rules out a mesh of any useful size."
               ],
-              "correct": 1,
-              "explain": "The absence of a channel is the architecture. Everything else follows from it."
+              "correct": 2,
+              "explain": "There simply is no sibling-to-sibling channel to build a mesh on top of — the only channel that exists is a parent writing a prompt string for a child, so hub-and-spoke isn't a style choice but the only topology the architecture leaves available. There's no rate limit standing in the way, and the Workflow tool addresses orchestrating many delegations from a script, not direct sibling messaging. Concurrency limits on subagent count are a separate concern from whether a channel between them exists."
             }
           ]
         }
@@ -689,15 +689,15 @@
       "reviewQuestions": [
         {
           "id": "r_hub_1",
-          "q": "Name the coordination pattern in which subagents never communicate directly.",
+          "q": "A multi-agent design routes every message between workers through a single coordinator, which also owns all error handling and routing decisions — no subagent ever addresses another directly. What is this coordination pattern called?",
           "options": [
-            "Prompt chaining",
-            "Evaluator-optimizer",
-            "Dynamic decomposition",
-            "Hub-and-spoke"
+            "Hub-and-spoke, where the coordinator owns every inter-subagent exchange.",
+            "Prompt chaining, a fixed sequence of steps known before the run starts.",
+            "Evaluator-optimizer, where one agent critiques and another revises in a loop.",
+            "Dynamic decomposition, where subtasks are generated from what earlier steps discover."
           ],
-          "correct": 3,
-          "explain": "Glossary t3. The coordinator owns routing, error handling, and every message between workers."
+          "correct": 0,
+          "explain": "This is exam glossary t3, hub-and-spoke: the coordinator owns all inter-subagent communication, error handling, and routing, which matches a design where no subagent ever addresses another directly. Prompt chaining and dynamic decomposition describe how work gets split up, not whether workers can talk to each other. Evaluator-optimizer describes a two-agent critique loop, which is a different pattern from a coordinator mediating many workers."
         }
       ]
     },
@@ -713,27 +713,27 @@
           "questions": [
             {
               "id": "q_decomp_1a",
-              "q": "\"Add tests to this legacy codebase.\" Fixed chain or dynamic decomposition?",
+              "q": "A team asks Claude to \"add tests to this legacy codebase,\" which has no existing coverage and no inventory yet of what actually needs testing. Before deciding how to structure this as a multi-agent task, which decomposition shape actually fits?",
               "options": [
-                "Fixed chain — testing is always the same steps",
-                "Fixed chain, since the number of files is known",
-                "Neither; this is really just a single-agent task",
-                "Dynamic — the subtasks depend on what you find"
+                "Prompt chaining, since testing always follows the same fixed sequence of steps regardless of the codebase.",
+                "Prompt chaining, since the number of files involved can be counted before the run starts.",
+                "Neither — open-ended investigation like this should stay a single-agent task with no decomposition.",
+                "Dynamic decomposition, since the subtasks can only be identified once the code has actually been examined."
               ],
               "correct": 3,
-              "explain": "You cannot list what needs testing before you have looked at the code. That is the definition of the dynamic case."
+              "explain": "This fits dynamic decomposition: you can't list what needs testing before looking at the code, so the subtasks have to be discovered as investigation proceeds rather than planned up front. Knowing the file count doesn't tell you which files need tests or what those tests should cover, so that alone doesn't make it a fixed chain. Ruling out decomposition entirely ignores that a legacy codebase of any real size benefits from splitting the discovery work across subagents."
             },
             {
               "id": "q_decomp_1b",
-              "q": "\"Summarise each of these 12 reports, then write one combined brief.\" Which shape?",
+              "q": "A task reads: \"summarize each of these 12 reports individually, then write one combined brief from the summaries.\" The full sequence of steps is knowable before any subagent starts running. Which decomposition shape does this fit?",
               "options": [
-                "Dynamic decomposition, discovered as you go",
-                "Prompt chaining — the steps are known up front",
-                "Hub-and-spoke, a third option beyond the two",
-                "Neither; use a single query for all twelve"
+                "Dynamic decomposition, since each report might turn up findings that change the plan mid-run.",
+                "Hub-and-spoke, a third decomposition shape distinct from both chaining and dynamic decomposition.",
+                "Neither — twelve reports of this size should be handled by a single query with no delegation.",
+                "Prompt chaining, since the per-item summaries and the integration pass are both writable in advance."
               ],
-              "correct": 1,
-              "explain": "Per-item work then an integration pass, all writable in advance. Textbook prompt chaining."
+              "correct": 3,
+              "explain": "This is prompt chaining: the per-report summarization step and the final integration pass are both known before the run starts, which is exactly the fixed-sequence case the pattern is for. Nothing about the task depends on findings changing the plan mid-run, so dynamic decomposition doesn't fit. Hub-and-spoke describes how subagents communicate, not how the work gets split, so it isn't a competing decomposition shape here."
             }
           ]
         }
@@ -741,15 +741,15 @@
       "reviewQuestions": [
         {
           "id": "r_decomp_1",
-          "q": "What single question separates prompt chaining from dynamic decomposition?",
+          "q": "You're deciding between prompt chaining and dynamic decomposition for a new multi-agent workflow and want a single question that reliably tells you which shape fits. What is that discriminating question?",
           "options": [
-            "How many subagents end up being involved",
-            "Whether the subtask list could be written first",
-            "Whether the agents get to run in parallel",
-            "Whether there is a coordinator involved at all"
+            "How many subagents the workflow ends up needing to involve by the time it finishes.",
+            "Whether the subagents assigned to the workflow are able to run in parallel with each other.",
+            "Whether the list of subtasks could have been written down before the run ever started.",
+            "Whether a coordinator is present at all, as opposed to subagents running independently."
           ],
-          "correct": 1,
-          "explain": "Known up front → chain. Discovered as you go → dynamic."
+          "correct": 2,
+          "explain": "The discriminating question is whether the subtask list could have been written before the run started: if yes, it's a fixed chain; if the subtasks only emerge from what earlier steps discover, it's dynamic decomposition. Subagent count and parallelism are properties a workflow can have under either shape, so neither one distinguishes the two. A coordinator is present in both patterns — hub-and-spoke governs communication, not which decomposition shape is in use."
         }
       ]
     },
@@ -777,15 +777,15 @@
             },
             {
               "id": "q_coorddefect_1b",
-              "q": "Which observation most strongly points at decomposition rather than worker failure?",
+              "q": "A multi-agent research run finishes: every subagent reports success, no tool call returns an error, and the coordinator hasn't run out of turns. Yet the final combined report is noticeably thin, covering far less ground than the task called for. Which observation from this run points most strongly at the coordinator's task decomposition rather than a worker failure?",
               "options": [
-                "One of the subagents timed out part-way through",
-                "The coordinator ran out of turns to work with",
-                "Every subagent succeeded and the whole is thin",
-                "A tool came back with isError set to true on it"
+                "One of the subagents took noticeably longer to finish its assigned piece than the other two did.",
+                "Every subagent succeeded, and the resulting whole is still thin — success everywhere, yet incomplete overall.",
+                "The coordinator's own turn budget was close to its configured maxTurns limit by the end of the run.",
+                "A tool call inside one of the subagents returned a result flagged with isError set to true."
               ],
-              "correct": 2,
-              "explain": "Universal success plus an incomplete whole is the signature of a bad partition."
+              "correct": 1,
+              "explain": "Universal success at every node combined with a thin aggregate is the specific signature of a bad partition — if the workers were the problem, at least one of them would show a failure, and none do. Runtime differences between subagents and a turn budget running close to its limit are both unremarkable operational details that don't point at decomposition specifically. An isError result would actually implicate a worker directly, which is the opposite of what's observed here."
             }
           ]
         }
@@ -793,15 +793,15 @@
       "reviewQuestions": [
         {
           "id": "r_coorddefect_1",
-          "q": "State the diagnostic rule for multi-agent failure.",
+          "q": "You're debugging a multi-agent pipeline where every individual subagent completed its assigned piece successfully, but the combined output is missing content the task clearly needed. What is the general diagnostic rule for tracing a failure like this?",
           "options": [
-            "Always suspect the slowest of the subagents",
-            "Retry the whole run with a lot more turns",
-            "Blame context isolation before anything else",
-            "Workers all fine, aggregate wrong → look up"
+            "Always suspect whichever subagent happened to take the longest to finish its assigned piece.",
+            "Retry the entire run with a substantially larger turn budget before investigating anything else.",
+            "Assume context isolation dropped information somewhere before checking anything else about the run.",
+            "When every worker succeeds and the aggregate is wrong, the defect is in the coordinator itself."
           ],
           "correct": 3,
-          "explain": "Look up. The coordinator owns the partition, and a bad partition survives perfect workers."
+          "explain": "The rule is to look up, not down: the coordinator owns the task partition, and a bad partition — one that never asked for the missing sub-topics in the first place — survives perfectly successful workers untouched. Suspecting the slowest subagent or blaming context isolation both point at the workers, which the evidence has already cleared. Retrying with more turns doesn't fix a decomposition that was too narrow to begin with; it just repeats the same narrow plan."
         }
       ]
     }

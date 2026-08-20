@@ -1,5 +1,5 @@
 {
-  "builtAt": "2026-08-18",
+  "builtAt": "2026-08-20",
   "stats": {
     "topics": 44,
     "clusters": 5,
@@ -18,10 +18,10 @@
     "encompassings.json": "sha256:a0f478b72d90b499",
     "clusters.json": "sha256:90777e24eb3505a2",
     "curriculum-standards.json": "sha256:a223dd8a8229ab1e",
-    "knowledge-points/foundations.json": "sha256:d36cd4362bde4bd7",
-    "knowledge-points/hooks.json": "sha256:30913c941cee50b9",
-    "knowledge-points/sessions.json": "sha256:315538b8c808c4f7",
-    "knowledge-points/subagents.json": "sha256:0b053229deb1f73d",
-    "knowledge-points/tools-mcp.json": "sha256:e2a7c11d1c5e6531"
+    "knowledge-points/foundations.json": "sha256:3d0086f7a1e80731",
+    "knowledge-points/hooks.json": "sha256:7236fde536ddafa9",
+    "knowledge-points/sessions.json": "sha256:e1960f78cfb4ae34",
+    "knowledge-points/subagents.json": "sha256:f3b87f50bf6a03a9",
+    "knowledge-points/tools-mcp.json": "sha256:4223aeb041db7dbc"
   }
 }

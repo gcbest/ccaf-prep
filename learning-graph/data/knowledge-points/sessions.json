@@ -13,27 +13,27 @@
           "questions": [
             {
               "id": "q_sess_1a",
-              "q": "You want to continue one specific prior conversation, not the most recent one. Which option?",
+              "q": "A support engineer has three separate open conversations with your CLI-based agent, each about a different customer ticket. She wants her next command to continue specifically the ticket-142 conversation, not whichever conversation last received a message. Which option should the query pass?",
               "options": [
-                "continue: true on the new query",
-                "sessionId set in the options object",
-                "resume set to that conversation's id",
-                "forkSession: true on the new query"
+                "Set continue to true, which reopens whichever conversation last received a message, not necessarily ticket-142.",
+                "Set sessionId to a freshly generated UUID, which creates a brand-new session rather than reopening ticket-142.",
+                "Set resume to the ticket-142 conversation's session id, reopening that exact conversation no matter what ran last.",
+                "Set forkSession to true on the query with no resume value specified at all, which has no baseline session to branch from."
               ],
               "correct": 2,
-              "explain": "continue takes whatever ran last. resume names the one you mean."
+              "explain": "Setting resume to ticket-142's own session id targets that exact conversation directly, independent of whatever ran most recently. Setting continue instead grabs whichever conversation last received a message, which may not be ticket-142 at all. Assigning a fresh sessionId creates a new, empty session rather than reopening an existing one. And forkSession only has meaning alongside resume — used alone it has no baseline session to branch from."
             },
             {
               "id": "q_sess_1b",
-              "q": "What does persistSession: false cost you?",
+              "q": "Your agent handles one-off runs over files containing customer PII, so you've set persistSession: false to avoid writing transcripts to disk for compliance reasons. A teammate later asks you to resume one of these runs to review its reasoning. What actually happens?",
               "options": [
-                "Hooks stop firing for the rest of that agent run",
-                "Nothing real; it is purely a performance tuning setting",
-                "Tool results are dropped instead of returned to the model",
-                "The transcript is never on disk, so it can never be resumed"
+                "The run cannot be resumed at all, because persistSession: false means no transcript was ever written to disk.",
+                "PostToolUse hooks stop firing entirely for the remainder of that particular run once this is set.",
+                "Nothing changes in practice at all; persistSession is purely a performance tuning setting with no other effect.",
+                "Tool results are still returned to the model but are withheld from the final response shown to the user."
               ],
-              "correct": 3,
-              "explain": "Useful for sensitive one-off runs; fatal if you later wanted to resume or fork from it."
+              "correct": 0,
+              "explain": "persistSession: false means the transcript for that run is never written to disk, so there is nothing on disk to resume from — the teammate's request simply cannot be fulfilled. Hooks like PostToolUse continue firing normally regardless of this setting; it doesn't touch hook execution. It is not a mere performance knob either — it permanently forecloses resuming or forking that session later. And it has no bearing on what tool results reach the model versus the user, which is an unrelated distinction."
             }
           ]
         },
@@ -45,27 +45,27 @@
           "questions": [
             {
               "id": "q_sess_2a",
-              "q": "Your API runs on four instances behind a load balancer and resume sometimes fails. What is missing?",
+              "q": "Your agent API runs on four stateless instances behind a round-robin load balancer. Customers report that resuming a previous conversation usually works, but roughly one in four attempts comes back as a brand-new, empty session instead. What's the most likely fix?",
               "options": [
-                "persistSession: true on every one of the instances",
-                "Sticky sessions on the load balancer, the only real fix",
-                "forkSession: true so each instance gets its own branch",
-                "A sessionStore mirroring transcripts to a shared backend"
+                "Set persistSession: true on every one of the four instances so transcripts are written to disk.",
+                "Configure sticky sessions on the load balancer so that each customer is always routed to the exact same instance.",
+                "Set forkSession: true on every resume call so each instance creates its own independent branch.",
+                "Add a sessionStore that mirrors transcripts to a shared backend, so any instance can resume any session."
               ],
               "correct": 3,
-              "explain": "Sticky sessions would paper over it. The session store is the fix that makes any host able to resume."
+              "explain": "A sessionStore mirrors transcripts to a backend all four instances share, so resume succeeds no matter which instance handles the request — the actual cause of the intermittent failures. Sticky routing only works around the symptom by pinning each customer to the instance that created their session, and breaks the moment that instance restarts or the balancer rebalances. Turning on persistSession changes nothing about cross-instance access; it only controls whether a transcript is written to disk at all, not where other instances can find it. And forkSession has nothing to do with retrieving an existing session across machines — it only branches a new id off an already-resumed baseline."
             },
             {
               "id": "q_sess_2b",
-              "q": "Which utility would you use to show a user their past agent runs?",
+              "q": "You're building a dashboard page that lists every past conversation a given user has had with the agent, showing titles and timestamps, before they click into any specific one to see its content. Which utility should populate that list?",
               "options": [
-                "getSessionMessages()",
-                "renameSession()",
-                "listSessions()",
-                "tagSession()"
+                "Call getSessionMessages() once per known session id to assemble each conversation's full message history.",
+                "Call listSessions() to retrieve the index of the user's sessions before any specific one is opened.",
+                "Call tagSession() on each conversation so the dashboard can group entries by label instead of by time.",
+                "Call renameSession() on the most recent conversations so their titles are current before they're listed."
               ],
-              "correct": 2,
-              "explain": "List for the index, getSessionMessages when they open one."
+              "correct": 1,
+              "explain": "listSessions() returns the index of a user's sessions, which is exactly the lightweight list a dashboard needs before anyone opens a specific conversation. getSessionMessages() instead pulls the full transcript of one already-known session, which is far more than an index view requires and wasteful to call for every row. tagSession() only attaches metadata labels to sessions; it doesn't enumerate them. renameSession() changes a session's stored title, which doesn't help populate a list in the first place."
             }
           ]
         }
@@ -73,15 +73,15 @@
       "reviewQuestions": [
         {
           "id": "r_sess_1",
-          "q": "continue vs. resume — what is the difference?",
+          "q": "A teammate keeps passing continue when they want to reopen yesterday's conversation about a specific bug, but several other conversations have happened since then, so continue keeps landing them somewhere else. How would you explain the fix to them?",
           "options": [
-            "continue takes the latest run; resume names one",
-            "They are aliases for the same underlying flag",
-            "continue works in the CLI, resume only in the SDK",
-            "resume always starts a brand-new empty session"
+            "continue only works from the CLI, while resume is only available when calling the SDK directly.",
+            "resume called with no session id specified at all always starts a brand-new, completely empty session.",
+            "continue reopens whichever conversation ran most recently; resume reopens the one you name by id specifically.",
+            "continue and resume are interchangeable aliases that both target the exact same underlying flag."
           ],
-          "correct": 0,
-          "explain": "Latest vs. named. resume plus forkSession is a third thing again."
+          "correct": 2,
+          "explain": "continue always grabs whichever conversation ran most recently, which explains why it keeps landing your teammate somewhere other than yesterday's bug discussion; resume, given that conversation's own session id, reopens it specifically regardless of what ran afterward. They aren't interchangeable aliases — passing an id to each produces different results only for resume. And the CLI-versus-SDK split described in one option isn't the actual distinction; both options exist in each surface."
         }
       ]
     },
@@ -97,27 +97,27 @@
           "questions": [
             {
               "id": "q_fork_1a",
-              "q": "You want two independent explorations that both start from one expensive analysis. What do you pass?",
+              "q": "After a subagent finishes a lengthy codebase analysis, you want to explore two different implementation strategies based on that analysis, without either exploration's dead ends leaking into the other. What should the two follow-up queries pass?",
               "options": [
-                "resume alone, run twice from the same id",
-                "forkSession alone, run twice with no id",
-                "resume plus forkSession, run twice from that id",
-                "Two fresh queries with the analysis text pasted in"
+                "resume set to the analysis session's id together with forkSession: true, run once per strategy.",
+                "forkSession: true on its own, run once per strategy, with no resume value specified.",
+                "resume set to the analysis session's id alone, run once per strategy, with no forkSession value.",
+                "Two fresh queries that each paste the full text of the codebase analysis into a new prompt."
               ],
-              "correct": 2,
-              "explain": "forkSession without resume has nothing to fork from. With it, both branches share the baseline and diverge cleanly."
+              "correct": 0,
+              "explain": "Pairing resume with forkSession lets each follow-up branch a new session id off the same analysis baseline, so both strategies inherit the expensive analysis while their explorations stay isolated from each other. forkSession on its own has no resumed session to branch from, so it accomplishes nothing. resume alone would have both follow-ups append to the same single timeline, letting one strategy's dead ends contaminate the other's context. And pasting the analysis text into fresh prompts discards the session mechanism entirely and re-spends the tokens that made the analysis expensive."
             },
             {
               "id": "q_fork_1b",
-              "q": "What goes wrong if you resume the same session twice without forking?",
+              "q": "Two teammates both pass resume with the same session id to continue exploring a shared analysis, but neither sets forkSession. After both have sent several follow-up messages, what has happened to their two lines of investigation?",
               "options": [
-                "Both runs append to one timeline and contaminate each other",
-                "The second resume errors out with a session lock",
-                "Nothing; resumed sessions are copy-on-write by default",
-                "The first session is deleted when the second one starts"
+                "The second resume call is rejected outright because the session is already locked by the first caller's process.",
+                "Each resume call is treated as copy-on-write by default, so the two investigations stayed separate.",
+                "The original session was deleted and replaced the moment the second teammate's resume call landed.",
+                "Both sets of follow-up messages landed in the same timeline, so each investigation is now part of the other's."
               ],
-              "correct": 0,
-              "explain": "One session, one history. Branch A's dead ends become part of branch B's context."
+              "correct": 3,
+              "explain": "Without forkSession, resume just appends to the one existing timeline, so both teammates' follow-up messages ended up interleaved in the same session — each investigation's dead ends and detours are now part of the other's context. resume isn't exclusive or locking; a second caller can resume the same id without being rejected. Sessions also aren't copy-on-write by default — that isolation only happens when forkSession is explicitly set. And nothing about resuming a session deletes or replaces it; the original history is preserved, just shared."
             }
           ]
         }
@@ -125,15 +125,15 @@
       "reviewQuestions": [
         {
           "id": "r_fork_1",
-          "q": "State what forkSession does in one sentence.",
+          "q": "You're documenting the SDK's session options for new team members and need one accurate sentence describing what forkSession does and what it requires to have any effect. Which description is correct?",
           "options": [
-            "It runs two agents against the same prompt in parallel",
-            "It compacts the session before the resume happens",
-            "It copies the session's files into a new directory",
-            "With resume, it branches a new id off that baseline"
+            "It runs two entirely separate agents against the same prompt at the same time, in parallel.",
+            "It only takes effect combined with resume, branching a new session id off that resumed baseline.",
+            "It copies all of a session's associated files into a freshly created directory on disk.",
+            "It compacts a session's history immediately, before the accompanying resume call takes effect."
           ],
-          "correct": 3,
-          "explain": "Shared past, separate futures — and only in combination with resume."
+          "correct": 1,
+          "explain": "forkSession only means something alongside resume — used together, it branches a brand-new session id off the resumed baseline, giving two timelines that share a past but not a future. Used alone, without resume, there's no baseline to branch from, so it does nothing observable. It has nothing to do with running parallel agents against one prompt, copying files to a new directory, or triggering compaction — those are separate mechanisms entirely."
         }
       ]
     },
@@ -149,27 +149,27 @@
           "questions": [
             {
               "id": "q_compact_1a",
-              "q": "You need to save a summary of state before the SDK compacts. Which hook?",
+              "q": "You want to write a summary of the agent's current plan to an external log immediately before the SDK automatically compacts the conversation, so nothing important gets lost in the summarization. Which hook fires at the right moment for this?",
               "options": [
-                "SessionEnd",
-                "PostCompact",
-                "PreCompact",
-                "Stop"
+                "SessionEnd, which fires only once the entire session has fully and finally concluded.",
+                "PostCompact, which fires right after compaction has already finished summarizing.",
+                "PreCompact, which fires before compaction happens, while full history is still present.",
+                "Stop, which fires when the agent's turn is ending for reasons unrelated to compaction."
               ],
               "correct": 2,
-              "explain": "PreCompact is the last moment the full history is still there."
+              "explain": "PreCompact fires before compaction happens, which is the last moment the full, unsummarized history is still available to read and log. SessionEnd fires far too late, after the whole session — not just this compaction — has concluded. A hook firing after compaction has already run would only see the summarized version, defeating the purpose of preserving detail. And Stop is about the end of a turn, an unrelated event from compaction entirely."
             },
             {
               "id": "q_compact_1b",
-              "q": "maxTokens in a context-usage response reflects what?",
+              "q": "Your monitoring dashboard reads totalTokens and maxTokens from an SDKControlGetContextUsageResponse and the ratio looks comfortably low, yet the agent triggers compaction sooner than that ratio would suggest it should. What does maxTokens actually represent here?",
               "options": [
-                "The window, or the lower auto-compaction one if set",
-                "Always the model's full advertised context window",
-                "The maxTokens value you passed in the options object",
-                "Whatever budget is left in the taskBudget setting"
+                "The effective ceiling in force, possibly a lower auto-compaction window, not the model's full window.",
+                "Always the model's full advertised context window, no matter what else is configured for the run.",
+                "Whatever numeric value was passed to a separate, unrelated maxTokens option in the query itself.",
+                "Whatever budget currently remains under the taskBudget setting that was specifically configured for this run."
               ],
               "correct": 0,
-              "explain": "The effective ceiling, not the theoretical one — which is what you actually want to reason against."
+              "explain": "maxTokens in that response reflects the effective ceiling actually in force, which can be a lower auto-compaction window rather than the model's theoretical full context — explaining why compaction triggers before the ratio looks alarming. It is not always the model's full advertised window; that's exactly the assumption the dashboard's confusion is built on. It also isn't tied to a separate query-level maxTokens option, which governs something else entirely. And taskBudget tracks spend, not the token ceiling that governs compaction."
             }
           ]
         }
@@ -177,15 +177,15 @@
       "reviewQuestions": [
         {
           "id": "r_compact_1",
-          "q": "What appears in the message stream when compaction happens?",
+          "q": "You're building tooling that watches the message stream to determine when history before some point has already been summarized by compaction. What should your code look for?",
           "options": [
-            "Nothing observable in the message stream",
-            "A compact-boundary message in the stream",
-            "A second system:init message arrives",
-            "A tool_result carrying isError: true"
+            "A second system:init message, matching the one normally seen only at conversation start.",
+            "A tool_result entry marked isError: true appearing at the exact point compaction ran.",
+            "Nothing; compaction happens invisibly with no corresponding entry in the message stream.",
+            "A compact-boundary message in the stream, marking where the summarized history ends."
           ],
-          "correct": 1,
-          "explain": "It marks where summarised history ends, so downstream code knows what it is looking at."
+          "correct": 3,
+          "explain": "A compact-boundary message appears directly in the stream, giving code a concrete marker for where summarized history ends and unsummarized history begins. There is no second system:init message involved — that message type only appears once, at the very start of a conversation. Compaction also isn't reported as a failed tool call, so watching for isError: true on a tool_result would never catch it. And it isn't invisible either; the whole point of the boundary message is to make it observable to downstream code."
         }
       ]
     },
@@ -201,27 +201,27 @@
           "questions": [
             {
               "id": "q_lever_1a",
-              "q": "A multi-phase discovery keeps blowing the context window. First structural fix?",
+              "q": "A code-review workflow's discovery phase reads roughly fifty files across the repository, and this alone regularly fills most of the context window before the actual review work even begins. Lowering maxTokens just makes compaction trigger earlier without fixing the underlying problem. What's the structural fix?",
               "options": [
-                "Lower maxTokens so that compaction runs much sooner",
-                "Call /compact by hand between each of the phases",
-                "Turn on file checkpointing for the whole run",
-                "Delegate discovery to a subagent; only findings return"
+                "Enable file checkpointing for the whole run so any file changes can be rewound afterward if needed.",
+                "Delegate the discovery phase to a subagent, so only its findings return to the main context, not the fifty files.",
+                "Call /compact by hand between each phase of the discovery to keep the window from filling as much.",
+                "Lower maxTokens further still, so that automatic compaction triggers even earlier and more often during discovery."
               ],
-              "correct": 3,
-              "explain": "Compaction is a response to a full window. Delegation stops it filling in the first place."
+              "correct": 1,
+              "explain": "Delegating discovery to a subagent means the verbose reading of fifty files happens somewhere else entirely, and only the conclusions return to the main context — this prevents the window from filling rather than reacting once it already has. Manually compacting between phases and lowering maxTokens are both still forms of damage control that respond to a window that's already filling, not fixes for the filling itself. File checkpointing is an unrelated safety net for rewinding filesystem changes, not a context-management tool at all."
             },
             {
               "id": "q_lever_1b",
-              "q": "What is enableFileCheckpointing for?",
+              "q": "After a long agent run modifies a dozen files, you discover the edits took a wrong turn and want to roll the filesystem back to its state before the run started, without touching the conversation history at all. Which setting supports this?",
               "options": [
-                "Reducing how much context a long run uses",
-                "Rewinding file changes the agent made",
-                "Persisting sessions across separate hosts",
-                "Snapshotting the conversation before compaction"
+                "sessionStore, which mirrors the conversation's transcript to a shared external backend.",
+                "PreCompact, which fires before automatic compaction and lets you persist extra state.",
+                "enableFileCheckpointing, which lets you rewind the file changes the agent made during the run.",
+                "forkSession, which branches a new session id off an already-resumed baseline session."
               ],
-              "correct": 1,
-              "explain": "A safety net for the filesystem, not for the context window — worth keeping separate in your head."
+              "correct": 2,
+              "explain": "enableFileCheckpointing is a safety net specifically for the filesystem, letting you rewind the file changes an agent made — exactly what's needed to undo a run that took a wrong turn without touching the conversation itself. sessionStore and PreCompact both operate on the conversation transcript and context, not on files on disk. forkSession branches conversation history into a new session id; it has no relationship to filesystem state at all."
             }
           ]
         }
@@ -229,15 +229,15 @@
       "reviewQuestions": [
         {
           "id": "r_lever_1",
-          "q": "Why does delegation beat compaction as a context strategy?",
+          "q": "A teammate argues that since the SDK already compacts automatically once context fills up, there's no real need to bother delegating verbose discovery work to a subagent. How would you push back on that reasoning?",
           "options": [
-            "Compaction summarises a full window; delegation avoids one",
-            "Delegation is simply a lot faster than compaction is",
-            "Compaction has been deprecated in the current SDK release",
-            "Subagents are given much larger context windows to use"
+            "Compaction summarizes a window that's already full, while delegation keeps it from filling up in the first place.",
+            "Delegation is simply a faster mechanism to execute than compaction, with no other meaningful difference between them.",
+            "Compaction has been removed entirely from the current SDK release, leaving delegation as the only option.",
+            "Subagents are automatically granted a much larger context window than the main agent loop receives."
           ],
           "correct": 0,
-          "explain": "Prevention versus damage control. Explore is the built-in expression of it."
+          "explain": "Compaction is damage control — it summarizes a window only after it's already full — while delegation is prevention, keeping the verbose work from filling the main window at all, which is why it beats compaction as a strategy rather than merely duplicating it. It isn't just a speed difference; the two operate at different points in the process entirely. Compaction hasn't been removed from the SDK, and subagents don't receive some inherently larger context window — the benefit comes from what returns to the caller, not from a bigger window."
         }
       ]
     },
@@ -253,27 +253,27 @@
           "questions": [
             {
               "id": "q_stopgate_1a",
-              "q": "The agent keeps declaring done without running tests. What do you build?",
+              "q": "Despite a system-prompt instruction telling the agent to always run the test suite before declaring a task complete, code review keeps finding pull requests where the agent claimed success without running tests at all. What should you build to close this gap deterministically?",
               "options": [
-                "A Stop hook that runs the suite and blocks with a reason",
-                "A stronger instruction at the top of the system prompt",
-                "A PreToolUse hook on Bash that checks for a test command",
-                "A PostToolUse hook that looks for test output in results"
+                "A PostToolUse hook that inspects each tool result for the presence of recognizable test output.",
+                "A stronger, more emphatic version of the instruction placed at the very top of the system prompt.",
+                "A PreToolUse hook on the Bash tool that checks whether the invoked command specifically looks like a test runner.",
+                "A Stop hook that runs the test suite itself and returns decision: \"block\" with a reason if it hasn't passed."
               ],
-              "correct": 0,
-              "explain": "The turn is what you want to gate, so Stop is the attachment point. Note the return shape: top-level decision, not permissionDecision."
+              "correct": 3,
+              "explain": "A Stop hook that runs the suite itself and returns decision: \"block\" turns the instruction into a condition the agent cannot end its turn without satisfying, which is what deterministic compliance requires. A stronger instruction is still just a request the model can skip under pressure, the same failure mode already observed. A PreToolUse hook on Bash can only check whether some command resembling a test runner was invoked, not whether the suite actually passed. And a PostToolUse hook inspecting for test output is reactive and easy to satisfy without a genuine, passing test run."
             },
             {
               "id": "q_stopgate_1b",
-              "q": "Why is a Stop hook stronger than the same rule in the system prompt?",
+              "q": "A colleague asks why you replaced the 'always run tests before finishing' line in the system prompt with a Stop hook, instead of just rewording the instruction to sound more forceful. What's the real advantage of the hook?",
               "options": [
-                "It uses fewer tokens than a system-prompt instruction",
-                "It gates the end of the turn instead of asking nicely",
-                "It runs on a faster model than the main loop does",
-                "It bypasses the permission checks the prompt cannot"
+                "The hook consumes noticeably fewer tokens than the equivalent system-prompt instruction did.",
+                "The hook gates whether the turn is allowed to end at all, rather than merely asking the agent to comply.",
+                "The hook executes on a noticeably smaller and faster model than the main agent loop uses.",
+                "The hook bypasses permission checks that a system-prompt instruction would otherwise be subject to."
               ],
               "correct": 1,
-              "explain": "Deterministic compliance versus probabilistic. Same principle as the refund gate, applied one level up."
+              "explain": "The hook's advantage is that it gates the end of the turn itself, making compliance a condition rather than a request — the same determinism principle applied one level up from a single tool call. Token savings and running on a different model aren't the mechanism at work here; the hook and the instruction it replaced aren't being compared on cost or speed. And permission checks are a separate system entirely — the hook isn't bypassing anything, it's enforcing something the prompt could only ask for."
             }
           ]
         }
@@ -281,15 +281,15 @@
       "reviewQuestions": [
         {
           "id": "r_stopgate_1",
-          "q": "Which return shape does a Stop hook use to prevent the turn ending?",
+          "q": "You're implementing a Stop hook meant to prevent the agent's turn from ending until the test suite has passed. Which return shape actually accomplishes that?",
           "options": [
-            "hookSpecificOutput.permissionDecision set to \"deny\"",
-            "updatedInput with the corrected tool arguments",
-            "additionalContext explaining what still needs doing",
-            "A top-level decision: \"block\" plus a reason string"
+            "hookSpecificOutput.permissionDecision set to \"deny\", the same shape used to block a tool call.",
+            "updatedInput containing corrected arguments for the tool call that originally triggered the hook.",
+            "A top-level decision field set to \"block\", together with a reason string explaining why.",
+            "additionalContext describing to the agent what work still needs to be done before finishing."
           ],
-          "correct": 3,
-          "explain": "Stop is in the top-level-decision family. Getting this wrong fails silently."
+          "correct": 2,
+          "explain": "Stop hooks use a top-level decision: \"block\" plus a reason, which is a different return shape from the tool-call-blocking family — using the wrong shape here fails silently and lets the turn end anyway. permissionDecision belongs to hooks that gate individual tool calls, like PreToolUse, not the end of a turn. updatedInput only makes sense for a hook that's modifying a tool call's arguments, which Stop isn't doing. additionalContext can add information but doesn't itself prevent the turn from ending."
         }
       ]
     },
@@ -305,27 +305,27 @@
           "questions": [
             {
               "id": "q_posture_1a",
-              "q": "First-contact resolution is low because the agent hands off too late. Hook, or prompt?",
+              "q": "Your support agent's first-contact resolution rate is low because it keeps trying to resolve issues on its own well past the point where a human should have taken over, not because it's skipping a procedural step. Should you address this with a hook or with the system prompt?",
               "options": [
-                "A Stop hook that requires an escalation check first",
-                "The system prompt, with escalation criteria and examples",
-                "A PreToolUse hook guarding the escalation tool",
-                "A lower maxTurns setting, forcing an earlier handoff"
+                "The system prompt, expanded with escalation criteria and few-shot examples showing when to hand off.",
+                "A Stop hook that blocks the agent's turn from ending until an escalation check has explicitly run.",
+                "A PreToolUse hook that guards the escalation tool so it can only be called under narrow conditions.",
+                "A lower maxTurns setting that forces the conversation to hand off sooner regardless of its content."
               ],
-              "correct": 1,
-              "explain": "The failure is judgment about when to hand off, not a rule being skipped. Hooks enforce invariants; they cannot supply taste."
+              "correct": 0,
+              "explain": "The failure here is judgment — knowing when a conversation should be handed to a human — and hooks can only enforce invariants, not supply taste; the fix is a system prompt with escalation criteria and worked examples showing the judgment call being made correctly. A Stop hook could force some escalation check to run, but it can't make that check reach the right conclusion about a genuinely ambiguous case. A PreToolUse guard on the escalation tool restricts when it's callable rather than teaching when it should be called. And a blunt maxTurns cap hands off based on turn count, not on whether handoff actually makes sense for that conversation."
             },
             {
               "id": "q_posture_1b",
-              "q": "An agent shows 97% overall accuracy. Why might that still be unacceptable?",
+              "q": "Your agent shows 97% overall accuracy across all interactions, and your manager wants to ship it broadly on the strength of that single number. Why might that aggregate figure still hide a serious problem?",
               "options": [
-                "97% sits below every published industry benchmark",
-                "Accuracy is not a valid metric for any agent system",
-                "One category can fail constantly and hide in the average",
-                "It tells you nothing at all about response latency"
+                "A 97% figure sits below the threshold published by every comparable industry benchmark for this domain.",
+                "Accuracy simply isn't a meaningful metric for any agent system at all, no matter how it happens to be computed.",
+                "The aggregate figure says nothing at all about the agent's response latency under real production load.",
+                "One category of requests can fail most of the time while everything else performing well averages it away."
               ],
-              "correct": 2,
-              "explain": "Aggregates hide their worst slice. Evaluate per category or you are measuring the categories that already work."
+              "correct": 3,
+              "explain": "Aggregates hide their worst slice — a single category can be failing most of the time and still get buried under everything else that performs well, producing a headline number that looks fine while a real subset of users is being badly served. Whether 97% clears some industry benchmark is beside the point; the problem is what the average conceals, not where it ranks. Accuracy is a meaningful metric when measured correctly — the issue here is granularity, not the metric's validity. And latency is a genuinely separate concern from the per-category masking problem being illustrated."
             }
           ]
         }
@@ -333,15 +333,15 @@
       "reviewQuestions": [
         {
           "id": "r_posture_1",
-          "q": "Which failures belong to hooks and which to prompting?",
+          "q": "You're deciding whether a newly discovered reliability gap should be closed with a hook or addressed through the system prompt instead. What's the general rule the team follows for making that call?",
           "options": [
-            "Hooks for everything; prompting is simply unreliable",
-            "Hooks for compliance invariants; prompting for judgment",
-            "Prompting for tool use; hooks for anything text-shaped",
-            "Hooks belong to Domain 1; prompting belongs to Domain 3"
+            "Hooks handle every reliability gap; prompting is considered inherently too unreliable to depend on.",
+            "Hooks enforce compliance invariants, while prompting teaches judgment calls, like when to escalate.",
+            "Prompting governs tool-use decisions while hooks apply to anything that involves free text.",
+            "Hooks are reserved for one part of the curriculum, and prompting belongs to an entirely separate one."
           ],
           "correct": 1,
-          "explain": "The dividing line the exam keeps drawing: invariants are enforced, judgment is taught."
+          "explain": "The dividing line is what kind of failure you're dealing with: hooks enforce compliance invariants deterministically, while prompting — with escalation criteria and examples — teaches judgment calls like when to hand a conversation to a human, since no hook can supply that kind of taste. Treating hooks as the answer to every gap ignores that some failures simply aren't rule violations. The tool-use-versus-free-text split and the curriculum-domain split both describe distinctions that don't actually correspond to how this choice gets made."
         }
       ]
     }

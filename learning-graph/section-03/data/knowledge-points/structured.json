@@ -13,27 +13,27 @@
           "questions": [
             {
               "id": "q_prefill_1a",
-              "q": "Claude keeps wrapping requested JSON in a sentence of explanation. Which two moves remove it?",
+              "q": "Your invoice-extraction endpoint asks Claude for 'JSON only, no explanation,' but production logs show roughly 30% of responses still open with a sentence like 'Here is the extracted JSON:' before the object, breaking your json.loads() parser. Which pair of changes would most reliably eliminate this preamble?",
               "options": [
-                "Lower the temperature and raise max_tokens",
-                "Prefill with an opening fence; stop on close",
-                "Move the request into the system prompt block",
-                "Enable streaming and parse the first delta"
+                "Prefill the assistant turn with an opening ```json fence so the response continues from there, and add a stop_sequence on the closing fence to cut off trailing commentary.",
+                "Lower the temperature toward zero and increase max_tokens so the model has more room and less randomness to settle into a clean, fully structured JSON response.",
+                "Move the 'JSON only' instruction out of the user turn and into the system prompt, where Claude is expected to treat formatting rules as strictly binding on every turn.",
+                "Enable streaming and parse only the first delta chunk returned, since the preamble sentence is assumed to be generated only after the JSON object has already begun."
               ],
-              "correct": 1,
-              "explain": "Prefill kills the opening preamble; the stop sequence kills the trailing commentary."
+              "correct": 0,
+              "explain": "Prefilling the assistant turn with the fence removes the preamble because Claude continues the turn rather than starting fresh, and the stop sequence trims anything that would follow the JSON. Lowering temperature and adding tokens changes how confidently text is generated but does nothing to stop a preamble sentence from being produced in the first place. Relocating the instruction to the system prompt still leaves compliance probabilistic — the same 'ask nicely' approach from a different slot. And streaming doesn't change generation order: the preamble sentence is produced before the JSON, not after, so parsing only the first chunk would capture the sentence, not the object."
             },
             {
               "id": "q_prefill_1b",
-              "q": "How does prefilling actually suppress the preamble?",
+              "q": "A teammate claims that prefilling the assistant turn works by sending a hidden instruction that tells Claude to skip its usual preamble. You test this and find the preamble disappears even though no such instruction is added anywhere in the request. What actually explains why prefill suppresses it?",
               "options": [
-                "It instructs Claude never to write one",
-                "It strips the preamble server-side first",
-                "It sets stop_reason to stop_sequence at once",
-                "Claude continues from the assistant text"
+                "The API detects the prefilled text and automatically instructs the model server-side to omit any introductory sentences it would otherwise have generated.",
+                "Prefilling forces stop_reason to resolve to stop_sequence immediately, before any preamble tokens have a chance to be generated at all.",
+                "Claude continues generating from the exact text you supplied, so a turn that already opens with a fence has no place left for a preamble sentence to go.",
+                "Prefilling strips any preamble tokens Claude generates before they are included in the returned response content sent back to the caller."
               ],
-              "correct": 3,
-              "explain": "It is continuation, not instruction. The turn has already started, and it started with a fence."
+              "correct": 2,
+              "explain": "Prefill is continuation, not instruction: the assistant turn already begins mid-structure, so there is no sentence-starting position left for a preamble to occupy. There's no server-side detection or instruction-injection happening — the API doesn't rewrite your request based on prefilled content. stop_reason only becomes stop_sequence once generation actually reaches your stop string, which happens after the JSON, not instead of the preamble. And nothing is stripped after the fact — the model simply never produces preamble tokens because generation started somewhere past where they would go."
             }
           ]
         }
@@ -41,27 +41,27 @@
       "reviewQuestions": [
         {
           "id": "r_prefill_1",
-          "q": "Besides JSON, what else can prefill plus a stop sequence constrain?",
+          "q": "Your team wants to reuse the prefill-plus-stop-sequence technique from your JSON extraction endpoint on two new endpoints: one that returns Python code snippets, and one that returns CSV rows. A reviewer says the technique only works for JSON responses. Is the reviewer right?",
           "options": [
-            "Nothing — the technique is JSON-specific",
-            "Code, lists, or CSV — anything delimited",
-            "Only output whose length is known first",
-            "Only tool inputs, never the text output"
+            "Yes — prefill and stop sequences only work for JSON because the API validates the closing fence against the JSON Schema before returning the response.",
+            "No — the technique works for any output with an unambiguous opening and closing delimiter, so fenced code blocks and CSV rows can use the same approach as JSON.",
+            "Only partially — prefill still works for code and CSV, but a stop sequence can only be defined as a single-character delimiter like a closing brace.",
+            "No, but only for outputs whose total length is known in advance, since the stop sequence needs a fixed number of tokens to search across."
           ],
           "correct": 1,
-          "explain": "The requirement is an unambiguous delimiter to open with and stop on, not a particular format."
+          "explain": "The requirement is a delimiter, not a format: anything you can open with a known prefix and close with a known suffix — a code fence, a CSV header line, a closing bracket — works the same way JSON's fence does. There's no JSON Schema validation involved in stop sequences at all, so that claim invents a mechanism that isn't part of how prefill works. Stop sequences aren't limited to single characters either; they can be any string, including a full closing fence like triple backticks. And nothing about the technique depends on knowing output length ahead of time — generation simply halts whenever the stop string appears."
         },
         {
           "id": "r_prefill_2",
-          "q": "Which stop_reason do you expect on a successful prefill-and-stop extraction?",
+          "q": "You're debugging an extraction pipeline that uses prefill plus a stop_sequence on the closing fence. A run completes normally and the returned JSON parses without error. Which stop_reason value should you expect to see in the API response for that run?",
           "options": [
-            "stop_sequence",
-            "end_turn",
-            "max_tokens",
-            "tool_use"
+            "end_turn, because the model considers the JSON object a complete, well-formed response on its own, with nothing left to generate.",
+            "tool_use, because returning structured JSON is treated internally the same way as a tool call would be, even without a defined tool.",
+            "max_tokens, because the fence-and-stop pattern is designed to cap generation length rather than to match a specific string.",
+            "stop_sequence, because generation halted the moment the model produced the string you supplied as the stop condition."
           ],
-          "correct": 0,
-          "explain": "Generation ended because it hit the string you supplied."
+          "correct": 3,
+          "explain": "stop_sequence is reported specifically when generation halts because it matched one of the strings you passed in stop_sequences — exactly what happens when the closing fence appears. end_turn is what you'd see if the model decided on its own that the response was finished, which isn't what's driving termination here. tool_use only appears when the model actually invokes a defined tool, and no tool is involved in a prefill-based text extraction. max_tokens would indicate the response was cut off for hitting the token limit, a failure mode you want to avoid, not the expected outcome of a clean stop-sequence match."
         }
       ]
     },
@@ -76,27 +76,27 @@
           "questions": [
             {
               "id": "q_schemaout_1a",
-              "q": "Why prefer a tool schema over prefill for high-accuracy production extraction?",
+              "q": "Your invoice extractor currently uses prefill-and-stop-sequence and mostly works, but roughly 2% of responses still return slightly malformed JSON that fails to parse. A teammate suggests switching to a tool whose input_schema describes the invoice fields instead. What is the actual advantage of that approach for this production case?",
               "options": [
-                "It costs noticeably fewer output tokens",
-                "Tool calls are run on a more capable model",
-                "The shape is declared and validated, not hoped",
-                "Prefill is unavailable once tools are defined"
+                "Tool calls execute against a more capable internal model variant, which produces more accurate field extraction than a prefilled text response would generate.",
+                "The schema declares the output's structure, and the API validates the tool_use input against it, catching malformed shapes instead of hoping they won't occur.",
+                "Defining a tool automatically reduces the number of output tokens generated, which lowers the chance of a truncated, unparsable response overall.",
+                "Once any tool is defined for a request, prefilling the assistant turn is disabled entirely, forcing the model onto the more reliable tool-calling path."
               ],
-              "correct": 2,
-              "explain": "A schema turns 'please return this shape' into a contract the API checks."
+              "correct": 1,
+              "explain": "A tool's input_schema is a declared contract that the API validates the tool_use input against, so a malformed shape gets caught rather than slipping through as parse-breaking text — that is the real gap prefill can't close. There's no separate, more-capable model invoked for tool calls; it's the same model responding in a different format. Defining a tool doesn't inherently shrink output token counts either — the fields still need to be generated, just as structured arguments instead of prose. And prefill isn't disabled by defining tools; the two techniques are independent, even though you'd typically pick one for a given response."
             },
             {
               "id": "q_schemaout_1b",
-              "q": "When is a generic to_json-style tool the better choice over a dedicated schema?",
+              "q": "Two teams are building extraction endpoints. Team A is prototyping a new document type and expects the fields they care about to change weekly as they learn what's useful. Team B has a stable, high-accuracy production endpoint for invoices that has been unchanged for months. Which team should reach for a generic to_json-style tool rather than a dedicated schema?",
               "options": [
-                "For complex, high-accuracy production work",
-                "Whenever more than three fields are needed",
-                "When the output has to be deeply nested JSON",
-                "For prototypes, or requirements still moving"
+                "Team A — a generic tool suits prototyping and requirements that are still moving, while a dedicated schema fits Team B's stable, production case better.",
+                "Team B — a generic tool is best once an endpoint is stable and unchanging, since there is no further need to keep updating the schema at all.",
+                "Both teams — a generic to_json tool is strictly better in every case because it removes the maintenance burden of hand-written schemas entirely.",
+                "Neither team — generic tools should only be used when no schema validation is needed at all, which applies to neither scenario here."
               ],
-              "correct": 3,
-              "explain": "Generic for speed and churn; dedicated for accuracy and stability."
+              "correct": 0,
+              "explain": "A generic tool is the better fit exactly when requirements are still changing and speed of iteration matters more than tight validation — that's Team A's situation. Team B's endpoint is the opposite case: stable and high-accuracy, which is what a dedicated schema is suited for, so assigning the generic tool there gets it backwards. It isn't strictly better in all cases either — a dedicated schema catches malformed output more precisely, which production work benefits from. And both scenarios still want some schema validation; the choice is which shape of schema to use, not whether to validate at all."
             }
           ]
         },
@@ -108,27 +108,27 @@
           "questions": [
             {
               "id": "q_schemaout_2a",
-              "q": "Your extraction tool returns a well-formed record with a total that is off by a factor of ten. What failed?",
+              "q": "An invoice's total reads $12,340.00, but your extraction tool returns a well-formed record with total_cents: 123400 — off by a factor of ten from the correct 1,234,000. The record passes schema validation without any errors. What actually failed here?",
               "options": [
-                "Nothing in the schema; correctness is yours",
-                "The schema — it should have bounded the range",
-                "The tool_choice setting was set wrongly",
-                "The model tier was too small for the maths"
+                "The input_schema, because it should have included a numeric range constraint bounding total_cents to a plausible range of invoice amounts.",
+                "The tool_choice setting, because forcing the tool only ran validation on presence and type instead of on the correctness of values.",
+                "The underlying model tier, because correctly extracting a ten-fold amount requires a larger model than the one used for this call.",
+                "Nothing at the schema level — the record was well-formed, and only application-level validation against the source would have caught the error."
               ],
-              "correct": 0,
-              "explain": "Shape passed because the shape was fine. Only application-level validation catches a wrong-but-well-typed value."
+              "correct": 3,
+              "explain": "The schema's job is to check that total_cents is present and is an integer, both of which were true here, so it passed — the error is a wrong-but-well-typed value, which only application code cross-checking the value against the source document can catch. A range constraint might rule out some implausible values but wouldn't reliably catch an off-by-ten error that's still numerically plausible for an invoice, so narrowing the schema isn't the real fix. Presence and type checks in the schema aren't tied to tool_choice, which governs whether and which tool gets called, not what gets checked inside the call. And this isn't a model-capacity problem — the failure is a missing validation step, not a math limitation of the model tier."
             },
             {
               "id": "q_schemaout_2b",
-              "q": "Which check does a JSON Schema perform?",
+              "q": "You're listing out which checks belong in your invoice tool's JSON Schema versus which belong in your application's post-extraction validation code. Which of the following is actually something the JSON Schema itself checks?",
               "options": [
-                "That a supplied date is in the future",
-                "That an identifier exists in your database",
-                "That a field is present and typed right",
-                "That a total matches the sum of line items"
+                "That the extracted due_date value falls in the future relative to today's date on the calendar.",
+                "That the extracted invoice_number matches a record already stored in your customer database.",
+                "That a required field like total_cents is present in the response and typed as an integer.",
+                "That the total_cents value matches the sum of the invoice's individual line items exactly."
               ],
               "correct": 2,
-              "explain": "Presence and type — structure. The other three are business rules."
+              "explain": "Presence and type checks are exactly what a JSON Schema is designed to enforce — required fields exist, and their values match the declared type. Whether a date is in the future, whether an identifier matches your database, and whether a total reconciles with line items are all business rules about the meaning of the values, not their shape, so none of them are things a schema checks — they belong in application-level validation instead."
             }
           ]
         }
@@ -136,15 +136,15 @@
       "reviewQuestions": [
         {
           "id": "r_schemaout_1",
-          "q": "What is the relationship between the tool you define for structured output and a real function?",
+          "q": "You're defining a record_invoice tool purely so Claude has a typed shape to fill when extracting invoice data — there's no invoicing system for it to actually call. A reviewer objects that every tool definition must correspond to a real function the API will invoke server-side. Is the reviewer correct?",
           "options": [
-            "There must be a function; the API calls it",
-            "The function must return the declared schema",
-            "The function is run server-side by Anthropic",
-            "There need not be one; it is a typed shape"
+            "No — a tool used for structured output need not correspond to any real function; it exists only to give the model a typed shape, read off the tool_use block.",
+            "Yes — the Claude API executes the named function server-side and returns its result as part of the response, so an implementation is required for this to work.",
+            "Partially — a stub function is required, but it can simply return the same input it received without performing any real work of its own.",
+            "Yes, but only for tools with more than a handful of properties, where the API needs a real implementation to validate nested structures correctly."
           ],
-          "correct": 3,
-          "explain": "It is a contract, not necessarily an implementation. You read the tool_use input and never dispatch anything."
+          "correct": 0,
+          "explain": "There need not be a real function behind a structured-output tool at all — it's a contract describing the shape you want, and your application code reads the arguments straight off the tool_use block without calling anything. The Claude API never executes functions server-side; all tool execution, if any happens, is the caller's responsibility, which rules out the idea that an implementation is required. A stub isn't needed either, since there's no dispatch step waiting to invoke one. And schema size has nothing to do with whether an implementation exists — validation of the shape happens the same way regardless of how many properties are declared."
         }
       ]
     },
@@ -159,27 +159,27 @@
           "questions": [
             {
               "id": "q_toolchoice_1a",
-              "q": "An endpoint must always return a filled-in record, never prose. Which tool_choice?",
+              "q": "Your extraction endpoint has two tools defined: record_invoice, which captures structured invoice fields, and flag_for_review, used for genuinely unreadable documents. The endpoint must always call record_invoice for every input — flagging is not a valid response here. With tool_choice set to auto, roughly 8% of malformed-but-readable invoices come back as a plain-text explanation instead of either tool being called. Which tool_choice setting guarantees record_invoice is the tool called every time?",
               "options": [
-                "The specific tool, named outright — forced",
-                "auto, so Claude can decline on bad input",
-                "any, so Claude picks the closest tool it has",
-                "auto, plus an instruction to always use it"
+                "any, so Claude is required to call some tool, whether that turns out to be record_invoice or flag_for_review, depending on the input.",
+                "auto, combined with a stronger system-prompt instruction telling Claude to always call record_invoice regardless of input quality.",
+                "auto, with a lower temperature so Claude converges more consistently on calling record_invoice instead of answering in prose.",
+                "record_invoice, named directly in tool_choice, since naming a tool is the only setting that guarantees that exact tool gets called."
               ],
-              "correct": 0,
-              "explain": "Naming the tool is the only setting that guarantees that tool gets called."
+              "correct": 3,
+              "explain": "Naming record_invoice directly is the only setting that guarantees that exact tool is what gets called, which is what this endpoint requires. any would guarantee a tool call but not which one — Claude could still call flag_for_review, which doesn't satisfy the requirement. Keeping auto and adding a stronger instruction still leaves the choice probabilistic, which is exactly the behavior producing the 8% prose responses. And temperature affects how confidently tokens are sampled; it has no effect on whether tool_choice: auto decides to invoke a tool versus answer in prose."
             },
             {
               "id": "q_toolchoice_1b",
-              "q": "What does tool_choice: \"any\" guarantee?",
+              "q": "You're building a research agent with three tools: search_web, search_docs, and search_code. For a general query, you want to guarantee the agent calls one of these three tools rather than answering directly from its own knowledge, but you're fine with the agent deciding which of the three is most relevant. Which tool_choice setting matches this requirement?",
               "options": [
-                "Every defined tool gets called exactly once",
-                "Some tool is called; Claude picks which",
-                "One specific named tool is always called",
-                "No tool unless the input is unambiguous"
+                "The specific tool most likely to apply, forced by name, guaranteeing that exact tool and none of the other two is ever called.",
+                "any, which guarantees some one of the three tools is called on every turn, while leaving the choice of which tool entirely to Claude.",
+                "auto, which guarantees a tool is called whenever Claude judges the query to be search-related, and prose is returned otherwise.",
+                "any, which guarantees all three tools are called in sequence so their results can be compared before Claude answers."
               ],
               "correct": 1,
-              "explain": "any requires a tool call without dictating which one."
+              "explain": "any is exactly the setting for 'a tool must be called, but which one is up to the model' — it guarantees some tool call without dictating which of the three fires. Naming one specific tool would guarantee that tool only, which is stronger than needed here and would prevent the agent from picking search_docs or search_code when either is the better fit. auto doesn't guarantee anything — it explicitly allows Claude to skip tools entirely and answer in prose, which is the outcome this requirement rules out. And any doesn't call every defined tool; it guarantees one call, not a sweep across all of them."
             }
           ]
         }
@@ -187,15 +187,15 @@
       "reviewQuestions": [
         {
           "id": "r_toolchoice_1",
-          "q": "Your extraction endpoint is on tool_choice auto and returns prose on roughly one request in twenty. What is the fix?",
+          "q": "A support-ticket triage endpoint uses tool_choice: auto with a single tool, classify_ticket. In production it returns a plain-text response instead of calling the tool on roughly 1 in 20 requests, breaking the downstream router that expects a structured category every time. What is the most reliable fix?",
           "options": [
-            "Lower temperature, for a steadier choice",
-            "Improve the tool description, keep auto",
-            "Force the tool by name; it is guaranteed",
-            "Retry any prose response until it works"
+            "Lower the temperature so Claude settles into calling classify_ticket more consistently across requests over time.",
+            "Rewrite the tool's description to more clearly explain when classify_ticket applies, while keeping tool_choice on auto.",
+            "Set tool_choice to name classify_ticket directly, since forcing it is a guarantee rather than a probabilistic nudge.",
+            "Add retry logic that resubmits the request whenever a prose response comes back, until a tool call is finally returned."
           ],
           "correct": 2,
-          "explain": "If a record is mandatory, do not leave it to judgement. Forcing it is a guarantee rather than a nudge."
+          "explain": "Naming classify_ticket directly in tool_choice guarantees it fires on every request — the router needs a structured category every time, and that's exactly what forcing the tool provides instead of hoping for it. Lowering temperature might nudge the failure rate down but doesn't eliminate the underlying possibility of a prose response, since auto never rules that outcome out entirely. A clearer tool description can help auto perform better on average, but it's still a probabilistic improvement, not a guarantee. And retrying on prose responses adds latency and cost to paper over a problem that a single settings change removes outright."
         }
       ]
     }

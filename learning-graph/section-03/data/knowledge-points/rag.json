@@ -13,27 +13,27 @@
           "questions": [
             {
               "id": "q_whyrag_1a",
-              "q": "Aside from length limits and cost, what is wrong with stuffing everything into the prompt?",
+              "q": "An engineering team attaches their full 40-page product manual to every prompt. Requests complete well within the context window, cost stays within budget, and latency is unaffected — yet answers are noticeably worse than a version that retrieves and sends only the two or three relevant sections. No length error is ever thrown. What explains the quality drop?",
               "options": [
-                "The API rejects prompts over a threshold",
-                "Effectiveness degrades on very long prompts",
-                "Long prompts simply cannot be cached at all",
-                "Claude reads only the first and last parts"
+                "The manual exceeds a per-request chunk limit, so the excess content is silently truncated before Claude ever receives it.",
+                "Attaching the same lengthy manual to every request pushes the account over its per-minute token rate limit during peak hours.",
+                "Even safely inside the length limit, a long prompt still degrades the model's effectiveness relative to a short, relevant one.",
+                "The manual was chunked using a structure-based strategy that assumes headers, corrupting the content Claude ultimately receives."
               ],
-              "correct": 1,
-              "explain": "Degradation on length is a quality argument, not just a capacity one."
+              "correct": 2,
+              "explain": "The stated quality problem with stuffing everything into the prompt isn't only about hitting a hard limit — even comfortably inside it, a very long prompt is measurably less effective than a short, relevant one. No truncation is occurring here, since no length error appears. A rate-limit issue would show up as failed or delayed requests, not a quiet quality drop, and nothing in the scenario points to a broken chunking step, since the manual is attached whole rather than chunked at all."
             },
             {
               "id": "q_whyrag_1b",
-              "q": "Which is a stated challenge of RAG rather than a benefit?",
+              "q": "A team evaluating whether to adopt RAG lists its trade-offs. One item reads: 'a chunk retrieved in isolation can be missing the surrounding material that made it interpretable in the first place.' Which category does this item belong to?",
               "options": [
-                "It focuses Claude on relevant content",
-                "It scales out to a great many documents",
-                "Chunks might lose the context they needed",
-                "It is both cheaper and faster to run overall"
+                "A stated cost — chunking cuts a document apart, so a retrieved chunk can lose the surrounding context it needed.",
+                "A stated benefit — narrowing retrieval to individual chunks focuses Claude only on content relevant to the question asked.",
+                "A stated benefit — breaking documents into smaller chunks lets RAG scale to corpora far too large for any single prompt.",
+                "A stated cost — RAG requires an upfront preprocessing step that chunks every document before any of it can be indexed."
               ],
-              "correct": 2,
-              "explain": "Cutting a document up can cut a chunk off from what made it interpretable — the problem contextual retrieval later fixes."
+              "correct": 0,
+              "explain": "This is one of RAG's stated costs: because chunking splits a document apart, a retrieved chunk can end up missing the surrounding material that made it interpretable — the exact problem that later motivates contextual retrieval. It isn't a benefit; the benefits listed are focusing Claude on relevant content, scaling to large corpora, and being cheaper and faster to run. The other real cost, needing a chunking step up front, describes the work of preparing chunks, not the specific risk of a chunk losing context once it's retrieved."
             }
           ]
         }
@@ -41,15 +41,15 @@
       "reviewQuestions": [
         {
           "id": "r_whyrag_1",
-          "q": "What does RAG actually do?",
+          "q": "A new team member, having only heard the term 'RAG' in passing, guesses that it works by compressing long documents so more content fits inside the prompt. A teammate corrects them. Which description accurately captures what RAG actually does?",
           "options": [
-            "Compresses documents so that more fits in",
-            "Summarises the conversation once it grows",
-            "Chunks documents; includes only relevant ones",
-            "Moves documents to a store Claude queries"
+            "It compresses documents algorithmically so a greater volume of content fits within the same prompt length.",
+            "It summarizes the ongoing conversation once it grows past a certain length, freeing up context space.",
+            "It moves documents into an external store that Claude queries directly during generation, bypassing the prompt.",
+            "It breaks documents into chunks ahead of time and includes only the chunks relevant to the current question."
           ],
-          "correct": 2,
-          "explain": "Chunk and select. Compression is a different idea, and summarising history is compaction."
+          "correct": 3,
+          "explain": "RAG's actual mechanism is chunk-then-select: documents are broken into chunks ahead of time, and only the chunks relevant to the current question are included in the prompt. It isn't compression — no information-preserving shrinking happens, chunks are either included whole or left out. Summarizing conversation history as it grows is a different technique, compaction, not RAG. And Claude doesn't query an external store directly mid-generation; retrieval happens before the prompt is assembled, not during generation itself."
         }
       ]
     },
@@ -64,27 +64,27 @@
           "questions": [
             {
               "id": "q_chunk_1a",
-              "q": "Which chunking strategy is the production default, and why?",
+              "q": "Your retrieval pipeline ingests three very different corpora: cleanly formatted markdown docs, scraped HTML pages with no consistent headers, and raw source code files. You need one chunking strategy that will not fail outright on any of them, even if it isn't always the most semantically clean split. Which strategy should you default to, and why?",
               "options": [
-                "Semantic — it gives the most relevant chunks",
-                "Size-based with overlap — simple and reliable",
-                "Structure-based — it gives the cleanest chunks",
-                "Sentence-based — it never cuts a sentence"
+                "Structure-based splitting on headers, because consistent document structure produces the cleanest possible chunk boundaries.",
+                "Size-based chunking with overlap, because it works reliably on markdown, unstructured HTML, or code without depending on formatting.",
+                "Semantic chunking, because grouping sentences by NLP-measured relatedness produces the most relevant chunks regardless of source format.",
+                "Sentence-based chunking with a regex splitter, because grouping several sentences per chunk is a safe middle ground for prose."
               ],
               "correct": 1,
-              "explain": "Reliability across arbitrary input beats chunk quality on a well-behaved subset."
+              "explain": "Size-based chunking with overlap is the default because it degrades gracefully everywhere — code, scraped text, and formatted docs alike — never depending on an assumption that might not hold. Structure-based splitting produces cleaner chunks, but only when headers are actually consistent, which scraped HTML and code cannot guarantee. Semantic chunking gives the most relevant chunks but at a computational cost that isn't justified when the input mix is this varied, and sentence-based chunking doesn't handle code, which has no sentence structure to regex against."
             },
             {
               "id": "q_chunk_1b",
-              "q": "What makes structure-based chunking risky?",
+              "q": "A team switches their chunker to split on markdown headers because it produced noticeably cleaner chunks in testing on their internal wiki. Three months later, a new content source — PDFs converted to plain text with no header markup — is added, and retrieval quality drops sharply for that source. What underlying risk surfaced here?",
               "options": [
-                "It is computationally rather expensive",
-                "It cannot make use of any chunk overlap",
-                "It makes the chunks too large to embed",
-                "It assumes formatting that may not hold"
+                "Header-based splitting is computationally expensive at ingestion scale, so it should never be applied to plain-text sources.",
+                "Chunk overlap cannot be combined with structure-based splitting, so sentences at header boundaries are silently lost.",
+                "Structure-based chunking's clean output depends entirely on the source actually containing the formatting it splits on.",
+                "Splitting on headers produces chunks too large for the embedding model's input limit, causing silent truncation."
               ],
-              "correct": 3,
-              "explain": "It is only as reliable as the formatting assumption behind it."
+              "correct": 2,
+              "explain": "Structure-based chunking is only as reliable as the assumption that the document actually contains the structure being split on; when a source like plain-text PDFs has no header markup, the strategy has nothing to split on and quality collapses. It isn't a matter of computational cost — that concern applies to semantic chunking, not structure-based. Overlap and embedding input-size limits are unrelated to why this particular source performed badly."
             }
           ]
         }
@@ -92,27 +92,27 @@
       "reviewQuestions": [
         {
           "id": "r_chunk_1",
-          "q": "What is overlap for in size-based chunking?",
+          "q": "A size-based chunker splits a support article into fixed 500-token chunks with 50-token overlap between consecutive chunks. Without the overlap, a sentence describing the refund eligibility window would be split exactly at the chunk boundary, with half landing in each neighboring chunk. What problem is the overlap specifically solving here?",
           "options": [
-            "Keeping a sentence whole across the cut",
-            "Raising recall by duplicating content",
-            "Making every chunk exactly one length",
-            "Reducing the total number of chunks made"
+            "It ensures a sentence cut by a fixed-length boundary still appears whole in at least one of the two adjacent chunks.",
+            "It raises recall by duplicating high-value content across every chunk in the document, not just adjacent ones.",
+            "It guarantees every chunk ends up exactly the same token length, no matter where the sentence boundaries happen to fall.",
+            "It reduces the total number of chunks the document produces, lowering the number of embeddings that must be stored."
           ],
           "correct": 0,
-          "explain": "A fixed-length cut lands mid-sentence sooner or later; overlap means the sentence survives in one of the two chunks."
+          "explain": "Overlap exists because a fixed-length cut will eventually land in the middle of a sentence; repeating the tail of one chunk at the start of the next means that sentence survives intact in at least one of them. It doesn't duplicate content across the whole document, only at the boundaries where a cut could otherwise split something apart. Chunk length still varies by content, and overlap actually increases the number of chunks and stored embeddings rather than reducing them."
         },
         {
           "id": "r_chunk_2",
-          "q": "Which strategy is described as most relevant but computationally expensive?",
+          "q": "Your team is evaluating chunking strategies for a corpus where retrieval quality matters more than latency or cost — an internal legal research tool where analysts already wait for results. One candidate uses NLP to measure how related consecutive sentences are and groups accordingly, producing the most contextually coherent chunks of the four options at the price of being the most computationally expensive. Which strategy is this?",
           "options": [
-            "Semantic",
-            "Size-based",
-            "Structure-based",
-            "Sentence-based"
+            "Size-based chunking, which favors simplicity and reliability over any individual chunk's semantic coherence.",
+            "Structure-based chunking, which relies on the document's own headers to produce clean, well-defined chunk boundaries.",
+            "Sentence-based chunking, which groups a fixed number of sentences per chunk with overlap between groups.",
+            "Semantic chunking, which measures relatedness between consecutive sentences and groups by that relatedness."
           ],
-          "correct": 0,
-          "explain": "Semantic chunking uses NLP to group by relatedness — best chunks, highest cost and complexity."
+          "correct": 3,
+          "explain": "Semantic chunking is the strategy described — it uses NLP to measure how related consecutive sentences are and groups accordingly, producing the most contextually coherent chunks but at the highest complexity and cost of the four. Size-based chunking optimizes for reliability across any input, not for coherence. Structure-based chunking depends on header markup rather than measured relatedness. Sentence-based chunking groups by a fixed sentence count, not by how related the sentences actually are."
         }
       ]
     },
@@ -127,27 +127,27 @@
           "questions": [
             {
               "id": "q_embed_1a",
-              "q": "Where do embeddings come from in this stack?",
+              "q": "Your team is standing up a RAG pipeline built entirely around Claude for generation. When it comes time to embed the document chunks for semantic search, an engineer assumes they can reuse the same Anthropic API key already used for Claude, since everything else in the stack is Anthropic end to end. What will they actually need to set up?",
               "options": [
-                "VoyageAI, with its own account and key",
-                "The Anthropic embeddings endpoint itself",
-                "Computed client-side by the SDK for you",
-                "The Files API generates them on upload"
+                "Nothing extra — the Messages API accepts an `embeddings: true` flag that returns a vector alongside the completion.",
+                "A separate VoyageAI account and key, since Anthropic has no embeddings endpoint and recommends VoyageAI for that purpose.",
+                "A client-side embedding computed locally by the SDK's built-in tokenizer, avoiding any additional API account or key.",
+                "The Files API, which automatically generates and stores embeddings for any document uploaded to it for later retrieval."
               ],
-              "correct": 0,
-              "explain": "Anthropic does not provide embeddings; VoyageAI is the recommended provider."
+              "correct": 1,
+              "explain": "Anthropic does not provide an embeddings endpoint, so this step genuinely requires a separate provider — VoyageAI is the one Anthropic recommends, with its own account and a distinct key such as VOYAGE_API_KEY. There is no embeddings flag on the Messages API, no local SDK computation of embeddings, and the Files API only stores and serves files rather than generating vectors from them. It's the one part of an otherwise Anthropic-only stack that needs an outside service, which is exactly why it trips people up."
             },
             {
               "id": "q_embed_1b",
-              "q": "What can you read off an individual embedding dimension?",
+              "q": "A developer debugging poor retrieval results opens the raw embedding vector for a chunk and inspects a single dimension, hoping to find that it correlates with something like 'formality' or 'topic category' so they can adjust it directly. What should they expect to find?",
               "options": [
-                "The source document's overall topic",
-                "A sentiment score between −1 and +1",
-                "The chunk's position in the source",
-                "Nothing human-interpretable at all"
+                "A sentiment score for the chunk's overall tone, ranging from roughly −1 for negative to +1 for positive language.",
+                "The chunk's relative position within the source document, encoded as a normalized fraction between 0 and 1.",
+                "Nothing individually interpretable — meaning lives in the relationship between whole vectors, not one dimension.",
+                "The document's overall topic category, since each dimension corresponds to one topic the model recognizes."
               ],
-              "correct": 3,
-              "explain": "The dimensions are not individually meaningful. Only distances between whole vectors carry information."
+              "correct": 2,
+              "explain": "Individual embedding dimensions are not human-interpretable — there's no dimension that reads as 'formality' or 'topic' on its own, so inspecting one dimension in isolation won't reveal anything meaningful. Sentiment, document position, and topic category are all appealing guesses, but none of them map onto a single coordinate the way a labeled feature would. What actually carries information is the distance between whole vectors, which is what semantic search relies on."
             }
           ]
         }
@@ -155,15 +155,15 @@
       "reviewQuestions": [
         {
           "id": "r_embed_1",
-          "q": "What does semantic search find that keyword search does not?",
+          "q": "A user types 'how do I get my money back?' into a support search box. The system returns a passage titled 'Refund Eligibility Requirements' that shares almost no vocabulary with the query — no 'money', no 'back', no 'get'. A plain keyword search on the same query returns nothing useful. What capability let the system make this match?",
           "options": [
-            "Exact identifiers and very rare terms",
-            "The most recently updated of documents",
-            "Chunks related in meaning, not wording",
-            "Chunks from the same document section"
+            "Semantic search, which compares embedding vectors so chunks related in meaning surface despite little shared vocabulary.",
+            "BM25, a lexical method that weights rare query terms far more heavily than common ones like 'how' or 'do'.",
+            "Reranking, which rescores an initial candidate set for how precisely each candidate actually answers the query asked.",
+            "Structure-based chunking, which grouped the refund passage under a header that matched the query's intent."
           ],
-          "correct": 2,
-          "explain": "Meaning over wording — which is also precisely why it misses exact strings."
+          "correct": 0,
+          "explain": "This is semantic search's defining capability — it compares meaning as encoded in embedding vectors, so a query and a passage can match despite sharing almost no words in common. BM25 is the opposite case: it's a lexical method that rewards shared rare terms, which is exactly what's missing here. Reranking only reorders candidates that retrieval already found, so it doesn't explain how the match happened in the first place, and structure-based chunking affects how the document was split, not how the query was matched to it."
         }
       ]
     },
@@ -178,27 +178,27 @@
           "questions": [
             {
               "id": "q_bm25_1a",
-              "q": "A user searches an exact incident ID and semantic search returns four thematically similar but wrong documents. What fixes it?",
+              "q": "Your incident-management search tool uses semantic embeddings exclusively. A support engineer searches for the exact ticket ID INC-2023-Q4-011 and gets back four incidents that are thematically similar to networking outages in general, but not the specific ticket they typed. Increasing embedding quality doesn't change the outcome. What retrieval mechanism actually solves this class of problem?",
               "options": [
-                "Reranking the semantic results returned",
-                "BM25, which matches rare terms literally",
-                "Smaller chunks with a lot more overlap",
-                "A more capable embedding model instead"
+                "Reranking the same semantic candidates with a second embedding-based pass to push the more relevant ones higher.",
+                "Shrinking the chunk size and increasing the overlap between chunks so the identifier appears inside more of them.",
+                "Switching to a larger, more capable embedding model trained on a broader vocabulary that includes more identifiers.",
+                "BM25, a lexical search that weights rare terms like this identifier heavily and matches it literally, not conceptually."
               ],
-              "correct": 1,
-              "explain": "Exact-term precision is a lexical problem. No embedding model fixes it, because the identifier has no meaning to embed."
+              "correct": 3,
+              "explain": "The identifier carries almost no conceptual meaning, so no amount of embedding quality will make semantic search retrieve it reliably — that's a categorical limitation, not a tuning problem. BM25 solves it because it's lexical: it weights rare terms far more heavily than common ones, and an identifier like INC-2023-Q4-011 is about as rare as a term gets. Reranking only reorders what semantic search already retrieved, so it inherits the same blind spot, and adjusting chunk size or overlap doesn't change what kind of similarity is being measured."
             },
             {
               "id": "q_bm25_1b",
-              "q": "In BM25, how are common words like “a” treated?",
+              "q": "You're implementing BM25 scoring for a document search feature. A query contains both the word 'a' and the term 'INC-2023-Q4-011'. Per BM25's term-weighting step, how should the scoring function treat these two terms relative to each other?",
               "options": [
-                "Given low weight; rarer terms score higher",
-                "Removed entirely before the scoring runs",
-                "Given high weight, being in every document",
-                "Weighted by their position in the query"
+                "Both terms should be weighted equally, since BM25 treats every token in the query the same way regardless of frequency.",
+                "'a' should receive almost no weight, since it appears in nearly every document, while the identifier scores near maximal weight.",
+                "'a' should be dropped from the query entirely before scoring runs, while the rare identifier is scored normally.",
+                "The identifier should be weighted by its position in the query, with later terms scoring higher regardless of rarity."
               ],
-              "correct": 0,
-              "explain": "Rarity drives weight. Common terms end up contributing almost nothing."
+              "correct": 1,
+              "explain": "BM25's term weighting is driven by rarity: a word like 'a' appears in nearly every document and so contributes almost nothing to the score, while a specific identifier that appears in very few documents scores close to maximal weight. Treating every term equally would defeat the entire mechanism, since rarity is the signal that lets BM25 find the one document that matters. Explicit stopword removal is a related but different technique from the down-weighting described here, and weighting by query position isn't part of how BM25 scores terms at all."
             }
           ]
         }
@@ -206,15 +206,15 @@
       "reviewQuestions": [
         {
           "id": "r_bm25_1",
-          "q": "What does BM25 stand for, and what kind of search is it?",
+          "q": "During a design review, a colleague describes a retrieval component as 'Best Match 25' and says it complements the team's embedding-based semantic search by handling queries embeddings are bad at, like exact identifiers and rare technical terms. Which description accurately characterizes what this component is and does?",
           "options": [
-            "Best Match 25 — lexical keyword search",
-            "Binary Match 25 — a quantisation scheme",
-            "Best Match 25 — a reranking model only",
-            "Balanced Metric 25 — a hybrid scorer"
+            "Best Match 25, a reranking model that rescoring semantic search's output rather than retrieving independently.",
+            "Balanced Metric 25, a hybrid scorer that blends lexical and semantic signals into one combined score.",
+            "Best Match 25, a lexical keyword search that weights rare query terms more heavily than common ones.",
+            "Binary Match 25, a quantization scheme used to compress embedding vectors before they are indexed."
           ],
-          "correct": 0,
-          "explain": "Best Match 25, and it is keyword search — the complement to semantic search, not a variant of it."
+          "correct": 2,
+          "explain": "Best Match 25 (BM25) is a lexical, keyword-based search method — it tokenizes the query and weights rarer terms more heavily, which is why it's the natural complement to embedding-based semantic search rather than a variant of it. It isn't a reranker: it retrieves independently rather than rescoring semantic search's candidates. It isn't a blended hybrid scorer either — hybrid search is the separate pattern of running BM25 and semantic search in parallel and merging results — and it has nothing to do with compressing or quantizing vectors."
         }
       ]
     },
@@ -229,27 +229,27 @@
           "questions": [
             {
               "id": "q_hybrid_1a",
-              "q": "Your corpus gets both prose questions and part numbers. What retrieval design covers both?",
+              "q": "Your company's internal search tool needs to handle two very different query types well: natural-language questions like 'how do I request time off' and exact part numbers like '88-4412-B' typed by warehouse staff. A pure semantic search deployment handles the first well but frequently misses the second. What retrieval architecture should you adopt to serve both without compromising either?",
               "options": [
-                "Semantic search with a wider candidate set",
-                "BM25 with query expansion on the front",
-                "Hybrid — semantic and BM25 merged together",
-                "Semantic search over contextual chunks"
+                "Hybrid search — run semantic search and BM25 in parallel on every query and merge their results.",
+                "Semantic search alone, but with the candidate set widened so exact-match part numbers are more likely to surface.",
+                "BM25 alone, with query expansion added on the front to help it handle natural-language questions.",
+                "Semantic search over chunks that have been run through contextual retrieval to add a situating sentence."
               ],
-              "correct": 2,
-              "explain": "Two retrievers, run together and merged. It is the standard production pattern."
+              "correct": 0,
+              "explain": "Hybrid search is designed for exactly this split — running semantic search and BM25 in parallel and merging the results gives conceptual relevance for natural-language questions and exact-term precision for identifiers like part numbers, in a single pass. Widening the semantic candidate set doesn't help, because the part number carries too little meaning for embeddings to rank it well regardless of how many candidates are considered. BM25 alone would handle the part numbers but struggle with conceptual questions, and contextual retrieval addresses chunks that lost their surrounding context, not the mismatch between lexical and conceptual queries."
             },
             {
               "id": "q_hybrid_1b",
-              "q": "How do the two retrievers run in hybrid search?",
+              "q": "A junior engineer implementing hybrid search proposes running BM25 first, then feeding only its top results into the semantic search step, to save on embedding computation. What is wrong with this compared to how hybrid search is meant to work, and how should the two retrievers actually be arranged?",
               "options": [
-                "Semantic first, then BM25 over its output",
-                "BM25 first, then semantic over its output",
-                "In parallel, with the two results merged",
-                "Whichever one returns first is the one used"
+                "BM25 should run first as proposed, since its results are a reliable prefilter for the semantic step that follows.",
+                "Semantic search should instead run first, with BM25 then applied only to whichever chunks semantic search already returned.",
+                "Whichever retriever returns faster for a given query should be used alone, with the other skipped entirely.",
+                "Both retrievers should run in parallel on the full corpus, independently, then have their result sets merged."
               ],
-              "correct": 2,
-              "explain": "In parallel. Chaining them would let the first stage's blind spot exclude what the second was for."
+              "correct": 3,
+              "explain": "Hybrid search runs semantic search and BM25 in parallel and merges the two independent result sets — that's what lets each one cover the other's blind spot. Chaining BM25 first would mean any chunk BM25's keyword matching missed is never even considered by semantic search, defeating the purpose of adding it. The reverse chaining has the same flaw in the other direction, and picking whichever retriever happens to finish first abandons the whole idea of combining their strengths for every query."
             }
           ]
         }
@@ -257,15 +257,15 @@
       "reviewQuestions": [
         {
           "id": "r_hybrid_1",
-          "q": "Why not simply improve the embedding model instead of adding BM25?",
+          "q": "A stakeholder asks why the team maintains two separate retrieval systems, semantic search and BM25, instead of just investing in a stronger embedding model that could, in principle, get better at everything including exact matches. What is the best response?",
           "options": [
-            "Better embeddings are simply unavailable",
-            "An identifier has little meaning to embed",
-            "Embeddings cannot be used with any overlap",
-            "BM25 is cheaper to run than embeddings"
+            "A stronger embedding model would work, but it has not yet been budgeted for this project's next quarter.",
+            "An exact identifier or part number carries almost no semantic meaning to embed, so no embedding model closes that gap.",
+            "Embeddings cannot be generated for chunks that use any amount of chunk overlap, so BM25 is required as a workaround.",
+            "BM25 is simply cheaper to run per query than computing embeddings, which is the only reason it's kept in the pipeline."
           ],
           "correct": 1,
-          "explain": "The failure is categorical rather than a matter of quality, so it needs a different mechanism."
+          "explain": "The gap isn't about embedding model quality — an identifier or part number has almost no conceptual meaning for an embedding to capture in the first place, so it's a categorical limitation rather than one a better model closes. Framing it as a budget question sidesteps that this isn't solvable by spending more on embeddings, and overlap is unrelated to whether embeddings can be generated at all. BM25 may also be cheap, but cost isn't why it's necessary here — the necessity comes from covering a class of query semantic search structurally can't."
         }
       ]
     },
@@ -280,27 +280,27 @@
           "questions": [
             {
               "id": "q_rerank_1a",
-              "q": "What is the division of labour between retrieval and reranking?",
+              "q": "Your retrieval pipeline pulls the top 30 candidates using a fast combination of embeddings and BM25, then passes them through a slower, more discriminating LLM-based scoring step before sending only the top 5 to Claude. A colleague asks why you need two stages instead of running the discriminating scorer against the whole corpus directly. How do the two stages actually divide the work?",
               "options": [
-                "Retrieval for precision, reranking for recall",
-                "Both aim at precision, at different scales",
-                "Retrieval for keywords, reranking semantics",
-                "Retrieval for recall, reranking for precision"
+                "Both stages optimize for precision, just applied at different scales — the first over the corpus, the second over the shortlist.",
+                "The first stage retrieves using keyword matching only, and the second stage then layers semantic understanding on top of that.",
+                "The first stage optimizes for recall, cheaply getting the right chunk in somewhere, and the second reranks it for precision.",
+                "The first stage scores relevance precisely, and the second stage merely reorders those scores for presentation to Claude."
               ],
-              "correct": 3,
-              "explain": "Cast a wide net cheaply, then judge carefully within it."
+              "correct": 2,
+              "explain": "The two stages have genuinely different jobs: the fast first pass is optimized for recall, casting a wide net across embeddings and BM25 to make sure the right chunk is somewhere in the top 20 to 50, while the slower second pass reranks that shortlist for precision, scoring each candidate's actual relevance. Running the precise scorer against the whole corpus directly is exactly what the two-stage design avoids, since scoring 500,000 candidates carefully isn't affordable. The first stage isn't keyword-only — it already combines embeddings and BM25 — and the second stage does real scoring, not just cosmetic reordering."
             },
             {
               "id": "q_rerank_1b",
-              "q": "Why is reranking never applied to the whole corpus?",
+              "q": "An engineer proposes skipping the initial retrieval stage entirely and running the reranking model directly against all 500,000 chunks in the corpus for every query, reasoning this guarantees the most relevant chunk is never missed. What is the practical problem with this proposal?",
               "options": [
-                "It needs embeddings the corpus may lack",
-                "It cannot score documents it has not seen",
-                "Corpus-wide, it would blow the context window",
-                "It costs real latency per candidate scored"
+                "Reranking scores each candidate individually, so running it against the full corpus multiplies per-query latency enormously.",
+                "The reranking model has never seen most of the corpus during training, so it cannot meaningfully score unfamiliar chunks.",
+                "Scoring the entire corpus in one pass would exceed Claude's context window long before any answer could be generated.",
+                "Embeddings would need to be regenerated across the whole corpus before reranking could even begin running against it."
               ],
-              "correct": 3,
-              "explain": "It is the expensive pass by design. The cheap retriever exists precisely to make its input small."
+              "correct": 0,
+              "explain": "Reranking is expensive precisely because it scores each candidate individually — that cost is affordable against a shortlist of 20 to 50 but becomes untenable at 500,000, which is why the cheap first-pass retriever exists to narrow the field before reranking ever runs. It isn't about the reranker being unfamiliar with unscored chunks; nothing about reranking depends on prior exposure to specific documents. It also isn't a context-window problem, since that only applies to what's sent to Claude after reranking, and reranking doesn't require regenerating embeddings at all."
             }
           ]
         }
@@ -308,15 +308,15 @@
       "reviewQuestions": [
         {
           "id": "r_rerank_1",
-          "q": "How large is the candidate set typically pulled before reranking?",
+          "q": "You're configuring a reranking stage for a new RAG pipeline. The design calls for a candidate set wide enough that the truly relevant chunk is very likely included, but narrow enough that scoring each one individually with an LLM or dedicated reranker stays affordable in latency terms. Roughly how many candidates should this initial retrieval stage typically pull?",
           "options": [
-            "Top 3–5",
-            "Top 500",
-            "Top 20–50",
-            "The entire corpus"
+            "Around 3 to 5 candidates, since reranking is assumed to already work best on a very narrow, pre-trimmed shortlist.",
+            "Around 500 candidates, which maximizes the odds that the truly relevant chunk gets captured somewhere in the set.",
+            "The entire corpus, since reranking is designed from the ground up to operate efficiently at full corpus scale.",
+            "Around 20 to 50 candidates — wide enough for likely recall, small enough to score each one carefully."
           ],
-          "correct": 2,
-          "explain": "Wide enough that the right chunk is very likely inside, small enough to score carefully."
+          "correct": 3,
+          "explain": "The typical candidate set is around 20 to 50 — wide enough that the relevant chunk is very likely somewhere inside it, but narrow enough that scoring each one carefully with a reranker remains affordable per query. A shortlist of only 3 to 5 risks recall, since the first-pass retriever isn't perfect and may have ranked the truly relevant chunk just outside that narrow a cut. Pulling 500 or the entire corpus defeats the purpose of having a cheap first stage at all — that's the expensive approach the two-stage design exists specifically to avoid."
         }
       ]
     },
@@ -331,27 +331,27 @@
           "questions": [
             {
               "id": "q_ctxret_1a",
-              "q": "How does contextual retrieval differ from reranking?",
+              "q": "Your team is deciding where an LLM call fits in the pipeline: contextual retrieval, which generates a short situating sentence for each chunk before indexing, versus reranking, which rescoring candidates for each incoming query. A cost-conscious stakeholder wants to understand how their operating costs compare at scale. What is the key difference in when each technique pays its LLM cost?",
               "options": [
-                "It runs once per chunk; reranking per query",
-                "It runs at query time; reranking at index",
-                "It uses BM25; reranking uses embeddings",
-                "It replaces the chunking step entirely"
+                "Contextual retrieval uses BM25 exclusively, while reranking relies entirely on embeddings, so their costs aren't comparable.",
+                "Contextual retrieval pays its LLM cost once per chunk at preprocessing time; reranking pays a fresh cost on every single query.",
+                "Contextual retrieval runs at query time to tailor each chunk to the specific question; reranking runs once during indexing.",
+                "Contextual retrieval replaces the chunking step entirely, so it has no separate cost beyond the chunking that already happens."
               ],
-              "correct": 0,
-              "explain": "Preprocessing-time fix versus query-time fix — pay once per chunk, or every time someone searches."
+              "correct": 1,
+              "explain": "The two techniques sit at opposite points in the pipeline's timeline: contextual retrieval generates its situating sentence once per chunk during preprocessing, so its LLM cost is paid a fixed number of times regardless of query volume, while reranking scores candidates fresh on every incoming query, so its cost scales with traffic. Describing one as BM25-only and the other as embeddings-only mischaracterizes both, since contextual retrieval actually improves both signals at once. Reversing the timing is backwards — the whole point is that it happens before anyone has asked a question — and it doesn't replace chunking, it's an additional step applied after chunks already exist."
             },
             {
               "id": "q_ctxret_1b",
-              "q": "Why does the situating sentence help BM25 as well as semantic search?",
+              "q": "A chunk from an earnings report reads only 'Revenue grew 3%' with no other identifying detail. After contextual retrieval, the chunk is prepended with a sentence naming the company, the fiscal quarter, and the business division, before either indexing method runs. Why does this preprocessing step improve results from BM25's keyword search, not just from semantic search?",
               "options": [
-                "It shortens the chunk, raising term density",
-                "It adds indexable keywords the chunk lacked",
-                "It normalises the whole chunk's vocabulary",
-                "It does not; it only helps semantic search"
+                "It shortens the effective chunk length, which raises the term-frequency density BM25 uses when scoring.",
+                "It normalizes vocabulary across the whole corpus so that BM25's term weighting becomes more consistent chunk to chunk.",
+                "It adds specific, indexable terms — like the company and quarter names — that the original chunk never contained.",
+                "It does not actually help BM25 at all; the benefit is limited entirely to semantic search's embedding step."
               ],
-              "correct": 1,
-              "explain": "Names that were never in the chunk become searchable terms."
+              "correct": 2,
+              "explain": "The situating sentence introduces concrete terms — the company name, the fiscal quarter, the division — that simply weren't present in the bare 'Revenue grew 3%' chunk, giving BM25 new keywords to index and match against a query that names any of them. It isn't about shortening the chunk or normalizing vocabulary across the corpus; the mechanism is additive, not compressive. And the benefit is explicitly not limited to semantic search — prepending the sentence before indexing strengthens both the embedding and the keyword signal at once."
             }
           ]
         }
@@ -359,15 +359,15 @@
       "reviewQuestions": [
         {
           "id": "r_ctxret_1",
-          "q": "What is passed to the LLM when generating a chunk's situating sentence?",
+          "q": "You're implementing the preprocessing step that generates each chunk's situating sentence before indexing. For a chunk reading 'Revenue grew 3%' pulled from a 40-page earnings report, what inputs does the LLM call need to produce a sentence identifying the company, quarter, and division the chunk is actually about?",
           "options": [
-            "The chunk on its own, and nothing else",
-            "The chunk and the user's eventual query",
-            "The chunk and its immediate neighbours",
-            "The chunk plus the document or a summary"
+            "The chunk itself, plus the full source document or a summary of it, giving the LLM surrounding context to draw from.",
+            "The chunk on its own, with no other input, since the LLM is expected to infer context from general world knowledge.",
+            "The chunk together with the eventual user query, so the situating sentence can be tailored to what is being asked.",
+            "The chunk together with its immediate neighboring chunks only, without needing access to the rest of the document."
           ],
-          "correct": 3,
-          "explain": "The whole document is what supplies the context the chunk lost — the query is not known yet at preprocessing time."
+          "correct": 0,
+          "explain": "Generating an accurate situating sentence requires the chunk plus the full document, or at least a summary of it, since that's where the missing identifying details — the company, the quarter, the division — actually live. The chunk alone gives the LLM nothing to identify those specifics from, and general world knowledge can't recover facts specific to this document. The user's query isn't available yet either, since this step runs at preprocessing time before anyone has asked a question, and neighboring chunks alone might not contain the identifying details if they live earlier in the document."
         }
       ]
     }

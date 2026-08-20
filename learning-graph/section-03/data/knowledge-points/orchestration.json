@@ -13,27 +13,27 @@
           "questions": [
             {
               "id": "q_wva_1a",
-              "q": "What single question separates a workflow design from an agent design?",
+              "q": "Your team is scoping a new automation: extracting structured line items from vendor invoices, where the invoice format, field names, and number of pages are known in advance and identical every time. A teammate argues this should be built as an agent with a broad toolset so it can 'figure things out.' Which single question would settle whether a workflow or an agent is the right design here?",
               "options": [
-                "Does the task need more than one call?",
-                "Can you picture the exact steps upfront?",
-                "Does the task require any tools at all?",
-                "Is the output structured or free-form?"
+                "Whether the exact steps required to complete the task can be pictured in advance.",
+                "Whether the task can be completed using more than one Claude call in sequence.",
+                "Whether the workflow needs access to any external tools during execution.",
+                "Whether the final output must be returned in a structured, machine-readable format."
               ],
-              "correct": 1,
-              "explain": "Knowability of the steps. Both may use several calls and both may use tools."
+              "correct": 0,
+              "explain": "Knowability of the steps is the deciding factor — since the invoice format and fields never change, the steps can be specified ahead of time, making this a workflow question regardless of how many calls or tools it uses. Needing more than one Claude call doesn't rule out a workflow, since workflows commonly chain several calls together. Needing external tools doesn't decide it either, since both workflows and agents can call tools. The output format is a separate design choice unrelated to whether the steps are knowable."
             },
             {
               "id": "q_wva_1b",
-              "q": "How is a workflow defined?",
+              "q": "A colleague describes a system that always executes the same three Claude calls in the same order for every request, because the task is fully understood ahead of time. What best describes what makes this a 'workflow' in the course's terms?",
               "options": [
-                "Any pipeline with more than three calls",
-                "A loop ending on a fixed iteration count",
-                "A predefined series solving a known problem",
-                "A single call with process steps inside"
+                "It only issues a single Claude call, structured internally into multiple process steps.",
+                "It runs a loop of Claude calls that terminates after a fixed number of iterations.",
+                "It is a predefined series of Claude calls built to solve a problem whose shape is already known.",
+                "It routes each request to one of several specialized pipelines chosen at runtime."
               ],
               "correct": 2,
-              "explain": "Predefined and known — that is what makes the steps designable ahead of time."
+              "explain": "A workflow is a predefined series of Claude calls built for a problem whose shape is already known, which is exactly what makes it possible to design the three-call sequence in advance. Packing the same logic into a single call structured internally into steps isn't what makes something a workflow — it's the predefined, known series of calls. A loop terminating on a fixed iteration count describes a control structure, not the workflow/agent distinction itself. Routing a request to one of several pipelines chosen at runtime describes routing, a specific pattern within workflows, not workflows in general."
             }
           ]
         },
@@ -45,27 +45,27 @@
           "questions": [
             {
               "id": "q_wva_2a",
-              "q": "Which does the course recommend by default?",
+              "q": "A product manager wants an agent for every new automation, since agents feel more powerful and flexible. Before approving the design, an architect pushes back citing the course's stated default. Which principle does she cite?",
               "options": [
-                "Agents, since they handle far more cases",
-                "Whichever one is cheaper to run overall",
-                "Agents for users, workflows for batch jobs",
-                "Workflows, with agents only when needed"
+                "Default to agents everywhere since they can handle a strictly larger set of cases than workflows.",
+                "Choose whichever approach happens to be cheaper to operate at the team's current request volume.",
+                "Use agents for every user-facing request and workflows only for internal batch processing jobs.",
+                "Default to workflows and only reach for an agent when the steps genuinely cannot be predefined."
               ],
               "correct": 3,
-              "explain": "Workflows by default. Users want reliability, and agents trade success rate for flexibility."
+              "explain": "The course's stated default is workflows, reserved for agents only when the steps genuinely can't be predefined, because users want reliability more than flexibility. Claiming agents handle a strictly larger set of cases ignores that agents pay for that flexibility with a lower success rate. Picking based on operating cost sidesteps the actual tradeoff the course focuses on. Splitting by user-facing versus batch work isn't the distinction the course draws — it's about whether the steps are knowable, not who's waiting on the result."
             },
             {
               "id": "q_wva_2b",
-              "q": "Which is a stated downside of workflows?",
+              "q": "A team chooses workflows over agents for a new eligibility-checking feature. During planning, an engineer raises a concern about the tradeoff, expecting to spend meaningfully more time upfront. What downside are they anticipating?",
               "options": [
-                "More upfront design and a tighter UX",
-                "A lower overall success rate for users",
-                "They are much harder to test properly",
-                "They cannot make use of tools at all"
+                "Workflows require significantly more upfront design work and offer a more constrained user experience.",
+                "Workflows produce a measurably lower success rate for users than an equivalent agent would.",
+                "Workflows are considerably harder to test and evaluate end-to-end than an equivalent agent would be.",
+                "Workflows cannot invoke external tools at all as part of their execution steps, unlike agents."
               ],
               "correct": 0,
-              "explain": "You pay in design effort and flexibility. Testability and predictability are what you get back."
+              "explain": "More upfront design work and a more constrained user experience are the downsides the course attributes to workflows, since every step has to be predefined before the system can run. A lower success rate for users is actually the tradeoff on the agent side, not the workflow side. Workflows are described as easier to test and evaluate than agents, not harder, since each step can be checked individually. Workflows can and do invoke external tools as part of their steps, so that isn't a limitation unique to them."
             }
           ]
         }
@@ -73,27 +73,27 @@
       "reviewQuestions": [
         {
           "id": "r_wva_1",
-          "q": "Which is a benefit unique to agents?",
+          "q": "An architect is justifying the extra risk of building an agent instead of a workflow for a research-assistant feature. Which of the following is the specific benefit unique to the agent approach that justifies the tradeoff?",
           "options": [
-            "Combining tools in ways nobody planned",
-            "Higher accuracy on each single subtask",
-            "Much easier to evaluate and to test",
-            "More predictable behaviour on the whole"
+            "It combines tools in sequences the designer never explicitly anticipated.",
+            "It reaches a higher accuracy on each individual subtask than a comparable workflow.",
+            "It is meaningfully easier to evaluate and test end-to-end than a workflow.",
+            "It produces more predictable behavior across repeated runs than a workflow."
           ],
           "correct": 0,
-          "explain": "Novelty handling is the thing you are buying. The other three are workflow advantages."
+          "explain": "Combining tools in sequences nobody explicitly planned is the flexibility that's unique to agents, since a workflow's steps are all fixed in advance. Higher accuracy on each individual subtask is credited to workflows, precisely because each step can be a narrowly focused prompt. Being easier to evaluate and test is also a workflow strength, not an agent one, since an agent's path isn't known until it runs. More predictable behavior across runs likewise favors workflows, since agents are described as less predictable in exchange for their flexibility."
         },
         {
           "id": "r_wva_2",
-          "q": "Why are agents harder to instrument than workflows?",
+          "q": "An observability engineer complains that they can't add per-stage latency metrics to a new agent the way they could for the workflow it replaced. What is the underlying reason?",
           "options": [
-            "They run against a different endpoint",
-            "Their tool calls run on the server side",
-            "They do not emit a stop_reason at all",
-            "The steps are not known ahead of time"
+            "Agent tool calls execute against a different network endpoint than workflow calls do.",
+            "Agents don't emit a stop_reason field the way workflow completions reliably do at each stage.",
+            "The agent's steps aren't fixed in advance, so there's no fixed stage to attach a metric to.",
+            "The agent's tool calls all run entirely server-side, outside the engineer's instrumentation."
           ],
-          "correct": 3,
-          "explain": "You cannot put a metric on a stage that does not exist until runtime."
+          "correct": 2,
+          "explain": "An agent's steps aren't fixed in advance, so there's no predetermined stage for a metric to attach to the way there is in a workflow. The network endpoint tool calls run against isn't what differs between agents and workflows. The presence or absence of a stop_reason field isn't the reason instrumentation is harder — the issue is that the sequence of steps doesn't exist until runtime. Where tool calls execute (client-side or server-side) is unrelated to why per-stage metrics are hard to define for an agent."
         }
       ]
     },
@@ -108,27 +108,27 @@
           "questions": [
             {
               "id": "q_par_1a",
-              "q": "A loan decision needs a credit check, a fraud check, and an affordability check. Which pattern, and what is the final step?",
+              "q": "A lending platform evaluates every loan application with a credit check, a fraud check, and an affordability check. These three checks don't depend on each other's results, and the team wants the fastest possible turnaround alongside a combined approval decision. Which orchestration pattern fits, and what must happen after the three checks finish?",
               "options": [
-                "Routing; the final step selects a pipeline",
-                "Parallelization; then aggregate to a decision",
-                "Chaining; the final step is a revision pass",
-                "Evaluator–optimizer; the final step is a grade"
+                "Routing — classify the application, then send it to whichever single pipeline matches its risk profile.",
+                "Parallelization — run the three checks simultaneously, then aggregate the results into a decision.",
+                "Chaining — run the three checks one after another, each one revising the previous check's output.",
+                "Evaluator–optimizer — grade the application repeatedly against criteria until all three checks pass."
               ],
               "correct": 1,
-              "explain": "Independent evaluations run at once, then aggregated. Aggregation is part of the pattern."
+              "explain": "Independent evaluations that run at once and then combine into a single decision is the definition of parallelization, and aggregating the three results is the step that produces the final decision. Routing would send the application down only one of the three checks, not all three. Chaining would run the checks one after another with each revising the last, which isn't how independent checks like these relate to each other. Evaluator–optimizer implies a producer being graded and revised, not three independent checks being combined."
             },
             {
               "id": "q_par_1b",
-              "q": "Must parallelized sub-tasks be identical?",
+              "q": "A teammate objects to a parallelization design because the credit check, fraud check, and affordability check use different prompts and different criteria, arguing 'they're not the same task, so this can't be parallelization.' Is that objection correct?",
               "options": [
-                "Yes — the same prompt on different inputs",
-                "Yes, unless they each use different models",
-                "No — they need only be truly independent",
-                "No, but they must share an output schema"
+                "Yes — parallelization requires applying the identical prompt to different inputs.",
+                "No — the branches only need to be genuinely independent, not identical to each other.",
+                "Yes, unless every one of the branches happens to be powered by the same underlying model.",
+                "No, but every branch must still return its output using exactly the same schema."
               ],
-              "correct": 2,
-              "explain": "Independence is the requirement, not sameness."
+              "correct": 1,
+              "explain": "Parallelization only requires that the branches be genuinely independent evaluations — they don't need to be the identical prompt, since a credit check, a fraud check, and an affordability check are different tasks with different criteria. Requiring an identical prompt on different inputs describes something closer to a single prompt run repeatedly, not parallelization's actual requirement. The model powering each branch is a separate implementation choice unrelated to whether the branches count as parallelization. A shared output schema helps aggregation but isn't what defines the pattern."
             }
           ]
         }
@@ -136,15 +136,15 @@
       "reviewQuestions": [
         {
           "id": "r_par_1",
-          "q": "Besides latency, what does parallelization buy?",
+          "q": "A teammate asks why the fraud-check branch was split out into its own focused Claude call instead of just adding fraud rules to one big prompt that also does credit and affordability, given that running three calls at once already reduces total latency. What's the accuracy-related reason to keep them separate?",
           "options": [
-            "A lower token cost across the board",
-            "Guaranteed structured output every time",
-            "Fewer round trips to the API in total",
-            "Accuracy — each branch is a focused prompt"
+            "It lowers the total token cost incurred when running the three checks this way instead of as one.",
+            "It guarantees that the structured output format is honored correctly on every single run through.",
+            "It reduces the total number of round trips the overall workflow needs to make to the API.",
+            "Each branch stays a focused prompt, more accurate than one prompt juggling three concerns."
           ],
           "correct": 3,
-          "explain": "Focus per subtask — the same reason workflows generally beat one large prompt."
+          "explain": "Keeping each check as its own focused prompt tends to be more accurate than one prompt trying to weigh all three concerns simultaneously, since a focused prompt doesn't have to divide its attention. Running three calls doesn't inherently lower total token cost, since three focused prompts can easily add up to more tokens than one combined prompt. Structured output isn't guaranteed simply by splitting the checks apart. Running the checks as three parallel calls doesn't reduce round trips to the API — it takes three calls instead of one, just issued at the same time."
         }
       ]
     },
@@ -159,27 +159,27 @@
           "questions": [
             {
               "id": "q_chain_1a",
-              "q": "A prompt with eight rules obeys five of them. What pattern fixes it?",
+              "q": "A single prompt asks Claude to rewrite a product description while following eight style rules — tone, length, banned words, required keywords, and so on. Testing shows the output reliably satisfies only five of the eight, even though none of the rules is ambiguous on its own. Which pattern addresses this, and how?",
               "options": [
-                "Parallelization — evaluate each rule alone",
-                "Chaining — generate, then revise with focus",
-                "Routing — send each rule to its own branch",
-                "Evaluator–optimizer — grade until all pass"
+                "Parallelization — evaluate the description's compliance with each rule in a separate simultaneous call.",
+                "Chaining — generate the description first, then run a focused revision pass on just the missed rules.",
+                "Routing — classify the description by category and send it to a category-specific pipeline instead.",
+                "Evaluator–optimizer — grade the description and keep regenerating it from scratch until all eight pass."
               ],
               "correct": 1,
-              "explain": "Chaining is the named fix for the long-prompt problem: generate, then revise with focus."
+              "explain": "Chaining is the fix for this exact failure: generate the description first, accepting that it will be imperfect, then run a second, focused revision pass that targets just the rules that were missed. Parallelization would check each rule independently but has no step that revises the draft to fix what it finds. Routing would send the description down one category-specific pipeline, which doesn't address a single description failing to satisfy all its own rules. Evaluator–optimizer implies grading against criteria and looping until accepted, which is a heavier mechanism than the two-step generate-then-revise fix this scenario calls for."
             },
             {
               "id": "q_chain_1b",
-              "q": "What does the second call in a two-step chain do?",
+              "q": "In a two-step chain, the first call generates a draft that only partially satisfies the brief, which the course treats as expected rather than a failure. What is the second call's job, and what does it receive as input?",
               "options": [
-                "Re-runs the prompt at a lower temperature",
-                "Grades the first output and gives a score",
-                "Splits the output for parallel processing",
-                "Takes the first output and revises it hard"
+                "It re-runs the identical prompt again, but this time at a lower temperature setting.",
+                "It grades the first output against the criteria and returns only a numeric score.",
+                "It splits the first output into separate pieces for parallel processing downstream.",
+                "It takes the first output plus a short list of fixes and revises it in one focused pass."
               ],
               "correct": 3,
-              "explain": "A focused revision pass. Only a few concerns compete for attention, so they all get it."
+              "explain": "The second call in a chain takes the first output plus a short, targeted list of what to fix, and revises it in a focused pass so nothing competes for the model's attention. Re-running the identical prompt at a lower temperature doesn't give the model any information about what specifically went wrong. Returning a numeric score describes an evaluator's job, not the second step of a two-step chain. Splitting the output into pieces for parallel processing describes parallelization, a different pattern entirely."
             }
           ]
         }
@@ -187,27 +187,27 @@
       "reviewQuestions": [
         {
           "id": "r_chain_1",
-          "q": "How does chaining differ from parallelization?",
+          "q": "Two engineers are debating whether a multi-step content pipeline should be built as a chain or as a parallel fan-out. One points out that in their design, each step's output directly feeds the next step's input, and step three cannot start until step two finishes. What does that describe?",
           "options": [
-            "Chaining is sequential; parallel is at once",
-            "Chaining uses one model, parallel uses many",
-            "Chaining is for known steps, parallel unknown",
-            "Chaining aggregates results, parallel does not"
+            "Chaining — the steps run one after another in sequence, each depending on the one before it.",
+            "Chaining — the steps use a single shared model, unlike parallelization's multiple models.",
+            "Chaining — the steps are for known work, while parallelization only handles unknown work.",
+            "Chaining — the final step aggregates results, which parallelization's final step never does."
           ],
           "correct": 0,
-          "explain": "Sequence and dependence versus simultaneity and independence."
+          "explain": "Chaining's steps run one after another, each depending on the output of the one before it, whereas parallelization's branches run at once with no such dependency. Chaining isn't distinguished by using a single shared model — both patterns can use whichever models fit each step. It also isn't about known versus unknown work — both patterns are workflow patterns built for known problems. And parallelization does have an aggregation step at the end, so aggregation isn't unique to chaining."
         },
         {
           "id": "r_chain_2",
-          "q": "Why does one prompt with many constraints drop some of them?",
+          "q": "A prompt lists twelve formatting and content rules for a single Claude call. QA finds that several rules are dropped in most runs, even though each rule reads clearly on its own and the prompt is well under any length limit. What causes constraints to get dropped like this?",
           "options": [
-            "Constraints compete for finite attention",
-            "The API truncates any prompt this long",
-            "Later instructions overwrite earlier ones",
-            "Constraints past the fifth are ignored"
+            "The constraints compete for a finite amount of the model's attention within one call.",
+            "The API silently truncates the prompt once it exceeds a certain number of rules.",
+            "Later instructions in the prompt overwrite the effect of the earlier ones entirely.",
+            "Any constraint listed after roughly the fifth position is effectively ignored by the model."
           ],
           "correct": 0,
-          "explain": "Competition, not truncation — which is why splitting the work rather than rewording it is the fix."
+          "explain": "Constraints get dropped because they compete for a finite amount of the model's attention within a single call, not because any one rule was unclear. The API doesn't truncate prompts based on how many rules they contain. Later instructions don't overwrite earlier ones outright — the failure is attention getting spread thin, not one rule silently replacing another. There's no fixed cutoff position after which rules stop being followed; which rules get dropped varies, because the mechanism is competition, not a hard limit."
         }
       ]
     },
@@ -222,27 +222,27 @@
           "questions": [
             {
               "id": "q_route_1a",
-              "q": "One inbox receives refund requests, bug reports, and sales enquiries. Which pattern, and how many pipelines does a message reach?",
+              "q": "A support inbox receives refund requests, bug reports, and sales enquiries, and the team wants each type handled by a pipeline built specifically for it. A classification call reads each incoming message first. Which pattern is this, and how many of the specialized pipelines does a single message reach?",
               "options": [
-                "Parallelization; all three of them",
-                "Chaining; all three, in sequence",
-                "Routing; exactly one of the three",
-                "Routing; one or more, by confidence"
+                "Parallelization — the message is sent to all three pipelines, and their outputs are combined.",
+                "Chaining — the message passes through all three pipelines in sequence, one after another.",
+                "Routing — the message is classified and then sent to exactly one of the three pipelines.",
+                "Routing — the message is sent to one or more pipelines, depending on the classifier's confidence."
               ],
               "correct": 2,
-              "explain": "Routing sends each input down a single branch, which is what allows each branch to specialise."
+              "explain": "Routing is the pattern where a classification step reads the message and sends it to exactly one of the specialized pipelines, letting each pipeline be built for its specific case. Parallelization would send the message to all three pipelines and combine their outputs, which isn't what happens when only refund messages go to the refund pipeline. Chaining would pass the message through all three pipelines in sequence, which doesn't match a message being handled by only its own category's pipeline. Sending a message to more than one pipeline based on classifier confidence isn't how routing works — it always commits to a single branch."
             },
             {
               "id": "q_route_1b",
-              "q": "What distinguishes routing from parallelization?",
+              "q": "Sketched on a whiteboard, a routing design and a parallelization design both show one input branching into three boxes, which briefly confuses a new teammate into thinking they're the same pattern. What actually distinguishes them?",
               "options": [
-                "Routing is sequential, parallel is not",
-                "Routing always requires structured output",
-                "Routing uses one model, parallel uses many",
-                "Routing picks one branch; parallel uses all"
+                "Routing runs its steps sequentially, while parallelization runs its branches all at once.",
+                "Routing always requires its output to be structured, while parallelization does not.",
+                "Routing relies on a single model tier, while parallelization uses several models at once.",
+                "Routing sends the input to exactly one branch, while parallelization sends it to all of them."
               ],
               "correct": 3,
-              "explain": "One branch versus all branches. The diagrams look alike; the semantics are opposite."
+              "explain": "The real distinction is that routing sends the input to exactly one branch, while parallelization sends the same input to every branch and combines what comes back — the fan-out on a diagram looks the same, but the semantics are opposite. Routing isn't inherently more sequential than parallelization; a routed pipeline can still involve multiple sequential calls once it's chosen. Structured output isn't a requirement unique to routing. Neither pattern is defined by using one model tier versus several — model choice is a separate decision from which pattern is in play."
             }
           ]
         }
@@ -250,15 +250,15 @@
       "reviewQuestions": [
         {
           "id": "r_route_1",
-          "q": "What does the classification step in routing typically run on?",
+          "q": "A team building a routing pipeline for support tickets is deciding which model tier should power the classification step that decides which of the three downstream pipelines a ticket goes to. What does the course recommend, and why?",
           "options": [
-            "The same tier as the pipelines, for parity",
-            "Opus, since a misroute is very expensive",
-            "A non-LLM classifier trained offline first",
-            "A cheap tier such as Haiku, its exact brief"
+            "The same tier as the downstream pipelines, so behavior stays consistent across the whole system.",
+            "Opus, since the team decides a misrouted ticket is too expensive to recover from later on.",
+            "A non-LLM classifier that the team trained offline before any of the pipelines were built.",
+            "A cheap tier such as Haiku, since classification is exactly the kind of narrow task it's suited for."
           ],
           "correct": 3,
-          "explain": "Classification is Haiku's named workload, and routing is where per-task model choice actually gets used."
+          "explain": "Classification is exactly the kind of narrow, well-defined task a cheap tier like Haiku is suited for, and routing is where that kind of per-task model choice gets applied in practice. Matching the classification tier to the downstream pipelines' tier ignores that classification is a simpler task than actually handling the request. Reserving Opus for classification treats the cheapest step in the pipeline as if it were the hardest one. A non-LLM classifier trained offline is a different design entirely from the Claude-call classification step the course describes."
         }
       ]
     },
@@ -273,27 +273,27 @@
           "questions": [
             {
               "id": "q_evopt_1a",
-              "q": "Which workflow pattern has a feedback edge back to its own first step?",
+              "q": "Of the four orchestration patterns covered — parallelization, chaining, routing, and evaluator–optimizer — only one has an edge in its diagram that loops output back to its own producing step when that output is rejected. Which pattern is this?",
               "options": [
-                "Parallelization",
-                "Evaluator–optimizer",
-                "Chaining",
-                "Routing"
+                "Parallelization, since a poor branch result triggers a rerun of just that one branch.",
+                "Evaluator–optimizer, since a rejected output loops feedback back to the producer for revision.",
+                "Chaining, since a failed revision pass restarts the entire chain from its first call.",
+                "Routing, since a misclassified input gets sent back to the classifier for a second pass."
               ],
               "correct": 1,
-              "explain": "Rejection sends feedback back to the producer. The other three flow forwards only."
+              "explain": "Evaluator–optimizer is the only pattern where a rejected output loops feedback back to the producer for revision — the other three patterns all flow forward without looping back to an earlier step. Parallelization doesn't rerun a single branch based on quality; it runs all branches once and aggregates. Chaining's revision pass moves the work forward rather than restarting the whole chain from its first call. Routing doesn't send anything back to the classifier once a branch has been chosen."
             },
             {
               "id": "q_evopt_1b",
-              "q": "What must the evaluator return for the loop to work?",
+              "q": "In an evaluator–optimizer loop, the grading call currently just returns a single number like '6/10' when it rejects an output, and the producer's revisions aren't improving much between iterations. What is the evaluator missing that the course says it needs to return?",
               "options": [
-                "A bare score, so acceptance is a threshold",
-                "Reasoning on strengths and weaknesses, not a number",
-                "A fully rewritten version of the output itself",
-                "A confidence interval around its own grade"
+                "A bare numeric score is enough, as long as acceptance is judged against a fixed threshold.",
+                "A complete rewritten version of the output for the producer to adopt directly.",
+                "Reasoning that names the output's specific strengths and weaknesses, not just a bare number.",
+                "A confidence interval expressing how certain the evaluator is in its own grade."
               ],
-              "correct": 1,
-              "explain": "It is a model grader, and the same rule applies: a bare number is uninformative and drifts to the middle."
+              "correct": 2,
+              "explain": "The evaluator has to return reasoning that names the output's specific strengths and weaknesses, since that's what gives the producer something concrete to act on when revising. A bare numeric score against a threshold tells the producer whether it passed but not what to change. Having the evaluator rewrite the output itself would collapse the separation between grading and producing that the pattern depends on. A confidence interval around the grade doesn't help the producer understand what was wrong with its output."
             }
           ]
         }
@@ -301,15 +301,15 @@
       "reviewQuestions": [
         {
           "id": "r_evopt_1",
-          "q": "In the image-to-CAD example, what is graded against what?",
+          "q": "The course's image-to-CAD workflow describes an object, builds a CAD model from that description, and then renders the model before the evaluator step runs. What exactly does the evaluator compare in that final check?",
           "options": [
-            "A rendering of the model against the image",
-            "The CAD model against a specification doc",
-            "The description against the original image",
-            "The final model against a previous version"
+            "It renders the model and compares that rendering against the original input image.",
+            "It compares the CAD model's geometry directly against a written specification document.",
+            "It compares the text description directly against the original input image itself.",
+            "It compares the final model against an earlier draft version of the same model."
           ],
           "correct": 0,
-          "explain": "Render, then compare the render to the original — a check in the same medium as the input."
+          "explain": "The check happens in the same medium as the input: the model gets rendered, and that rendering is compared against the original image. Comparing the CAD model's geometry to a written specification skips the rendering step the example actually describes. Comparing the text description to the original image checks the wrong stage — the description feeds the model, but it isn't what gets graded. Comparing the final model to an earlier draft would check progress between iterations, not fidelity to the original input."
         }
       ]
     },
@@ -324,27 +324,27 @@
           "questions": [
             {
               "id": "q_choice_1a",
-              "q": "What is the first question to ask of an orchestration scenario?",
+              "q": "Before picking among parallelization, chaining, routing, and evaluator–optimizer for a new automation, the course says there's a prior question to answer first — one that decides whether any of those four patterns even apply. What is that first question?",
               "options": [
-                "How many Claude calls will this need?",
-                "Which model tier will this one need?",
-                "Does it require any tools at all?",
-                "Are the steps knowable in advance?"
+                "How many separate Claude calls will the finished design require?",
+                "Which model tier is appropriate for handling this particular task?",
+                "Does the task require access to any external tools at all?",
+                "Can the exact steps needed to solve this be pictured in advance?"
               ],
               "correct": 3,
-              "explain": "Knowability first. Only once it is a workflow does the shape question apply."
+              "explain": "The first question is whether the exact steps can be pictured in advance, since that's what decides between designing a workflow or an agent before any pattern-specific question comes up. How many Claude calls a design will need doesn't decide workflow versus agent, since both can involve multiple calls. Which model tier fits the task is a later decision made once the pattern is already chosen. Whether the task needs external tools doesn't distinguish them either, since both workflows and agents commonly use tools."
             },
             {
               "id": "q_choice_1b",
-              "q": "A scenario needs quality iterated toward against explicit criteria. Which pattern?",
+              "q": "A team is generating marketing copy that must be checked against a written style guide and revised repeatedly until it satisfies every criterion in that guide, however many passes that takes. Which of the four workflow patterns matches this shape?",
               "options": [
-                "Parallelization",
-                "Routing",
-                "Evaluator–optimizer",
-                "Chaining"
+                "Parallelization, since the style guide's criteria can be checked independently and combined.",
+                "Routing, since different copy types should be classified and sent to different pipelines.",
+                "Evaluator–optimizer, since output is graded against criteria and revised until it's accepted.",
+                "Chaining, since the copy is generated and then revised once in a focused second pass."
               ],
               "correct": 2,
-              "explain": "Criteria plus iteration until accepted is the evaluator–optimizer signature."
+              "explain": "Grading output against explicit criteria and revising it until accepted is the evaluator–optimizer signature, which matches copy that must satisfy every rule in a style guide however many passes it takes. Parallelization would check independent aspects and combine them into one decision, not iterate a single piece of copy toward acceptance. Routing would classify the copy and send it to a different pipeline per type, not repeatedly revise the same piece. Chaining implies one focused revision pass, not an open-ended loop that continues until the criteria are met."
             }
           ]
         },
@@ -356,27 +356,27 @@
           "questions": [
             {
               "id": "q_choice_2a",
-              "q": "What do you actually hand an agent?",
+              "q": "A team has concluded that a new customer-support automation can't have its steps predefined, so they're designing it as an agent rather than a workflow. According to the course, what does that design actually consist of handing the agent?",
               "options": [
-                "A sequence of steps and a tool set",
-                "A goal and a maximum iteration count",
-                "A goal, plus a set of tools",
-                "A classified input and a pipeline"
+                "A fixed sequence of steps for it to execute, along with a set of tools to use.",
+                "A goal for it to accomplish, along with a set of tools to accomplish it with.",
+                "A goal to accomplish, along with a hard cap on how many iterations it may take.",
+                "A classified version of the input, along with the pipeline matching that classification."
               ],
-              "correct": 2,
-              "explain": "Goal plus tools. If you could hand it steps, you would be building a workflow."
+              "correct": 1,
+              "explain": "An agent is handed a goal to accomplish along with a set of tools to accomplish it with, and it works out the combination of calls itself. Handing it a fixed sequence of steps plus tools would actually be building a workflow, since the steps would already be decided. Adding a hard cap on iterations describes an execution limit, not what defines the agent's design. Handing it a classified input and a matching pipeline describes routing, a workflow pattern, not an agent."
             },
             {
               "id": "q_choice_2b",
-              "q": "An agent is asked to calculate a warranty expiry and lacks the purchase date. What is the expected behaviour?",
+              "q": "A customer asks a support agent to check whether their product is still under warranty, but the purchase date isn't available anywhere in the conversation or the tools the agent has access to. What should the agent do, according to the course's description of expected agent behavior?",
               "options": [
-                "It fails outright with a clear error",
-                "It assumes today's date and proceeds",
-                "It asks the user for the purchase date",
-                "It calls tools until one supplies a date"
+                "Fail immediately and return a clear error stating the request cannot be completed.",
+                "Assume the purchase date is today's date and proceed with the calculation anyway.",
+                "Ask the customer directly for the purchase date before proceeding any further.",
+                "Keep calling other available tools until one of them happens to supply a date."
               ],
               "correct": 2,
-              "explain": "Recognising it needs more input is part of what an agent does — and a listed benefit of the approach."
+              "explain": "Recognizing that it needs more information and asking the customer for the purchase date is the expected behavior the course describes, and it's presented as a benefit of the agent approach rather than a failure mode. Failing outright with an error would be unnecessarily rigid when the missing information could simply be asked for. Assuming today's date and proceeding would silently produce a wrong answer instead of surfacing the missing input. Calling other tools hoping one supplies a date isn't a substitute for asking the customer directly, since none of the agent's tools would actually have that information."
             }
           ]
         }
@@ -384,27 +384,27 @@
       "reviewQuestions": [
         {
           "id": "r_choice_1",
-          "q": "A scenario describes triaging incoming documents into three types, each handled by a different specialised prompt. Which pattern?",
+          "q": "An operations team receives incoming documents that fall into exactly three types — contracts, invoices, and correspondence — and each type needs a completely different specialized prompt to process correctly. Which orchestration pattern matches this description?",
           "options": [
-            "Routing",
-            "Parallelization",
-            "Chaining",
-            "An agent"
+            "Routing — classify each document, then send it to the one pipeline built for its type.",
+            "Parallelization — run all three specialized prompts on every document and combine the results.",
+            "Chaining — run the three specialized prompts in sequence on every incoming document.",
+            "An agent — give the model all three prompts as tools and let it choose one per document."
           ],
           "correct": 0,
-          "explain": "Distinct categories, different handling, one branch each — routing."
+          "explain": "Distinct document categories that each need different handling, with a classification step choosing one pipeline per document, is exactly the routing shape. Running all three specialized prompts on every document and combining the results describes parallelization, not triage into distinct types. Running the three prompts in sequence on every document describes chaining, which doesn't fit documents that only need one type of handling each. Framing the three prompts as tools for an agent to pick from turns a known, enumerable choice into an open-ended one, when the categories are already fixed."
         },
         {
           "id": "r_choice_2",
-          "q": "A scenario says the system must handle requests the team cannot enumerate ahead of time, combining tools as needed. Workflow or agent?",
+          "q": "A team is scoping a research tool that must handle arbitrary user questions, combining a search tool, a calculator, and a document reader in whatever order turns out to be needed — a combination the team readily admits they can't enumerate in advance. Should this be built as a workflow or an agent?",
           "options": [
-            "Workflow — enumerate the common cases only",
-            "Agent — the steps are simply not knowable",
-            "Workflow, routing with an 'other' branch",
-            "Either; the distinction is mere preference"
+            "A workflow, covering only the common cases the team can currently predict.",
+            "An agent, since the necessary steps genuinely cannot be known ahead of time.",
+            "A workflow using routing, with a catch-all 'other' branch for edge cases.",
+            "Either approach works equally well; the choice is just a matter of style preference."
           ],
           "correct": 1,
-          "explain": "'Cannot be enumerated ahead of time' is the rule's second branch, stated almost verbatim."
+          "explain": "Requests whose combination of steps genuinely can't be enumerated ahead of time is the rule's second branch stated almost exactly — that's what should push the design toward an agent rather than a workflow. Limiting the workflow to only the common, predictable cases would leave the genuinely novel requests unhandled, which is the situation being described. Adding a routing branch for 'other' still requires the steps within that branch to be knowable, which the scenario says they aren't. Treating the choice as a matter of style ignores that the course ties the decision to a specific, checkable fact about whether the steps can be predicted."
         }
       ]
     }

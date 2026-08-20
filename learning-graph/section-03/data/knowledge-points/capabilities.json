@@ -13,27 +13,27 @@
           "questions": [
             {
               "id": "q_svc_1a",
-              "q": "Why does a server tool need no loop iteration?",
+              "q": "You notice that after Claude calls web_search, your code never has to run a second loop iteration to get a result back — unlike after it calls bash. Why doesn't web_search require another turn?",
               "options": [
-                "It executes before the request is processed",
-                "Anthropic runs it and returns the result inline",
-                "It returns no result at all, only a status",
-                "The SDK quietly loops internally for you"
+                "Because Anthropic caches results from earlier web_search calls, letting the loop skip the network round trip entirely.",
+                "Because the SDK's tool runner executes web_search locally and silently, before your own code ever sees the request.",
+                "Because Anthropic executes web_search server-side and returns its result in the same response, leaving nothing for the loop to do.",
+                "Because web_search only returns a status code, not a full result, so there is nothing yet to feed back into a new turn."
               ],
-              "correct": 1,
-              "explain": "The round trip happens inside Anthropic's request handling. You get text and tool results together."
+              "correct": 2,
+              "explain": "A server tool's execution and result both happen inside Anthropic's handling of the request, so the server_tool_use and matching result block arrive alongside the text in one response — there's no second turn to run. Local caching and silent SDK execution aren't what's happening; the tool genuinely runs on Anthropic's infrastructure. And the response does carry a full result, not just a status, which is exactly why no further loop iteration is needed to fetch it."
             },
             {
               "id": "q_svc_1b",
-              "q": "Which is a client tool?",
+              "q": "Your codebase declares bash using a schema and runner shipped by the SDK's tool runner. A teammate argues that since the SDK provides ready-made execution for it, bash must be a server tool like web_search. Which statement is correct?",
               "options": [
-                "web_search",
-                "code_execution",
-                "web_fetch",
-                "bash"
+                "bash is still a client tool: your own code executes it wherever it runs, regardless of the SDK shipping its schema and a runner.",
+                "bash becomes a server tool whenever you use the SDK's built-in tool runner instead of writing your own execution loop.",
+                "bash is a server tool because Anthropic maintains sandboxed compute specifically to run shell commands on your behalf.",
+                "bash's classification depends on which model you call it with, since some newer models run it server-side by default."
               ],
-              "correct": 3,
-              "explain": "bash runs where your code runs. The other three are executed server-side."
+              "correct": 0,
+              "explain": "Location is what defines the category, not convenience: bash executes wherever your code runs, so it stays a client tool even though the SDK ships a schema and a runner for it. Using the SDK's tool runner doesn't move execution onto Anthropic's servers — it's still your process running the command. Anthropic has no shell sandbox executing bash for you, and the client/server split isn't something that varies by model."
             }
           ]
         }
@@ -41,27 +41,27 @@
       "reviewQuestions": [
         {
           "id": "r_svc_1",
-          "q": "Which block type signals a tool Anthropic ran for you?",
+          "q": "You're debugging response parsing and need to tell a tool Anthropic ran for you apart from a step your own loop still has to perform. Which block signals the former?",
           "options": [
-            "server_tool_use",
-            "tool_result",
-            "tool_use",
-            "thinking"
+            "A tool_use block whose input matches one of the tools you declared, sitting inside the same response as usual.",
+            "A tool_result block that has no matching tool_use block anywhere earlier in that same response.",
+            "A thinking block appearing immediately before the first text block, ahead of any tool activity.",
+            "A server_tool_use block paired with a matching result block, like bash_code_execution_tool_result."
           ],
-          "correct": 0,
-          "explain": "server_tool_use, paired with a matching tool-result block in the same response."
+          "correct": 3,
+          "explain": "server_tool_use is the marker — it shows up with its matching result block (bash_code_execution_tool_result, for instance) alongside the text blocks in the very response that requested it. An ordinary tool_use block just means a tool was requested, not that Anthropic ran it. A tool_result with no preceding tool_use, or a thinking block ahead of text, aren't the signal — they don't tell you who executed anything."
         },
         {
           "id": "r_svc_2",
-          "q": "The SDK ships a schema and a runner for a tool. Does that make it a server tool?",
+          "q": "A teammate argues that memory and bash must be server tools, since the SDK ships ready-made schemas and runners for both. Are they right?",
           "options": [
-            "Yes — anything the SDK ships runs server-side",
-            "Only if you never override the schema yourself",
-            "No — location is what defines the category",
-            "Only when used with the SDK's tool runner"
+            "They're right — anything the SDK ships a ready-made runner for executes on Anthropic's servers, not your own process.",
+            "They're wrong — location decides the category; memory and bash still run in your own process, SDK convenience aside.",
+            "They're right, but only when the runner's default schema is used without any of your own customization applied.",
+            "They're right only if you invoke the SDK's tool runner rather than writing your own execution loop from scratch."
           ],
-          "correct": 2,
-          "explain": "Convenience is not location. Memory and bash ship with schemas and are still client tools."
+          "correct": 1,
+          "explain": "Convenience isn't location — memory and bash still execute inside your own process no matter how much scaffolding the SDK provides, so they stay client tools. Nothing about using the tool runner, or leaving its default schema untouched, moves execution onto Anthropic's infrastructure; server tools like web_search run there regardless of which runner you use."
         }
       ]
     },
@@ -76,27 +76,27 @@
           "questions": [
             {
               "id": "q_websearch_1a",
-              "q": "How do you keep the web search tool inside a set of trusted sites?",
+              "q": "Compliance wants your agent's web_search calls restricted to a whitelist of regulator sites, and wants that enforced so the model can't wander off the list even under a loosely worded prompt. What should you configure?",
               "options": [
-                "Instruct it to, in the system prompt",
-                "Post-filter the citations and retry",
-                "Set an allowed-domains list on the tool",
-                "Use web_fetch on those sites instead"
+                "Add a line to the system prompt instructing the model to only cite results from the approved regulator domains.",
+                "Set an allowed-domains list on the web_search tool's configuration so the search itself is constrained to those sites.",
+                "Run every citation through a post-hoc filter that discards any result whose URL isn't on the approved list.",
+                "Replace web_search with web_fetch calls targeted only at the specific regulator URLs you already know about."
               ],
-              "correct": 2,
-              "explain": "The tool takes an allowed-domains constraint — configuration, not instruction."
+              "correct": 1,
+              "explain": "The web_search tool takes an allowed-domains constraint as configuration, so the search itself never looks outside the approved sites — that's a guarantee, not a request the model could ignore. A system-prompt instruction is still just a probabilistic ask. Filtering citations afterward doesn't stop the search from running against disallowed domains in the first place, and swapping to web_fetch abandons search discovery entirely."
             },
             {
               "id": "q_websearch_1b",
-              "q": "What lets you show users where an answer came from?",
+              "q": "Your product wants every sentence in a search-grounded answer that's traceable to a specific source to be clickable, distinguishing it from the model's own connective reasoning. What in the response lets you do that?",
               "options": [
-                "Citation blocks within the response",
-                "The server_tool_use block's input",
-                "The usage field on the response",
-                "stop_reason on the final message"
+                "The input field on the server_tool_use block that recorded the original search query.",
+                "The usage field on the response, which just reports the total count of searches run.",
+                "The stop_reason field on the final message, set once the search budget is exhausted.",
+                "The citation blocks in the response, each one pointing at the source behind a claim."
               ],
-              "correct": 0,
-              "explain": "Citations point at the source behind a claim, which is also how you separate sourced claims from synthesis."
+              "correct": 3,
+              "explain": "Citation blocks are what tie an individual claim back to the document that supports it, which is exactly the mechanism for telling sourced text apart from the model's own synthesis. The search query on server_tool_use just records what was searched, usage only counts how many searches ran, and stop_reason says why generation stopped — none of them point at a source for a specific sentence."
             }
           ]
         }
@@ -104,15 +104,15 @@
       "reviewQuestions": [
         {
           "id": "r_websearch_1",
-          "q": "What is max-uses for on the web search tool?",
+          "q": "An agent burns through a long chain of web searches on a single request before anyone caps it. What does max-uses actually control?",
           "options": [
-            "Capping how many searches one request runs",
-            "Limiting the results returned per search",
-            "Capping the monthly spend on the account",
-            "Restricting how many domains are searched"
+            "How many searches a single request is permitted to run, which caps a runaway search chain.",
+            "How many results the search tool returns for each individual search it performs.",
+            "How much of the account's total monthly API spend the web_search tool is allowed to consume.",
+            "How many distinct domains a single search query is permitted to span across results."
           ],
           "correct": 0,
-          "explain": "A per-request budget on searches — cost and latency control for an agent that could otherwise search indefinitely."
+          "explain": "max-uses is a per-request cap on the number of searches the tool may run, which is exactly the control for an agent that could otherwise keep searching indefinitely within one request. It says nothing about results per search, monthly account spend, or how many domains one query touches — allowed-domains is the separate control for that."
         }
       ]
     },
@@ -127,27 +127,27 @@
           "questions": [
             {
               "id": "q_codeexec_1a",
-              "q": "The code execution sandbox has no network. How does a CSV get into it?",
+              "q": "An analyst wants Claude's code execution tool to load a 50MB sales CSV, but the sandbox has no network access to fetch it from anywhere. How does the file actually get in?",
               "options": [
-                "Base64 in the message, decoded by the code",
-                "Uploaded via the Files API, referenced by id",
-                "Fetched by the sandbox from a URL you give",
-                "Mounted from your server over the channel"
+                "Encode the CSV as base64 directly inside the message text and let the executed code decode it in place.",
+                "Have the sandbox fetch the file itself from a signed URL you generate and include in the prompt.",
+                "Upload the CSV once through the Files API and reference the resulting file id in a container_upload block.",
+                "Mount the CSV from your own server into the sandbox over an authenticated internal network channel."
               ],
-              "correct": 1,
-              "explain": "Files API in, file id referenced. Fetching from a URL is exactly what no network rules out."
+              "correct": 2,
+              "explain": "The Files API is the sanctioned path in and out of a no-network sandbox: upload once, get a file id, and reference that id in a container_upload block so the sandbox has the data without ever touching the network. Fetching from a URL or mounting over a channel are both exactly what 'no network access' rules out, and inlining base64 works but forces you to re-encode the same payload into every message instead of reusing an id."
             },
             {
               "id": "q_codeexec_1b",
-              "q": "What does the Files API buy you outside the sandbox case?",
+              "q": "The same 50MB CSV gets reused across a dozen separate code-execution requests over one session, and an engineer complains about re-sending the base64 payload every time. What's the fix?",
               "options": [
-                "Longer retention of the conversation history",
-                "Automatic chunking of your documents for RAG",
-                "Cheaper input tokens on the images you send",
-                "Upload once, reference by id, skip re-encoding"
+                "Upload the file once via the Files API and reference the file id in later requests instead of re-encoding it.",
+                "Enable extended context caching so the repeated base64 payload gets deduplicated automatically across every request.",
+                "Compress the CSV file before base64-encoding it, which shrinks the payload sent with every single request.",
+                "Split the CSV into several smaller chunks so each individual message payload stays safely under the size limit."
               ],
-              "correct": 3,
-              "explain": "One upload, an id you reuse — a straightforward saving on repeated payloads."
+              "correct": 0,
+              "explain": "The Files API's value is exactly this: upload once, keep the id, and reference it in every later request instead of re-encoding and re-sending the same bytes. There's no automatic caching that deduplicates inline base64 payloads for you, and compressing or chunking the file still means re-sending it — they reduce the pain without addressing the actual repeated-upload problem."
             }
           ]
         }
@@ -155,15 +155,15 @@
       "reviewQuestions": [
         {
           "id": "r_codeexec_1",
-          "q": "How do files generated inside the sandbox reach you?",
+          "q": "Code execution generates a chart image inside the sandbox. Given the sandbox has no network access, how do you actually retrieve it?",
           "options": [
-            "As file ids you then download separately",
-            "Streamed back as base64 in the text block",
-            "Written out to a storage bucket you configure",
-            "They cannot ever leave the sandbox at all"
+            "It streams back embedded as a base64 payload inside the same text block as Claude's explanation.",
+            "It's written directly to a storage bucket you configure ahead of time in the tool definition.",
+            "It never leaves the sandbox — generated files are discarded when the conversation ends.",
+            "It returns as a file id inside a code_execution_output block, downloaded separately by that id."
           ],
-          "correct": 0,
-          "explain": "Out by id, the same way they went in."
+          "correct": 3,
+          "explain": "Generated files come back as file ids inside code_execution_output blocks, the same id-based mechanism used to get data in — you download the file separately using that id. Nothing writes automatically to a bucket you configure, files don't vanish at the end of the conversation, and they aren't streamed inline as base64 text."
         }
       ]
     },
@@ -178,27 +178,27 @@
           "questions": [
             {
               "id": "q_editor_1a",
-              "q": "The text editor tool is 'built in'. What exactly is?",
+              "q": "A new engineer enables the text_editor tool and is surprised that requested file edits don't actually happen anywhere on disk. What does 'built in' actually mean for this tool?",
               "options": [
-                "The schema and implementation; just enable it",
-                "The schema only; you write the operations",
-                "The implementation only; you write the schema",
-                "Neither — it means Claude Code's own editor"
+                "Both the schema and the underlying file-manipulation logic are built in, so enabling the tool is the whole integration.",
+                "Only the schema is built in — the vocabulary and argument shapes for edits — while you write the actual file operations.",
+                "Only the implementation is built in already; you're still responsible for writing and registering its schema yourself.",
+                "Neither piece is built in here — the name is simply a collision with Claude Code's own editor, not any API-level tool."
               ],
               "correct": 1,
-              "explain": "Claude knows how to ask. Performing the operation is entirely yours."
+              "explain": "Claude is trained to know the vocabulary and argument shapes for requesting edits — view, replace, insert, and so on — but nothing in Anthropic's infrastructure touches your filesystem, so the operations themselves are entirely your code to write. It isn't the reverse, and it isn't a name collision with Claude Code's own editor; enabling the stub alone gives you a tool definition with no body."
             },
             {
               "id": "q_editor_1b",
-              "q": "What safety obligation comes with implementing it?",
+              "q": "After wiring up the text editor tool's executor, a red-team test has Claude request replacing text inside /etc/passwd. What obligation should the implementer already have handled for this not to be a problem?",
               "options": [
-                "Rate-limiting the edits per conversation",
-                "Encrypting the file contents in transit",
-                "Constraining which paths and operations run",
-                "Logging every single view operation made"
+                "Rate-limiting how many edit operations a single conversation is allowed to issue.",
+                "Encrypting file contents in transit between your executor and wherever the files are stored.",
+                "Constraining which paths and which operations the executor will actually carry out.",
+                "Logging every view operation so a security team can audit read access after the fact."
               ],
               "correct": 2,
-              "explain": "Path and operation constraints. The tool can request anything; only your executor decides what happens."
+              "explain": "Because the tool can request anything — including a path like /etc/passwd — the safety has to live in the executor, which must constrain which paths and operations it will actually perform rather than carrying out whatever is asked. Rate-limiting, encryption in transit, and audit logging can all be reasonable additions, but none of them stop a malicious or mistaken request from actually being carried out the way a path/operation constraint does."
             }
           ]
         }
@@ -206,15 +206,15 @@
       "reviewQuestions": [
         {
           "id": "r_editor_1",
-          "q": "Why does the schema stub carry a date, like text_editor_20250124?",
+          "q": "Two teams disagree about what a stub like text_editor_20250124 actually pins down. What does the date in that identifier represent?",
           "options": [
-            "It expires and then has to be renewed",
-            "It records when you registered your code",
-            "It sets the cache lifetime for the tool",
-            "The stub is versioned and varies by model"
+            "It's part of a versioned identifier — which exact one to pass depends on the model you're calling.",
+            "It expires after a fixed period, so the developer must periodically renew the tool's registration.",
+            "It records the exact date your integration first registered this tool with Anthropic's platform.",
+            "It sets the maximum duration for which that tool's results remain eligible to be cached."
           ],
-          "correct": 3,
-          "explain": "Versioned by model — the identifier you pass depends on which Claude you are calling."
+          "correct": 0,
+          "explain": "The date is simply part of a versioned identifier, and which exact stub you pass depends on which model you're calling — it isn't an expiry, a registration timestamp, or a cache setting. Treat it the way you'd treat any other versioned API identifier: pick the one that matches your model."
         }
       ]
     },
@@ -229,27 +229,27 @@
           "questions": [
             {
               "id": "q_think_1a",
-              "q": "Where does the effort parameter go?",
+              "q": "An engineer sets thinking = {\"type\": \"adaptive\"} and now wants to dial reasoning depth up for a hard trade-off analysis, but is looking in the wrong place for the knob. Where does the effort parameter actually go?",
               "options": [
-                "Inside the thinking block, beside its type",
-                "At the top level, beside max_tokens",
-                "In the system prompt, as an instruction",
-                "Inside output_config on the request"
+                "Inside the thinking block itself, as a sibling field next to type.",
+                "At the top level of the request, alongside max_tokens.",
+                "In the system prompt, phrased as an instruction to think harder.",
+                "Inside output_config, as a separate effort field on the request."
               ],
               "correct": 3,
-              "explain": "output_config — not next to the thinking block, despite controlling how deeply it thinks."
+              "explain": "effort lives inside output_config, not beside the thinking block it intuitively seems to control — that placement is easy to get wrong precisely because it's the less obvious spot. It isn't a top-level sibling of max_tokens, and phrasing it as a system-prompt instruction wouldn't set the parameter at all."
             },
             {
               "id": "q_think_1b",
-              "q": "What is the default effort level?",
+              "q": "A team leaves output_config.effort unset entirely on Opus 4.7. What reasoning depth are they actually getting by default?",
               "options": [
-                "high",
-                "low",
-                "medium",
-                "max"
+                "xhigh — the platform falls back to the second-highest tier when effort is unset.",
+                "high — the documented default effort level whenever the field is left unset.",
+                "medium — treated as the conservative default between the low and high tiers.",
+                "low — deeper reasoning tiers must be explicitly opted into by setting effort."
               ],
-              "correct": 0,
-              "explain": "high is the default, with low and medium below it and xhigh and max above."
+              "correct": 1,
+              "explain": "high is the default effort level, sitting between low/medium below it and xhigh/max above it for cases that need even more reasoning depth. Nothing about leaving the field unset pushes you to xhigh, drops you to a conservative medium, or requires an explicit opt-in from low — high is simply what you get by default."
             }
           ]
         },
@@ -261,27 +261,27 @@
           "questions": [
             {
               "id": "q_think_2a",
-              "q": "Name a task where enabling thinking makes the product worse.",
+              "q": "Your team runs four separate Claude-based workflows and is deciding where to enable extended thinking. One handles a multi-step financial reconciliation, one debugs failing integration tests, one weighs regulatory trade-offs in a compliance memo, and one classifies inbound support tickets into one of five fixed categories. Enabling thinking on which workflow is most likely to just add latency and cost without improving results?",
               "options": [
-                "Debugging a test that keeps failing",
-                "Classifying a ticket into five buckets",
-                "Analysing a hard regulatory trade-off",
-                "Working through a multi-step calculation"
+                "The financial reconciliation workflow, since arithmetic errors easily compound across many sequential steps.",
+                "The integration-test debugging workflow, since isolating a failing assertion is a multi-step reasoning task.",
+                "The support-ticket classification workflow, since sorting into a small fixed set of categories doesn't need step-by-step reasoning.",
+                "The regulatory trade-off memo workflow, since weighing competing compliance obligations benefits from working through the reasoning."
               ],
-              "correct": 1,
-              "explain": "Simple classification gains nothing from reasoning tokens and pays for them in latency and cost."
+              "correct": 2,
+              "explain": "Simple classification into a small, fixed set of categories is exactly the kind of task where the route to the answer isn't the hard part, so reasoning tokens just add latency and cost without changing the outcome. The other three — multi-step reconciliation, test debugging, and weighing regulatory trade-offs — are precisely the categories where working through the steps is what makes thinking worth turning on."
             },
             {
               "id": "q_think_2b",
-              "q": "You enable thinking and your UI starts showing reasoning instead of the answer. Why?",
+              "q": "After enabling thinking on a mature integration, code that reads content[0].text for the final answer starts returning what looks like the model's reasoning instead. Why?",
               "options": [
-                "A thinking block now precedes the text",
-                "Thinking replaces the text block outright",
-                "The answer comes back in a separate field",
-                "max_tokens is consumed before the answer"
+                "A thinking block is now first in content, ahead of the text block your code indexes into.",
+                "Thinking replaces the text block outright, so there's no final-answer text left to read at all.",
+                "The final answer now arrives in a separate top-level response field instead of inside content.",
+                "max_tokens is being fully consumed by reasoning before any answer tokens can be produced."
               ],
               "correct": 0,
-              "explain": "A new block type appeared ahead of the text. Loop and dispatch on block.type instead of indexing."
+              "explain": "Extended thinking introduces a new block type that shows up in content ahead of the text block, so code that blindly indexes content[0] starts reading reasoning instead of the answer — the fix is to loop over blocks and dispatch on block.type. The text block is still present, not replaced or moved to a separate field, and this is a content-ordering issue, not a token-budget one."
             }
           ]
         }
@@ -289,15 +289,15 @@
       "reviewQuestions": [
         {
           "id": "r_think_1",
-          "q": "What changed about thinking on Opus 4.7?",
+          "q": "Migrating an integration to Opus 4.7, code that used to pass a thinking token budget now behaves oddly, because that parameter no longer exists. What changed?",
           "options": [
-            "It became free of any token charge",
-            "It moved out of the API into the SDK",
-            "It became adaptive — no budget to set",
-            "It became the default on all requests"
+            "Thinking is now free of any token charge whatsoever when it runs on Opus 4.7.",
+            "Thinking moved entirely out of the API and into SDK-side post-processing of the response.",
+            "Thinking became the default behavior applied to every request, whether you enable it or not.",
+            "Thinking became adaptive on Opus 4.7, removing the token budget parameter you used to set."
           ],
-          "correct": 2,
-          "explain": "Adaptive: the budget parameter is gone, and depth is expressed through effort instead."
+          "correct": 3,
+          "explain": "On Opus 4.7 thinking became adaptive, which is why the old token-budget parameter is gone — depth is now expressed through the effort setting in output_config instead. It didn't become free, it didn't move out of the API into the SDK, and it isn't on by default; you still opt in and control it, just through a different parameter."
         }
       ]
     },
@@ -312,27 +312,27 @@
           "questions": [
             {
               "id": "q_image_1a",
-              "q": "You send three photos and ask about “the second one”. What should you have done?",
+              "q": "A user uploads three product photos in one message and asks 'what's wrong with the second one?' — Claude answers about the wrong photo. What should have been done when building the message?",
               "options": [
-                "Sent each of them in separate messages",
-                "Used URLs rather than base64 payloads",
-                "Labelled them, image block before text",
-                "Downscaled them all to a uniform size"
+                "Send each photo in its own separate message instead of bundling three into one.",
+                "Give each image a clear label or caption so 'the second image' isn't ambiguous.",
+                "Switch from base64 payloads to hosted URLs for all three images.",
+                "Downscale all three images to the same uniform resolution before sending."
               ],
-              "correct": 2,
-              "explain": "Labels remove the ambiguity, and image-before-text is the ordering convention."
+              "correct": 1,
+              "explain": "Ambiguity about which photo is 'the second one' is exactly what labels or captions on each image are for — without them, ordinal references are a guess. Splitting into separate messages doesn't remove the ambiguity, and switching between base64 and URLs or normalizing resolution address different problems entirely."
             },
             {
               "id": "q_image_1b",
-              "q": "What is the cost consequence of image resolution?",
+              "q": "A photo-heavy support tool switches from downscaled thumbnails to full-resolution originals, and finance notices the per-request cost rose sharply. Is that expected?",
               "options": [
-                "None — images are billed per image sent",
-                "Bigger, higher-res images cost more input",
-                "Resolution affects the output tokens only",
-                "Only non-JPEG formats are billed by size"
+                "That's unexpected — images are billed at a flat per-image rate no matter what resolution is sent.",
+                "That's expected, but only because higher resolution affects output token count, not input token count.",
+                "That's expected — higher-resolution images cost more input tokens, making resolution a direct cost lever.",
+                "That's unexpected — resolution-dependent billing only applies to non-JPEG formats like PNG or WebP images."
               ],
-              "correct": 1,
-              "explain": "Resolution is input tokens, so downscale when the detail is not doing any work."
+              "correct": 2,
+              "explain": "Higher-resolution images cost more input tokens, so the cost jump is exactly what you'd expect from switching away from downscaled thumbnails — resolution is a budget decision, not a quality default. It isn't a flat per-image rate, the cost lands on input tokens rather than output, and the effect isn't limited to particular file formats."
             }
           ]
         }
@@ -340,15 +340,15 @@
       "reviewQuestions": [
         {
           "id": "r_image_1",
-          "q": "Can Claude refer to an image from an earlier turn?",
+          "q": "A multi-turn conversation references a diagram that was sent three turns earlier. Under what condition can Claude still refer to it correctly?",
           "options": [
-            "No — images are discarded after the reply",
-            "Only if it was uploaded via the Files API",
-            "Only within the same message it arrived in",
-            "Yes, if that message is still in the array"
+            "Only if that earlier message, image included, is still part of the array you send now.",
+            "Only if the image was uploaded through the Files API instead of being sent inline as base64.",
+            "Never — images are discarded from context as soon as the reply that used them is generated.",
+            "Always — Anthropic retains uploaded images server-side for the life of the conversation."
           ],
-          "correct": 3,
-          "explain": "Same rule as everything else in a stateless API: it is in context if you resent it."
+          "correct": 0,
+          "explain": "Like everything else in a stateless API, an image is only in context if you resend the message containing it — so it works precisely when that earlier message is still part of the array you send. There's no server-side retention that keeps it around automatically, no special Files API requirement, and it isn't discarded the instant a reply is generated — it's discarded only if you stop resending it."
         }
       ]
     },
@@ -363,27 +363,27 @@
           "questions": [
             {
               "id": "q_pdf_1a",
-              "q": "A contract's meaning is in its tables. Why not extract the text yourself and send the string?",
+              "q": "A legal team extracts text from a 40-page contract with a PDF library and sends the flat string to Claude, but gets worse answers about clause cross-references in tables than a colleague who sent the PDF directly. Why?",
               "options": [
-                "Extraction libraries are slower than the API",
-                "Extracted text cannot be cached by the API",
-                "A flat string loses the layout of the tables",
-                "The API rejects plain text over a size limit"
+                "Extraction libraries introduce OCR errors that a PDF document block avoids entirely.",
+                "Plain extracted text can't be cached, so the model re-reads it fully on every turn.",
+                "The API silently truncates any plain-text input once it crosses a certain character count.",
+                "Flattening the PDF into text loses the table layout that made the numbers meaningful."
               ],
-              "correct": 2,
-              "explain": "The document block reads layout as well as text. Flattening a table is exactly the information you would lose."
+              "correct": 3,
+              "explain": "A document block lets Claude read the visual layout alongside the extracted text, so it keeps which column a number sat in — exactly the structure a flattened string throws away. It isn't primarily about OCR error rates, prompt caching eligibility, or a silent truncation limit; the actual gap is the lost table structure."
             },
             {
               "id": "q_pdf_1b",
-              "q": "How is a PDF page billed?",
+              "q": "Finance is projecting API costs for ingesting hundreds of scanned annual reports as PDFs and needs to model the per-page cost correctly. How is each page actually billed?",
               "options": [
-                "Roughly as an image, plus its text tokens",
-                "As ordinary text tokens, and nothing else",
-                "At a flat per-page rate set by the tier",
-                "As output tokens, since it is post-prompt"
+                "As a flat per-page rate set by the account's pricing tier, independent of content.",
+                "Roughly like an image per page, plus the tokens for that page's extracted text.",
+                "As pure output tokens, since the document is processed after the prompt is read.",
+                "As ordinary text tokens only, with no separate charge for the visual layout."
               ],
-              "correct": 0,
-              "explain": "Visual tokens plus text tokens — which is why long PDFs get expensive fast."
+              "correct": 1,
+              "explain": "Each page bills roughly like an image — visual tokens — plus the tokens for whatever text was extracted from it, which is why long PDFs get expensive quickly. It isn't a flat tier-based rate, it doesn't land on output tokens, and it isn't pure text billing that ignores the visual layout being processed."
             }
           ]
         }
@@ -391,15 +391,15 @@
       "reviewQuestions": [
         {
           "id": "r_pdf_1",
-          "q": "When is sending a PDF as a document block clearly the right call?",
+          "q": "Someone proposes always sending scanned PDFs as document blocks by default, even for a one-line confirmation email that happens to be a PDF. When is that practice clearly worth its extra cost?",
           "options": [
-            "Whenever the file happens to be a PDF",
-            "When tables and figures carry the meaning",
-            "Only when it is under one page in length",
-            "Only when you have the citations enabled"
+            "Whenever the source file happens to be in PDF format, regardless of its content.",
+            "Only when the PDF is a single page long, to keep the per-page cost minimal.",
+            "When the document's tables, charts, and figures are where the actual meaning lives.",
+            "Only when citations have been enabled on that particular document block."
           ],
-          "correct": 1,
-          "explain": "The value is layout. For a plain prose PDF the difference is much smaller."
+          "correct": 2,
+          "explain": "The value of a document block is reading layout alongside text, so it earns its cost specifically when tables, charts, and figures carry meaning that a flat text extraction would lose. For a plain prose document, page count alone doesn't make the case, and citations are a separate opt-in feature that doesn't determine whether sending the PDF itself was worthwhile."
         }
       ]
     },
@@ -414,27 +414,27 @@
           "questions": [
             {
               "id": "q_cite_1a",
-              "q": "You enable citations on a PDF. Which location type comes back?",
+              "q": "You enable citations on a PDF policy document and inspect the response to build a click-to-source UI. Which kind of citation block comes back?",
               "options": [
-                "citation_char_location",
-                "citation_block_index",
-                "citation_page_location",
-                "Both, for every claim"
+                "citation_page_location blocks, each pointing at the page start and end behind a claim.",
+                "citation_char_location blocks, pointing at character offsets within the PDF text.",
+                "citation_block_index blocks, pointing at a numbered content block in the document.",
+                "Both citation types can appear at once, since PDF sources mix paged and unpaged content regions."
               ],
-              "correct": 2,
-              "explain": "PDFs are paged, so citations point at page start and end."
+              "correct": 0,
+              "explain": "PDFs are paged sources, so citations for them come back as citation_page_location blocks pointing at a page start and end. Character-offset citations are what you'd get from a plain-text source instead, there's no citation_block_index type, and PDFs don't return both kinds at once."
             },
             {
               "id": "q_cite_1b",
-              "q": "How are citations turned on?",
+              "q": "A team wants citations on a policy PDF but not on an internal scratch document sent in the same request. Where is that actually controlled?",
               "options": [
-                "A top-level parameter on the request",
-                "By asking for them in the system prompt",
-                "They are always on for document blocks",
-                "Per document block, citations: enabled"
+                "As a single top-level parameter on the request that turns citations on for every document block.",
+                "By asking for source citations explicitly in the system prompt's instructions.",
+                "They're always generated automatically for any document content block you send.",
+                "By setting citations: enabled on that specific document block, opted in per block."
               ],
               "correct": 3,
-              "explain": "Per block, opt-in — so you can cite one source and not another in the same request."
+              "explain": "Citations are opted into per document block via citations: enabled, which is exactly why you can cite the policy PDF while leaving the scratch document uncited in the same request. It isn't a single request-wide switch, asking in the system prompt wouldn't configure the field, and it isn't on automatically for every document block."
             }
           ]
         }
@@ -442,15 +442,15 @@
       "reviewQuestions": [
         {
           "id": "r_cite_1",
-          "q": "What does a claim without a citation tell you?",
+          "q": "Reviewing a long generated answer, one sentence has no citation block attached to it at all while the surrounding sentences do. What does that tell you?",
           "options": [
-            "The citation simply failed to generate",
-            "The source document was too short to cite",
-            "It is the model's own synthesis, untraced",
-            "Citations were disabled for that one turn"
+            "That citation failed to generate due to a transient error and should be retried.",
+            "That sentence is the model's own synthesis, not traced back to a specific source.",
+            "The source document was too short for that claim to be citable at all.",
+            "Citations were disabled specifically for that one sentence's underlying passage."
           ],
-          "correct": 2,
-          "explain": "Citations mark the sourced claims, so their absence marks the connective tissue the model supplied."
+          "correct": 1,
+          "explain": "Citations mark the claims that trace back to a specific source, so a sentence without one is the connective tissue the model supplied itself rather than a lookup failure. There's no per-sentence citations toggle, and a short source document doesn't make individual claims uncitable — it's simply a signal about which claims are sourced and which aren't."
         }
       ]
     },
@@ -465,27 +465,27 @@
           "questions": [
             {
               "id": "q_cu_1a",
-              "q": "What do you send back after performing a Computer Use action?",
+              "q": "Claude requests a left_click on a 'Submit' button in a Computer Use loop. What must your code do next before Claude can tell whether the click worked?",
               "options": [
-                "A JSON status object describing the action",
-                "A new screenshot, sent as the tool result",
-                "The mouse coordinates that you ended up using",
-                "Nothing — Claude continues from its plan"
+                "Return a JSON status object reporting whether the click executed without an error.",
+                "Do nothing further — Claude continues from its existing plan without new input.",
+                "Capture a new screenshot of the current screen and send it back as the tool result.",
+                "Return the exact pixel coordinates the click landed on as the tool result."
               ],
-              "correct": 1,
-              "explain": "A fresh image is the tool result. It is the only way Claude perceives whether anything changed."
+              "correct": 2,
+              "explain": "A fresh screenshot is the tool result Claude reads — it's the only way Claude can perceive whether the click actually changed anything on screen, since there's no other feedback channel. A success/failure status or the raw coordinates clicked doesn't tell Claude what the screen now looks like, and stopping without sending anything back leaves Claude with no way to continue."
             },
             {
               "id": "q_cu_1b",
-              "q": "Where must Computer Use run?",
+              "q": "You're wiring a Computer Use loop that repeatedly sends a screenshot, waits for Claude to request an action, performs it, and sends back a new screenshot. You want to know the built-in stopping condition so you don't have to hand-roll one. What is it?",
               "options": [
-                "On the user's own desktop, for realistic tests",
-                "In a sandboxed VM, never on a real desktop",
-                "On Anthropic's own infrastructure, server-side",
-                "In a browser tab with tightly restricted rights"
+                "The loop stops once Claude's response has no further action request — that is, it has decided the task is done.",
+                "The loop stops automatically after a fixed number of screenshot exchanges configured ahead of time.",
+                "The loop stops once your own code detects that two consecutive screenshots come out pixel-identical.",
+                "The loop stops once a configured timeout elapses without Claude issuing any further action request."
               ],
-              "correct": 1,
-              "explain": "Arbitrary UI actions demand a sandbox. This one is not negotiable."
+              "correct": 0,
+              "explain": "The loop repeats until Claude itself decides the task is complete, signaled by a response with no further action request — that's the built-in stopping condition, not something your code has to detect. There's no fixed exchange count or timeout baked into the loop, and comparing screenshots for pixel equality is a heuristic you'd have to build yourself, not what the loop already does."
             }
           ]
         }
@@ -493,27 +493,27 @@
       "reviewQuestions": [
         {
           "id": "r_cu_1",
-          "q": "What is Computer Use for?",
+          "q": "An internal tool team has a legacy desktop app with no API at all, and is deciding whether Computer Use is the right fit versus building custom integration code. What is Computer Use actually for?",
           "options": [
-            "Driving software that has no API of its own",
-            "Speeding up API calls by batching via a UI",
-            "Running code in a sandbox with no network",
-            "Editing files on your own server more safely"
+            "It's a good fit only for speeding up existing API calls by wrapping a UI layer around them.",
+            "It's a good fit only for running untrusted code inside a network-isolated execution sandbox.",
+            "It's a good fit only for editing files on a remote server more safely than direct access would allow.",
+            "It's a good fit specifically because the app has no API — Computer Use operates the screen instead."
           ],
-          "correct": 0,
-          "explain": "Legacy apps and consumer GUIs — the cases where no programmatic interface exists to call."
+          "correct": 3,
+          "explain": "Computer Use exists for exactly this case: software with no programmatic interface, like legacy applications and consumer GUIs, where operating the screen the way a person would is the only option. It isn't a speed optimization for existing API calls, it isn't the code-execution sandbox, and it isn't a safer file-editing mechanism — those are different tools entirely."
         },
         {
           "id": "r_cu_2",
-          "q": "How does the Computer Use loop relate to the ordinary agent loop?",
+          "q": "An engineer familiar with the ordinary agent loop is learning Computer Use and wants to know how much of that mental model carries over. What's the actual relationship?",
           "options": [
-            "A distinct protocol with its own endpoint",
-            "It runs server-side and so needs no loop",
-            "It swaps stop_reason for a screen check",
-            "The same loop, with a screenshot as result"
+            "Nothing carries over — Computer Use is a distinct protocol with its own separate endpoint.",
+            "The same loop carries over almost entirely, with a screenshot substituted in as the tool result.",
+            "It carries over except that Computer Use runs server-side and so needs no client-side loop at all.",
+            "It carries over except that stop_reason gets replaced entirely by a screen-change comparison."
           ],
-          "correct": 3,
-          "explain": "Same five steps, visual environment. The specialisation is what the tool result carries."
+          "correct": 1,
+          "explain": "Computer Use is the same five-step agent loop, with one substitution: instead of an ordinary JSON tool result, what comes back is a fresh screenshot. It isn't a separate protocol with its own endpoint, it still runs your client-side loop rather than moving server-side, and stop_reason isn't replaced by anything — the loop still ends when Claude's response carries no further action request."
         }
       ]
     }

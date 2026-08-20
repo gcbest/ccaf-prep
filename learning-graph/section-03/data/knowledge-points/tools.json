@@ -13,27 +13,27 @@
           "questions": [
             {
               "id": "q_loop_1a",
-              "q": "What distinguishes an agent from an ordinary chat integration?",
+              "q": "Your team is turning a customer-support chatbot into an autonomous agent that can look up orders and issue refunds without a human approving each step. A junior engineer says the only difference is that the agent uses a bigger context window and a more expensive model tier. What is the structural difference that actually defines the shift from chat integration to agent?",
               "options": [
-                "It relies on a more capable model tier",
-                "Claude runs both sides; tool results are turns",
-                "It maintains conversation state server-side",
-                "It streams rather than returning one response"
+                "The agent uses a model with a larger context window, letting it hold more conversation history before summarizing.",
+                "The agent streams its responses token by token instead of waiting for the full completion before displaying anything.",
+                "The agent's code supplies every following turn as a tool result, so Claude ends up running both sides of the loop.",
+                "The agent persists conversation state in a database server-side, rather than requiring the client to resend the full history."
               ],
-              "correct": 1,
-              "explain": "The human turn is replaced by a tool result your code produces. That is the whole structural difference."
+              "correct": 2,
+              "explain": "In a chat app a person supplies each user turn; in an agent, the code supplies tool results as those turns, so Claude ends up driving both sides of the loop with no human in the middle. Larger context and streaming are unrelated capabilities that plenty of ordinary chat integrations also have. Server-side state persistence changes where history lives, not who supplies the next turn."
             },
             {
               "id": "q_loop_1b",
-              "q": "In an agent, who owns what?",
+              "q": "Two engineers disagree about who is responsible for retry logic when a tool call fails inside an agent loop. One says Claude should decide when to retry; the other says the calling code should decide. Based on the ownership split that defines an agent, who owns what?",
               "options": [
-                "You own the loop and tools; Claude reasons",
-                "Claude owns the loop; you own the reasoning",
-                "Anthropic owns the loop; you own the tools",
-                "You own the tools; Claude owns loop and reasoning"
+                "You own the loop and the tools — including retry decisions — while Claude owns the reasoning about what to do next.",
+                "Claude owns the loop and decides when to retry a failed call, while your code owns only the tool implementations.",
+                "Anthropic's infrastructure owns the loop entirely, and your code is responsible only for the tool definitions you supply.",
+                "You own the tool implementations only; Claude owns both the loop's control flow and all retry decisions."
               ],
               "correct": 0,
-              "explain": "Loop and tools yours, reasoning Claude's — and that split is exactly what managed agents later renegotiate."
+              "explain": "The split is loop-and-tools versus reasoning: your code decides things like whether and how to retry, and Claude decides what to do next given the results. Options putting loop ownership on Claude reverse the actual split. The remaining option moves loop ownership to Anthropic's infrastructure, but the loop is code you write and run yourself, calling the same stateless endpoint repeatedly."
             }
           ]
         },
@@ -45,27 +45,27 @@
           "questions": [
             {
               "id": "q_loop_2a",
-              "q": "What ends an agent loop?",
+              "q": "Your agent implementation has an iteration cap of 25 as a safety net, and on a particular run it exits after only 6 iterations without ever hitting that cap. Nothing in your cap logic fired. What actually caused the loop to end?",
               "options": [
-                "The tools array has been exhausted",
-                "A maximum iteration count is reached",
-                "The response contains a text block",
-                "stop_reason comes back as end_turn"
+                "The tools array became empty because every declared tool had already been called once.",
+                "The response Claude returned had a stop_reason of end_turn, so the continue condition no longer held.",
+                "The response's content array contained a text block, which your code always treats as terminal.",
+                "The conversation reached six messages, which is treated as an implicit default exit point."
               ],
-              "correct": 3,
-              "explain": "end_turn. An iteration cap is a sensible safety net you add, but it is not what the loop is defined by."
+              "correct": 1,
+              "explain": "The loop's actual exit condition is stop_reason == end_turn; the iteration cap is a safety net you add on top, and in this run the natural exit fired first. Tools aren't consumed by use, so an empty tools array isn't a real mechanism. A text block can appear alongside a tool_use block in the same response, so its presence alone doesn't end anything, and there's no message-count default in the protocol."
             },
             {
               "id": "q_loop_2b",
-              "q": "In which step does your own code do the work?",
+              "q": "During a code review, a teammate argues that step 2 of the agent loop — where Claude decides which tool to call — is the step doing the actual work of your system, since it's where the 'intelligence' lives. You want to point out which step is where your own code executes. Which step is it?",
               "options": [
-                "Step 2, where Claude decides which tool",
-                "Step 3, where the requested tool is run",
-                "Step 5, where the loop condition is checked",
-                "Step 1, where the tools are all defined"
+                "Step 1, where the tool definitions are assembled and sent along with the request.",
+                "Step 2, where Claude decides whether to respond with text or a tool-use request.",
+                "Step 5, where the loop's stop_reason is checked against end_turn to decide whether to continue.",
+                "Step 3, where your code executes the tool Claude requested and produces a result."
               ],
-              "correct": 1,
-              "explain": "Claude asks; you execute. Step 3 is where your function actually runs."
+              "correct": 3,
+              "explain": "Step 3 is the one instance in the five steps where your own code — not Claude — does the work: it runs the requested tool and produces output. Step 2 is where Claude reasons and decides, step 1 is setup, and step 5 is just a condition check on the response you already received."
             }
           ]
         }
@@ -73,27 +73,27 @@
       "reviewQuestions": [
         {
           "id": "r_loop_1",
-          "q": "Which sequence is correct?",
+          "q": "A new engineer sketches the agent loop from memory to onboard onto the codebase, but gets the ordering of two steps backwards. Which of these correctly describes the sequence, from sending the first request through to looping again?",
           "options": [
-            "Send with tools → tool_use → execute → tool_result → repeat",
-            "Send with tools → execute → tool_use → end_turn → repeat",
-            "Execute → send with tools → tool_result → tool_use → end",
-            "Send with tools → end_turn → execute → tool_result → loop"
+            "Send the request with tools available, receive a tool_use response, execute the tool, send back a tool_result, then repeat.",
+            "Send the request with tools available, execute a tool speculatively, receive tool_use back, then send end_turn to repeat.",
+            "Execute a tool first, then send the request with tools available, followed by tool_result and tool_use, then end.",
+            "Send the request with tools available, receive end_turn immediately, execute the tool, then send tool_result and loop."
           ],
           "correct": 0,
-          "explain": "Claude requests before you execute, and end_turn is the exit rather than a stage."
+          "explain": "Claude has to request a tool before your code executes it — the sequence is request, tool_use, execute, tool_result, repeat. Executing speculatively before a request, executing before even sending the request, and treating end_turn as an early step you loop past all invert the actual order, where end_turn is the exit condition rather than a stage in the middle."
         },
         {
           "id": "r_loop_2",
-          "q": "Does the agent loop require a different API endpoint?",
+          "q": "Your team is evaluating whether adopting an agent architecture requires provisioning a different API endpoint than the one your existing chat feature already calls, since 'agent' sounds like a fundamentally different kind of request. What's actually true here?",
           "options": [
-            "Yes — /agents instead of /messages",
-            "Yes, once more than one tool is defined",
-            "No — messages.create in a loop, array growing",
-            "No, but it needs the streaming endpoint"
+            "Yes — agents call a dedicated /agents endpoint instead of the standard messages endpoint your chat feature uses.",
+            "No — it's the same stateless messages.create call, invoked repeatedly, with the message array growing each time.",
+            "Yes, but only once more than one tool is defined; a single-tool agent can still use the standard endpoint.",
+            "No, but it does require switching to the streaming variant of the endpoint to support the agent loop."
           ],
-          "correct": 2,
-          "explain": "Same stateless call, called in a loop. The agency is in your code, not in a different endpoint."
+          "correct": 1,
+          "explain": "Nothing about the API changes — it's the same stateless call, called in a loop, with the array of messages growing on each iteration. There's no separate agents endpoint, no threshold at which one becomes required, and streaming is an optional choice unrelated to whether something is structured as an agent."
         }
       ]
     },
@@ -108,27 +108,27 @@
           "questions": [
             {
               "id": "q_anatomy_1a",
-              "q": "What are the three parts of a tool definition?",
+              "q": "You're writing your first tool definition for a get_weather function and want to make sure you include every required field, no more and no less. Your teammate suggests adding an output_schema field to formally describe the return type. Which set of fields actually make up a valid tool definition, and where is the return type documented?",
               "options": [
-                "name, handler, output_schema",
-                "name, description, input_schema",
-                "name, input_schema, output_schema",
-                "description, input_schema, tool_choice"
+                "name, handler, and output_schema — with the return type formally declared in output_schema.",
+                "name, description, and input_schema — with the return type described in prose inside description.",
+                "name, input_schema, and output_schema — with the return type validated against output_schema at runtime.",
+                "description, input_schema, and tool_choice — with the return type inferred from input_schema's properties."
               ],
               "correct": 1,
-              "explain": "Name, description, input_schema. There is no output schema — what a tool returns is described in prose, in the description."
+              "explain": "A tool definition has exactly three parts — name, description, input_schema — and there is no output schema at all; what the tool returns is documented in prose inside description. Options that include output_schema or a handler field describe something outside the actual spec, and tool_choice is a request-level setting, not part of a tool definition."
             },
             {
               "id": "q_anatomy_1b",
-              "q": "What kind of specification is input_schema?",
+              "q": "A developer who has previously written OpenAPI specs is about to write input_schema for a new tool and asks whether it's some Anthropic-specific format they need to learn from scratch. What should you tell them about what input_schema actually is?",
               "options": [
-                "Standard JSON Schema, a general spec",
-                "An Anthropic format for tool arguments",
-                "A TypeScript type definition, compiled",
-                "OpenAPI, restricted to request bodies"
+                "It's standard JSON Schema, the general-purpose data-validation spec that predates this and isn't AI-specific at all.",
+                "It's an Anthropic-designed format for describing tool arguments, similar to JSON Schema but with proprietary extensions.",
+                "It's a compiled TypeScript type definition that the SDK converts into a runtime validator automatically.",
+                "It's OpenAPI, specifically restricted to the subset used for describing request bodies in REST endpoints."
               ],
               "correct": 0,
-              "explain": "Plain JSON Schema. Nothing about it is AI-specific."
+              "explain": "input_schema is plain JSON Schema — a general specification that long predates tool use and has nothing AI-specific about it, so someone who already knows JSON Schema, or OpenAPI, which is built on it, already knows this. It isn't an Anthropic invention, a compiled TypeScript artifact, or a restricted OpenAPI subset."
             }
           ]
         }
@@ -136,15 +136,15 @@
       "reviewQuestions": [
         {
           "id": "r_anatomy_1",
-          "q": "Which field describes what a tool returns?",
+          "q": "You're reviewing a colleague's new tool definition and notice there's no field anywhere describing the shape or content of what the tool will return when called — no output_schema, no returns property. They ask whether this is a mistake. What should you tell them?",
           "options": [
-            "output_schema on the definition",
-            "The input_schema's `returns` property",
-            "The description, in prose; there is none",
-            "Nothing; Claude infers it from results"
+            "It's a mistake — every tool definition should include an output_schema field describing the return shape.",
+            "It's fine, but the return format should be documented in the input_schema's `returns` property instead.",
+            "It's expected — what a tool returns is described in prose inside the description; there's no dedicated field for it.",
+            "It's fine, because Claude infers the return shape automatically from the tool's name and its arguments."
           ],
           "correct": 2,
-          "explain": "The description carries it. That is one reason the guidance is three or four sentences rather than one."
+          "explain": "There genuinely is no dedicated field for this — the description carries it in prose, which is one reason the guidance calls for three or four sentences rather than one. Adding an output_schema or a returns property isn't part of the actual spec, and Claude doesn't infer return shape from the name or arguments; it reads whatever the description says."
         }
       ]
     },
@@ -159,27 +159,27 @@
           "questions": [
             {
               "id": "q_desc_1a",
-              "q": "An agent has a working search tool and never calls it. Where do you look first?",
+              "q": "Your search_orders tool works flawlessly whenever it's invoked directly in a test harness, but in production the agent almost never calls it — instead it answers order questions from general knowledge, sometimes incorrectly. Nothing throws an error anywhere in the logs. Where should you look first to diagnose this?",
               "options": [
-                "The input_schema, for a field it cannot fill",
-                "The model tier, perhaps too small for tools",
-                "The temperature, suppressing the tool calls",
-                "The description, which drives the selection"
+                "The input_schema, in case there's a required field the agent can never plausibly fill in.",
+                "The model tier currently in use, since smaller models may not support tool use as reliably.",
+                "The temperature setting, in case it's suppressing tool-use responses in favor of text.",
+                "The tool's description, since that's what Claude reads to decide when to call it."
               ],
               "correct": 3,
-              "explain": "Selection is a description problem. It is named as the number one cause of agents ignoring tools they have."
+              "explain": "A working tool that's never called, with no error anywhere, is the textbook symptom of a vague description — it's named as the number one cause of agents misfiring or skipping available tools. Schema, model tier, and temperature can all affect other things, but none of them explain a tool that works when called directly yet never gets selected."
             },
             {
               "id": "q_desc_1b",
-              "q": "Which three things should a tool description cover?",
+              "q": "You're writing a description for a new search_customer_orders tool and want to hit every element the guidance says drives correct selection. A colleague suggests documenting who owns the tool and its typical latency instead. Which three elements should the description actually cover?",
               "options": [
-                "What it does, when to use it, what it returns",
-                "What it does, who owns it, how long it takes",
-                "Its name, its arguments, and its error codes",
-                "What it does, what it costs, when it changed"
+                "What it does, who owns it, and how long it typically takes to respond.",
+                "Its name, its arguments, and the error codes it can return on failure.",
+                "What it does, when to use it, and what it returns to the caller.",
+                "What it does, what it costs per call, and when it was last updated."
               ],
-              "correct": 0,
-              "explain": "Three or four sentences on those three points. 'When to use it' is the one most often missing."
+              "correct": 2,
+              "explain": "The three elements are what it does, when to use it, and what it returns — and 'when to use it' is specifically called out as the one most descriptions omit. Ownership, latency, cost, and version history might be useful metadata elsewhere, but none of them help Claude decide whether this tool is the right one for the current request."
             }
           ]
         }
@@ -187,27 +187,27 @@
       "reviewQuestions": [
         {
           "id": "r_desc_1",
-          "q": "Why is a tool that is never called a hard bug to notice?",
+          "q": "A tool that's available to your agent but never gets called is considered one of the harder failure modes to catch in production, compared to a tool call that errors outright. Why is that specifically?",
           "options": [
-            "The API returns a warning that is easy to miss",
-            "It only ever manifests under production load",
-            "The tool_use block comes back and is discarded",
-            "Nothing errors — it just answers without it"
+            "Because the API returns a warning in this case, but it's formatted subtly enough that teams routinely miss it.",
+            "Because this particular failure mode only ever manifests once the system is under significant production load.",
+            "Because the tool_use block does come back from Claude but then gets silently discarded by your dispatch code.",
+            "Because nothing errors at all — the agent just answers without the tool, and the answer looks plausible."
           ],
           "correct": 3,
-          "explain": "There is no failure signal. The agent produces a plausible invented answer instead of a grounded one."
+          "explain": "There's no failure signal anywhere: no error, no warning, no discarded tool_use block — the agent simply produces a plausible answer it invented instead of a grounded one, which is exactly why it's harder to catch than a call that errors. There's no API warning for this, it isn't load-dependent, and the tool_use block never gets generated in the first place, so there's nothing for dispatch code to discard."
         },
         {
           "id": "r_desc_2",
-          "q": "Two tools have overlapping purposes and Claude keeps picking the wrong one. What do you fix?",
+          "q": "You have both search_orders and lookup_order_by_id tools, and in production Claude frequently calls the wrong one for a given request — sometimes reaching for lookup_order_by_id when the user only gave a name, or search_orders when they gave an exact id. What's the most direct fix?",
           "options": [
-            "Rename them so that they sort differently",
-            "Remove one and merge their two schemas together",
-            "Sharpen both, especially 'when to use it'",
-            "Set tool_choice to any on every request"
+            "Sharpen both descriptions, especially the 'when to use it' part, so each tool's scope is explicit.",
+            "Rename the two tools so that they sort differently in whatever order the tools array happens to list them.",
+            "Remove one of the two tools entirely and merge their input schemas into a single combined schema.",
+            "Set tool_choice to any on every request, forcing Claude to weigh both tools each time it's called."
           ],
-          "correct": 2,
-          "explain": "Selection between tools is decided by description. Making each one's applicability explicit is the fix."
+          "correct": 0,
+          "explain": "Selection between tools is driven entirely by their descriptions, so making each tool's applicability explicit — particularly when to use it — is the direct fix for this kind of confusion. Renaming for sort order has no effect on selection, merging schemas loses the distinction that made two tools useful in the first place, and tool_choice: any doesn't help the model choose correctly between two tools it's already considering."
         }
       ]
     },
@@ -222,27 +222,27 @@
           "questions": [
             {
               "id": "q_proto_1a",
-              "q": "You append only the assistant's text to the history and send a tool_result. What breaks?",
+              "q": "After a tool call, your code appends only the assistant's visible text — not the full content array — to the message history, then sends a tool_result in the next user turn. On the follow-up request, Claude's response makes no reference to the tool's output at all. What went wrong?",
               "options": [
-                "The tool_use is gone; the result answers nothing",
-                "Nothing — the visible text is what matters",
-                "The tool schemas are lost from the tools array",
-                "stop_reason turns into end_turn prematurely"
+                "The tool_use block was dropped from history, so the tool_result you sent has no matching request to answer.",
+                "Nothing actually went wrong; the visible text is the only part of the response that matters to the conversation.",
+                "The original tool schemas were dropped from the tools array before the follow-up request was sent.",
+                "The stop_reason flipped to end_turn prematurely, ending the loop before the tool_result could be read."
               ],
               "correct": 0,
-              "explain": "Preserve the complete content array. The tool_use block is part of the conversation, not presentation."
+              "explain": "The invariant is preserving the complete assistant content array, not just the rendered text — the tool_use block is part of the conversation, and without it the tool_result you send has nothing to answer, so Claude can't connect the two. The text-only view might look complete to a human, but the API still needs the tool_use block for context. Tool schemas and stop_reason are unrelated to this particular failure."
             },
             {
               "id": "q_proto_1b",
-              "q": "Claude requests three tools in one turn and you return two results. What happens?",
+              "q": "In a single turn, Claude's response contains three tool_use blocks. Your code executes all three tools successfully but, due to a bug, only appends two tool_result blocks to the next user message before sending it. What happens when you send that request?",
               "options": [
-                "The request is rejected; each id needs one",
-                "Claude proceeds with the two it was given",
-                "The third one gets retried automatically",
-                "The third is treated as an error result"
+                "Claude proceeds normally using only the two results it was actually given, silently ignoring the third one entirely.",
+                "The request is rejected — every tool_use in a turn needs a matching tool_result; partial answers aren't allowed.",
+                "The third tool_use ends up being automatically retried by the API itself, before any response is returned to you.",
+                "The third tool_use gets treated as though it had returned an error result, and Claude reasons around it."
               ],
-              "correct": 0,
-              "explain": "All or nothing. Each tool_use id must be answered."
+              "correct": 1,
+              "explain": "This is one of the four invariants: every tool_use block in a turn must get a tool_result, and there's no such thing as a partial answer — the request gets rejected outright rather than Claude working around the gap. The API doesn't silently drop, auto-retry, or synthesize an error result for the missing one; it simply refuses the malformed request."
             }
           ]
         },
@@ -254,27 +254,27 @@
           "questions": [
             {
               "id": "q_proto_2a",
-              "q": "Where does authorisation for a tool call belong?",
+              "q": "A process_refund tool's system prompt states 'only refund orders belonging to the requesting customer,' and its input_schema requires an order_id string. During a red-team test, a crafted document read by the agent convinces it to call process_refund on an order belonging to a different customer, and schema validation passes because order_id is a well-formed string. Where should the authorisation check have lived to prevent this?",
               "options": [
-                "In the description, as an instruction to follow",
-                "In your executor, before the side effect runs",
-                "In the input_schema, as one required field",
-                "In the system prompt, as a standing site rule"
+                "In the description, as an explicit instruction the model is expected to follow before calling the tool.",
+                "In the input_schema, as an additional required field capturing the requesting customer's identity.",
+                "In your executor code, verifying ownership before the refund's side effect is allowed to run.",
+                "In the system prompt, stated more forcefully as a standing rule the agent must always obey."
               ],
-              "correct": 1,
-              "explain": "Only code can enforce. A prompt-level rule is a request, and untrusted content in context can compete with it."
+              "correct": 2,
+              "explain": "Authorisation has to live in code that runs before the side effect, because that's the only place it can be enforced rather than merely requested — a document read by the agent can compete with and override anything stated only in the system prompt or description. The schema already validated that order_id is a string; it has no way to check whether this particular customer is allowed to touch this particular order, and adding another field only gives the model more untrusted data to fill in, not real enforcement."
             },
             {
               "id": "q_proto_2b",
-              "q": "The schema validated the tool input. What has that established?",
+              "q": "Your tool's input_schema successfully validates a process_refund call: order_id is a string and amount_cents is an integer, exactly as required. Your teammate says this means the call is now safe to execute. What has schema validation actually established at this point?",
               "options": [
-                "That the arguments are safe to act on now",
-                "That the user authorised this exact action",
-                "That the values exist in your own database",
-                "That the shape and types are right — no more"
+                "That the arguments are now safe to act on, since schema validation is a boundary on Claude's output.",
+                "That the requesting user has been formally authorised to perform this exact refund action.",
+                "That the referenced order_id and the associated customer both exist in your production database.",
+                "That the shape and types of the arguments are correct as declared, and nothing beyond that."
               ],
               "correct": 3,
-              "explain": "Shape, not permission. Same boundary as structured output: schemas check structure, code checks truth."
+              "explain": "Schema validation checks shape and types only — it can confirm order_id is a string and amount_cents is an integer, and nothing beyond that. Whether the values are real, and whether this caller is allowed to act on them, are questions only your executor code can answer, which is exactly the same boundary structured output has: schemas check structure, code checks truth."
             }
           ]
         }
@@ -282,15 +282,15 @@
       "reviewQuestions": [
         {
           "id": "r_proto_1",
-          "q": "Which must accompany the follow-up request after a tool runs?",
+          "q": "After your code executes a tool and sends back the tool_result, you also drop the tools array from the follow-up request entirely, reasoning that Claude already knows what happened and doesn't need the definitions again. What breaks as a result?",
           "options": [
-            "Only the tool_result blocks themselves",
-            "The original tool schemas, still in tools",
-            "A fresh system prompt describing results",
-            "The tool's source code, for reference"
+            "Nothing breaks structurally at all, since only the tool_result blocks themselves are required on the follow-up.",
+            "Claude no longer has the tool definitions to reason about, since each call is stateless and nothing carries over.",
+            "The follow-up request needs a freshly written system prompt describing the tool's results instead of the schemas.",
+            "The tool's actual source code needs to be included in the request for Claude to interpret the result correctly."
           ],
           "correct": 1,
-          "explain": "The schemas stay. Each call is stateless, so dropping them leaves Claude without the definitions it is reasoning about."
+          "explain": "Each call is stateless, so dropping the tool schemas on the follow-up leaves Claude without the definitions it needs to keep reasoning about the tools in play — the schemas have to stay on every request, not just the first one. It's not enough to send only the tool_result blocks, and neither a rewritten system prompt nor the tool's source code substitutes for the actual schema."
         }
       ]
     },
@@ -305,27 +305,27 @@
           "questions": [
             {
               "id": "q_many_1a",
-              "q": "What has to change to go from one tool to five?",
+              "q": "Your agent currently has one tool, get_weather, and you're adding four more: search_orders, refund_order, cancel_order, and send_email. A teammate worries this means rewriting the while loop to handle the extra tool_use blocks that might come back. What actually needs to change to support five tools instead of one?",
               "options": [
-                "The loop, to take multiple tool_use blocks",
-                "The model tier, for the bigger schema set",
-                "The tools array and the dispatch function",
-                "tool_choice, which must now be set to any"
+                "The loop itself, since it currently assumes only a single tool_use block can appear per response.",
+                "The tools array, to declare each new schema, and the dispatch function, to add a matching case.",
+                "The model tier, since a larger model is needed to reliably reason over five separate schemas.",
+                "tool_choice, which must be explicitly set to any once more than one tool becomes available to Claude."
               ],
-              "correct": 2,
-              "explain": "Declare and dispatch. The loop is already generic over the tool set."
+              "correct": 1,
+              "explain": "Adding a tool is exactly two edits: declare its schema in the tools array, and add a matching case to the dispatch function. The loop is already generic over however many tools exist, so it doesn't need touching, and neither the model tier nor tool_choice has anything to do with the number of tools declared."
             },
             {
               "id": "q_many_1b",
-              "q": "How does Claude decide which of several tools to call?",
+              "q": "With five tools now declared, you notice Claude sometimes calls search_orders even though the tools array happened to list refund_order first, and other times it calls tools in a completely different order across otherwise-similar requests. A teammate assumes selection follows array order. What actually determines which tool Claude picks on a given turn?",
               "options": [
-                "In the order they appear in the tools array",
-                "By schema similarity to the user's phrasing",
-                "By whichever tool was used most recently",
-                "By reading all the descriptions, every turn"
+                "The order the tools happen to appear in within the tools array sent on that request.",
+                "Textual similarity between the tool's JSON schema and the wording of the user's message.",
+                "Claude reading all the provided descriptions fresh on every turn and choosing based on them.",
+                "Whichever tool was most recently called successfully earlier in the same conversation."
               ],
-              "correct": 3,
-              "explain": "Descriptions, every turn. It is why description quality gets more important as the toolbox grows."
+              "correct": 2,
+              "explain": "Selection happens by Claude reading every tool's description on every turn, which is also why description quality matters more as the toolbox grows — there's more competing for the same decision. Array order, schema-to-wording similarity, and recency of past calls aren't factors the model bases its choice on."
             }
           ]
         }
@@ -333,15 +333,15 @@
       "reviewQuestions": [
         {
           "id": "r_many_1",
-          "q": "Can Claude call more than one tool in a single turn?",
+          "q": "You're debugging why your agent takes five separate round trips to look up five independent pieces of information, one tool call per turn, when in principle nothing stops it from requesting all five at once. Is issuing multiple tool_use blocks in a single response actually possible for Claude?",
           "options": [
-            "No — only one tool_use block per response",
-            "Yes, though it often spreads them over turns",
-            "Only when tool_choice has been set to any",
-            "Only for the server-side tools it is given"
+            "No — the API only ever allows a single tool_use block per assistant response, by design.",
+            "Only for the small set of server-side tools that Anthropic hosts and executes directly.",
+            "Yes, though it often spreads calls across separate turns instead of batching them into one.",
+            "Only once tool_choice has been explicitly set to any on that particular request, and not by default."
           ],
-          "correct": 1,
-          "explain": "It can, and often does not — the conservatism that the batch tool exists to work around."
+          "correct": 2,
+          "explain": "Claude can call several tools in one turn, but its default conservatism often has it spread them across turns instead — which is exactly the behavior the batch tool exists to work around. It isn't limited to one block per response, it isn't restricted to server-side tools, and tool_choice: any doesn't gate whether multiple calls are possible in a single turn."
         }
       ]
     },
@@ -356,27 +356,27 @@
           "questions": [
             {
               "id": "q_runner_1a",
-              "q": "What does the SDK tool runner take over?",
+              "q": "You migrate an agent from a hand-written while loop to the SDK's toolRunner, passing it your actual functions instead of hand-authored JSON schemas. A teammate asks whether this means Anthropic's servers now execute your tools and enforce authorisation. What does the tool runner actually take over, and what stays your responsibility?",
               "options": [
-                "The loop, the switch, schemas, and messages",
-                "Tool execution, on Anthropic's own servers",
-                "Tool selection, by ranking the descriptions",
-                "Authorisation checks on the tool arguments"
+                "It takes over the while loop, the stop_reason switch, and schema generation — your functions and authorisation stay yours.",
+                "It takes over execution of the tools themselves, actually running each one on Anthropic's own infrastructure instead of yours.",
+                "It takes over tool selection entirely, ranking the available tool descriptions and deciding which one to call on each turn.",
+                "It takes over authorisation checks on every tool argument, validating them against your production database before execution."
               ],
               "correct": 0,
-              "explain": "Four pieces of mechanism. Your functions still run where your code runs, and authorisation is still yours."
+              "explain": "The tool runner removes four pieces of mechanism — the loop, the stop_reason handling, hand-written schemas, and manual message appending — but your functions still execute wherever your code runs, and nothing about authorisation moves with it. Execution, tool selection, and authorisation checks all remain exactly where they were; only the surrounding scaffolding disappears."
             },
             {
               "id": "q_runner_1b",
-              "q": "What does runner.untilDone() return?",
+              "q": "You call `const final = await runner.untilDone()` on an SDK tool runner and want to know exactly what gets returned once the call resolves, so you can decide what to do with it downstream. Which of these is correct?",
               "options": [
-                "A stream of every intermediate message",
-                "The list of tools that ended up called",
-                "The final assistant message, once settled",
-                "The last tool_result from the exchange"
+                "A stream emitting every intermediate message from the run, including tool_use and tool_result turns.",
+                "The list of tool names that ended up being called during the run, in the exact order they were invoked.",
+                "The last tool_result block produced during the exchange, just before Claude's final reasoning pass runs.",
+                "The final assistant message, returned once the internal loop has already run to completion and settled."
               ],
-              "correct": 2,
-              "explain": "The settled final message — the loop has already run to end_turn inside it."
+              "correct": 3,
+              "explain": "untilDone() resolves to the settled final assistant message — the runner has already driven the loop to end_turn internally before returning anything to you. It isn't a stream of intermediate turns, a list of tool names, or the raw last tool_result; those are things you'd have to inspect the runner's internal history for, not what the call itself returns."
             }
           ]
         }
@@ -384,15 +384,15 @@
       "reviewQuestions": [
         {
           "id": "r_runner_1",
-          "q": "Where do the schemas come from when using the tool runner?",
+          "q": "You've switched from hand-writing JSON schemas for each tool to using the SDK's tool runner, passing it your real functions directly. A teammate asks where the schemas Claude actually receives now come from, since nobody is writing them by hand anymore. What's the answer?",
           "options": [
-            "You still write them and pass them along",
-            "Claude infers them from the function name",
-            "Generated from your types and docstrings",
-            "They are fetched from a shared registry"
+            "You still have to write them yourself and pass them alongside your functions to the runner.",
+            "Claude infers a reasonable schema on its own, based only on the function's name.",
+            "They're fetched at runtime from a shared schema registry maintained by your organization.",
+            "They're generated automatically from your functions' types and docstrings by the runner."
           ],
-          "correct": 2,
-          "explain": "Generated from your code — which is also a reason to keep docstrings good, since they become the description Claude reads."
+          "correct": 3,
+          "explain": "The tool runner generates the schema from your functions' types and docstrings, which is also a good reason to keep those docstrings accurate — they effectively become the description Claude reads. You're no longer hand-writing schemas, there's no model-side inference from a bare function name, and there's no registry involved; it's derived straight from your own code."
         }
       ]
     },
@@ -407,27 +407,27 @@
           "questions": [
             {
               "id": "q_abstract_1a",
-              "q": "Your agent has twelve narrow tools and still fails on anything slightly novel. What principle was violated?",
+              "q": "Over several months you've built twelve narrow tools for your coding agent — refactor_code, install_dependencies, run_the_tests, and so on — one for each task the agent previously failed at. The agent now reliably handles those twelve tasks but still fails whenever it meets a slightly different request nobody anticipated. Which design principle does this pattern violate?",
               "options": [
-                "Tools should be few enough to fit context",
-                "Tools should be abstract and combinable",
-                "Tools should be server-side where possible",
-                "Tools should each do exactly one thing"
+                "Tools should be kept few enough in number to fit comfortably within the context window.",
+                "Tools should be abstract and combinable, rather than narrowly specialised to one predicted task.",
+                "Tools should run server-side wherever possible, rather than requiring local execution.",
+                "Tools should each do exactly one job, with no overlap between any two tool definitions."
               ],
               "correct": 1,
-              "explain": "Specialised tools only cover the cases you predicted. Primitives compose into the ones you did not."
+              "explain": "Each narrow tool only covers the exact case it was built for, so a dozen of them still leaves the agent unable to handle anything slightly different from what was predicted — which is precisely what happens here. The fix is tools that compose, like primitives, rather than more single-purpose tools. Context-window limits, server-side execution, and single-responsibility design aren't what's being violated; the problem is coverage of the long tail, not tool count or location."
             },
             {
               "id": "q_abstract_1b",
-              "q": "Which set illustrates the principle?",
+              "q": "You're designing a toolset for a general-purpose coding agent and want to follow the same design philosophy behind Claude Code's own tools, favoring composability over task-specific coverage. Which of these four toolsets best illustrates that philosophy?",
               "options": [
-                "refactor_code, install_dependencies, run_tests",
-                "search_orders, refund_order, cancel_order",
-                "bash, read, write, edit, glob, grep",
-                "summarise, translate, classify, extract"
+                "refactor_code, install_dependencies, and run_tests — one tool for each common engineering task.",
+                "search_orders, refund_order, and cancel_order — one tool per customer-service operation.",
+                "bash, read, write, edit, glob, and grep — a small set of generic primitives that combine.",
+                "summarise, translate, classify, and extract — one tool per common language task."
               ],
               "correct": 2,
-              "explain": "Claude Code's own toolset — deliberately generic so it can be combined."
+              "explain": "This is Claude Code's actual toolset, deliberately kept generic — a refactor becomes grep, then read, then edit, then bash, composed on the fly, rather than one purpose-built refactor_code tool. The other three sets are each collections of task-specific operations, exactly the pattern the principle argues against."
             }
           ]
         }
@@ -435,15 +435,15 @@
       "reviewQuestions": [
         {
           "id": "r_abstract_1",
-          "q": "What does abstraction cost you?",
+          "q": "After replacing several narrow, task-specific tools with a small set of general-purpose primitives, you notice the agent handles novel requests much better but occasionally makes a small mistake on a routine task the old narrow tool used to get right every time. What is this trade-off?",
           "options": [
-            "Reliability on any single predefined job",
-            "Nothing — abstract tools are strictly better",
-            "The ability to validate the tool inputs",
-            "Compatibility with the SDK tool runner"
+            "Reliability on any single predefined job, traded away in exchange for coverage of the long tail of unpredicted cases.",
+            "Nothing meaningful — abstract, combinable tools are strictly better than narrow ones in every situation.",
+            "The ability to validate the tool's inputs, since abstract tools generally can't enforce a strict input schema.",
+            "Compatibility with the SDK's tool runner, which requires narrowly scoped, single-purpose function signatures."
           ],
           "correct": 0,
-          "explain": "A narrow tool is more reliable at its one job. Abstraction trades that for handling what you did not plan for."
+          "explain": "A narrow tool built for exactly one job tends to be more reliable at that one job; giving that up is the real cost of abstraction, paid in exchange for handling the long tail of cases nobody predicted. It's a genuine trade-off, not a strict win, and it has nothing to do with input validation or tool-runner compatibility — abstract tools can still have well-defined schemas."
         }
       ]
     },
@@ -458,27 +458,27 @@
           "questions": [
             {
               "id": "q_inspect_1a",
-              "q": "An agent reports it saved the file. It did not. Which principle would have caught it?",
+              "q": "Your file-editing agent reports 'file saved successfully' at the end of a run, but when you check the repository the file was never actually written — the write call had silently failed partway through. The agent's own transcript shows no error and no contradiction anywhere. Which principle, if followed, would have caught this before the run ended?",
               "options": [
-                "Abstract tools — a narrow save would fail",
-                "Forced tool choice, so it cannot be skipped",
-                "A lower temperature, for more determinism",
-                "Environment inspection — look again after acting"
+                "Using abstract, combinable tools, since a narrower save-only tool would have failed more visibly.",
+                "Forcing a specific tool_choice on every turn, so the write step could never be skipped.",
+                "Lowering the sampling temperature, to make the agent's reported outcomes more deterministic.",
+                "Environment inspection — reading the file back or checking the write's result after acting."
               ],
               "correct": 3,
-              "explain": "Without an inspection step, nothing in the loop ever contradicts the agent's assumption that the write worked."
+              "explain": "Without a look-again step after the write, nothing in the loop ever contradicts the agent's assumption that the write succeeded, so it reports success from inside a loop that never checked. Tool abstraction, forced tool_choice, and temperature are all unrelated to whether the agent verifies outcomes; the fix here is specifically confirming state after acting, not before."
             },
             {
               "id": "q_inspect_1b",
-              "q": "Why can an agent not simply know whether its action succeeded?",
+              "q": "A developer argues that a sufficiently capable agent should be able to reason about whether its own previous action succeeded, without needing an explicit verification step, since the model 'knows' what it just did. Why is that reasoning wrong?",
               "options": [
-                "Tool results are async and may arrive late",
-                "The model does not retain the previous turn",
-                "It perceives only through the tool results",
-                "Success gets reported only at end_turn"
+                "Claude can only perceive its environment through tool results, with no other channel available to it.",
+                "Tool results are delivered asynchronously and can arrive well after the model has moved on to the next step.",
+                "The model discards all context from the previous turn the moment a new tool_use block gets generated.",
+                "Success or failure of an action only gets reported back to the agent once the entire loop reaches end_turn."
               ],
-              "correct": 2,
-              "explain": "There is no channel other than tool results. Perception is something the loop provides or withholds."
+              "correct": 0,
+              "explain": "Perception in an agent is entirely mediated by tool results — there's no other channel, so whatever the loop doesn't feed back in, the model simply doesn't know, no matter how capable it is. The model doesn't discard prior context, tool results aren't inherently asynchronous in this sense, and outcomes aren't withheld until end_turn — the actual gap is that nothing forced a verifying tool call to happen at all."
             }
           ]
         }
@@ -486,15 +486,15 @@
       "reviewQuestions": [
         {
           "id": "r_inspect_1",
-          "q": "Why read a file before editing it?",
+          "q": "A code-review comment asks why your agent's edit routine always reads a file immediately before editing it, even when the agent already read that same file a few turns earlier in the conversation. What's the justification for reading it again right before the edit?",
           "options": [
-            "To warm the cache before the edit call",
-            "So the edit targets the current content",
-            "Because edit tools require the contents",
-            "To confirm you are authorised to edit"
+            "To warm a local cache ahead of time so the subsequent edit call can execute with noticeably lower latency.",
+            "So the edit targets the file's actual current content, not content merely remembered from earlier turns.",
+            "Because the edit tool's underlying API requires the full file contents to be passed as an explicit argument.",
+            "To confirm the agent is properly authorised to modify that particular file before the edit proceeds."
           ],
           "correct": 1,
-          "explain": "The 'before' half of look-act-look. An edit built on remembered content is an edit built on a guess."
+          "explain": "This is the 'before' half of look-act-look: re-reading immediately before editing ensures the edit targets the file's actual current state rather than a stale memory of it from several turns back, since the file could have changed in between. It isn't about cache warming, an API requirement to pass full contents, or an authorisation check — those are different concerns entirely."
         }
       ]
     },
@@ -509,27 +509,27 @@
           "questions": [
             {
               "id": "q_batch_1a",
-              "q": "What does batch_tool's input schema accept?",
+              "q": "You want to give Claude a way to look up weather for five cities in a single round trip instead of five sequential tool calls, since it tends to call independent lookups one at a time across separate turns. You design a batch_tool whose input_schema needs to carry all five requests at once. What should that input_schema actually accept?",
               "options": [
-                "A list of tool names to enable this turn",
-                "A single tool name plus a repeat count",
-                "A nested conversation to run separately",
-                "An array of sub-invocations, name and input"
+                "A list of tool names to enable for that specific turn, letting Claude call any of them once each.",
+                "A single tool name paired with a repeat count, applied identically across all five cities.",
+                "An array of sub-invocations, each specifying a tool name and its own input, executed together.",
+                "A nested conversation object describing a separate sub-agent run for each city lookup."
               ],
-              "correct": 3,
-              "explain": "An array of {name, input} pairs, which your code unpacks and executes."
+              "correct": 2,
+              "explain": "The batch tool's input_schema takes an array of sub-invocations, each with its own name and input, which your code unpacks and executes — optionally in parallel — returning all results together as one tool_result. The other designs either don't let each sub-call carry distinct arguments or invent machinery, like a nested sub-conversation, that isn't part of the actual pattern."
             },
             {
               "id": "q_batch_1b",
-              "q": "When is batching the wrong move?",
+              "q": "Your agent needs to look up a customer's order, then use that order's shipping address to look up delivery estimates for that specific address. A teammate suggests wrapping both calls in a single batch_tool invocation to save a round trip. Why would that be the wrong move here, regardless of the latency it might save?",
               "options": [
-                "When the calls hit the same backend service",
-                "When one call's input needs another's result",
-                "When there are more than five calls in play",
-                "When the tools involved are all server-side"
+                "Because both calls happen to hit the same backend service, which the batch tool can't route to twice.",
+                "Because the second call needs the first call's result as input, so the two calls aren't independent.",
+                "Because batching is only ever supported once there are more than five sub-invocations involved in total.",
+                "Because all the tools being called here run server-side, and batching simply doesn't apply to those."
               ],
               "correct": 1,
-              "explain": "Independence is the precondition. Dependent calls have to be sequential — that is what the sequencing is for."
+              "explain": "Batching's whole precondition is that the calls are independent; here the delivery-estimate lookup needs the order's address as input, so the second call can't run until the first has returned. Same-backend routing, a minimum call count, and server-side-only restrictions aren't real constraints on the batch tool — the actual constraint is data dependency between the calls."
             }
           ]
         }
@@ -537,15 +537,15 @@
       "reviewQuestions": [
         {
           "id": "r_batch_1",
-          "q": "What problem does the batch tool solve?",
+          "q": "Your agent needs to look up weather for five independent cities and currently does so across five separate round trips, one per turn, even though none of the five lookups depends on any other. What specific problem is the batch tool designed to solve here?",
           "options": [
-            "Claude calling independent tools one per turn",
-            "Claude calling too many at once, hitting limits",
-            "Tool results arriving back out of their order",
-            "Tool schemas taking up far too much context"
+            "Tool results coming back to the agent out of the order in which the calls were originally issued.",
+            "Tool schemas collectively consuming too much of the available context window as more tools are added.",
+            "Claude's tendency to call independent tools one at a time across separate turns instead of together.",
+            "Claude attempting to call too many tools at once in a single turn and hitting a hard request limit."
           ],
-          "correct": 0,
-          "explain": "It collapses N round trips into one by giving the conservative serial habit a single call to express itself through."
+          "correct": 2,
+          "explain": "The batch tool exists specifically because Claude tends to call independent tools one per turn even when nothing requires that — giving it a single tool that accepts an array of sub-invocations collapses those N round trips into one. It isn't addressing result ordering, schema context usage, or a limit on simultaneous calls; those aren't the problem it's solving."
         }
       ]
     },
@@ -560,27 +560,27 @@
           "questions": [
             {
               "id": "q_fine_1a",
-              "q": "What causes the delay-then-burst pattern when streaming a large tool input?",
+              "q": "While streaming a tool call with a large input payload, your UI shows nothing for several seconds and then the entire argument value appears at once, rather than filling in progressively like the surrounding text does. What causes this specific delay-then-burst pattern?",
               "options": [
-                "Network buffering between the SDK and API",
-                "Tool inputs are generated after text blocks",
-                "Rate limiting applied to streamed tool calls",
-                "The API validates and emits complete pairs"
+                "By default the API buffers and validates tool input JSON server-side, emitting only complete key/value pairs at a time.",
+                "Tool inputs are always generated only after every preceding text block has finished streaming in full.",
+                "Rate limiting is applied specifically to streamed tool-use chunks once they exceed a certain payload size.",
+                "The network connection between your SDK client and the API is buffering responses at the transport layer."
               ],
-              "correct": 3,
-              "explain": "Server-side validation holds each pair until it is complete."
+              "correct": 0,
+              "explain": "By default the API validates tool input JSON and only releases complete top-level key/value pairs, which is exactly what produces the nothing-then-burst pattern on a large field. There's no ordering rule tying tool inputs to text blocks finishing first, no special rate limit on tool-use chunks, and this isn't a transport-layer buffering artifact — it's deliberate server-side validation."
             },
             {
               "id": "q_fine_1b",
-              "q": "What must your code handle once fine-grained streaming is on?",
+              "q": "You enable fine_grained_tool_streaming so your UI can show a large tool argument filling in live, character by character, instead of appearing all at once. Your teammate assumes this is a free improvement with no other change needed to your handling code. What does your code now need to handle that it didn't before?",
               "options": [
-                "Content blocks arriving out of their order",
-                "Duplicate tool_use ids within one response",
-                "Missing stop_reason values on the responses",
-                "Partial or invalid JSON, malformed values"
+                "Content blocks arriving out of the order they were generated in, requiring you to reorder them yourself.",
+                "Duplicate tool_use ids appearing within a single response, requiring de-duplication before execution.",
+                "Responses coming back with no stop_reason value set at all, leaving you to assume a default yourself.",
+                "Partial or invalid JSON, since malformed values can appear mid-stream once server-side validation is off."
               ],
               "correct": 3,
-              "explain": "You disabled the validation, so its job is now yours: buffer, validate, recover."
+              "explain": "Turning off buffering also turns off the server-side JSON validation that came with it, so your code now has to buffer, validate, and recover from partial or malformed values itself — that's the trade fine-grained streaming makes: immediacy for safety. Ordering, duplicate ids, and missing stop_reason aren't consequences of this particular setting."
             }
           ]
         }
@@ -588,15 +588,15 @@
       "reviewQuestions": [
         {
           "id": "r_fine_1",
-          "q": "What is the trade-off fine-grained tool streaming makes?",
+          "q": "Your team is deciding whether to turn on fine-grained tool streaming for a UI that shows tool arguments filling in live as they're generated. Before flipping it on, you want to be precise about what you're actually trading away in exchange for that immediacy. What's the trade-off?",
           "options": [
-            "Lower cost, set against higher latency",
-            "Better tool selection against slower replies",
-            "Faster streaming against server-side validation",
-            "Larger tool inputs against fewer tools"
+            "Lower per-token cost, traded against modestly higher end-to-end latency for the full response.",
+            "Better tool selection accuracy, traded against slightly slower replies from the model overall.",
+            "Faster overall streaming throughput, traded against support for a smaller number of declared tools.",
+            "Faster, more immediate streaming of arguments, traded against losing the API's server-side JSON validation."
           ],
-          "correct": 2,
-          "explain": "Immediacy for safety. The validation does not disappear — it moves to your code."
+          "correct": 3,
+          "explain": "The actual trade is immediacy for safety: you get argument chunks streamed as they're generated instead of held until complete, but you lose the server-side validation that used to catch partial or malformed JSON before it reached your code — that validation doesn't disappear, it just becomes your responsibility. Cost, tool-selection accuracy, and the number of tools you can declare aren't affected by this setting at all."
         }
       ]
     }

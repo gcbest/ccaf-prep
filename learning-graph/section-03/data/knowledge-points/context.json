@@ -13,27 +13,27 @@
           "questions": [
             {
               "id": "q_ctx_1a",
-              "q": "Which of these occupies the context window?",
+              "q": "Your team is auditing token usage on a production agent and budgets for the system prompt, message history, and attached files, but the monthly bill comes in noticeably higher than the estimate. The agent has 15 tools defined with detailed descriptions and uses extended thinking on every turn. What did the original budget most likely leave out?",
               "options": [
-                "Only the message history that you send",
-                "System prompt, history, tools, files, thinking",
-                "The message history and system prompt only",
-                "Everything but the tool definitions themselves"
+                "Tool definitions and thinking blocks — neither appears in the conversation as the user reads it, so both are easy to leave out of a token budget.",
+                "Tool results returned from earlier turns, since those are automatically discarded from context as soon as the model produces a reply to the user.",
+                "The cached portion of the system prompt, since prompt caching removes cached tokens from the context window that gets billed for that request.",
+                "Retry attempts triggered by transient API errors, since each retry silently resends the full request payload without appearing anywhere in the usage logs."
               ],
-              "correct": 1,
-              "explain": "All of it. Tool definitions in particular are a fixed cost people routinely overlook."
+              "correct": 0,
+              "explain": "Context includes tool definitions and thinking blocks alongside the system prompt, history, and files, but both are easy to forget because neither shows up in the conversation the way a user reads it — with 15 detailed tool descriptions and thinking on every turn, that's a real fixed cost. Tool results stay in context as part of the message history; they aren't discarded once the model replies. Prompt caching makes cached tokens cheaper, but it doesn't remove them from the context window itself, so they're still counted. And retries would show up in the usage logs like any other request — they aren't a hidden, unlogged cost."
             },
             {
               "id": "q_ctx_1b",
-              "q": "What happens when the context window fills?",
+              "q": "During a load test, one of your agent's conversations grows long enough to exceed the model's context window. Rather than crashing, you're hoping the API will handle this gracefully on its own. What actually happens when the window fills?",
               "options": [
-                "The oldest turns are dropped automatically",
-                "The response truncates with max_tokens",
-                "The request simply fails outright",
-                "Claude summarises the history on its own"
+                "The oldest turns are automatically dropped from history so the request still processes within the window.",
+                "The request fails outright — the API does not silently truncate or drop content to make it fit.",
+                "The response gets cut short by max_tokens, so the reply itself shrinks until the request fits.",
+                "Claude summarizes the earlier turns on its own initiative before replying, without being asked to."
               ],
-              "correct": 2,
-              "explain": "It fails. Automatic summarisation is compaction, which is an opt-in you have to ask for."
+              "correct": 1,
+              "explain": "Once the context window is full, the request simply fails — the API has no silent truncation or automatic trimming behavior. Dropping the oldest turns automatically would be a form of compaction, but that's an opt-in behavior you request explicitly, not something that happens by default. max_tokens governs how long the reply can be, not whether the incoming request fits, so it can't be the mechanism here. And Claude doesn't summarize history on its own initiative — server-side compaction is a feature you configure, not spontaneous behavior."
             }
           ]
         }
@@ -41,15 +41,15 @@
       "reviewQuestions": [
         {
           "id": "r_ctx_1",
-          "q": "How does the course state the goal of context management?",
+          "q": "A junior engineer proposes a strict rule for the team: always keep every request under half the context window, regardless of what's actually relevant to the task. You want to correct this before it becomes policy. What does the course actually say the goal of context management is?",
           "options": [
-            "Fit absolutely everything into it",
-            "Keep requests under half the window",
-            "Minimise total tokens per request",
-            "Fit the right things in, not everything"
+            "Fit absolutely everything available — system prompt, tools, files, and history — into every single request without exception.",
+            "Keep every request under some fixed fraction of the window, such as half, regardless of what the task actually requires.",
+            "Fit the right things into context for the task at hand, not everything available and not an arbitrary fraction of the window.",
+            "Minimize the total number of tokens sent on every request, treating token count itself as the metric to optimize."
           ],
-          "correct": 3,
-          "explain": "Selection, not compression. Cost is a consequence; relevance is the objective."
+          "correct": 2,
+          "explain": "The goal is selection, not a size target — fit the right things in for the task at hand, whether that's a lot of context or very little. A rule to include everything ignores that unrelated content still costs money and competes for the model's attention. A fixed fraction like 'under half the window' is arbitrary and unrelated to what the task actually needs. And minimizing total tokens treats cost as the objective, when relevance is really what determines what belongs in a request — cost reduction is a side effect of getting that right, not the goal itself."
         }
       ]
     },
@@ -64,27 +64,27 @@
           "questions": [
             {
               "id": "q_jit_1a",
-              "q": "A 200-page manual sits in your system prompt “just in case”. What replaces it?",
+              "q": "Your compliance agent currently has the entire 200-page building code manual pasted into its system prompt 'just in case' a question touches on it, and this is driving up cost on every single turn regardless of whether the manual is ever needed. Which redesign follows the just-in-time context pattern?",
               "options": [
-                "Server-side compaction, to summarise it",
-                "A cache breakpoint placed after the manual",
-                "A lookup tool the agent calls on demand",
-                "The memory tool, holding the whole manual"
+                "Add a context_management edit of type compact so the API automatically summarizes the manual once the conversation grows long.",
+                "Move the manual into a cache breakpoint so repeated requests reuse the cached tokens instead of reprocessing the full text.",
+                "Store the manual in the memory tool's storage backend so it persists across sessions instead of living in the system prompt.",
+                "Replace the pasted manual with a lookup_building_code tool that the agent calls only when a question actually requires it."
               ],
-              "correct": 2,
-              "explain": "Just-in-time: don't preload, let the agent pull. Caching would make re-sending it cheaper without making it necessary."
+              "correct": 3,
+              "explain": "Just-in-time context means loading what's needed on demand instead of preloading everything, and a lookup tool is exactly that: the manual's content is only pulled in when a question requires it. Compaction summarizes conversation history that has already accumulated, it doesn't decide what to load in the first place. A cache breakpoint makes resending the manual cheaper but doesn't stop it from being preloaded on every turn. The memory tool is for persisting information across sessions, not for keeping large reference material out of context until it's needed."
             },
             {
               "id": "q_jit_1b",
-              "q": "What makes just-in-time different from the other three context patterns?",
+              "q": "During an architecture review, a teammate argues that just-in-time context and prompt caching are essentially the same idea and should be implemented the same way. What's the key distinction that makes this comparison wrong?",
               "options": [
-                "It is the only one that lowers your cost",
-                "It is a pattern with no API feature at all",
-                "It is enabled by default on every request",
-                "It applies to agents but not to workflows"
+                "Just-in-time context is architectural, with no field to set, while caching is opted into via an explicit cache_control breakpoint.",
+                "Just-in-time context only applies to agents that use extended thinking, while caching works identically for both agentic and single-turn workflows.",
+                "Just-in-time context reduces the number of tool calls an agent has to make, while caching instead reduces the number of tokens billed on cached turns.",
+                "Just-in-time context is configured through the context_management field, while caching requires a separate memory tool storage backend."
               ],
-              "correct": 1,
-              "explain": "Nothing to switch on. It is a decision about architecture."
+              "correct": 0,
+              "explain": "Of Anthropic's four context-management patterns, just-in-time is the only one that's purely architectural — it's a decision about what to preload versus pull on demand, with nothing to switch on. Caching, by contrast, is opt-in through an explicit cache_control breakpoint. The claim about extended thinking is unrelated to either pattern. And the claim about configuration fields has it backwards: context_management enables compaction, not just-in-time, and caching doesn't involve the memory tool at all."
             }
           ]
         }
@@ -92,15 +92,15 @@
       "reviewQuestions": [
         {
           "id": "r_jit_1",
-          "q": "Your just-in-time design is sound but the agent answers without ever calling the lookup tool. Where is the fault?",
+          "q": "You've replaced a preloaded 200-page manual with a lookup_building_code tool, exactly following the just-in-time pattern. In production, the agent still answers code-related questions from its own general knowledge and never calls the tool, even on questions the manual would answer correctly. Where should you look first to fix this?",
           "options": [
-            "The context window is simply too small",
-            "The tool schema is far too complex to fill",
-            "Compaction removed the tool definition",
-            "The tool description, which drives choice"
+            "The context window, since it's likely too small to hold the tool definition alongside the rest of the conversation history.",
+            "The tool's description, since just-in-time context only works if the agent is convinced to reach for the tool in the first place.",
+            "Server-side compaction, since it may be silently removing the tool definition once the conversation crosses its trigger threshold.",
+            "The tool's input schema, since an overly complex schema will cause the agent to skip calling the tool entirely."
           ],
-          "correct": 3,
-          "explain": "The pattern depends on the agent choosing to pull, and that choice is made from the description."
+          "correct": 1,
+          "explain": "Just-in-time context depends on the agent choosing to pull data through the tool, and that choice is driven by how well the description communicates when to use it — a vague description leaves a perfect architecture unused. A context window that's too small would produce an error, not silent avoidance of the tool. Compaction manages conversation history that already exists; it has no mechanism for removing tool definitions. A complex schema can make a tool harder to fill in correctly once called, but it doesn't stop the model from calling it in the first place."
         }
       ]
     },
@@ -115,27 +115,27 @@
           "questions": [
             {
               "id": "q_compact_1a",
-              "q": "Which field enables server-side compaction?",
+              "q": "Your agent's conversations are growing long enough that you want the API itself to summarize older turns once the input crosses a threshold, rather than writing that logic yourself. Which request configuration turns this on?",
               "options": [
-                "context_management, with an edits compact entry",
-                "compaction: true at the top of the request",
-                "auto_summarise set on the system prompt block",
-                "A cache_control block with type compact"
+                "Setting compaction: true at the top level of the messages request, alongside the model and max_tokens fields.",
+                "Adding a cache_control block of type compact to the last message in the conversation history.",
+                "Setting context_management to an object with an edits array containing an entry of type compact.",
+                "Passing auto_summarize: true inside the system prompt block, next to its cache_control setting."
               ],
-              "correct": 0,
-              "explain": "context_management: {edits: [{type: \"compact\"}]}."
+              "correct": 2,
+              "explain": "Server-side compaction is opted into with context_management: {edits: [{type: 'compact'}]} — that's the exact field the API checks against the trigger threshold. There's no top-level compaction boolean, and cache_control governs caching breakpoints, not summarization. An auto_summarize flag on the system prompt block isn't a real field either; compaction is configured at the context_management level, not nested inside the prompt."
             },
             {
               "id": "q_compact_1b",
-              "q": "What does compaction take off your plate?",
+              "q": "After turning on server-side compaction, a developer on your team asks what work it actually removes from their responsibilities, since they assumed it would also help decide which documents get pulled into context in the first place. How should you answer?",
               "options": [
-                "Deciding what to load into context at all",
-                "Tracking length and deciding when to trim",
-                "Paying for the input tokens you resend",
-                "Validating the tool inputs that arrive"
+                "It removes the need to decide what to load into context at all, since compaction now selects which sources are relevant.",
+                "It removes the cost of the input tokens you resend, since compacted turns are no longer billed on subsequent requests.",
+                "It removes the need to validate tool inputs before they're sent to the model, since the API validates them during the compaction pass.",
+                "It removes the bookkeeping of tracking length and deciding when to trim, while what to load stays a separate, just-in-time problem."
               ],
-              "correct": 1,
-              "explain": "The bookkeeping. What to load is a different problem, and just-in-time's."
+              "correct": 3,
+              "explain": "Compaction manages the conversation you already have — it takes over tracking length and deciding when to trim older turns, but it has no say in what gets loaded into context in the first place; that's the problem just-in-time context solves. Compacted turns are summarized, not removed from billing, so the token-cost claim is wrong. And compaction doesn't validate tool inputs — that's a separate concern from summarizing history."
             }
           ]
         }
@@ -143,15 +143,15 @@
       "reviewQuestions": [
         {
           "id": "r_compact_1",
-          "q": "Which context features do managed agents enable by default?",
+          "q": "You're deciding between building your own agent loop or using Anthropic's managed agents product for a long-running customer support workflow, and want to know what context-management work you'd get for free. What ships enabled by default on managed agents?",
           "options": [
-            "Compaction only, not caching",
-            "Memory and compaction together",
-            "Caching and compaction together",
-            "None — all are opt-in everywhere"
+            "Compaction and caching are both enabled by default, since a hosted long-running loop needs both almost by definition.",
+            "Only caching is enabled by default, since compaction requires a conversation-length trigger you must configure yourself.",
+            "Only compaction is enabled by default, since caching requires you to manually place cache_control breakpoints.",
+            "Neither is enabled by default — both require explicit context_management configuration, just as in a self-managed setup."
           ],
-          "correct": 2,
-          "explain": "Both, since a hosted long-running loop needs them almost by definition."
+          "correct": 0,
+          "explain": "Managed agents enable both compaction and caching out of the box, since a hosted, long-running loop accumulates conversation history and repeats stable prefixes almost by definition, making both nearly always desirable. Caching isn't the only one enabled — compaction ships too, so limiting it to one or the other misstates the default. And it isn't an opt-in-for-both situation either, which is what distinguishes managed agents from a self-managed setup where you configure context_management yourself."
         }
       ]
     },
@@ -166,27 +166,27 @@
           "questions": [
             {
               "id": "q_cache_1a",
-              "q": "You put a cache breakpoint at the end of your tool definitions. What is cached?",
+              "q": "You add a cache_control breakpoint to the last block in your tool definitions array, right before the system prompt begins. On the next request, which portion of the request actually gets served from cache?",
               "options": [
-                "Only the tool definitions themselves",
-                "Everything after the tool definitions",
-                "The whole request, start to finish",
-                "Everything up to and including them"
+                "Only the individual tool definition block that carries the cache_control marker, not the other tool definitions before it.",
+                "Everything up to and including the tool definitions, since a breakpoint marks a prefix rather than a single tagged block.",
+                "The entire request from start to finish, since a single breakpoint anywhere causes the whole payload to be cached.",
+                "Everything that comes after the tool definitions, since the breakpoint marks where fresh content begins."
               ],
-              "correct": 3,
-              "explain": "A breakpoint caches the prefix — everything before and including it."
+              "correct": 1,
+              "explain": "A cache breakpoint is a prefix marker, not a tag on the one block it sits on — everything before and including it gets cached, which here means all of the tool definitions. Limiting the cache to just the marked block misunderstands how the prefix works. Caching the entire request regardless of breakpoint placement would defeat the purpose of choosing where to put it. And content after the breakpoint is processed normally, not cached, so that has it backwards too."
             },
             {
               "id": "q_cache_1b",
-              "q": "Which parts of a request are the best caching candidates?",
+              "q": "Your team is deciding which parts of a customer-support agent's request to mark with cache breakpoints. The system prompt and tool definitions haven't changed in months, while the user's message is different on every single call. Which caching strategy fits this pattern?",
               "options": [
-                "System prompts and tool definitions",
-                "The user's most recent message text",
-                "Tool results, which repeat quite a lot",
-                "Whichever part happens to be largest"
+                "Place the breakpoint after the user's message, since that's the largest and most expensive part of the request to reprocess.",
+                "Place breakpoints on tool results only, since those are the content that repeats most often across a multi-turn conversation.",
+                "Place the breakpoint after the tool definitions and system prompt, since stability matters more than size for caching.",
+                "Skip caching entirely for this workflow, since a request with any per-call variation can't benefit from a cache breakpoint."
               ],
-              "correct": 0,
-              "explain": "Stability is the criterion, and those two rarely change."
+              "correct": 2,
+              "explain": "Stability is the criterion for a good caching candidate, and the system prompt and tool definitions rarely change while the user's message changes every call — so the breakpoint belongs after them. Placing it after the user's message would cache exactly the part that's guaranteed to differ next time, producing a miss on every request. Tool results vary turn to turn within a conversation and aren't the stable-prefix candidates the rule points to. And skipping caching entirely ignores that only the volatile part needs to sit after the breakpoint — the stable part ahead of it still benefits."
             }
           ]
         }
@@ -194,15 +194,15 @@
       "reviewQuestions": [
         {
           "id": "r_cache_1",
-          "q": "Which block form is required to add a cache breakpoint?",
+          "q": "A developer tries to add a cache breakpoint by writing system: \"You are a helpful assistant...\" as a plain string, then adding a cache_control field next to it at the top level of the request. The request succeeds but nothing is ever cached. What's wrong with this approach?",
           "options": [
-            "The shorthand plain-string form only",
-            "The longhand block form, with cache_control",
-            "Either — cache_control is a top-level field",
-            "A dedicated cache block type entirely"
+            "cache_control only ever applies to tool definitions, never to the system prompt, regardless of how the prompt text is formatted.",
+            "The system prompt needs a matching prefix repeated in the very first user message before any breakpoint takes effect.",
+            "cache_control is itself a top-level request field, so it can sit directly next to system rather than nested inside a block.",
+            "cache_control attaches to a longhand content block, so the string has to become a block with type and text fields first."
           ],
-          "correct": 1,
-          "explain": "cache_control hangs off a longhand block, so a plain string system prompt has to be rewritten as one."
+          "correct": 3,
+          "explain": "cache_control is a property of a longhand content block, not a top-level request field, so a plain-string system prompt has to be rewritten into the {type: 'text', text: ..., cache_control: {...}} form before a breakpoint can attach to it. The claim that cache_control only applies to tools is wrong — system prompts are one of the best caching candidates precisely because they're stable. There's no requirement to match a prefix in the first user message; the breakpoint concerns the prefix up to itself, not later messages. And treating cache_control as a top-level field is exactly the mistake causing the request to silently cache nothing."
         }
       ]
     },
@@ -217,27 +217,27 @@
           "questions": [
             {
               "id": "q_rules_1a",
-              "q": "Your cache never hits, though the system prompt is identical — except you now interpolate the user's first name at the top. Which rule did you break?",
+              "q": "You add prompt caching to your support agent to cut costs, but cache hit rate stays at 0% across thousands of requests even though the system prompt template hasn't changed. You then realize the template interpolates the customer's first name at the very top of the prompt on every call. Which caching rule does this violate?",
               "options": [
-                "The 1,024-token minimum prefix size",
-                "The four-breakpoint per-request limit",
-                "The cached prefix must be identical",
-                "The one-hour cache entry lifetime"
+                "The cached prefix has to match byte for byte, and interpolating a name changes the first content processed, invalidating the prefix.",
+                "The request exceeds the four-breakpoint limit, since each interpolated name effectively creates an additional implicit breakpoint.",
+                "The prefix falls under the 1,024-token minimum, since a short interpolated name doesn't add enough tokens to qualify for caching.",
+                "The cache entry expires after its one-hour lifetime, and too much time passes before the next request for that same customer arrives."
               ],
-              "correct": 2,
-              "explain": "The prefix must match byte for byte. A name at the top changes the very first thing processed."
+              "correct": 0,
+              "explain": "A cached prefix must match identically, byte for byte, and putting the customer's name at the top of the prompt makes every request's prefix different from the last, so nothing ever matches. This has nothing to do with the four-breakpoint limit, which counts explicit cache_control markers, not incidental text changes. The 1,024-token minimum is about whether the prefix is large enough to cache at all, not about a small addition invalidating an otherwise-large prefix. And a one-hour expiry would explain occasional misses on slow traffic, not a flat 0% hit rate across thousands of requests with varying names."
             },
             {
               "id": "q_rules_1b",
-              "q": "What is the processing order that caching follows?",
+              "q": "You're designing where to place your first cache breakpoint and want it to cover the largest possible prefix without needing to touch it again as the system prompt evolves. Understanding the API's internal processing order will tell you where that natural first breakpoint sits. What is that order?",
               "options": [
-                "messages → system prompt → tools",
-                "system prompt → tools → messages",
-                "system prompt → messages → tools",
-                "tools → system prompt → messages"
+                "messages, then the system prompt, then tool definitions, so a breakpoint after messages covers everything.",
+                "tool definitions, then the system prompt, then messages, so a breakpoint after tools forms the natural outermost prefix.",
+                "system prompt, then tool definitions, then messages, so a breakpoint after the system prompt covers the most content.",
+                "system prompt, then messages, then tool definitions, so tools should always carry the last breakpoint, not the first."
               ],
-              "correct": 3,
-              "explain": "Tools first, which is why they make the natural outermost breakpoint."
+              "correct": 1,
+              "explain": "The API processes tool definitions first, then the system prompt, then messages — which is exactly why a breakpoint placed right after the tools forms the natural outermost prefix, covering the most stable content with the fewest breakpoints. Reversing the order to start with messages is wrong because messages are processed last, not first, so a breakpoint there wouldn't capture tools or the system prompt at all. Putting the system prompt first misstates the order the API actually follows. And treating tools as the last stage rather than the first inverts the very fact that makes them the ideal first breakpoint."
             }
           ]
         },
@@ -249,27 +249,27 @@
           "questions": [
             {
               "id": "q_rules_2a",
-              "q": "How long does the cache live?",
+              "q": "Your team runs two workloads against the same system prompt and tool set: a chat support service handling requests continuously throughout the day, and a batch job that regenerates a report once every 24 hours. You're deciding whether prompt caching is worth setting up for each. What should guide that decision?",
               "options": [
-                "One hour",
-                "Five minutes",
-                "24 hours",
-                "Until the conversation ends"
+                "Caching benefits the batch job more than the chat service, since batch requests typically process a significantly larger number of tokens per call.",
+                "Caching benefits neither workload here, since both would need the memory tool rather than prompt caching to persist content between separate requests.",
+                "Caching benefits the chat service far more than the batch job, since the one-hour cache lifetime means the batch job's daily gap always finds it expired.",
+                "Caching benefits both workloads about equally, since the one-hour cache lifetime automatically resets whenever any new request of any kind arrives."
               ],
-              "correct": 0,
-              "explain": "One hour. Useful only if you resend the same prefix within it."
+              "correct": 2,
+              "explain": "The cache lives for one hour, so it only pays off when the same prefix is resent inside that window — true of a chat service under steady load, but not a job that only runs once every 24 hours, which will always find the cache expired. Token volume per call doesn't determine whether caching applies; recency of the repeated request does, so the batch-job claim has that backwards. Neither workload needs the memory tool for this — caching and memory solve different problems. And the one-hour lifetime doesn't reset on unrelated requests; it's tied to that specific prefix being resent."
             },
             {
               "id": "q_rules_2b",
-              "q": "Which of these is safe for a cached prefix?",
+              "q": "A teammate proposes four different changes to a cached agent's request, each intended to make responses feel more personalized or current. Only one of these can be made without invalidating the cache on every request. Which one is safe?",
               "options": [
-                "A timestamp at the top of the system prompt",
-                "The user's name put into the system prompt",
-                "Volatile content after the last breakpoint",
-                "Reordering the tools array on each request"
+                "Inserting the current timestamp at the top of the system prompt, so responses always reflect the latest date.",
+                "Appending the user's most recent message and any other per-call detail strictly after the last cache breakpoint.",
+                "Interpolating the user's name directly into the system prompt, ahead of the cache breakpoint that follows it.",
+                "Reordering the tool definitions array on each request, so the most relevant tool appears first."
               ],
-              "correct": 2,
-              "explain": "After the breakpoint is the safe place for anything that changes. The other three all alter the prefix."
+              "correct": 1,
+              "explain": "Content placed after the last breakpoint isn't part of the cached prefix at all, so it can vary freely on every call without causing a miss — that's exactly where per-call detail like the user's message belongs. A timestamp at the top of the system prompt sits ahead of the breakpoint and changes on every request, breaking the prefix match. Interpolating the user's name into the system prompt does the same thing, just with a different volatile value. And reordering the tools array changes the very first content the API processes, which also invalidates the prefix even though the tools themselves are unchanged."
             }
           ]
         }
@@ -277,27 +277,27 @@
       "reviewQuestions": [
         {
           "id": "r_rules_1",
-          "q": "How many cache breakpoints may a request carry?",
+          "q": "You're building an agent with cache breakpoints after the tool definitions, after the system prompt, after a large reference document injected mid-conversation, and after a second reference document injected later. Before adding a fifth breakpoint after the final user turn, what do you need to check?",
           "options": [
-            "2",
-            "1",
-            "Unlimited",
-            "4"
+            "Whether the request is already at the two-breakpoint limit, since only two cache_control markers are permitted per request.",
+            "Whether the request is already at the one-breakpoint limit, since only a single cache_control marker is permitted per request.",
+            "Whether the request is already at the four-breakpoint limit, the maximum number of cache_control markers a request may carry.",
+            "Nothing — the API supports an unlimited number of cache breakpoints, as long as each individual one meets the minimum token threshold."
           ],
-          "correct": 3,
-          "explain": "Up to four."
+          "correct": 2,
+          "explain": "A request can carry at most four cache breakpoints, and this scenario already has four in place, so adding a fifth would exceed that limit and needs to be checked before it's added. The one- and two-breakpoint limits understate the actual cap, which sits at four, not one or two. And there is a hard limit — it isn't unlimited regardless of token size, so the check can't be skipped."
         },
         {
           "id": "r_rules_2",
-          "q": "What is the minimum cacheable size, and how is it measured?",
+          "q": "Your system prompt is short — only about 200 tokens — so you assume it will never qualify for caching on its own. But you place the cache breakpoint after the system prompt and after several tool definitions that precede it, and the cache does hit. What explains this?",
           "options": [
-            "1,024 tokens, summed across the prefix",
-            "1,024 tokens, on the marked block alone",
-            "512 tokens, summed across the request",
-            "There is no minimum size to speak of"
+            "The 1,024-token minimum is measured only against the system prompt block itself, and 200 tokens happens to be enough once whitespace is counted.",
+            "There is no real minimum size for caching at all — any prefix, however small, becomes cacheable the moment a breakpoint is placed on it.",
+            "The tool definitions triggered a separate, lower minimum of 512 tokens that applies specifically to breakpoints placed early in the request.",
+            "The 1,024-token minimum sums everything up to the breakpoint, so the tools preceding the short system prompt push the total over threshold."
           ],
-          "correct": 0,
-          "explain": "Summed across the prefix — which is why a breakpoint after a short system prompt can still qualify if tools precede it."
+          "correct": 3,
+          "explain": "The minimum cacheable size is measured cumulatively across everything up to the breakpoint, not on the tagged block in isolation — so even though the system prompt alone is well under 1,024 tokens, the tool definitions preceding it push the combined prefix over the threshold. Measuring the minimum against the system prompt alone misstates how the threshold is calculated. There is a real minimum, so treating any size as cacheable is incorrect. And there's no separate, lower threshold that applies specifically to early breakpoints — the same 1,024-token rule applies throughout."
         }
       ]
     },
@@ -312,27 +312,27 @@
           "questions": [
             {
               "id": "q_mem_1a",
-              "q": "Your agent should remember a user's preferences next week. Which pattern, and what do you build?",
+              "q": "You want your agent to remember that a specific customer prefers email over phone contact, and have that preference available in a conversation that starts next week with no shared history from today's session. Which context pattern applies, and what part of it do you have to build yourself?",
               "options": [
-                "Compaction; nothing — it is a request field",
-                "The memory tool; you build the storage backend",
-                "Prompt caching; build a one-hour refresh loop",
-                "Just-in-time; build a preferences lookup tool"
+                "Prompt caching, and you build a mechanism that refreshes the cache entry every hour so the preference never expires.",
+                "Just-in-time context, and you build a lookup tool that queries today's conversation transcript for stated preferences.",
+                "The memory tool, and you build the storage backend it reads from and writes to, since Anthropic supplies only the tool interface.",
+                "Server-side compaction, and you build nothing, since it's a request field that persists content automatically across sessions."
               ],
-              "correct": 1,
-              "explain": "Cross-session continuity is memory's job, and the backend is yours to implement."
+              "correct": 2,
+              "explain": "Persisting information across sessions, like a preference that must still be available next week, is the memory tool's job — Anthropic supplies the tool interface for reading and writing, but the storage backend itself is yours to implement. Prompt caching only lasts one hour and operates within a conversation, so refreshing it wouldn't survive a week-long gap. Just-in-time context is about pulling data from external sources on demand, not about persisting facts learned during a conversation. And compaction summarizes the history of an existing conversation — it has no mechanism for carrying content into a brand-new session."
             },
             {
               "id": "q_mem_1b",
-              "q": "What does Anthropic inject automatically when the memory tool is in use?",
+              "q": "A teammate is reviewing your memory tool integration and is surprised the agent checks its memory directory at the start of every session, even though nobody added an instruction telling it to do so in the system prompt. What explains this behavior?",
               "options": [
-                "A summary of the user's own prior sessions",
-                "A storage backend with 30-day retention",
-                "An instruction to check memory up front",
-                "A cache breakpoint before the memory dir"
+                "The memory tool automatically summarizes the user's prior sessions and prepends that summary to the system prompt on every request.",
+                "The storage backend itself triggers a webhook that appends a check-memory instruction directly to the system prompt at request time.",
+                "Server-side compaction detects the memory tool in the tools array and injects the check-memory instruction as part of its own trigger logic.",
+                "Anthropic auto-injects a check-memory instruction whenever the memory tool is enabled, independent of what your system prompt says."
               ],
-              "correct": 2,
-              "explain": "The check-memory-first instruction. Without it, memory that exists is memory that goes unread."
+              "correct": 3,
+              "explain": "Anthropic auto-injects an instruction telling Claude to check memory before starting work whenever the memory tool is in use, which is why the behavior shows up without anyone adding it to the system prompt. The memory tool doesn't generate or prepend session summaries on its own — you implement the storage backend, and it stores whatever your application writes to it. There's no webhook mechanism triggered by the storage backend; the instruction comes from the tool being present, not from backend infrastructure. And compaction is a separate context pattern for summarizing conversation history — it has no role in injecting memory-related instructions."
             }
           ]
         }
@@ -340,15 +340,15 @@
       "reviewQuestions": [
         {
           "id": "r_mem_1",
-          "q": "Name Anthropic's four context-management patterns.",
+          "q": "A new team member asks you to list the full toolkit Anthropic provides for managing what goes into an agent's context window over a long-running deployment, before they start researching each one individually. Which four patterns should you point them to?",
           "options": [
-            "Just-in-time, compaction, caching, memory",
-            "Chunking, retrieval, reranking, caching",
-            "Compaction, streaming, caching, batching",
-            "Just-in-time, RAG, memory, summarisation"
+            "Just-in-time context, server-side compaction, prompt caching, and the memory tool — the four patterns Anthropic documents for context management.",
+            "Chunking, retrieval, and reranking, plus prompt caching — the standard retrieval-augmented generation pipeline adapted for managing context.",
+            "Server-side compaction, streaming, prompt caching, and message batching — four levers commonly used for controlling cost and context size.",
+            "Just-in-time context, retrieval-augmented generation, the memory tool, and automatic summarization — four patterns aimed at long documents."
           ],
           "correct": 0,
-          "explain": "In production you typically layer all four — cache the stable prefix, pull data just-in-time, compact the history, persist across sessions."
+          "explain": "Anthropic's four context-management patterns are just-in-time context, server-side compaction, prompt caching, and the memory tool — in production these typically layer together: pull data on demand, compact accumulated history, cache the stable prefix, and persist what needs to survive across sessions. Chunking, retrieval, and reranking describe a RAG pipeline, not Anthropic's context-management feature set. Streaming and message batching are unrelated API features that don't manage what occupies the context window. And retrieval-augmented generation and automatic summarization aren't among the four named patterns, even though they sound plausible next to just-in-time and memory."
         }
       ]
     }

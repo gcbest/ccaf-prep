@@ -13,27 +13,27 @@
           "questions": [
             {
               "id": "q_create_1a",
-              "q": "Which set of arguments must every messages.create call carry?",
+              "q": "A new engineer refactors your wrapper around messages.create and accidentally drops one argument from every call. Requests now fail validation immediately, before any tokens are generated or billed. Which three arguments must all be present for a call to pass validation?",
               "options": [
-                "model, system, messages",
-                "model, temperature, messages",
-                "api_key, model, messages",
-                "model, max_tokens, messages"
+                "model, system, and messages must all be present, since the system prompt configures behavior before generation starts.",
+                "model, temperature, and messages must all be present, since temperature controls the sampling behavior for every call.",
+                "api_key, model, and messages must all be present, since the request needs to identify who is authorized to call it.",
+                "model, max_tokens, and messages must all be present, since max_tokens sets the ceiling the API needs before it will generate."
               ],
               "correct": 3,
-              "explain": "model, max_tokens, messages. The system prompt and temperature are optional, and the key is supplied to the client, not to the call."
+              "explain": "max_tokens, model, and messages are the three arguments the API validates before generation starts; drop any one and the request is rejected immediately. The system prompt and temperature are both optional refinements, not requirements. The API key authenticates the client itself, not an individual call, so it never appears as a call argument."
             },
             {
               "id": "q_create_1b",
-              "q": "What is the `messages` argument, structurally?",
+              "q": "A teammate writes messages=\"Summarize this article.\" instead of the list-of-objects form, and the call fails with a type error. Structurally, what should the messages argument actually be?",
               "options": [
-                "A string containing the user's whole question",
-                "An array of objects, each with role and content",
-                "A dictionary mapping usernames to their questions",
-                "A single object with user and assistant keys"
+                "An array of objects, each carrying a role and a content field, representing the conversation turns so far.",
+                "A single string containing the full text of the user's request, with no separate structure for roles.",
+                "A dictionary that maps each username in the conversation to that user's most recent question.",
+                "A single object with two fixed keys, one named user and one named assistant, holding both turns."
               ],
-              "correct": 1,
-              "explain": "An array of {role, content} objects. That the conversation is a list is the fact everything about multi-turn state depends on."
+              "correct": 0,
+              "explain": "messages has to be a list of role/content objects because that structure is what makes a multi-turn conversation possible — each object is one turn. A bare string collapses that structure and gives the client nothing to append future turns onto. A dictionary keyed by username or a single fixed user/assistant object can't represent an arbitrary-length back-and-forth."
             }
           ]
         },
@@ -45,27 +45,27 @@
           "questions": [
             {
               "id": "q_create_2a",
-              "q": "Why is an API key kept in .env.local rather than in the file that calls the API?",
+              "q": "During a security review, an auditor flags that your service reads its Claude API key from an environment file excluded from version control, rather than from a constant in the client code. What risk does this practice actually address?",
               "options": [
-                "So it never gets committed to version control",
-                "Environment variables are read faster at runtime",
-                "The SDK cannot read a key passed as an argument",
-                "It lets you use a different key per model tier"
+                "Environment variables are read measurably faster at request time than a hardcoded string literal compiled into the source file.",
+                "A key hardcoded into source code eventually gets committed and pushed, and public-repo crawlers can find and exploit it within minutes.",
+                "The SDK's client constructor is only capable of authenticating when the key is supplied through an environment variable at runtime.",
+                "Storing the key in an environment file lets the service rotate between a separate key for each model tier automatically at request time."
               ],
-              "correct": 0,
-              "explain": "A hardcoded key gets committed and pushed. Public-repo crawlers find keys in minutes."
+              "correct": 1,
+              "explain": "The risk is exposure: a key embedded in source code inevitably ends up committed, and automated crawlers scan public repositories for exactly this pattern within minutes of a push. Read speed of environment variables versus a literal string is not meaningfully different, and the SDK reads a key however it's passed in, so neither is the actual reason. Per-tier key rotation is unrelated to why the key lives outside the source file."
             },
             {
               "id": "q_create_2b",
-              "q": "Your mobile app needs Claude-generated summaries. Where does the API key go?",
+              "q": "Your mobile app needs to generate AI summaries using Claude, and a developer proposes bundling the API key directly into the compiled app so it can call the API straight from the device. What is the correct architecture instead?",
               "options": [
-                "Bundled with the app, obfuscated so it cannot leak",
-                "In the app's environment configuration at build time",
-                "On your own server, which the app calls in turn",
-                "In the device keychain, entered on first launch"
+                "The key ships inside the app binary but is obfuscated with encryption so it cannot be extracted by reverse engineering.",
+                "The key is embedded in the app's build-time environment configuration and injected into the binary rather than hardcoded in source.",
+                "The app calls your own server, and only that server — the one place holding the API key — makes the actual request to Claude.",
+                "The key is stored in the device's secure keychain, decrypted at launch, and entered once by the user when the app first runs."
               ],
               "correct": 2,
-              "explain": "Anything shipped to a device you do not control can be extracted, obfuscated or not. The key stays on your server."
+              "explain": "Routing the call through your own server means the API key never has to leave infrastructure you control, since anything shipped to a device can eventually be extracted. Obfuscating the key in the app bundle only raises the effort required to extract it, not whether it's possible. Putting it in build-time configuration or the device keychain still ends up on hardware outside your control, which is the exact exposure the pattern is meant to avoid."
             }
           ]
         }
@@ -73,15 +73,15 @@
       "reviewQuestions": [
         {
           "id": "r_create_1",
-          "q": "A request fails validation before it reaches the model. Which omission would do that?",
+          "q": "A request fails validation immediately, before it ever reaches the model to generate a response, and before any tokens are billed. Which of the following, if omitted from the call, would actually cause that failure?",
           "options": [
-            "No system prompt on the call",
-            "No temperature on the call",
-            "No max_tokens on the call",
-            "No stop_sequences on the call"
+            "Omitting the system prompt from the call, since without it the request has no defined behavior to validate against.",
+            "Omitting temperature from the call, since sampling parameters must be present for validation to pass.",
+            "Omitting stop_sequences from the call, since the API requires an explicit stopping condition to accept a request.",
+            "Omitting max_tokens from the call, since it's one of the three arguments required for the request to validate."
           ],
-          "correct": 2,
-          "explain": "max_tokens is one of the three required arguments. The other three named here are all optional."
+          "correct": 3,
+          "explain": "max_tokens is one of the three arguments the API requires before it will even begin generating, so omitting it is what produces a validation failure before the model is ever reached. The system prompt and temperature are both optional and their absence doesn't block the request. stop_sequences is also optional — the API doesn't require an explicit stopping condition to accept a call."
         }
       ]
     },
@@ -96,27 +96,27 @@
           "questions": [
             {
               "id": "q_blocks_1a",
-              "q": "Why is `response.content[0].text` described as a latent bug rather than an error?",
+              "q": "A team's Claude integration has run reliably in production for months using response.content[0].text to read every answer. After they turn on extended thinking, users start seeing garbled or missing replies, but no exception is ever raised. What best explains why this bug went undetected for so long?",
               "options": [
-                "It raises an exception on any response with a tool call",
-                "It only fails when streaming has been switched on",
-                "It works, but is slower than iterating the blocks",
-                "It works until a non-text block leads, then reads wrong"
+                "The indexing approach raises an exception the moment any response includes a tool call, a case the team's tests never happened to trigger.",
+                "The bug only manifests once streaming is enabled on these calls, and the team happened to test exclusively in streaming mode throughout.",
+                "response.content[0].text works correctly in every case tested, but runs measurably slower than iterating over the full block list each time.",
+                "The code keeps working until a non-text block leads the array, where index 0 still exists but now holds the wrong content silently."
               ],
               "correct": 3,
-              "explain": "Latent is the right word: index 0 keeps existing. It just stops being the block you meant once thinking or tool_use blocks appear."
+              "explain": "The bug is latent rather than an error because content[0] always exists and always has some value — it just silently stops being the text block once a non-text block, like a thinking block, is emitted ahead of it. No exception fires on tool calls specifically, and the failure isn't tied to streaming; it's tied to which block type ends up first in the array. Performance is irrelevant to why the bug went unnoticed."
             },
             {
               "id": "q_blocks_1b",
-              "q": "What is the safe general shape for reading a response?",
+              "q": "You're rewriting the response-handling code for an integration that will eventually use tools and extended thinking, not just plain text answers. What is the safe general pattern for reading a Claude response, regardless of which block types are present?",
               "options": [
-                "Loop over content and dispatch on block type",
-                "Concatenate every block's text field together",
-                "Read content[-1]; the last block is the answer",
-                "Call response.text(), which flattens the blocks"
+                "Iterate over the content array and dispatch behavior based on each block's type field.",
+                "Concatenate the text field of every block in the array into a single combined string.",
+                "Read content[-1], since the last block in the array is always the final answer.",
+                "Call a response.text() convenience method that automatically flattens all blocks for you."
               ],
               "correct": 0,
-              "explain": "Loop and switch on block.type. Blocks are typed precisely so that different kinds get different handling."
+              "explain": "Looping over content and branching on each block's type is the only approach that works no matter which combination of text, tool_use, or thinking blocks a given response contains. Concatenating every block's text field would merge unrelated content types together, since not every block even has a text field. Reading the last block or calling a flattening convenience method both assume a fixed block order that the API doesn't guarantee."
             }
           ]
         }
@@ -124,27 +124,27 @@
       "reviewQuestions": [
         {
           "id": "r_blocks_1",
-          "q": "You turn on extended thinking and your UI starts printing reasoning where the answer should be. What happened?",
+          "q": "You enable extended thinking on an existing integration, and your UI immediately starts displaying the model's reasoning where the final answer used to appear. The code itself was never changed. What happened?",
           "options": [
-            "Thinking replaces the text block rather than joining it",
-            "Thinking output goes to a field the UI does not read",
-            "The code reads content[0], now a thinking block",
-            "max_tokens is consumed by reasoning before the answer"
+            "Extended thinking replaces the text block entirely, rather than simply being added alongside it in the model's response.",
+            "Thinking output is streamed to a separate response field entirely, one the existing UI code was never written to read from.",
+            "A thinking block now appears ahead of the text block, so content[0] — the only index read — now points at that block instead.",
+            "max_tokens is being consumed entirely by the reasoning step, leaving no budget remaining for the model to produce a final answer."
           ],
           "correct": 2,
-          "explain": "A new block type appeared ahead of the text. Code indexing content[0] follows it straight into the wrong block."
+          "explain": "Extended thinking adds a thinking block that appears in the array ahead of the text block, and code that still indexes content[0] follows that index straight into the new block instead of the answer. Thinking is added alongside the text block, not in place of it, so the text is still there — just no longer at index 0. The output isn't routed to a separate field the UI ignores, and max_tokens consumption isn't what's producing this particular symptom."
         },
         {
           "id": "r_blocks_2",
-          "q": "Which is true of a single Claude response?",
+          "q": "A code reviewer objects to a new function that loops over response.content instead of just reading a single field, arguing it's unnecessary complexity. Which fact about Claude responses justifies the loop?",
           "options": [
-            "It contains exactly one content block, always",
-            "It contains one block per tool in the request",
-            "It can contain several blocks of different types",
-            "Block count equals the number of turns so far"
+            "A response always contains exactly one content block, so the loop is unnecessary work in every case.",
+            "A single response can contain several blocks of different types — text and tool_use together, for instance.",
+            "The number of blocks in a response always equals the number of tools that were made available in that request.",
+            "The number of blocks in a response always equals the number of conversational turns exchanged in that session so far."
           ],
-          "correct": 2,
-          "explain": "One response, several blocks — text and tool_use together is the normal case once tools are in play."
+          "correct": 1,
+          "explain": "A single Claude response can legitimately contain several blocks of different types at once, most commonly a tool_use block alongside a text block, which is exactly why code has to loop rather than read one fixed field. The block count doesn't track the number of tools made available in the request, nor the number of conversational turns so far — both of those are separate concerns from how many blocks one response happens to produce."
         }
       ]
     },
@@ -159,27 +159,27 @@
           "questions": [
             {
               "id": "q_stop_1a",
-              "q": "A generated draft ends mid-sentence. Which stop_reason distinguishes a budget problem from a prompt problem, and what value indicates the budget?",
+              "q": "A report-generation pipeline produces a draft that clearly ends mid-sentence. One engineer wants to rewrite the prompt to be clearer; another wants to check a single response field first. Which stop_reason value would confirm the cause is a token budget rather than a prompt issue?",
               "options": [
-                "end_turn means the token budget has run out",
-                "max_tokens means it hit the ceiling you set",
-                "stop_sequence means the model simply gave up",
-                "stop_reason is absent when output is truncated"
+                "end_turn as the stop_reason would mean the token budget had already been exhausted partway through the response.",
+                "max_tokens as stop_reason confirms generation hit its configured ceiling, not that the prompt itself was unclear.",
+                "stop_sequence as the stop_reason would mean the model simply gave up partway through the task, not hit a limit.",
+                "stop_reason is omitted from the response entirely whenever the output happens to get truncated mid-sentence like this."
               ],
               "correct": 1,
-              "explain": "max_tokens is a ceiling, and hitting it is reported plainly. The prompt was fine; the budget was not."
+              "explain": "max_tokens as the reported stop_reason confirms the ceiling configured for the call was hit, which is a budget problem rather than a comprehension problem with the prompt. end_turn means the opposite — a complete answer — so it couldn't explain a mid-sentence cutoff. stop_sequence would mean a string you configured was matched, not that generation ran out of room, and stop_reason is always present on a response, truncated or not."
             },
             {
               "id": "q_stop_1b",
-              "q": "Which stop_reason means your code has more work to do before the turn is over?",
+              "q": "In an agent loop, your code needs to know exactly when Claude has paused to wait for a tool result rather than finished its turn. Which stop_reason value signals that there is more work for your code to do before the turn is complete?",
               "options": [
-                "tool_use",
-                "end_turn",
-                "stop_sequence",
-                "max_tokens"
+                "tool_use, since it means Claude is waiting on the result of a tool call before it can continue.",
+                "end_turn, since it means Claude has produced a complete answer and is done with the turn.",
+                "stop_sequence, since it means the model reached a string you supplied and stopped generating.",
+                "max_tokens, since it means the response hit the ceiling you configured for that call."
               ],
               "correct": 0,
-              "explain": "tool_use: Claude is waiting on a result from you. It is the continue condition of every agent loop."
+              "explain": "tool_use is the signal that Claude is paused waiting on a tool result before it can finish the turn, which is exactly the continue condition an agent loop is built around. end_turn means the opposite — the turn is already complete. stop_sequence and max_tokens both mean generation has stopped for a different reason, neither of which implies more work is expected from your code."
             }
           ]
         }
@@ -187,27 +187,27 @@
       "reviewQuestions": [
         {
           "id": "r_stop_1",
-          "q": "What is the exit condition of an agent loop?",
+          "q": "You're debugging an agent loop that keeps calling tools indefinitely and never returns a final answer to the user. What condition should the loop actually be checking to know it's finished?",
           "options": [
-            "The tools array comes back empty",
-            "The response contains a text block",
-            "The max_tokens ceiling is reached",
-            "stop_reason comes back as end_turn"
+            "The loop should exit once the tools array included in the request comes back empty on a call.",
+            "The loop should exit once the response contains any content block whose type field is set to text.",
+            "The loop should exit once the max_tokens ceiling configured for that particular call has actually been reached.",
+            "The loop should exit once stop_reason reads end_turn, not on the presence of any particular block type."
           ],
           "correct": 3,
-          "explain": "end_turn. A text block can appear alongside a tool_use block, so its presence proves nothing about being finished."
+          "explain": "end_turn is the only stop_reason value that actually means Claude considers the turn complete, so it's the correct exit condition for the loop. An empty tools array on a call says nothing about whether the current turn is finished. A text block can appear in the same response as a tool_use block, so its mere presence doesn't prove the turn is over, and hitting max_tokens means the response was cut off, not that it finished successfully."
         },
         {
           "id": "r_stop_2",
-          "q": "Your summariser has produced clean output for months, then starts truncating on long inputs. What do you check first?",
+          "q": "A summarization service has produced clean, complete output for months. This week, on unusually long input documents, it starts truncating output partway through. What should you check first, before touching the prompt or model settings?",
           "options": [
-            "stop_reason, to see if it is max_tokens",
-            "Whether the system prompt has drifted",
-            "Whether temperature is set too high",
-            "The model tier, in case of a downgrade"
+            "Check stop_reason on the truncated responses to confirm whether it reads max_tokens.",
+            "Check whether the system prompt has quietly drifted from its original wording over recent deploys.",
+            "Check whether temperature has been set too high, causing the model to wander off topic.",
+            "Check whether the model tier configured for the service was silently downgraded in a recent release."
           ],
           "correct": 0,
-          "explain": "The response already carries the diagnosis. max_tokens means the ceiling is now too low for the inputs you are getting."
+          "explain": "The response already carries the diagnosis in stop_reason, so checking whether it reads max_tokens tells you immediately whether the ceiling configured for the call has simply become too low for the longer inputs now arriving. Prompt drift and temperature are both plausible-sounding causes, but neither one produces this specific symptom of consistent truncation at the same point relative to the budget. A model downgrade would show up as a quality change, not a truncation pattern tied to input length."
         }
       ]
     },
@@ -222,27 +222,27 @@
           "questions": [
             {
               "id": "q_system_1a",
-              "q": "Which instruction belongs in the system parameter?",
+              "q": "You're building a code review assistant and need to decide which instructions go in the system parameter versus the user message for each request. Which of the following instructions belongs in system rather than in the per-request user turn?",
               "options": [
-                "“Summarise the report below in three bullets.”",
-                "“You are a terse and senior code reviewer.”",
-                "“Here is the customer's most recent message.”",
-                "“Return only valid JSON for this request.”"
+                "\"Summarize the report below in exactly three concise bullet points for the reader.\"",
+                "\"You are a terse, senior code reviewer who always leads with the most serious issue.\"",
+                "\"Here is the customer's most recent message, which you should now respond to directly.\"",
+                "\"Return only valid JSON that matches the schema defined for this particular request.\""
               ],
               "correct": 1,
-              "explain": "Role and standing behaviour go in system. The other three are about this particular request and belong in the user turn."
+              "explain": "Role and standing behavior — being a terse, senior reviewer who leads with the most serious issue — holds true across every call, which is exactly what belongs in system. Summarizing a specific report, responding to a specific customer message, and requesting JSON for a specific request are all instructions about what to do this one time, so they belong in the user turn instead."
             },
             {
               "id": "q_system_1b",
-              "q": "What property of the system prompt makes it the best candidate for caching?",
+              "q": "A teammate wants to know why putting standing instructions in the system parameter, rather than repeating them at the top of every user message, is the right move for a service that expects prompt caching to lower costs. What property of the system prompt makes it the best candidate for caching?",
               "options": [
-                "It is processed last, so caching happens after",
-                "It is exempt from the 1,024-token cache minimum",
-                "It is the only part of a request that can cache",
-                "It rarely changes, so the same bytes are re-sent"
+                "It is processed after the messages array, so its caching happens once the rest of the request is already handled.",
+                "It is exempt from the minimum token count that the caching system otherwise requires a cached block to meet.",
+                "It is the only part of a Claude request that the caching system is technically capable of storing at all.",
+                "It rarely changes between requests, so the exact same bytes are resent on call after call, which is what a cache hit requires."
               ],
               "correct": 3,
-              "explain": "Stability is the whole criterion. A cache hit requires a byte-identical prefix, and stable content is what stays identical."
+              "explain": "Caching depends on a byte-identical prefix, and the system prompt's stability — rarely changing between calls — is what lets the same bytes be resent and hit the cache. It's processed before the messages, not after, so ordering isn't the reason. It isn't exempt from any minimum-token requirement the caching system otherwise applies, and it isn't the only cacheable part of a request; stable prefixes anywhere in the request can cache."
             }
           ]
         }
@@ -250,15 +250,15 @@
       "reviewQuestions": [
         {
           "id": "r_system_1",
-          "q": "Every request your service makes should be answered in the same clinical, non-speculative register. Where does that instruction go?",
+          "q": "Every request your service sends to Claude should be answered in the same clinical, non-speculative register, regardless of what the user asks. Where should that standing instruction live?",
           "options": [
-            "Prepended to each user message",
-            "In the system parameter itself",
-            "In an assistant prefill block",
-            "In a stop sequence on the call"
+            "Prepended to the text of each individual user message, repeated fresh before every single request is sent.",
+            "In an assistant turn that prefills the start of Claude's expected response before generation continues from there.",
+            "In the system parameter, since the register holds across every request rather than one call in particular.",
+            "Configured as a stop_sequence value on every call the service makes, so generation halts at the register's edge."
           ],
-          "correct": 1,
-          "explain": "It holds across every request, so it is standing behaviour — and putting it in system also keeps it cacheable."
+          "correct": 2,
+          "explain": "A clinical, non-speculative register that should hold for every request is standing behavior, which is exactly what the system parameter exists for — and putting it there also keeps that instruction cacheable across calls. Repeating it at the top of every user message duplicates it on every request instead of stating it once. An assistant prefill block only shapes the start of a single response, and a stop_sequence only tells the model where to stop generating, neither of which sets a standing register."
         }
       ]
     },
@@ -273,27 +273,27 @@
           "questions": [
             {
               "id": "q_convo_1a",
-              "q": "Your chatbot cannot remember what the user said two messages ago. What is missing?",
+              "q": "A support chatbot answers every follow-up question as if it's the very first message in the conversation, with no memory of anything the user said two turns ago. The team assumes memory is broken somewhere. What is actually missing?",
               "options": [
-                "Your code is not appending previous turns",
-                "A session id is missing from the request",
-                "conversation_memory is not enabled for you",
-                "The system prompt never tells it to remember"
+                "The code isn't appending prior conversation turns into the messages array before each new request goes out.",
+                "A session identifier is missing from the request, so the API cannot associate the calls with one conversation.",
+                "The conversation_memory option was never enabled on the client instance used to make these particular calls.",
+                "The system prompt never explicitly instructs the model to recall what the user said in earlier turns of the exchange."
               ],
               "correct": 0,
-              "explain": "The API is stateless. History exists only because you resend it, every time."
+              "explain": "Because the API is stateless, any memory of earlier turns exists only if the calling code re-sends them, so a chatbot that forgets is almost always missing that append step. There's no session identifier mechanism the Messages API relies on to link separate calls together. There's no conversation_memory flag to enable, and a system prompt instructing the model to 'remember' can't substitute for actually including the prior turns in the request."
             },
             {
               "id": "q_convo_1b",
-              "q": "What do you append for the assistant's half of a turn?",
+              "q": "After adding tool use to a multi-turn assistant, the second tool call in a conversation behaves incorrectly even though the first one worked fine. The code appends only the text shown to the user after each Claude reply. What should it be appending instead?",
               "options": [
-                "The extracted text you showed the user",
-                "The complete response.content block array",
-                "A summary of it, to save on input tokens",
-                "Nothing — only user turns get appended"
+                "Just the extracted text string that had already been shown to the user in the chat interface display.",
+                "The complete response.content block array, tool_use and thinking blocks included alongside the text.",
+                "A shortened summary of the response, generated to keep the growing conversation within the token budget.",
+                "Nothing at all for the assistant's turn — only the user's own messages ever need to be appended."
               ],
               "correct": 1,
-              "explain": "The whole content array. Keeping only the visible text discards tool_use blocks and breaks the next turn."
+              "explain": "The complete response.content block array has to be appended for the assistant's turn because it includes tool_use and thinking blocks that the next turn's tool-calling logic depends on, not just the visible text. Appending only the extracted text, or a summary of it, silently discards those non-text blocks and breaks the next tool round. Skipping the assistant's turn entirely would leave the conversation missing half of what actually happened."
             }
           ]
         }
@@ -301,27 +301,27 @@
       "reviewQuestions": [
         {
           "id": "r_convo_1",
-          "q": "Which statement about the Messages API is true?",
+          "q": "A new engineer assumes Claude 'remembers' past conversations the way some other chat products do, and is surprised when a fresh API key produces no history. Which statement correctly describes how the Messages API actually behaves?",
           "options": [
-            "It stores conversation history for 30 days",
-            "It stores history only when system is set",
-            "It keeps history per API key automatically",
-            "It is stateless; history is what you resend"
+            "It stores each conversation's history server-side for 30 days before automatically discarding it.",
+            "It stores conversation history automatically, but only for requests that include a system parameter.",
+            "It keeps a running history per API key, so calls from the same key share continuity automatically.",
+            "It is stateless — any conversation history that appears in a request is only there because the caller resent it."
           ],
           "correct": 3,
-          "explain": "Stateless. Every call is complete on its own, which is also why context cost grows with conversation length."
+          "explain": "The Messages API is stateless: it has no memory of past calls on its own, so any continuity in a conversation exists only because the caller resent the prior turns. It doesn't retain history server-side for a fixed period, doesn't condition storage on whether a system parameter is present, and doesn't track a running history tied to an API key — every call is judged only on what's included in that call's messages array."
         },
         {
           "id": "r_convo_2",
-          "q": "What is the cost consequence of maintaining conversation history yourself?",
+          "q": "A finance team notices that a long-running support conversation costs noticeably more per turn as it goes on, even though each individual reply is about the same length as earlier ones. What explains the rising cost?",
           "options": [
-            "None — history is billed once, when first sent",
-            "The whole history is re-billed as input each turn",
-            "The history is billed at the output token rate",
-            "Only the most recent turn is ever billed for"
+            "History is billed only once, the first time it's sent, so later turns should not add extra cost.",
+            "The conversation history is billed at the cheaper output token rate rather than the input rate.",
+            "The entire accumulated history is resent and re-billed as input tokens with every new turn of the conversation.",
+            "Only the single most recent turn is ever counted toward the bill, regardless of what else is resent."
           ],
-          "correct": 1,
-          "explain": "Everything you resend is input tokens again. It is why compaction and caching exist."
+          "correct": 2,
+          "explain": "Because history is what you resend, not something the API remembers, every prior turn gets counted again as input tokens on every subsequent call, which is why cost climbs as a conversation grows even when individual replies stay the same size. It isn't billed once and then free, it's billed at the input rate rather than the cheaper output rate, and every resent turn counts toward the bill, not just the latest one."
         }
       ]
     },
@@ -336,27 +336,27 @@
           "questions": [
             {
               "id": "q_sampling_1a",
-              "q": "You set max_tokens=4096 and get a 200-token answer. What happened?",
+              "q": "An engineer sets max_tokens=4096 on a summarization call, expecting a long response, but gets back a clean 200-token answer with stop_reason end_turn. They're confused because they thought they'd requested a longer output. What actually happened?",
               "options": [
-                "Nothing odd — max_tokens is a ceiling, not a target",
-                "The request failed silently and returned partial",
-                "The model tier caps output below your setting",
-                "temperature was too low for a longer answer"
+                "Nothing unusual — max_tokens only sets a ceiling on output length, not a target the model tries to reach.",
+                "The request silently failed partway through and returned an incomplete response without raising an error.",
+                "The configured model tier itself caps output length below whatever value max_tokens happens to be set to.",
+                "The temperature setting was configured too low to allow the model to generate a meaningfully longer response."
               ],
               "correct": 0,
-              "explain": "A ceiling, not a target. Claude writes what the task needs and stops with end_turn."
+              "explain": "max_tokens only caps how long the output is allowed to be — it isn't a target length, so a shorter, complete answer with stop_reason end_turn is entirely normal and expected. Nothing here indicates a silent partial failure, since a genuine failure would show a different stop_reason or an error. Neither the model tier nor the temperature setting caps output length independently of max_tokens."
             },
             {
               "id": "q_sampling_1b",
-              "q": "What happens when generation reaches max_tokens?",
+              "q": "A generation is midway through a sentence when it hits the max_tokens ceiling configured for the call. What actually happens to the output at that point?",
               "options": [
-                "Claude wraps up with a concluding sentence",
-                "Output stops dead, with stop_reason max_tokens",
-                "The request retries automatically with more room",
-                "An error is returned and no content comes back"
+                "Claude notices it's near the limit and wraps up with a brief concluding sentence before stopping.",
+                "Output stops immediately, wherever it happens to be, and the response reports stop_reason as max_tokens.",
+                "The request is automatically retried with a higher token budget so the answer can finish.",
+                "An error is returned to the caller and no partial content is included in the response."
               ],
               "correct": 1,
-              "explain": "It stops dead, mid-sentence if that is where it lands, and reports max_tokens as the reason."
+              "explain": "Hitting max_tokens stops generation immediately, wherever it happens to land — including mid-sentence — and the response reports max_tokens as the stop_reason so the cutoff is diagnosable. Claude doesn't get a chance to wrap up gracefully once the ceiling is reached. There's no automatic retry with more room, and a truncated response still comes back as valid partial content rather than an error with nothing returned."
             }
           ]
         },
@@ -368,27 +368,27 @@
           "questions": [
             {
               "id": "q_sampling_2a",
-              "q": "An extraction pipeline returns slightly different field values run to run. Which setting most directly addresses that?",
+              "q": "A pipeline that extracts structured fields from invoices returns slightly different values for the same invoice when run more than once. Which setting most directly addresses this inconsistency?",
               "options": [
-                "Raise max_tokens",
-                "Enable streaming",
-                "Add a stop sequence",
-                "Lower temperature"
+                "Raising max_tokens, since a larger ceiling gives the extraction more room to complete accurately.",
+                "Enabling streaming, since streaming forces the same tokens to be sampled in the same order each time.",
+                "Adding a stop sequence, since it prevents the model from generating past the fields it already extracted.",
+                "Lowering temperature, since it reduces the randomness that causes deterministic extraction tasks to vary between runs."
               ],
               "correct": 3,
-              "explain": "Low temperature is the setting for deterministic transformations. It reduces variation — though it does not make the extraction correct."
+              "explain": "Lowering temperature directly reduces the randomness in how the next token gets sampled, which is the actual source of run-to-run variation on a task that should be deterministic, like field extraction. Raising max_tokens only affects how much room the output has, not how consistent it is. Streaming changes how the response is delivered, not how it's sampled, and a stop sequence only affects where generation halts, not the variation in what precedes it."
             },
             {
               "id": "q_sampling_2b",
-              "q": "What does temperature 0 guarantee?",
+              "q": "A developer sets temperature to 0 on a classification task and assumes this now guarantees the model will always return the same label, and that the label will always be correct. What does temperature 0 actually guarantee?",
               "options": [
-                "The exact same answer every single time",
-                "A correct answer to the question asked",
-                "Less randomness — but not sameness or truth",
-                "That Claude will refuse any creative task"
+                "The exact same output returned on every single call, provided the input text sent is byte-for-byte identical each time.",
+                "A correct answer to the classification task, since determinism is treated as equivalent to accuracy.",
+                "Less randomness in sampling — not identical output on every call, and never a guarantee that the answer is correct.",
+                "That Claude will refuse to attempt any task that calls for creative, open-ended, or non-deterministic output generation."
               ],
               "correct": 2,
-              "explain": "It reduces randomness. The course is explicit that it guarantees neither a different answer nor a right one."
+              "explain": "Temperature 0 reduces randomness in sampling, but it doesn't guarantee bit-for-bit identical output across calls, and it never guarantees that the answer produced is actually correct — determinism and accuracy are separate properties. Assuming identical output on every call overstates what temperature 0 promises, and assuming correctness conflates consistency with truth. Nothing about setting temperature to 0 causes Claude to refuse creative tasks."
             }
           ]
         }
@@ -396,15 +396,15 @@
       "reviewQuestions": [
         {
           "id": "r_sampling_1",
-          "q": "Which of these is a budget rather than a quality setting?",
+          "q": "A cost-review meeting asks which request parameter you'd tune to cap runaway spend on a single call, as opposed to parameters that affect how good the output is. Which parameter is a budget control rather than a quality control?",
           "options": [
-            "temperature",
-            "system",
-            "max_tokens",
-            "model"
+            "max_tokens, since it caps spend and output length without saying anything about how good that output is.",
+            "temperature, since it controls how deterministic or varied each individual response turns out to be.",
+            "system, since it configures the standing behavior and role that the model adopts for every call.",
+            "model, since it selects which tier of capability and cost is used to generate the response."
           ],
-          "correct": 2,
-          "explain": "max_tokens caps spend and length. It says nothing about how good the output is."
+          "correct": 0,
+          "explain": "max_tokens caps how much you can be billed for and how long the output can run, but it says nothing about the quality of that output, which makes it the budget control among these four. temperature affects how varied or deterministic the output is, system shapes the model's standing behavior, and model selects a capability/cost tier — all three of those are quality-side choices, not spend caps."
         }
       ]
     },
@@ -419,27 +419,27 @@
           "questions": [
             {
               "id": "q_tiers_1a",
-              "q": "Ten thousand support tickets a day need sorting into five categories. Which tier?",
+              "q": "Ten thousand support tickets arrive every day and each one needs to be sorted into one of five fixed categories before routing. Which model tier is the natural fit for this workload?",
               "options": [
-                "Opus",
-                "Haiku",
-                "Sonnet",
-                "Fable"
+                "Opus, since sorting into the correct category is important enough to justify deep reasoning.",
+                "Haiku, since high-volume, low-complexity classification is exactly the job it's built for.",
+                "Sonnet, since it balances cost and capability well enough for most production classification work.",
+                "Fable, since the volume is high enough to justify paying for the most capable tier available."
               ],
               "correct": 1,
-              "explain": "High volume, low complexity, and classification by name — Haiku's exact brief."
+              "explain": "Sorting high-volume tickets into a small, fixed set of categories is exactly the classification workload Haiku is built for — fast and cheap at scale. Opus's deep reasoning isn't needed for a bounded five-way classification, and Sonnet or Fable would cost meaningfully more per ticket without improving accuracy on a task this well-defined."
             },
             {
               "id": "q_tiers_1b",
-              "q": "Which tier sits above Opus in capability and cost?",
+              "q": "A teammate is filling out a comparison chart of the model tiers and needs to know which tier sits above Opus in both capability and cost. Which tier is it?",
               "options": [
-                "Fable",
-                "Sonnet",
-                "Haiku",
-                "Nothing — Opus is the top tier"
+                "Fable, which sits above Opus in the ladder as the most capable tier, at the highest cost of the four.",
+                "Sonnet, which the chart should place above Opus as the balanced, everyday production tier to use.",
+                "Haiku, which the chart should place above Opus as the fastest and cheapest option on the ladder.",
+                "None — Opus is already at the top of the ladder, with nothing positioned above it at all."
               ],
               "correct": 0,
-              "explain": "Fable is the most capable tier, above Opus, at the highest cost."
+              "explain": "Fable sits above Opus as the most capable tier, at the highest cost, making it the top of the ladder. Sonnet and Haiku both sit below Opus, not above it, so placing either above it on the chart would invert the actual ordering. Opus is not the top of the ladder — Fable is positioned above it."
             }
           ]
         }
@@ -447,27 +447,27 @@
       "reviewQuestions": [
         {
           "id": "r_tiers_1",
-          "q": "Which tier is described as the sweet spot for most production work?",
+          "q": "A new architect on the team is deciding on a default tier to reach for when a task's complexity hasn't been characterized yet, and wants to know which tier the course describes as the sweet spot for most production work. Which is it?",
           "options": [
-            "Haiku",
-            "Fable",
-            "Sonnet",
-            "Opus"
+            "Haiku, described as the tier reserved for the highest-volume, lowest-complexity work only.",
+            "Fable, described as the most capable tier, positioned above Opus in the ladder.",
+            "Sonnet, described as the balanced default that fits most production workloads.",
+            "Opus, described as the tier for deep reasoning and complex, multi-step analysis."
           ],
           "correct": 2,
-          "explain": "Sonnet is the balanced default. Haiku is below it, Opus and Fable above."
+          "explain": "Sonnet is described as the balanced default that fits most production workloads without needing to justify the extra cost of Opus or Fable. Haiku is positioned below it, reserved for high-volume, low-complexity work specifically. Opus and Fable both sit above Sonnet, aimed at deep reasoning and top-tier capability rather than everyday defaults."
         },
         {
           "id": "r_tiers_2",
-          "q": "A one-off multi-step regulatory trade-off analysis. Which tier is the natural fit?",
+          "q": "A compliance team needs a single, one-off multi-step analysis of a complex regulatory trade-off, with no ongoing volume to worry about. Which tier is the natural fit for this task?",
           "options": [
-            "Haiku",
-            "Sonnet",
-            "Whichever is cheapest — it is one-off",
-            "Opus"
+            "Haiku, since the task's regulatory stakes make minimizing cost the primary factor to optimize decision-making for.",
+            "Sonnet, since it balances cost and capability well enough to handle even complex one-off regulatory analysis.",
+            "Whichever tier turns out cheapest, since the analysis will only ever be run this one single time for compliance.",
+            "Opus, since deep reasoning over complex trade-offs is its brief, and the one-off task easily absorbs its cost."
           ],
           "correct": 3,
-          "explain": "Deep reasoning and complex analysis is Opus's brief, and being one-off is exactly when its cost is affordable."
+          "explain": "Deep reasoning over a complex, multi-step trade-off is exactly Opus's brief, and because the analysis is one-off rather than recurring, its higher per-call cost is easy to absorb. Haiku is suited to high-volume, low-complexity work, not this kind of nuanced analysis. Sonnet could attempt it but isn't the tier built for genuinely complex reasoning, and picking 'whichever is cheapest' ignores that the task's complexity, not its frequency, is what should drive the tier choice."
         }
       ]
     },
@@ -482,27 +482,27 @@
           "questions": [
             {
               "id": "q_select_1a",
-              "q": "In what order do you test model tiers for a new feature?",
+              "q": "You're deciding on a model tier for a new summarization feature and want to follow the course's recommended search strategy rather than guessing. In what order should you actually test the tiers?",
               "options": [
-                "Opus first for a ceiling, then work downward",
-                "Haiku first, stepping up only if quality fails",
-                "Sonnet first, then Haiku and Opus in parallel",
-                "Whichever tier the previous feature happened to use"
+                "Test Opus first to establish a quality ceiling, then work downward until quality drops.",
+                "Test Haiku first, and step up to a higher tier only if its quality on your eval fails to hold.",
+                "Test Sonnet first, then test Haiku and Opus in parallel to compare all three at once.",
+                "Use whichever tier a previous, unrelated feature happened to already be using."
               ],
               "correct": 1,
-              "explain": "Cheapest first, stopping as soon as quality holds. Searching downward from the top rarely gets finished."
+              "explain": "The recommended search starts at the cheapest tier, Haiku, and only steps up when quality actually fails to hold, because starting at the top and searching downward almost never gets finished once something already works. Testing Sonnet first, or all three tiers in parallel, doesn't follow the search-from-the-bottom discipline the method depends on. Reusing whatever tier a prior, unrelated feature used skips evaluating the current task entirely."
             },
             {
               "id": "q_select_1b",
-              "q": "What has to exist before the model comparison is meaningful?",
+              "q": "Before your team can meaningfully claim that 'quality holds' on Haiku for a new feature, something needs to already exist to measure that claim against. What is it?",
               "options": [
-                "A production sample of at least 1,000 requests",
-                "A fine-tuned baseline to compare against",
-                "An eval set of 20–30 representative examples",
-                "A cost ceiling agreed with the finance team"
+                "A production sample of at least 1,000 real requests collected after the feature has already shipped.",
+                "A fine-tuned baseline model that each of the tiers under test can be measured and compared against.",
+                "An eval set of 20 to 30 representative examples that the outputs can actually be scored against.",
+                "A cost ceiling that has been formally agreed with the finance team well in advance of testing."
               ],
               "correct": 2,
-              "explain": "20–30 representative examples. Without a shared scoreboard, 'quality holds' is just an opinion."
+              "explain": "An eval set of 20 to 30 representative examples is what turns 'quality holds' from an opinion into something you can actually check when comparing tiers. A large production sample collected after shipping comes too late to inform the initial choice, a fine-tuned baseline isn't part of this comparison method, and a finance-agreed cost ceiling constrains the decision but doesn't make quality measurable."
             }
           ]
         },
@@ -514,27 +514,27 @@
           "questions": [
             {
               "id": "q_select_2a",
-              "q": "A support pipeline classifies tickets, drafts most replies, and occasionally writes a full RFP response. What is the sensible model arrangement?",
+              "q": "A support pipeline classifies incoming tickets, drafts replies for the bulk of them, and occasionally has to write a full RFP-style response for a high-stakes case. What is the sensible model arrangement across these three tasks?",
               "options": [
-                "One tier throughout, chosen for the hardest task",
-                "One tier throughout, chosen for the commonest task",
-                "A tier per task — Haiku, Sonnet, Opus by need",
-                "Alternate tiers by request, to spread the cost"
+                "A different tier per task: Haiku for classification, Sonnet for drafting, Opus for the rare RFP.",
+                "One tier used throughout the whole pipeline, sized for whichever of the three tasks is hardest to get right.",
+                "One tier used throughout the whole pipeline, sized for whichever of the three tasks happens most often day to day.",
+                "Alternate tiers on each incoming request, cycling through them to spread out the total cost."
               ],
-              "correct": 2,
-              "explain": "Route per task type. Sizing everything for the hardest case pays Opus prices on classification."
+              "correct": 0,
+              "explain": "Routing each task to its own tier — Haiku for classification, Sonnet for drafting, Opus for the rare RFP — means the expensive tier only ever sees the fraction of traffic that actually needs it. Sizing the whole pipeline for the hardest task pays Opus-level cost on routine classification, and sizing it for the commonest task under-serves the rare high-stakes case. Alternating tiers by request has no relationship to what each task actually requires."
             },
             {
               "id": "q_select_2b",
-              "q": "Which field tells you what a request actually cost you?",
+              "q": "You need to add per-request cost tracking to a service and want to read the field on the response that tells you exactly what a given call cost. Which field is it?",
               "options": [
-                "response.stop_reason",
-                "response.content",
-                "response.usage",
-                "response.model"
+                "response.stop_reason, which reports why generation ended for that particular call.",
+                "response.content, which holds the actual text and tool_use blocks produced by the call.",
+                "response.model, which reports which model tier actually served the request.",
+                "response.usage, which reports the input and output token counts the bill is computed from."
               ],
-              "correct": 2,
-              "explain": "usage reports input and output token counts, which is what the bill is computed from."
+              "correct": 3,
+              "explain": "response.usage reports the input and output token counts a request actually consumed, which is the data the bill is computed from. response.stop_reason explains why generation ended, response.content holds the actual output, and response.model just confirms which tier served the request — none of those three report the token counts that determine cost."
             }
           ]
         }
@@ -542,15 +542,15 @@
       "reviewQuestions": [
         {
           "id": "r_select_1",
-          "q": "How does the course define the right model for a task?",
+          "q": "A manager asks how the course defines 'the right model' for a given task, since 'best' and 'cheapest' can pull in different directions. How does it define the right choice?",
           "options": [
-            "The cheapest one whose output you would ship",
-            "The most capable one your budget will allow",
-            "Sonnet, unless the benchmarks say otherwise",
-            "Whichever has the lowest latency at quality"
+            "The most capable tier that the project's budget can realistically accommodate.",
+            "The cheapest tier whose output you would actually be willing to ship.",
+            "Sonnet by default, unless a specific benchmark result says otherwise for that task.",
+            "Whichever tier delivers the lowest latency at an acceptable quality bar."
           ],
-          "correct": 0,
-          "explain": "Cheapest shippable. It makes the decision an evidence question rather than a preference."
+          "correct": 1,
+          "explain": "The course frames the right model as the cheapest tier whose output you'd actually be willing to ship, which turns the decision into an evidence question rather than a preference. Picking the most capable tier the budget allows ignores whether that capability was ever needed. Defaulting to Sonnet, or optimizing purely for latency, both substitute a fixed rule for the eval-driven comparison the method actually calls for."
         }
       ]
     },
@@ -565,27 +565,27 @@
           "questions": [
             {
               "id": "q_stream_1a",
-              "q": "Which event carries the text as it is generated?",
+              "q": "You're implementing a live-typing effect in a chat UI and need to know which streaming event actually carries the text tokens as they're generated. Which event is it?",
               "options": [
-                "message_start",
-                "content_block_start",
-                "message_delta",
-                "content_block_delta"
+                "message_start, which fires once at the very beginning of the response before any content exists.",
+                "content_block_start, which fires once when a new block begins, before any of its text has arrived.",
+                "message_delta, which reports changes at the level of the whole message rather than individual text.",
+                "content_block_delta, which repeats as each new piece of text arrives within a block."
               ],
               "correct": 3,
-              "explain": "content_block_delta, repeated. The start and stop events bracket each block."
+              "explain": "content_block_delta is the event that repeats as each new piece of text for a block arrives, which is what a live-typing UI should actually listen for. content_block_start and message_start both fire once, before any of that block's text exists, and message_delta reports changes at the whole-message level rather than carrying the text itself."
             },
             {
               "id": "q_stream_1b",
-              "q": "A streamed response contains a thinking block and a text block. How many content_block_start events do you see?",
+              "q": "A streamed response contains a thinking block followed by a text block. How many content_block_start events should your client expect to see over the course of that stream?",
               "options": [
-                "Two",
-                "One",
-                "One per delta",
-                "None — starts only fire for text"
+                "Two — the start/delta/stop lifecycle repeats separately for each block that appears in the response.",
+                "One, since a single message_start event covers every block the response ends up containing overall.",
+                "One per delta event received, since the client is expected to treat each incoming delta as beginning its own new block.",
+                "None at all, since content_block_start events are defined to fire only for blocks whose content type is text."
               ],
               "correct": 0,
-              "explain": "The block lifecycle repeats per block. Two blocks, two starts."
+              "explain": "The block lifecycle of start, delta, and stop repeats independently for each block in the response, so two blocks — a thinking block and a text block — produce two separate content_block_start events. A single message_start event only brackets the whole response, not each block, and delta events don't each begin a new block; they continue one already opened. content_block_start events aren't limited to text-type blocks."
             }
           ]
         },
@@ -597,27 +597,27 @@
           "questions": [
             {
               "id": "q_stream_2a",
-              "q": "What does enabling streaming change?",
+              "q": "A product manager asks whether turning on streaming will make a slow endpoint's total response time faster, not just make it feel faster while the user waits. What does enabling streaming actually change?",
               "options": [
-                "Total latency to a complete answer",
-                "The cost per token you are charged",
-                "The likelihood of hitting max_tokens",
-                "Time to first token, and nothing else"
+                "The total latency until the complete answer has finished generating, which streaming shortens.",
+                "The per-token cost charged for the request, which streaming reduces compared to a non-streamed call.",
+                "Time to first token, and nothing else — the total time to a complete answer stays the same.",
+                "The likelihood that the response ends up hitting the max_tokens ceiling before finishing."
               ],
-              "correct": 3,
-              "explain": "It is a perceived-latency fix. The response is the same response, arriving in pieces."
+              "correct": 2,
+              "explain": "Streaming changes time to first token — how soon the user sees something appear — and nothing else about the underlying generation. Total latency to a complete answer, the per-token cost, and the odds of hitting max_tokens are all properties of the same underlying response and are unaffected by whether it's delivered in one payload or many small ones."
             },
             {
               "id": "q_stream_2b",
-              "q": "Why does streaming make stop_reason handling more important, not less?",
+              "q": "A teammate argues that once streaming is enabled, checking stop_reason matters less, since the user can already see the output arriving live. Why is the opposite actually true?",
               "options": [
-                "Streamed responses hit max_tokens more often",
-                "The user watches the answer break off live",
-                "stop_reason is only available when streaming",
-                "Streaming turns off the server-side validation"
+                "Streamed responses are measurably and consistently more likely to hit the configured max_tokens ceiling than non-streamed calls.",
+                "With streaming, the user watches the answer break off mid-sentence live, so the truncation is now visible instead of hidden.",
+                "stop_reason is only included in the response payload at all once streaming has been explicitly enabled for that call.",
+                "Enabling streaming disables the server-side validation that would otherwise have caught the truncated response before delivery."
               ],
               "correct": 1,
-              "explain": "The failure is now visible as it happens. Nothing about truncation changed — only who sees it."
+              "explain": "Streaming makes a truncated response visible as it happens, since the user watches the text arrive live and sees it break off mid-sentence rather than only discovering the cutoff after the fact. Streaming doesn't change the underlying rate at which max_tokens gets hit, doesn't gate whether stop_reason is included in the response, and doesn't disable any server-side validation — the same failure is just harder to hide once it's visible in real time."
             }
           ]
         }
@@ -625,15 +625,15 @@
       "reviewQuestions": [
         {
           "id": "r_stream_1",
-          "q": "Users complain about thirty seconds of blank screen on long generations. What do you turn on, and what does it not fix?",
+          "q": "Users are complaining about roughly thirty seconds of blank screen while waiting on long generations. What should the team turn on to address this, and what limitation will it not solve?",
           "options": [
-            "Streaming — it does not cut total generation time",
-            "Streaming — it also cuts total generation time",
-            "A lower temperature — it does not improve quality",
-            "Compaction — though it does not reduce the cost"
+            "Turn on streaming — it also meaningfully cuts down the total time generation takes to finish.",
+            "Lower the temperature setting — doing so does not improve the quality of the final output.",
+            "Turn on streaming — it does not reduce the total time it takes generation to actually finish.",
+            "Turn on compaction — doing so does not reduce the total token cost of the request being sent."
           ],
-          "correct": 0,
-          "explain": "Streaming fixes the wait, not the work. The last token still arrives when it would have."
+          "correct": 2,
+          "explain": "Streaming is the fix for the thirty-second blank screen because it delivers the first tokens sooner, but it does not shorten the total time generation takes to actually finish — the last token still arrives when it otherwise would have. Claiming it also cuts total generation time overstates what streaming does. Lowering temperature and enabling compaction both address different problems entirely — output determinism and context size, not perceived wait time."
         }
       ]
     }

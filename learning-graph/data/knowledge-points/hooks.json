@@ -13,27 +13,27 @@
           "questions": [
             {
               "id": "q_determinism_1a",
-              "q": "An agent skips identity verification in 12% of refunds. What class of fix actually closes the gap?",
+              "q": "Production data shows that in 12% of cases, your customer support agent skips get_customer entirely before calling process_refund, using only the customer's stated name to identify the account. This has led to several refunds issued to the wrong customer. Which change would most reliably close this gap?",
               "options": [
-                "Add more few-shot examples that show verification first",
-                "Switch to a larger and more instruction-following model",
-                "Move the instruction to the very top of the system prompt",
-                "A programmatic gate blocking refunds until identity is checked"
+                "Add a programmatic prerequisite that blocks process_refund until get_customer has returned a verified customer ID.",
+                "Update the system prompt to state explicitly that identity verification is mandatory before any refund is processed.",
+                "Add few-shot examples to the system prompt showing the agent always calling get_customer before process_refund.",
+                "Switch to a larger model with stronger instruction-following to reduce the rate of skipped steps."
               ],
-              "correct": 3,
-              "explain": "Every option except the hook leaves a residual failure rate. The whole point of the principle is that \"almost always\" is a different category from \"always.\""
+              "correct": 0,
+              "explain": "A programmatic prerequisite guarantees the sequence holds on every run, closing the gap entirely rather than reducing it. Options B and C are both prompt-based fixes that rely on probabilistic compliance — they might cut the 12% rate but can't eliminate it. Option D assumes model capability is the bottleneck, but the failure is a missing enforcement mechanism, not a comprehension problem."
             },
             {
               "id": "q_determinism_1b",
-              "q": "Which requirement most clearly belongs in a hook rather than a prompt?",
+              "q": "Your support agent's system prompt already states that identity must be verified via get_customer before any refund is authorized, but production logs still show occasional refunds processed without that call ever happening. The team is deciding which of several policies to enforce with a hook instead of leaving them in the prompt. Which policy is the best candidate for hook enforcement?",
               "options": [
-                "Prefer a friendly tone with visibly frustrated customers",
-                "Never issue a refund without a verified customer identity",
-                "Summarise long documents before quoting anything from them",
-                "Ask clarifying questions whenever the request is vague"
+                "Requiring the agent to keep a warm, empathetic tone whenever a customer's message reads as frustrated or dissatisfied.",
+                "Blocking any call to process_refund until get_customer has returned a verified customer identity for that account.",
+                "Requiring the agent to summarize any document longer than a few paragraphs before quoting specific passages from it.",
+                "Requiring the agent to ask a clarifying question whenever a customer's request is ambiguous about which order it concerns."
               ],
               "correct": 1,
-              "explain": "Three of these are judgment, which prompts are good at. One is an invariant, which prompts cannot guarantee."
+              "explain": "Verifying identity before a refund is a hard invariant that must hold on every run, which is exactly what a hook enforces deterministically. Keeping a warm tone with frustrated customers, deciding when a document needs summarizing, and recognizing when a request is ambiguous are judgment calls the model is well suited to make, not invariants that need programmatic gating."
             }
           ]
         }
@@ -41,15 +41,15 @@
       "reviewQuestions": [
         {
           "id": "r_determinism_1",
-          "q": "State the principle in one sentence.",
+          "q": "A team is debating whether a new 'never log a customer's full card number' rule should live only in the agent's system prompt or also be enforced by a hook. One engineer summarizes the general distinction between the two mechanisms for the rest of the team. Which summary is accurate?",
           "options": [
-            "Hooks are faster to execute than prompt instructions",
-            "Prompts should always be replaced with hooks where possible",
-            "A hook is code that runs; a prompt is only a request",
-            "Hooks are for tool calls, prompts are for text output"
+            "Hooks execute in a separate process, so they run measurably faster than a prompt instruction the model reads on every turn.",
+            "Prompts should be phased out entirely in favor of hooks wherever a hook could technically be written to enforce the rule.",
+            "A hook is code that runs deterministically every time its event fires; a prompt is only a request the model may or may not follow.",
+            "Hooks exist only to gate tool calls, while prompts remain the sole mechanism for shaping what the model writes in its response."
           ],
           "correct": 2,
-          "explain": "Glossary t9. Note the limit: judgment still belongs in the prompt."
+          "explain": "A hook is code that executes on every occurrence of its event, giving a guarantee a prompt cannot provide. The claim about execution speed conflates a different property with the real distinction, phasing prompts out entirely ignores that judgment calls still belong there, and restricting hooks to tool-call gating undersells what hooks can observe and enforce across other events like Stop or UserPromptSubmit."
         }
       ]
     },
@@ -65,27 +65,27 @@
           "questions": [
             {
               "id": "q_events_1a",
-              "q": "You want code to run every time the agent tries to end its turn. Which event?",
+              "q": "You are building a compliance check that requires the agent to have cited at least one source before it is allowed to finish responding to the user, and the check needs to run every single time the agent attempts to end its turn. Which hook event should the check subscribe to?",
               "options": [
-                "PostToolUse",
-                "Notification",
-                "SessionEnd",
-                "Stop"
+                "PostToolUse, so the check runs immediately after each individual tool result is returned to the model.",
+                "Notification, so the check runs whenever the SDK surfaces a user-facing notification during the session.",
+                "SessionEnd, so the check runs only once the entire multi-turn session with the user has fully concluded.",
+                "Stop, so the check runs when the agent attempts to end its turn, letting it require a citation before allowing that."
               ],
               "correct": 3,
-              "explain": "Stop fires when the agent attempts to finish — which is what makes it the place to demand evidence before it can."
+              "explain": "Stop fires specifically when the agent attempts to end its turn, which is what makes it the right place to require a citation before that is allowed. PostToolUse fires per tool call rather than per turn, Notification is for informational events, and SessionEnd — even where it exists — fires only once the whole session is already over, too late to gate a single turn."
             },
             {
               "id": "q_events_1b",
-              "q": "Which event fires when a tool call has already failed?",
+              "q": "A tool call to a payment gateway throws an exception, and you want a dedicated hook to run recovery logic specifically for that failure, without adding failure-handling branches to your existing PostToolUse success-path code. Which event should the recovery hook subscribe to?",
               "options": [
-                "PostToolUse",
-                "PermissionRequest",
-                "PostToolUseFailure",
-                "UserPromptSubmit"
+                "PostToolUse, since it fires for every tool call regardless of whether the call succeeded or failed.",
+                "PostToolUseFailure, a dedicated event that fires specifically when a tool call has already failed.",
+                "PermissionRequest, since it fires whenever a tool call requires explicit authorization before running.",
+                "UserPromptSubmit, since it fires before the model begins processing a new request from the user."
               ],
-              "correct": 2,
-              "explain": "A distinct event, so recovery logic does not have to live inside the success path."
+              "correct": 1,
+              "explain": "PostToolUseFailure is a distinct event dedicated to calls that have already failed, so recovery logic can live in its own handler instead of being threaded through the success path. PostToolUse does not fire for failed calls, PermissionRequest concerns authorization rather than outcome, and UserPromptSubmit fires before the tool call happens at all."
             }
           ]
         }
@@ -93,15 +93,15 @@
       "reviewQuestions": [
         {
           "id": "r_events_1",
-          "q": "Which of these is NOT a Python HookEvent?",
+          "q": "While reviewing the SDK's hook documentation, a colleague claims there is a Python HookEvent called ToolResultReceived that fires whenever a tool returns output. You check the actual list of events to confirm. Which statement is correct?",
           "options": [
-            "PermissionRequest",
-            "ToolResultReceived",
-            "SubagentStart",
-            "UserPromptSubmit"
+            "ToolResultReceived exists and fires before PostToolUse specifically for read-only tools such as Read and Grep.",
+            "ToolResultReceived exists but only fires for tool calls that originate from within a subagent.",
+            "ToolResultReceived does not exist; PostToolUse is the actual event that fires when a tool call completes.",
+            "ToolResultReceived exists and replaced PostToolUse in the most recent version of the Python HookEvent list."
           ],
-          "correct": 1,
-          "explain": "The one that sounds plausible is the invented one. PostToolUse is what you would use for that moment."
+          "correct": 2,
+          "explain": "ToolResultReceived is not one of the Python HookEvent values; PostToolUse is the actual event that fires once a tool call completes, whether by success or via the separate PostToolUseFailure event. The other claims all describe behavior for an event that was never part of the list to begin with."
         }
       ]
     },
@@ -117,27 +117,27 @@
           "questions": [
             {
               "id": "q_hookreg_1a",
-              "q": "Write the matcher that runs a hook on Write and Edit but not Read.",
+              "q": "You want a hook registered under PreToolUse to run whenever the agent calls Write or Edit, but not when it calls Read, and you want to express that directly through the HookMatcher's matcher field rather than filtering inside the callback itself. How should you write the matcher?",
               "options": [
-                "Omit matcher and filter inside the callback",
-                "matcher=[\"Write\", \"Edit\"]",
-                "matcher=\"Write,Edit\"",
-                "matcher=\"Write|Edit\""
+                "Set matcher to the list [\"Write\", \"Edit\"], since HookMatcher accepts an array of exact tool names.",
+                "Set matcher to the comma-separated string \"Write,Edit\" and let the SDK split it into individual tool names.",
+                "Leave matcher unset entirely and add an early return inside the callback whenever tool_name is not Write or Edit.",
+                "Set matcher to the pattern string \"Write|Edit\", which HookMatcher parses as matching either tool name."
               ],
               "correct": 3,
-              "explain": "A pattern string. Omitting the matcher matches every tool, which is the blunt version."
+              "explain": "HookMatcher's matcher field accepts a pattern string like \"Write|Edit\", which the framework parses as matching either tool name for that hook. An array of exact names and a comma-separated string are not the formats the field expects, and leaving matcher unset would run the hook for every tool rather than expressing the restriction where it belongs."
             },
             {
               "id": "q_hookreg_1b",
-              "q": "Which fields let a hook know it is firing inside a subagent rather than the main thread?",
+              "q": "A PreToolUse hook needs to apply a stricter rate limit to tool calls made by subagents than to calls made from the main thread, and it needs to tell the two apart purely from fields already present on the hook input. Which fields let it do that?",
               "options": [
-                "session_id together with the cwd value",
-                "agent_id and agent_type on the hook input",
-                "parent_tool_use_id on the hook input",
-                "permission_mode on the hook input"
+                "The agent_id and agent_type fields, present on PreToolUseHookInput when the call originates inside a subagent.",
+                "The session_id field combined with the cwd field, since subagents always run from a completely different working directory.",
+                "The parent_tool_use_id field, which is populated only for calls issued from the main thread rather than a subagent.",
+                "The permission_mode field, since subagents always run under a noticeably stricter permission mode than the main thread does."
               ],
-              "correct": 1,
-              "explain": "They appear on PreToolUseHookInput specifically when the call originates inside a subagent."
+              "correct": 0,
+              "explain": "agent_id and agent_type appear on PreToolUseHookInput specifically when a call originates inside a subagent, which is exactly the signal needed to apply a different rate limit there. session_id and cwd don't reliably distinguish the two contexts, parent_tool_use_id doesn't work the way described, and permission_mode is not tied to whether a call came from a subagent."
             }
           ]
         },
@@ -149,27 +149,27 @@
           "questions": [
             {
               "id": "q_hookreg_2a",
-              "q": "A command hook prints a warning to stderr and exits 0. What does Claude see?",
+              "q": "A command hook configured for PreToolUse prints a warning to stderr reading 'this path is outside the project root' and then exits with code 0. The team expects Claude to see the warning and reconsider the file path, but across several transcripts the model never reacts to it. What explains this?",
               "options": [
-                "The warning, injected beside the tool result",
-                "Nothing — exit-0 stderr goes to the debug log",
-                "The warning, delivered as a system message",
-                "A blocked tool call it must work around now"
+                "The warning is delivered to Claude directly, but as a system message the model is trained to treat as low priority.",
+                "The tool call is blocked before it runs, so there is nothing left for the model to react to in the first place.",
+                "Exit code 0 tells the framework the hook succeeded, so stderr goes only to the debug log and Claude never sees it.",
+                "stderr from a command hook is injected beside the tool result only when the matcher targets exactly one tool."
               ],
-              "correct": 1,
-              "explain": "Exit 0 means \"fine, carry on.\" If you want the model to read it, exit 2 and block."
+              "correct": 2,
+              "explain": "Exit code 0 tells the framework the hook finished normally, so any stderr it wrote is recorded only in the debug log and never reaches Claude. The call is not blocked, since blocking requires exit code 2, and stderr delivery to Claude does not depend on how narrowly the matcher is scoped."
             },
             {
               "id": "q_hookreg_2b",
-              "q": "Which exit code blocks the action and sends stderr to Claude?",
+              "q": "Your command hook needs to stop a dangerous Bash command from executing at all, and it needs its stderr message delivered back to Claude so the model can adjust its approach on the next attempt. Which exit code should the hook script return?",
               "options": [
-                "0",
-                "Any non-zero code",
-                "1",
-                "2"
+                "Exit code 0, which signals to the framework that the hook actively intervened in the tool call.",
+                "Exit code 1, which is reserved specifically for blocking actions along with a spoken reason.",
+                "Any non-zero exit code, since the framework treats all of them identically as a deliberate block.",
+                "Exit code 2, which blocks the action from running and feeds the hook's stderr back to Claude."
               ],
               "correct": 3,
-              "explain": "Specifically 2. Other non-zero codes are treated as hook failure rather than a deliberate block."
+              "explain": "Exit code 2 is the specific signal that blocks the action and feeds the hook's stderr back to Claude so it can adjust course. Exit 0 means the hook succeeded and the action proceeds, exit 1 has no special meaning here, and other non-zero codes are treated as the hook itself having failed rather than as a deliberate block."
             }
           ]
         }
@@ -177,15 +177,15 @@
       "reviewQuestions": [
         {
           "id": "r_hookreg_1",
-          "q": "What is the default hook timeout, and which event differs?",
+          "q": "You are configuring a HookMatcher and need to know how long the framework waits before treating your callback as timed out, given you set no explicit timeout value. Your hook is registered under PreToolUse, and a teammate's hook is registered under UserPromptSubmit. What are the applicable defaults?",
           "options": [
-            "30 seconds by default; PreToolUse is 600",
-            "600 seconds; UserPromptSubmit is 30",
-            "There is no default; each hook sets its own",
-            "60 seconds by default; Stop is 600"
+            "PreToolUse defaults to 600 seconds, while UserPromptSubmit defaults to 30 seconds since a user is waiting.",
+            "Both default to 30 seconds, since that is the single standard timeout applied across every hook event.",
+            "There is no default timeout at all; every HookMatcher must specify one explicitly or registration fails.",
+            "Both default to 600 seconds across every event, except Stop hooks, which fall back to 30 seconds instead."
           ],
-          "correct": 1,
-          "explain": "600s default, UserPromptSubmit at 30 — because a user is sitting there waiting."
+          "correct": 0,
+          "explain": "The default hook timeout is 600 seconds, except for UserPromptSubmit, which defaults to 30 seconds specifically because a user is sitting there waiting on the response. There is a default even when none is set explicitly, and it is not a flat 30 or 600 seconds across every event."
         }
       ]
     },
@@ -201,27 +201,27 @@
           "questions": [
             {
               "id": "q_direction_1a",
-              "q": "Several MCP tools return timestamps in different formats. Where do you fix it?",
+              "q": "Three MCP tools your agent calls return timestamps in three different formats — one as Unix epoch, one as ISO 8601, and one as MM/DD/YYYY — and the model occasionally miscalculates date comparisons because it has to reconcile the mismatch itself. Where should you fix this?",
               "options": [
-                "In the system prompt, explaining each of the formats",
-                "A PreToolUse hook that rewrites the outgoing request",
-                "A PostToolUse hook that normalises the returned results",
-                "By merging the tools into a single wrapper tool"
+                "In the system prompt, listing each tool's timestamp format so the model can interpret every value correctly.",
+                "In a PostToolUse hook that normalizes each tool's returned timestamp into a single consistent format.",
+                "In a PreToolUse hook that rewrites the outgoing arguments before each of the three tool calls runs.",
+                "By merging the three tools into a single wrapper tool that always returns results as Unix epoch."
               ],
-              "correct": 2,
-              "explain": "\"Different tools return inconsistent formats\" is the tell for PostToolUse. Asking the model to reconcile formats is work it should never have to do."
+              "correct": 1,
+              "explain": "Reconciling inconsistent tool output is exactly what PostToolUse normalization is for — the hook rewrites each returned timestamp into one consistent format so the model never has to compare formats itself. Explaining the formats in the system prompt still leaves the reconciliation work to the model, a PreToolUse hook only touches the outgoing request rather than what comes back, and merging the tools is a much larger change than the problem requires."
             },
             {
               "id": "q_direction_1b",
-              "q": "Block any refund over $500 and route it to a human. Which hook?",
+              "q": "Your finance team requires that any process_refund call for more than $500 never actually execute — it must be intercepted and routed to a human reviewer before the payment provider is ever contacted. Which hook should implement this?",
               "options": [
-                "PreToolUse, denying the outgoing call with a reason",
-                "PostToolUse, checking the refund result afterwards",
-                "UserPromptSubmit, rejecting the request up front",
-                "Stop, refusing to let the agent end its turn"
+                "A PostToolUse hook that checks the refund amount in the completed result and reverses it if it exceeds $500.",
+                "A UserPromptSubmit hook that rejects any user message mentioning refunds over $500 before the agent responds.",
+                "A Stop hook that refuses to let the agent end its current turn until a human has reviewed any large refund it issued.",
+                "A PreToolUse hook that denies the outgoing process_refund call and supplies a reason when the amount exceeds $500."
               ],
-              "correct": 0,
-              "explain": "You want the refund never to happen, not to be detected afterwards. That means intercepting on the way out."
+              "correct": 3,
+              "explain": "Blocking the refund before it ever reaches the payment provider requires intercepting the outgoing call, which is what a PreToolUse hook denying process_refund with a reason accomplishes. A PostToolUse check would only notice the refund after it has already happened, a UserPromptSubmit hook can't inspect the tool call itself, and a Stop hook would let the refund go through and only block the agent from finishing afterward."
             }
           ]
         }
@@ -229,15 +229,15 @@
       "reviewQuestions": [
         {
           "id": "r_direction_1",
-          "q": "Give the one-line rule for choosing between PreToolUse and PostToolUse.",
+          "q": "A new team member is trying to decide, as a general rule and without inspecting each case individually, whether a given hook requirement belongs on PreToolUse or PostToolUse. Which rule correctly captures the distinction?",
           "options": [
-            "Pre for cheap checks, Post for expensive ones",
-            "Pre for MCP tools, Post for the built-in tools",
-            "Pre guards what goes out; Post what comes back",
-            "Pre can block a call, Post can only observe it"
+            "PreToolUse guards what goes out to a tool before it runs; PostToolUse handles what comes back from it afterward.",
+            "PreToolUse is reserved for cheap, fast checks; PostToolUse is for checks that are expensive to compute.",
+            "PreToolUse only applies to MCP tools; PostToolUse only applies to built-in tools like Read and Write.",
+            "PreToolUse can block a call outright, while PostToolUse can only observe the result and log it."
           ],
-          "correct": 2,
-          "explain": "Direction. And note that \"Post can only observe\" is wrong — PostToolUse can block with decision: \"block\"."
+          "correct": 0,
+          "explain": "PreToolUse sits before the tool runs and guards the outgoing call, while PostToolUse sits after and handles what comes back — that direction, not cost or tool type, is the actual distinction. PreToolUse isn't limited to MCP tools, and PostToolUse is not observe-only: it can also block via a decision field of its own."
         }
       ]
     },
@@ -253,27 +253,27 @@
           "questions": [
             {
               "id": "q_decisions_1a",
-              "q": "Your PostToolUse hook returns hookSpecificOutput.permissionDecision: \"deny\". What happens?",
+              "q": "You write a PostToolUse hook that inspects a completed database write and, wanting to prevent the model from seeing the result, returns hookSpecificOutput.permissionDecision: \"deny\". After deploying it, the questionable result still reaches the model unchanged. Why?",
               "options": [
-                "The tool result is discarded before the model sees it",
-                "Nothing useful — PostToolUse reads a top-level decision",
-                "The tool call is retried once with the same arguments",
-                "A validation error is raised and the whole run stops"
+                "The tool result is discarded silently before the model ever receives it, leaving the model working from stale data.",
+                "PostToolUse reads a top-level decision field, not hookSpecificOutput.permissionDecision, so the field is ignored.",
+                "The tool call is automatically retried once with the exact same arguments, producing the identical result again.",
+                "Returning a field that this particular event does not expect raises a validation error that halts the entire run."
               ],
               "correct": 1,
-              "explain": "Wrong shape for the event, and it fails quietly. PostToolUse blocks via the top-level decision field."
+              "explain": "PostToolUse reads a top-level decision field rather than hookSpecificOutput.permissionDecision, so returning the PreToolUse-shaped field is simply ignored and the result reaches the model unchanged. Nothing is discarded, retried, or flagged as a validation error — the mismatch fails silently rather than loudly."
             },
             {
               "id": "q_decisions_1b",
-              "q": "Which events can only add context and never block?",
+              "q": "You need to inject a short piece of context into the conversation right at the moment a new session or a new subagent begins, knowing these particular hooks cannot block anything since nothing has happened yet. Which pair of events are you working with?",
               "options": [
-                "PreToolUse and PostToolUse",
-                "Stop and SubagentStop",
-                "SessionStart and SubagentStart",
-                "PermissionRequest and PreCompact"
+                "PreToolUse and PostToolUse, which both surround individual tool calls rather than whole sessions.",
+                "Stop and SubagentStop, which fire only once the current turn is already in the process of ending.",
+                "SessionStart and SubagentStart, which fire before anything exists yet and can only add additionalContext.",
+                "PermissionRequest and PreCompact, which both gate an action that is already underway in the current tool call."
               ],
               "correct": 2,
-              "explain": "They fire before there is anything to block. additionalContext is all they offer."
+              "explain": "SessionStart and SubagentStart fire before anything has happened yet for that session or subagent, so all they can do is add additionalContext rather than block a call. PreToolUse and PostToolUse concern individual tool calls rather than session start, and Stop, SubagentStop, and PermissionRequest all fire at points where something is already underway."
             }
           ]
         },
@@ -285,27 +285,27 @@
           "questions": [
             {
               "id": "q_decisions_2a",
-              "q": "Why does a deny need permissionDecisionReason?",
+              "q": "A PreToolUse hook denies a call to send_email because the recipient address is outside the allowed domain, but the hook's author leaves permissionDecisionReason empty. Over the following turns, the model repeatedly retries the same call with only cosmetic changes to the arguments. Why does supplying a reason on a deny matter?",
               "options": [
-                "The reason goes back to the model so it can adapt",
-                "It is a required field on the response object",
-                "It shows up in the billing and usage records",
-                "Without it the exit code is not honoured at all"
+                "The reason is fed back to the model, giving it the information it needs to adapt instead of retrying blindly.",
+                "permissionDecisionReason is a required field, and omitting it causes the SDK to silently ignore the deny.",
+                "The reason text is recorded in billing and usage records so the team can audit denied calls later on.",
+                "Without a reason string present, the framework does not honor the exit code the hook returned."
               ],
               "correct": 0,
-              "explain": "A denial is a teaching moment. Without the reason, you get the same call again with different phrasing."
+              "explain": "permissionDecisionReason is what gets fed back to the model, giving it the specific information needed to adapt its next attempt instead of retrying the same call with cosmetic changes. It is not a required field that would break the deny if omitted, it has nothing to do with billing records, and the exit code's effect does not depend on whether a reason string is present."
             },
             {
               "id": "q_decisions_2b",
-              "q": "Which permissionDecision value hands the call back to the normal permission flow?",
+              "q": "A PreToolUse hook you are writing has no strong opinion on whether a particular Bash call should be allowed, and you want the decision to fall through to whatever the normal permission prompt or canUseTool callback would otherwise decide. Which permissionDecision value expresses that?",
               "options": [
-                "allow",
-                "deny",
-                "defer",
-                "ask"
+                "allow, since it lets the tool call proceed immediately, skipping any further permission checks entirely.",
+                "ask, since it hands the decision back to the normal permission flow instead of deciding itself.",
+                "deny, since it forces the decision back to the user through an explanatory error message right away.",
+                "defer, since it parks the call for your own application to resolve at some later point in time."
               ],
-              "correct": 3,
-              "explain": "ask says \"I have no opinion, use the usual rules.\" defer is different — it parks the call for your own UI."
+              "correct": 1,
+              "explain": "ask is the value that explicitly hands the decision back to the normal permission flow when the hook itself has no opinion. allow would let the call through unconditionally, deny would refuse it outright, and defer would park it for your own application to resolve rather than deferring to the built-in flow."
             }
           ]
         }
@@ -313,15 +313,15 @@
       "reviewQuestions": [
         {
           "id": "r_decisions_1",
-          "q": "Which field does a Stop hook use to prevent the agent ending its turn?",
+          "q": "You are writing a Stop hook that must prevent the agent from ending its turn until its response includes at least one citation. Which field on the hook's return value actually accomplishes that?",
           "options": [
-            "exit code 2 from a command hook",
-            "additionalContext with an explanation",
-            "hookSpecificOutput.permissionDecision: \"deny\"",
-            "A top-level decision: \"block\" with a reason"
+            "Returning exit code 2 from a command-line script registered specifically on the Stop event.",
+            "Setting additionalContext to a string that explains a citation is required before finishing.",
+            "Setting a top-level decision field to \"block\" along with a reason, the pattern Stop shares with PostToolUse.",
+            "Setting hookSpecificOutput.permissionDecision to \"deny\", the field a PreToolUse hook would use."
           ],
-          "correct": 3,
-          "explain": "Stop is in the top-level-decision family, alongside PostToolUse and UserPromptSubmit."
+          "correct": 2,
+          "explain": "Stop belongs to the family of events that use a top-level decision field set to \"block\" with a reason, the same pattern PostToolUse uses. hookSpecificOutput.permissionDecision belongs to PreToolUse instead, additionalContext alone can't prevent the turn from ending, and a command hook's exit code is a mechanism for shell-based hooks rather than the field being asked about here."
         }
       ]
     },
@@ -337,27 +337,27 @@
           "questions": [
             {
               "id": "q_rewrite_1a",
-              "q": "An agent keeps calling a search tool without the tenant filter. Deny, or rewrite?",
+              "q": "Your agent repeatedly calls a search_records tool without the required tenant_id filter, which would let it read across tenant boundaries if the results were ever returned to the model. The call is otherwise well-formed and clearly intends to search within the current tenant. Should a PreToolUse hook deny the call or rewrite it?",
               "options": [
-                "Rewrite with updatedInput, adding the filter first",
-                "Deny with a reason, so the model learns the rule",
-                "Remove the search tool from the agent entirely",
-                "Block in PostToolUse once the results have leaked"
+                "Deny it with a reason so the model learns the rule and adds the filter itself on its next attempt.",
+                "Remove the search_records tool from the agent's available toolset entirely, so this can never recur.",
+                "Let the call proceed and catch the cross-tenant leak afterward inside a PostToolUse hook instead.",
+                "Rewrite the call with updatedInput, adding the missing tenant_id filter before it is allowed to proceed."
               ],
-              "correct": 0,
-              "explain": "The call is nearly right. Rewriting gets the work done and closes the hole; denial just costs a turn."
+              "correct": 3,
+              "explain": "The call is nearly right — it's missing one filter — so rewriting it with updatedInput closes the gap immediately and lets the search still complete successfully. Denying costs a turn while the model retries, removing the tool entirely is a disproportionate response to a fixable mistake, and catching the leak in PostToolUse would mean the cross-tenant read already happened."
             },
             {
               "id": "q_rewrite_1b",
-              "q": "What is the cap on additionalContext, and what happens beyond it?",
+              "q": "A PostToolUse hook you wrote injects a long diagnostic report into additionalContext after every deploy-status check, and one particular report happens to run to roughly 40,000 characters. What happens to the injected context in that case?",
               "options": [
-                "1,000 characters; the rest is truncated silently",
-                "100,000 tokens; nothing special happens at the cap",
-                "10,000 characters; the overflow spills to a file",
-                "There is no cap; long context is passed through"
+                "It is capped at 1,000 characters, and the remainder beyond that is truncated silently with no other notice.",
+                "It is capped at 10,000 characters, with the overflow written to a file and a preview left in context.",
+                "It is capped at 100,000 tokens, a limit well above the size of this particular report, so nothing unusual happens.",
+                "There is no cap on additionalContext at all, so the full 40,000-character report is passed through unchanged."
               ],
-              "correct": 2,
-              "explain": "10,000 characters, with a spill-to-file fallback so nothing is lost — the model just has to go and read it."
+              "correct": 1,
+              "explain": "additionalContext is capped at 10,000 characters, and content beyond that limit is written to a file with a preview and the file path left in context instead of being lost. The other caps and the claim of no cap at all don't match how the framework actually handles oversized context."
             }
           ]
         }
@@ -365,15 +365,15 @@
       "reviewQuestions": [
         {
           "id": "r_rewrite_1",
-          "q": "Which field replaces a tool's arguments before the tool runs?",
+          "q": "A PreToolUse hook needs to silently correct a tool call's arguments — for example, clamping a limit parameter that is set too high — rather than deny the call outright. Which field on the hook's response carries the corrected arguments?",
           "options": [
-            "additionalContext",
-            "updatedPermissions",
-            "permissionDecisionReason",
-            "updatedInput"
+            "additionalContext, the same field a PostToolUse hook uses to inject extra information afterward.",
+            "updatedPermissions, a field that instead adjusts what the tool is allowed to do going forward.",
+            "updatedInput, nested directly under hookSpecificOutput, which replaces the tool's arguments before it runs.",
+            "permissionDecisionReason, which explains a deny but carries no replacement arguments of its own."
           ],
-          "correct": 3,
-          "explain": "updatedInput, on PreToolUse. updatedPermissions is a canUseTool field and does something else."
+          "correct": 2,
+          "explain": "updatedInput, nested under hookSpecificOutput on a PreToolUse response, is exactly the field that replaces a tool's arguments before it runs, which is what a silent correction like clamping a limit requires. additionalContext only applies after a tool has already run, updatedPermissions changes future authorization rather than this call's arguments, and permissionDecisionReason only explains a deny."
         }
       ]
     },
@@ -389,27 +389,27 @@
           "questions": [
             {
               "id": "q_defer_1a",
-              "q": "A manager must approve a refund in your web UI before the tool runs. Which decision value?",
+              "q": "Your company requires that any refund over $1,000 be approved by a manager inside your own web application — not through a terminal prompt — before the refund tool actually executes, with the run resuming automatically once approval is granted. Which permissionDecision value should the PreToolUse hook return?",
               "options": [
-                "deny with a reason",
-                "ask",
-                "defer",
-                "allow, then undo"
+                "deny, along with a clear reason explaining that manager approval is required before this can proceed.",
+                "ask, which routes the decision to the SDK's own built-in interactive permission flow instead.",
+                "allow, and then reverse the refund transaction afterward if the manager ends up rejecting it.",
+                "defer, which hands the pending call to your application to surface and resolve on its own."
               ],
-              "correct": 2,
-              "explain": "ask routes to the SDK's permission flow. defer hands the pending call to you."
+              "correct": 3,
+              "explain": "defer is built for exactly this situation: it parks the pending call and hands it to your own application to surface and resolve, resuming the run once approval comes back. deny would end the matter without a path to approval, ask would route to the SDK's own permission UI rather than your web app, and allow-then-reverse would let the refund execute before anyone had approved it."
             },
             {
               "id": "q_defer_1b",
-              "q": "What stop_reason accompanies a deferred tool call?",
+              "q": "After a PreToolUse hook returns permissionDecision: \"defer\" for a pending refund call, your backend needs to detect that the call is now waiting on external approval rather than assuming the turn simply ended normally. What should it check for?",
               "options": [
-                "\"tool_deferred\"",
-                "\"end_turn\"",
-                "\"max_turns\"",
-                "\"tool_use\""
+                "A stop_reason value of \"tool_deferred\", with the pending call itself available in deferred_tool_use.",
+                "A stop_reason value of \"end_turn\", the same value used whenever the agent finishes a turn normally.",
+                "A stop_reason value of \"max_turns\", indicating the run has hit its configured turn limit.",
+                "A stop_reason value of \"tool_use\", the generic value returned whenever any tool call occurs at all."
               ],
               "correct": 0,
-              "explain": "A dedicated stop_reason, with the pending call in deferred_tool_use so you know what you are approving."
+              "explain": "A defer decision produces a distinct stop_reason of \"tool_deferred\", with the pending call itself available in deferred_tool_use so the backend knows exactly what is waiting on approval. \"end_turn\", \"max_turns\", and \"tool_use\" are all used for other situations and would not signal that a call is parked awaiting external approval."
             }
           ]
         }
@@ -417,15 +417,15 @@
       "reviewQuestions": [
         {
           "id": "r_defer_1",
-          "q": "After a deferred call is approved, how do you continue?",
+          "q": "A manager has just approved a refund that was parked by a defer decision, and you need the agent's run to continue exactly where it left off rather than starting the conversation over from scratch. How do you resume it?",
           "options": [
-            "Start a fresh query with the same prompt text",
-            "Re-run the hook that deferred the call in the first place",
-            "Resume with the same session_id you were given",
-            "Call the tool yourself and inject the result"
+            "Start an entirely new query using the same prompt text that originally triggered the deferred call.",
+            "Re-run the PreToolUse hook that produced the defer decision so it can re-evaluate the call again.",
+            "Resume the run using the same session_id that was active at the moment the call was deferred.",
+            "Call the underlying refund tool yourself and inject its result directly into the transcript."
           ],
           "correct": 2,
-          "explain": "Same session, picked up where it stopped."
+          "explain": "Resuming with the same session_id that was active when the call was deferred picks the run back up exactly where it stopped. Starting a new query loses that state, re-running the hook would just produce another defer decision, and calling the tool yourself bypasses the approval flow the defer was designed to enforce."
         }
       ]
     },
@@ -441,27 +441,27 @@
           "questions": [
             {
               "id": "q_modes_1a",
-              "q": "A nightly unattended agent must never prompt and never do anything you did not pre-approve. Which mode?",
+              "q": "You are configuring an unattended agent that runs every night with no one watching it, and the requirement is strict: it must never prompt for permission, and it must never perform any action that was not explicitly pre-approved in advance. Which permission mode satisfies both requirements?",
               "options": [
-                "auto",
-                "acceptEdits",
-                "bypassPermissions",
-                "dontAsk"
+                "auto, since a model classifier approves or denies actions on your behalf without ever prompting.",
+                "acceptEdits, since it silently approves file edits without ever showing an interactive prompt.",
+                "bypassPermissions, since it skips permission checks and lets nearly everything through unprompted.",
+                "dontAsk, since it never prompts and denies anything that was not explicitly pre-approved."
               ],
               "correct": 3,
-              "explain": "dontAsk: no prompts, and anything not pre-approved is denied. bypassPermissions also never prompts — by allowing instead."
+              "explain": "dontAsk is built for exactly this case: it never prompts, and anything that was not explicitly pre-approved is denied rather than allowed. auto still lets a classifier approve actions on its own judgment, acceptEdits only concerns file edits specifically, and bypassPermissions also never prompts but does so by allowing nearly everything rather than denying it."
             },
             {
               "id": "q_modes_1b",
-              "q": "What does bypassPermissions still honour?",
+              "q": "Your team enables bypassPermissions for a coding agent to avoid interrupting it with prompts, but a scoped disallow rule like \"Bash(rm *)\" still blocks a destructive command the agent later attempts. This surprises a teammate who assumed bypass mode skipped every check. What does bypassPermissions actually still honor?",
               "options": [
-                "Nothing; it skips every check there is",
-                "Explicit ask rules, which will still prompt",
-                "The allowedTools list, and nothing else",
-                "Hooks, but none of the permission rules"
+                "Explicit ask rules and scoped disallow rules, both of which still take effect even under bypass mode.",
+                "Nothing at all; bypassPermissions is designed to skip every permission check without any exception.",
+                "Only the allowedTools list, which continues to auto-approve the specific tools it names.",
+                "Hooks still fire under bypassPermissions, but none of the ordinary permission rules apply anymore."
               ],
-              "correct": 1,
-              "explain": "And scoped disallowedTools rules like \"Bash(rm *)\" also still deny — bypass is not total."
+              "correct": 0,
+              "explain": "bypassPermissions still honors explicit ask rules and scoped disallow rules like \"Bash(rm *)\", which is why the destructive command was still blocked. It does not skip every check without exception, its effect isn't limited to policing the allowedTools list, and hooks continuing to fire is a separate mechanism from the permission rules being described here."
             }
           ]
         }
@@ -469,15 +469,15 @@
       "reviewQuestions": [
         {
           "id": "r_modes_1",
-          "q": "dontAsk vs. bypassPermissions in one line each.",
+          "q": "Two modes, dontAsk and bypassPermissions, both run without ever showing an interactive prompt, and a teammate assumes that makes them interchangeable. Which statement correctly distinguishes their default behavior toward an unapproved action?",
           "options": [
-            "dontAsk denies the unapproved; bypass allows it",
-            "dontAsk allows everything; bypassPermissions denies",
-            "Both skip prompts and allow whatever is asked for",
-            "They are two names for exactly the same mode"
+            "dontAsk allows everything through by default, while bypassPermissions denies anything unapproved.",
+            "dontAsk denies anything that was not pre-approved, while bypassPermissions allows it through instead.",
+            "Both modes skip prompts and allow whatever action is requested, with no real difference between them.",
+            "They are two configuration names that both map to exactly the same underlying permission behavior."
           ],
-          "correct": 0,
-          "explain": "Same silence, opposite defaults. A classic confusable pair."
+          "correct": 1,
+          "explain": "dontAsk denies anything that wasn't pre-approved, while bypassPermissions allows nearly everything through — same silence, opposite defaults. Neither the reversed version nor the claim that both allow everything nor the claim that they're identical describes the actual difference between the two modes."
         }
       ]
     },
@@ -493,27 +493,27 @@
           "questions": [
             {
               "id": "q_canuse_1a",
-              "q": "You log every tool call from canUseTool and the log has holes. Why?",
+              "q": "You add logging inside your canUseTool callback expecting it to capture every tool call the agent makes, but comparing the log against the full transcript afterward shows a large number of calls are missing. What explains the gap?",
               "options": [
-                "canUseTool is sampled when call volume is high",
-                "Only MCP tools ever invoke the canUseTool callback",
-                "Logging has to be async or entries get dropped",
-                "Calls auto-approved by rules or mode never reach it"
+                "canUseTool calls are sampled rather than invoked on every single call once tool-call volume gets high enough.",
+                "Only MCP tools are ever routed through the canUseTool callback, while built-in tools bypass it entirely.",
+                "Logging placed inside canUseTool has to be made asynchronous, or entries can get silently dropped somewhere.",
+                "Calls already auto-approved by allowedTools, a settings rule, or a permissive mode never reach canUseTool."
               ],
               "correct": 3,
-              "explain": "It is a prompt replacement, not an interceptor. An audit trail belongs in PreToolUse."
+              "explain": "Calls that are already auto-approved — by allowedTools, a settings allow rule, or a permissive mode like bypassPermissions — never reach canUseTool at all, which is exactly why the log has gaps. canUseTool isn't sampled, it isn't restricted to MCP tools, and an async logging bug wouldn't produce gaps that line up with which calls were pre-approved."
             },
             {
               "id": "q_canuse_1b",
-              "q": "Which of these reaches canUseTool even when the tool would otherwise be allowed?",
+              "q": "Your agent runs under bypassPermissions mode, and you assume canUseTool will never fire for anything since the mode is designed to skip prompts entirely. During testing, though, it does still fire for one particular kind of call. Which of these correctly reaches canUseTool even when otherwise allowed?",
               "options": [
-                "Bash, when it is listed in allowedTools",
-                "AskUserQuestion, in any permission mode",
-                "Read, running under acceptEdits mode",
-                "Any tool at all in bypassPermissions mode"
+                "An AskUserQuestion call, which reaches canUseTool in any mode, including bypassPermissions.",
+                "A Bash call, whenever Bash happens to be explicitly listed in the agent's allowedTools configuration.",
+                "A Read call, specifically whenever it happens to run under acceptEdits mode instead of default mode.",
+                "Any tool call at all, simply because the agent happens to be running under bypassPermissions mode."
               ],
-              "correct": 1,
-              "explain": "AskUserQuestion, MCP tools marked requiresUserInteraction, and org-set-to-ask connector tools are the three exceptions."
+              "correct": 0,
+              "explain": "AskUserQuestion is one of the exceptions that reaches canUseTool in every permission mode, including bypassPermissions, regardless of what would otherwise be allowed. Being listed in allowedTools or running under acceptEdits or bypassPermissions is exactly what causes other calls to skip canUseTool rather than reach it."
             }
           ]
         }
@@ -521,15 +521,15 @@
       "reviewQuestions": [
         {
           "id": "r_canuse_1",
-          "q": "canUseTool vs. a PreToolUse hook — what is the difference in when they fire?",
+          "q": "You are deciding where to put audit logging that must record every single tool call the agent makes with no gaps, and a teammate suggests putting it inside canUseTool since that is the SDK's permission callback. Why is that the wrong place, given when each mechanism fires?",
           "options": [
-            "canUseTool fires only on a prompt; PreToolUse on every call",
-            "canUseTool fires on every call; PreToolUse only on writes",
-            "They fire at exactly the same point for the same calls",
-            "PreToolUse fires only in default mode; canUseTool always"
+            "canUseTool fires on every tool call without exception, while PreToolUse only fires for file-write tools.",
+            "canUseTool fires only when the permission flow resolves to a prompt, while a PreToolUse hook fires on every call.",
+            "They fire at exactly the same point for exactly the same set of calls, so either placement works equally well.",
+            "PreToolUse only fires under default permission mode, while canUseTool fires regardless of the mode in use."
           ],
-          "correct": 0,
-          "explain": "Another confusable pair, and the reason audit and enforcement code belongs in the hook."
+          "correct": 1,
+          "explain": "canUseTool only fires when the permission flow actually resolves to a prompt, so any call that gets auto-approved never reaches it — a PreToolUse hook, by contrast, fires on every call regardless of how it will ultimately be decided. The claims that canUseTool fires on everything, that the two fire identically, or that PreToolUse is mode-restricted all get the relationship backwards."
         }
       ]
     },
@@ -545,27 +545,27 @@
           "questions": [
             {
               "id": "q_allow_1a",
-              "q": "You put only Read and Grep in allowedTools, in default mode. Can the agent write a file?",
+              "q": "You configure allowedTools to contain only Read and Grep, running the agent under default permission mode, expecting this to prevent it from ever writing a file. Partway through a session, the agent successfully calls Write after a permission prompt appears and you approve it. What does this reveal about allowedTools?",
               "options": [
-                "No — allowedTools acts as a strict whitelist",
-                "No — unlisted tools are removed from the context",
-                "Only if a hook explicitly allows the write",
-                "Yes — Write falls through to the permission mode"
+                "allowedTools should have acted as a strict whitelist, so this behavior indicates a bug in the permission system.",
+                "allowedTools should have removed Write from the agent's available tools entirely, so this call should have been impossible.",
+                "allowedTools only auto-approves the tools it lists; Write, being unlisted, correctly fell through to the normal permission mode.",
+                "A hook must have explicitly allowed the write, since allowedTools alone can never let an unlisted call through."
               ],
-              "correct": 3,
-              "explain": "The single most common misreading in this whole section. Auto-approval is not restriction."
+              "correct": 2,
+              "explain": "allowedTools only auto-approves the tools it names; an unlisted tool like Write doesn't become unavailable, it simply falls through to whatever the active permission mode does with it, which in default mode is a prompt. It is not a whitelist, it does not remove unlisted tools from the agent's context, and no hook was needed to explain a prompt that the permission mode itself would produce."
             },
             {
               "id": "q_allow_1b",
-              "q": "Which rule still denies matching calls under bypassPermissions?",
+              "q": "You need a rule that keeps the Bash tool available to the agent for legitimate use, but reliably denies any Bash call matching rm *, even in configurations where the agent runs under bypassPermissions mode for everything else. Which configuration achieves that?",
               "options": [
-                "disallowedTools: [\"Bash(rm *)\"]",
-                "allowedTools: [\"Read\"]",
-                "permissionMode: \"plan\"",
-                "A canUseTool callback returning deny"
+                "disallowedTools: [\"Bash(rm *)\"], a scoped rule keeping Bash available but denying matches in every mode.",
+                "allowedTools: [\"Read\"], since leaving Bash off the allow list should be sufficient to block its destructive calls entirely.",
+                "permissionMode: \"plan\", which prevents any tool anywhere from executing changes regardless of which tools are listed.",
+                "A canUseTool callback that returns deny for matching commands, since it fires for every single Bash call no matter the mode."
               ],
               "correct": 0,
-              "explain": "Scoped disallow rules survive bypass. A bare \"Bash\" would remove the tool entirely, which also works but costs you the tool."
+              "explain": "A scoped rule like disallowedTools: [\"Bash(rm *)\"] leaves Bash available for legitimate use while still denying matching calls in every mode, including bypassPermissions. Leaving Bash out of allowedTools wouldn't remove it under a permissive mode, permissionMode: \"plan\" is a blanket read-only mode rather than a targeted rule, and canUseTool would never even fire for a call already allowed under bypassPermissions."
             }
           ]
         }
@@ -573,15 +573,15 @@
       "reviewQuestions": [
         {
           "id": "r_allow_1",
-          "q": "What is the difference between disallowedTools: [\"Bash\"] and disallowedTools: [\"Bash(rm *)\"]?",
+          "q": "You are choosing between disallowedTools: [\"Bash\"] and disallowedTools: [\"Bash(rm *)\"] to restrict a coding agent, and need to know exactly how the two differ in effect before picking one. Which statement correctly describes the difference?",
           "options": [
-            "No difference; the second one is just more specific",
-            "The bare name prompts; the scoped rule denies outright",
-            "The bare name drops the tool; the scoped rule polices it",
-            "The scoped rule only takes effect in default mode"
+            "There is no real difference between them at all; the scoped version is simply a more specific way to write the same rule.",
+            "The bare tool name removes Bash from the agent's context entirely, while the scoped rule keeps it available but polices calls.",
+            "The bare tool name causes a prompt on every single Bash call, while the scoped rule denies matching calls outright without ever prompting.",
+            "The scoped rule only takes effect when the agent runs under default permission mode, unlike the bare tool-name rule."
           ],
-          "correct": 2,
-          "explain": "One takes the tool away, the other polices it. Both are real restriction, unlike allowedTools."
+          "correct": 1,
+          "explain": "The bare tool name removes Bash from the agent's context entirely, so it is never available to call, while the scoped rule keeps Bash usable but denies specifically the matching calls. Neither one merely prompts instead of denying, they are not equivalent to each other, and the scoped rule's effect isn't limited to default permission mode."
         }
       ]
     }

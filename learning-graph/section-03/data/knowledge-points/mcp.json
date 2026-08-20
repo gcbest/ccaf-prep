@@ -13,27 +13,27 @@
           "questions": [
             {
               "id": "q_tsm_1a",
-              "q": "Claude must follow your firm's report template, query your internal database, and read Slack. Which mechanism for each?",
+              "q": "Your team is scoping an agent that must (1) format every incident report using your company's internal report template exactly, (2) query your company's own database for on-call schedules, and (3) post updates into a partner organization's Slack workspace that your company does not operate. For each of these three capabilities, which mechanism is the right fit?",
               "options": [
-                "Tool, skill, MCP",
-                "MCP, tool, skill",
-                "Skill, tool, MCP",
-                "Skill, MCP, tool"
+                "A skill for the report template, a tool for the on-call database, and MCP for the partner's Slack workspace, since you own the first two but not the partner's service.",
+                "A tool for the report template, MCP for the on-call database, and a skill for the partner's Slack workspace, since templates need code and the other two sit outside the prompt.",
+                "MCP for the report template, a skill for the on-call database, and a tool for the partner's Slack workspace, since MCP fits whenever a capability lives outside the conversation.",
+                "A tool for all three capabilities, since a well-written tool can render templates, query databases, and call any external API, including a partner's Slack workspace."
               ],
-              "correct": 2,
-              "explain": "Template is a procedure (skill), your database is your system (tool), Slack is third-party (MCP)."
+              "correct": 0,
+              "explain": "The report template is a procedure the team already controls, which is exactly what a skill is for; the on-call database is the team's own system, which is what tools are for; the partner's Slack workspace is a service the team doesn't operate, which is the case MCP exists to cover. Treating the template as needing a tool, or MCP as the default for anything outside the prompt, misreads the ownership distinction that decides the choice. Writing a tool for the Slack workspace would mean taking on schema and auth maintenance for someone else's service — the maintenance burden MCP is meant to absorb."
             },
             {
               "id": "q_tsm_1b",
-              "q": "What is the practical argument for MCP over writing the tool yourself?",
+              "q": "An engineer proposes writing a custom tool that calls Slack's Web API directly, arguing it will give the team full control over the integration. A teammate suggests connecting to a Slack MCP server instead. What is the strongest practical argument for the MCP approach?",
               "options": [
-                "MCP tools run noticeably faster than yours",
-                "The provider maintains the schema and auth",
-                "MCP tools do not consume any of your context",
-                "MCP tools can be called without any loop"
+                "MCP-provided tools execute with meaningfully lower latency than an equivalent hand-written tool calling the same API.",
+                "The provider maintains the tool's schema and authentication, so the team isn't affected when Slack changes its API.",
+                "MCP tools don't count against the context window the way a hand-written tool's schema and results do.",
+                "MCP connections let Claude call tools without going through the standard tool-use loop, skipping validation."
               ],
               "correct": 1,
-              "explain": "Maintenance moves to whoever owns the service."
+              "explain": "The practical argument is maintenance: whoever runs the MCP server keeps the schema and auth working as Slack's API evolves, so the team never has to notice or react to that churn. Latency isn't the deciding factor here, and MCP tool schemas still occupy context and still go through the same tool-use loop as any other tool — nothing about MCP exempts a request from those mechanics."
             }
           ]
         }
@@ -41,15 +41,15 @@
       "reviewQuestions": [
         {
           "id": "r_tsm_1",
-          "q": "A skill is best described as…",
+          "q": "A new teammate asks how to decide whether a capability should be built as a skill rather than a tool or an MCP connection. Which description correctly identifies what a skill is?",
           "options": [
-            "An integration with an external service",
-            "A tool whose schema gets auto-generated",
-            "A server-side tool that Anthropic runs",
-            "Instructions teaching Claude a procedure"
+            "A skill is an integration that connects Claude to a service your team doesn't operate, the way MCP does.",
+            "A skill is a tool whose input schema gets generated automatically rather than written by hand by your team.",
+            "A skill is a set of instructions teaching Claude a procedure your team already owns, like a checklist.",
+            "A skill is a server-side tool that a third-party provider hosts and maintains on Claude's behalf, like MCP."
           ],
-          "correct": 3,
-          "explain": "Procedure, not plumbing — your template or checklist expressed as instructions."
+          "correct": 2,
+          "explain": "A skill packages a procedure the team already owns and controls — a template, a checklist, a way of doing something — as instructions, not as a system integration. That's what separates it from a tool, which connects to a system your team maintains, and from MCP, which connects to a service someone else maintains and hosts. Skills aren't auto-generated schemas or provider-hosted infrastructure; they're instructions."
         }
       ]
     },
@@ -64,27 +64,27 @@
           "questions": [
             {
               "id": "q_conn_1a",
-              "q": "Which two request fields connect a remote MCP server?",
+              "q": "You're wiring up a request that should let Claude use a remote MCP server for the first time. You've added the server's URL and an authorization token under mcp_servers, but Claude's response comes back without ever attempting to call any tool from that server. What is most likely missing?",
               "options": [
-                "mcp_servers, plus a tools mcp_toolset entry",
-                "mcp_servers and mcp_tools on the request",
-                "servers and tool_choice, on the request",
-                "mcp_config and allowed_tools, together"
+                "A separate mcp_tools field listing each tool name the server exposes, alongside mcp_servers.",
+                "A tool_choice field set to force Claude to prefer the tools discovered from the newly connected server.",
+                "An allowed_tools field naming the server so Claude knows it is permitted to introspect it.",
+                "A tools entry of type mcp_toolset pointing at the server's name, which is what actually grants access to it."
               ],
-              "correct": 0,
-              "explain": "One declares the connection, the other grants access to it."
+              "correct": 3,
+              "explain": "Declaring the server under mcp_servers only tells Claude the connection exists; it doesn't grant access to anything on it. Access is a separate step — a tools entry with type mcp_toolset and the matching mcp_server_name — and without it Claude has no tools to call even though the connection is live. There's no separate mcp_tools or allowed_tools field, and tool_choice controls which already-available tool gets picked, not whether the server's tools are available at all."
             },
             {
               "id": "q_conn_1b",
-              "q": "Who writes the schemas for MCP-provided tools?",
+              "q": "A developer asks why they never had to write a JSON schema for the search_messages tool exposed by a connected MCP server, even though they wrote schemas by hand for every one of their own tools. Why?",
               "options": [
-                "You, mirroring the server's documentation",
-                "The SDK, from the server's OpenAPI spec",
-                "Nobody — Claude introspects the server",
-                "Anthropic, from a registry of known servers"
+                "Claude introspects the connected server directly and discovers its tools and schemas itself, skipping manual work.",
+                "The SDK generates the schema automatically from the server's OpenAPI documentation the first time it's called.",
+                "Anthropic maintains a registry of known MCP servers and ships their schemas as part of the platform's API.",
+                "The developer's team is expected to mirror the schema from the server's docs into their own request by hand."
               ],
-              "correct": 2,
-              "explain": "Introspection is the point of the protocol. Hand-writing schemas is what MCP removes."
+              "correct": 0,
+              "explain": "Introspection is the mechanism the MCP connector relies on — Claude queries the connected server for its tools and their schemas at connection time, which is exactly what removes the hand-writing step. There's no SDK step that scrapes OpenAPI docs, no Anthropic-maintained registry of third-party schemas, and no expectation that the team copies documentation into the request — all of that manual work is precisely what MCP is designed to eliminate."
             }
           ]
         }
@@ -92,15 +92,15 @@
       "reviewQuestions": [
         {
           "id": "r_conn_1",
-          "q": "What does an mcp_toolset entry grant by default?",
+          "q": "You add a tools entry of type mcp_toolset pointing at a connected server, without listing any specific tool names inside it. What access does this grant?",
           "options": [
-            "No tools at all until each is enabled",
-            "Every tool on the server that is named",
-            "Only the read-only tools that it exposes",
-            "Only tools whose schemas Claude validates"
+            "No tools at all — each one on the server must be named individually before Claude is able to call it.",
+            "Every tool the server exposes, since a bare mcp_toolset entry defaults to granting the entire server.",
+            "Only the tools the server marks as read-only, with any state-changing tools excluded by default automatically.",
+            "Only the tools whose schemas Claude manages to validate successfully during the introspection step."
           ],
           "correct": 1,
-          "explain": "All of them — which is exactly why scoping down is a separate, deliberate step."
+          "explain": "An mcp_toolset entry grants everything on the server unless it's explicitly narrowed — that's the default, not an opt-in per tool. Nothing about read-only status or schema validation determines what's included; the entry is all-or-nothing until you scope it down yourself, which is exactly why scoping is treated as a separate, deliberate step."
         }
       ]
     },
@@ -115,27 +115,27 @@
           "questions": [
             {
               "id": "q_scope_1a",
-              "q": "You connect a Slack MCP server and the agent must never post. What do you do?",
+              "q": "You've connected a Slack MCP server that exposes search_messages, list_channels, post_message, and delete_channel. The agent's job only requires reading channel history, and it must never be able to post or delete a channel, even if a user tries to talk it into doing so via a crafted message. How should you configure access?",
               "options": [
-                "A system-prompt rule forbidding posting",
-                "List the posting tools in a blocked set",
-                "Use tool_choice to restrict what may run",
-                "default_config disabled, then enable reads"
+                "Add a system-prompt instruction telling the agent never to call post_message or delete_channel.",
+                "List post_message and delete_channel in a blocked set, leaving every other tool enabled by default.",
+                "Set default_config to disabled, then explicitly enable search_messages and list_channels.",
+                "Use tool_choice to steer Claude toward preferring search_messages and list_channels over the others."
               ],
-              "correct": 3,
-              "explain": "Deny by default, allow by name. It is configuration, and it survives the provider adding new tools."
+              "correct": 2,
+              "explain": "Setting default_config to disabled and enabling only the read tools by name is enforced at the configuration layer, so it holds regardless of what a crafted message in context argues for — that's what makes it resistant to the exact attack described. A system-prompt instruction is a request the agent can be talked out of, not a guarantee. A block list leaves anything unlisted enabled, which doesn't close the gap for a tool the team hasn't thought to list. tool_choice biases which available tool gets picked, but it doesn't remove post_message or delete_channel from what's callable."
             },
             {
               "id": "q_scope_1b",
-              "q": "Why is a block list worse than an allow list here?",
+              "q": "Six months after configuring a Slack MCP connection with post_message and delete_channel in a block list, the provider ships a new archive_workspace tool. The team never updates their configuration. What is the consequence, and why does a block-by-name list carry this risk that an allow-by-name list does not?",
               "options": [
-                "A new provider tool is permitted by default",
-                "It is simply a more verbose thing to write",
-                "Block lists are not supported by the API",
-                "Block lists cannot combine with auth tokens"
+                "Nothing changes, since MCP servers cannot add new tools without updating every connected client's configuration file.",
+                "The new tool stays unusable until the team edits their block list, exactly as it would be under an allow list too.",
+                "The connection breaks entirely, since a block list becomes invalid the instant the server's tool set changes at all.",
+                "archive_workspace becomes reachable by default, missing from the block list, while an allow list would keep it off."
               ],
-              "correct": 0,
-              "explain": "Anything unlisted is allowed, and the list of things to block grows without you."
+              "correct": 3,
+              "explain": "A block list is only correct as of the moment it was written — anything the provider adds afterward isn't excluded, so archive_workspace becomes callable without anyone deciding it should be. An allow list has the opposite failure mode: new tools stay off until someone deliberately turns them on, which is the safer default. The connection doesn't break and the server isn't prevented from adding tools; the risk is purely that a block list's blind spot grows every time the provider ships something new."
             }
           ]
         }
@@ -143,15 +143,15 @@
       "reviewQuestions": [
         {
           "id": "r_scope_1",
-          "q": "Why is scoping configuration rather than a prompt instruction?",
+          "q": "A reviewer asks why the team scoped MCP tool access using default_config and enabled configs entries instead of just adding a line to the system prompt telling the agent which tools it may use. What's the core reason configuration was chosen over a prompt instruction?",
           "options": [
-            "Prompt instructions cost extra tokens",
-            "Instructions are ignored for MCP tools",
-            "Configuration is enforced; a prompt is asked",
-            "Configuration is cached; instructions are not"
+            "Configuration is enforced regardless of context, while a prompt instruction is only a request the model can resist.",
+            "Prompt instructions consume meaningfully more tokens than an equivalent configuration block would, raising request cost.",
+            "Instructions placed in the system prompt are silently ignored whenever any MCP tool is involved in the request.",
+            "Configuration is cached between requests in a way that plain system-prompt instructions are never able to be."
           ],
-          "correct": 2,
-          "explain": "The same programmatic-enforcement-versus-instruction line that runs through the whole certification."
+          "correct": 0,
+          "explain": "The distinction is enforcement versus request: a disabled tool cannot be called no matter what appears in context, while a system-prompt rule is something untrusted content elsewhere in the conversation can potentially argue against. It isn't about token cost or caching, and system-prompt instructions aren't ignored for MCP tools — they simply don't provide the same guarantee that configuration does."
         }
       ]
     }

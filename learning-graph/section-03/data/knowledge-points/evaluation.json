@@ -13,27 +13,27 @@
           "questions": [
             {
               "id": "q_evalwhy_1a",
-              "q": "What does passing the handful of cases you invented actually establish?",
+              "q": "Your team tested a prompt against three examples you wrote yourselves, all passed, and shipped it. In production the failure rate turns out to be much higher than expected, concentrated in inputs nobody on the team anticipated. What does passing those three self-written cases actually establish, in retrospect?",
               "options": [
-                "That the prompt is ready for typical input",
-                "Only that it survives the cases you imagined",
-                "That the remaining failure rate is under 5%",
-                "That it generalises, the cases being typical"
+                "That the prompt correctly handles the specific inputs you happened to imagine, and nothing about inputs outside that set.",
+                "That the prompt is statistically ready for typical production traffic, since three cases represent that traffic well.",
+                "That the remaining failure rate in production will stay under some fixed small percentage, such as five percent.",
+                "That the prompt generalizes well to production traffic, because the three cases chosen were representative examples."
               ],
-              "correct": 1,
-              "explain": "Cases you invented are drawn from your imagination, not from production traffic. They cannot speak for what you did not imagine."
+              "correct": 0,
+              "explain": "Passing cases you invented proves only that the prompt survives cases you invented — production traffic is dominated by inputs nobody on the team thought to write down, which is exactly what stays unmeasured. Treating three passing examples as proof of readiness for typical traffic assumes the sample is representative, which nothing here establishes. Naming a specific failure-rate ceiling from three self-written cases isn't something that kind of testing can support. And claiming the invented cases were themselves representative is circular — that's the assumption in question, not a conclusion you can draw from passing them."
             },
             {
               "id": "q_evalwhy_1b",
-              "q": "How do prompt engineering and prompt evaluation differ?",
+              "q": "A team lead says the group has been 'doing evaluation' for months, pointing to dozens of prompt rewrites logged in their change history. Looking closer, every entry describes a wording tweak and a gut-check read of the output, with no scoring step anywhere. Which distinction explains why this isn't evaluation?",
               "options": [
-                "Engineering is manual, evaluation automated",
-                "Engineering is pre-deploy, evaluation is after",
-                "Engineering writes prompts; evaluation measures",
-                "Engineering is for system, evaluation for user"
+                "Prompt engineering happens only before deployment, while prompt evaluation is any activity that happens after a prompt has already shipped to production.",
+                "Prompt engineering is something a human does manually, while prompt evaluation refers only to fully automated grading pipelines with no human involvement.",
+                "Prompt engineering covers techniques for writing better prompts, while prompt evaluation is the practice of measuring whether changes actually worked.",
+                "Prompt engineering targets changes visible to the end user, while prompt evaluation targets only changes made to internal system instructions."
               ],
               "correct": 2,
-              "explain": "One writes, the other measures. The cycle alternates between them."
+              "explain": "The team has been iterating on wording, which is prompt engineering — techniques for writing better prompts. What's missing is the measurement step: prompt evaluation is specifically about scoring whether a change worked, and a gut-check read isn't a score. Splitting the two along a before/after deployment line doesn't match how the terms are used — both activities happen throughout iteration. Restricting evaluation to fully automated pipelines excludes human grading, which is one of the recognized grader types. And neither term is defined by whether the change is user-visible versus internal to the system prompt."
             }
           ]
         }
@@ -41,15 +41,15 @@
       "reviewQuestions": [
         {
           "id": "r_evalwhy_1",
-          "q": "What is the stated cost of the third path?",
+          "q": "A manager is deciding whether to invest in a full evaluation pipeline — dataset, grading, iteration — versus just spot-checking a prompt against a couple of examples before shipping. What tradeoff does choosing the evaluation pipeline actually involve?",
           "options": [
-            "More upfront work and cost, for confidence",
-            "It requires a much more capable model",
-            "It cannot handle prompts with examples",
-            "It only works for classification tasks"
+            "It requires switching to a more capable and more expensive model, since evaluation pipelines cannot score outputs from smaller models.",
+            "It only produces useful signal for prompts that generate structured output like JSON, not for open-ended text generation tasks.",
+            "It replaces the need for writing good prompts in the first place, since the pipeline will iterate its way to a working prompt automatically.",
+            "It requires more upfront work and cost than spot-checking, in exchange for much higher confidence that the prompt behaves correctly."
           ],
-          "correct": 0,
-          "explain": "The trade is explicit: effort and spend now, confidence later."
+          "correct": 3,
+          "explain": "The stated tradeoff is explicit: building a dataset, running a grader, and iterating on scores costs more time and money upfront than spot-checking, and buys much higher confidence in return. The model used for evaluation isn't restricted to a more expensive tier — nothing about the pipeline requires upgrading the model being tested. The pipeline works for any output a grader can score, not only structured formats like JSON. And it doesn't eliminate prompt writing — it's the mechanism for judging whether prompt-writing changes actually helped."
         }
       ]
     },
@@ -64,27 +64,27 @@
           "questions": [
             {
               "id": "q_evalpipe_1a",
-              "q": "Which artefact persists across iterations rather than being rebuilt?",
+              "q": "Over three weeks, an engineer revises a summarization prompt eleven times, re-running it through Claude and re-grading the output after every change. Which single artifact from the five-step pipeline stays untouched across all eleven revisions, rather than being rebuilt each time?",
               "options": [
-                "The prompt you are refining",
-                "The grader's own reasoning",
-                "The score threshold you set",
-                "The dataset of test cases"
+                "The prompt template currently being revised, since that's the variable under active iteration.",
+                "The dataset of representative test cases that was assembled once at the start of the process.",
+                "The grader's internal reasoning about why a particular output scored the way it did.",
+                "The score threshold the team agreed a prompt must clear before being considered acceptable."
               ],
-              "correct": 3,
-              "explain": "The dataset is built once and reused, which is what makes it a regression suite."
+              "correct": 1,
+              "explain": "The dataset is built once in step two and then reused unchanged for every run through Claude and every grading pass — that repetition against a fixed set of cases is what makes it a regression suite. The prompt is the opposite: it's exactly what changes on each of the eleven revisions. The grader's reasoning is regenerated fresh each time it scores a new output, so it isn't a persistent artifact. And a score threshold is a decision the team makes about the results, not a component of the pipeline itself."
             },
             {
               "id": "q_evalpipe_1b",
-              "q": "What does re-scoring the same dataset after every prompt change catch?",
+              "q": "An engineer swaps in a new instruction that fixes a stubborn edge case in the eval dataset. Eyeballing that one case, the change looks like a clear win — but the team re-runs the full dataset through the grader anyway before merging. What is that full re-scoring step designed to catch?",
               "options": [
-                "A change fixing one case, breaking others",
-                "Rate-limit errors during a long run",
-                "Drift in the underlying model itself",
-                "Cases missing from the dataset entirely"
+                "Cases that were left out of the dataset entirely and therefore never get exercised by any prompt version.",
+                "Rate-limit errors that occur when the entire dataset is sent through the API during a long run.",
+                "A change that fixes the one case it was aimed at while quietly breaking others in the set.",
+                "Silent drift in the underlying model's behavior between one evaluation run and the next."
               ],
-              "correct": 0,
-              "explain": "Regression. Without a fixed dataset, a net-negative change can look like a win."
+              "correct": 2,
+              "explain": "Re-scoring the entire dataset after every change is what catches a fix that helps the targeted case while quietly regressing others — without it, the average score would look flat or improved even as real capability was lost elsewhere. Missing dataset coverage is a property of how the dataset was built, not something a re-run against existing cases would reveal. API-level errors like rate limiting are an operational concern separate from what the scores are measuring. And the pipeline as described doesn't compare runs against each other to detect model drift — it compares prompt versions against a fixed dataset."
             }
           ]
         }
@@ -92,27 +92,27 @@
       "reviewQuestions": [
         {
           "id": "r_evalpipe_1",
-          "q": "Put the pipeline in order: grade, draft, run through Claude, build dataset, revise.",
+          "q": "A new team member is told the eval pipeline runs in five steps, but sees them listed out of order in an onboarding doc: grade, draft, run through Claude, build dataset, revise. What is the correct sequence?",
           "options": [
-            "build dataset → draft → grade → run through Claude → revise",
-            "draft → run through Claude → build dataset → grade → revise",
-            "draft → build dataset → run through Claude → grade → revise",
-            "build dataset → run through Claude → draft → grade → revise"
+            "Build the eval dataset first, draft the prompt second, grade the outputs third, run everything through Claude fourth, and revise last of all.",
+            "Draft a prompt, build the dataset, run it through Claude, grade each output, then revise and repeat from the run-through-Claude step.",
+            "Draft a prompt, run it through Claude right away, build the eval dataset only afterward, grade the outputs, then revise.",
+            "Build the eval dataset before anything else, run it through Claude, draft the prompt only after that, then grade and revise."
           ],
-          "correct": 2,
-          "explain": "Draft, dataset, run, grade, revise — then loop back to the run."
+          "correct": 1,
+          "explain": "The sequence is draft, then dataset, then run through Claude, then grade, then revise — and revising loops back to the run step rather than starting over. Building the dataset before a prompt exists reverses the dependency: the pipeline starts by having something to test. Running outputs through Claude before the dataset exists means there's nothing yet to feed through it. And drafting the prompt last, after already running and dataset-building, doesn't match the pipeline at all — there's nothing to run without a prompt first."
         },
         {
           "id": "r_evalpipe_2",
-          "q": "What score range does the course use for graders?",
+          "q": "While building a grading rubric, a teammate proposes scoring each output as simply pass or fail, arguing it's simpler to average. What score range does the pipeline actually use for graders, and why does it matter for averaging across a dataset?",
           "options": [
-            "Pass/fail",
-            "1–10",
-            "0–100",
-            "A letter grade"
+            "A pass/fail binary recorded per case, which averages across the dataset into a simple percentage of cases that passed.",
+            "A 0–100 percentage score per case, matching how code coverage tools typically report results across a run.",
+            "A letter grade per case, from A down to F, mirroring the rubric style used in academic grading systems.",
+            "A 1–10 numeric scale per case, averaging into a more granular score than a binary pass/fail outcome could."
           ],
-          "correct": 1,
-          "explain": "Typically 1–10, averaged across the dataset."
+          "correct": 3,
+          "explain": "Graders typically score each case on a 1–10 scale, and averaging those numeric scores preserves far more signal than a binary outcome would — a prompt that produces consistently mediocre 5s looks very different from one that alternates between 9s and 1s, even though both might 'pass' half the time. A pass/fail scheme collapses that distinction into a single percentage. A 0–100 scale isn't the convention used here, even though it appears elsewhere like coverage tooling. And letter grades aren't used at all — they're not how the numeric averaging in the pipeline works."
         }
       ]
     },
@@ -127,27 +127,27 @@
           "questions": [
             {
               "id": "q_evalds_1a",
-              "q": "Which model generates the eval dataset for a Sonnet prompt, and why?",
+              "q": "A team is building an eval dataset to test a prompt that will run on Sonnet in production. One engineer suggests generating the test cases with Sonnet too, 'to keep everything consistent.' Which model should generate the dataset instead, and why?",
               "options": [
-                "Sonnet, so cases match the model under test",
-                "Haiku — generating cases is not the task",
-                "Opus, since case quality drives eval quality",
-                "The same model, to avoid any mismatch"
+                "Haiku, because generating test cases is a separate, cheap task that doesn't need the same tier as the model being evaluated.",
+                "Sonnet, so the generated cases match the style and difficulty of what the model under test will actually see.",
+                "Opus, because the quality of the generated cases directly determines the quality of the entire evaluation.",
+                "Whichever model is under test, to avoid any mismatch between how cases are generated and how they'll be graded."
               ],
-              "correct": 1,
-              "explain": "Generation is a separate, cheap task. Applying the cheapest-model rule here is the point."
+              "correct": 0,
+              "explain": "Dataset generation is a separate task from the one being evaluated, and applying the cheapest-model-that-works rule here means reaching for Haiku rather than matching the tier of the model under test. Using Sonnet assumes generated cases need to mirror the target model's style, but the dataset is testing the prompt's behavior on realistic inputs, not modeling the target's own output. Reaching for Opus overstates how much generation quality matters relative to its cost — it's not the component being evaluated. And matching the model under test to the generation model isn't necessary, since the dataset is evaluated independently of which model wrote the inputs."
             },
             {
               "id": "q_evalds_1b",
-              "q": "How large should the dataset be during active prompt iteration?",
+              "q": "A team is actively revising a prompt, making a small wording change every few minutes and re-running the eval after each one. Their dataset currently has 300 cases, and each re-run takes several minutes, so engineers have started skipping the eval on minor changes. What should the dataset size be during this active-iteration phase?",
               "options": [
-                "Hundreds, so every change is measured well",
-                "Exactly 20–30, as for the model selection",
-                "As large as the rate limit will let you go",
-                "Two or three cases, so iteration stays fast"
+                "Hundreds of cases, so every change is measured against the full range of production scenarios.",
+                "As many cases as the API rate limit allows within a single run, in order to maximize dataset coverage.",
+                "Exactly 20 to 30 cases, matching the fixed sample size convention used elsewhere for comparing models.",
+                "Two or three cases, small enough that a run stays fast and cheap enough to actually happen every time."
               ],
               "correct": 3,
-              "explain": "Small while iterating, large to validate. A slow eval is an eval that gets skipped."
+              "explain": "During active iteration the dataset should stay to just two or three cases, because the whole point is that a run has to be fast and cheap enough that engineers actually run it after every small change — the team's current problem, skipping evals on minor edits because a 300-case run takes minutes, is exactly what a small dataset avoids. Hundreds of cases is the right size for final validation, not for a change happening every few minutes. There's no fixed 20-to-30 convention for this phase — that figure belongs to a different comparison task. And maximizing coverage up to the rate limit defeats the purpose, since the goal here is speed, not exhaustiveness."
             }
           ]
         },
@@ -159,27 +159,27 @@
           "questions": [
             {
               "id": "q_evalds_2a",
-              "q": "What is the per-case `format` field for?",
+              "q": "A code grader has three validators available — one for JSON, one for Python syntax, one for regex — but a mixed dataset gives it no way to know which validator applies to a given test case's expected output. What field, added to each test case, solves this?",
               "options": [
-                "Telling the code grader which validator",
-                "Telling Claude which format to produce",
-                "Recording which model produced the case",
-                "Selecting a temperature for each case"
+                "A `source` field that records which model was used to originally generate that test case.",
+                "A `format` field on each case that tells the code grader which validator to run against that case's output.",
+                "A `temperature` field that controls how much variation is allowed in the grader's scoring for that case.",
+                "A `format` field that tells Claude which output format to produce when generating a response to that case."
               ],
-              "correct": 0,
-              "explain": "It routes the output to the right validator — json.loads, ast.parse, re.compile."
+              "correct": 1,
+              "explain": "The `format` field on each test case is read by the code grader, which has several validators available — json.loads, ast.parse, re.compile — but no way to guess which one applies to a given case without that field routing it. A `source` field recording provenance wouldn't help the grader pick a validator; it just tracks where the case came from. A `temperature` field on a test case doesn't control grading variation — temperature is a model generation parameter, not a grading one. And while it might seem like the field should instruct Claude on what to produce, it's actually read on the grading side, after the output already exists, not by the model generating the response."
             },
             {
               "id": "q_evalds_2b",
-              "q": "Which three validators does the course name for code grading?",
+              "q": "A code grader needs to check three different kinds of structured output: JSON payloads, Python snippets, and regular expressions. Which three functions does it use to validate each format?",
               "options": [
-                "json.loads, ast.parse, re.compile",
-                "pydantic, mypy, and black",
-                "jsonschema, pytest, flake8",
-                "eval, exec, and compile"
+                "`json.loads`, `ast.parse`, and `re.compile` — one validator per format, each raising on invalid syntax.",
+                "`pydantic`, `mypy`, and `black` — a schema validator, a type checker, and a formatter.",
+                "`jsonschema`, `pytest`, and `flake8` — a JSON schema tool, a test runner, and a linter.",
+                "`eval`, `exec`, and `compile` — Python's built-in functions for executing arbitrary code."
               ],
               "correct": 0,
-              "explain": "One per format: JSON, Python, regular expression."
+              "explain": "The grader pairs each format with exactly one syntax check: `json.loads` for JSON, `ast.parse` for Python, and `re.compile` for regex — each one raises an exception on invalid input, which is what the try/except grading logic depends on. Pydantic, mypy, and black check schemas, types, and formatting respectively, none of which is what a bare syntax-validity check needs. jsonschema, pytest, and flake8 are heavier tools aimed at schema conformance, test execution, and style linting, not simple parse validation. And eval, exec, and compile would actually run the code rather than just check whether it parses, which is a much riskier and different operation."
             }
           ]
         }
@@ -187,15 +187,15 @@
       "reviewQuestions": [
         {
           "id": "r_evalds_1",
-          "q": "Why generate a dataset with prefill and stop sequences rather than plain prompting?",
+          "q": "An engineer generates eval dataset cases by prefilling the assistant turn with an opening code fence and setting a stop sequence on the closing fence, then calling `json.loads` on the result. A colleague asks why not just prompt Claude normally and parse whatever comes back. What does the prefill-and-stop-sequence approach actually buy here?",
           "options": [
-            "It is noticeably cheaper per token used",
-            "It is the only way to get more than three",
-            "It guarantees the cases are representative",
-            "It yields JSON clean enough to just parse"
+            "It's noticeably cheaper per token than a plain prompt would be, since a shorter completion means less generation cost.",
+            "It's the only way to generate a dataset larger than three cases, since plain prompting caps the output length.",
+            "It yields output clean enough — no preamble, no trailing commentary — that `json.loads` can parse it directly.",
+            "It guarantees the generated cases are representative of real production traffic, not just syntactically valid."
           ],
-          "correct": 3,
-          "explain": "Clean parsing. The technique is the structured-output one, applied to a generation task."
+          "correct": 2,
+          "explain": "Prefilling with an opening code fence and stopping at the closing one forces the completion to contain nothing but the JSON itself — no 'Here are some test cases:' preamble, no trailing notes — so `json.loads` can parse it directly without any cleanup step. It's not primarily a cost play; any savings from a shorter completion are incidental to the real benefit, which is parseability. It's also not the only way to exceed three cases — dataset size and this parsing technique are unrelated concerns. And clean parsing says nothing about whether the cases resemble production traffic; representativeness is a property of what's generated, not of how reliably it parses."
         }
       ]
     },
@@ -210,27 +210,27 @@
           "questions": [
             {
               "id": "q_codegrade_1a",
-              "q": "Which property can a code grader check?",
+              "q": "A team is deciding what a code grader can and can't be trusted to check on its own, without any model-based scoring layered on top. Which of the following can it reliably verify?",
               "options": [
-                "Whether the answer is genuinely helpful",
-                "Whether the reasoning behind it is sound",
-                "Whether the output parses as valid JSON",
-                "Whether the tone suits its intended audience"
+                "Whether the output is genuinely helpful and satisfying to the person who originally asked the question.",
+                "Whether the output is syntactically valid JSON, verified with a try/except around `json.loads`.",
+                "Whether the reasoning behind the output is logically sound, well-supported, and internally consistent.",
+                "Whether the tone and register of the output suit the audience it is intended to be read by."
               ],
-              "correct": 2,
-              "explain": "Syntax validity is exactly its brief. The other three need a model or a human."
+              "correct": 1,
+              "explain": "Syntax validity is exactly a code grader's brief — a try/except around `json.loads` returns a clean pass or fail with no ambiguity. Helpfulness, soundness of reasoning, and tone are all judgment calls that require either a model grader or a human reviewer, since none has a mechanically checkable right answer the way syntax does."
             },
             {
               "id": "q_codegrade_1b",
-              "q": "Why is a syntax code grader scored 10 or 0 rather than on a scale?",
+              "q": "A teammate suggests changing the syntax code grader to return partial credit — say, 7 out of 10 for output that's 'almost valid JSON' — instead of the current all-or-nothing 10 or 0. Why does the grader use a binary score instead?",
               "options": [
-                "To make averaging with a model score easy",
-                "The scale is reserved for model graders",
-                "To penalise malformed output more heavily",
-                "Syntax parses or it does not; no middle"
+                "A binary score makes it easier to average against a model grader's score later, which is otherwise complicated.",
+                "The 1–10 scale is reserved exclusively for model graders and can't be applied to programmatic checks.",
+                "Syntax either parses or it doesn't — there's no valid middle state for `json.loads` to return.",
+                "A binary score is deliberately harsher, penalizing any malformed output more heavily than a graded scale would."
               ],
-              "correct": 3,
-              "explain": "Binary property, binary score."
+              "correct": 2,
+              "explain": "`json.loads` either succeeds or raises — there's no partial-parse state to represent as a 7, so the grader's 10-or-0 shape simply mirrors the binary nature of what it's checking. Averaging with a model grader's score works whether the code score is binary or graded, so ease of averaging isn't the reason for the design. Nothing restricts the 1–10 scale to model graders specifically — it's used there because it fits judgment-based scoring, not because programmatic checks are barred from it. And the binary score isn't chosen for harshness; it's chosen because the underlying property being measured genuinely has only two states."
             }
           ]
         }
@@ -238,15 +238,15 @@
       "reviewQuestions": [
         {
           "id": "r_codegrade_1",
-          "q": "An output is beautifully argued and does not parse. What does a code grader give it?",
+          "q": "A code grader evaluates an output that is eloquently written, clearly explains its approach, and would likely score very well from a human reader — but the code itself has a syntax error and fails to parse. What score does the code grader assign?",
           "options": [
-            "A middling score",
-            "10",
-            "0",
-            "It skips the case"
+            "A middling score, reflecting that the explanation is strong even though the code itself is broken.",
+            "A 10, since the try/except only checks for a raised exception and the explanation would suppress it.",
+            "It skips the case entirely, since a parse failure means there's nothing valid to score.",
+            "A 0 — the grader sees only that parsing failed and has no way to credit the quality of the explanation."
           ],
-          "correct": 2,
-          "explain": "0. The grader sees the parse failure and nothing else — which is precisely why you combine it with a model score."
+          "correct": 3,
+          "explain": "The grader's try/except sees only that the validator raised an exception and returns 0 — it has no mechanism for weighing the quality of an explanation against a parse failure, because it isn't reading the explanation at all. A middling score would require some notion of partial credit, which the binary pass/fail design doesn't have. A 10 would require the exception to somehow not fire, which eloquent prose has no effect on. And skipping the case isn't an option the grader has — it always returns a score, which is precisely why this failure mode matters enough to combine the code grader with a model grader that can read the explanation."
         }
       ]
     },
@@ -261,27 +261,27 @@
           "questions": [
             {
               "id": "q_modelgrade_1a",
-              "q": "Every output in your eval scores between 5 and 7. What is most likely wrong?",
+              "q": "Across 200 cases in an eval run, every single output scores somewhere between 5 and 7, regardless of how obviously good or bad the response actually is when an engineer spot-checks a few by hand. What is most likely wrong?",
               "options": [
-                "The dataset is too small to separate them",
-                "The graded model's temperature is too low",
-                "The outputs genuinely are all mediocre",
-                "The grading prompt asks for a bare score"
+                "The grading prompt asks the model for a bare numeric score with no accompanying reasoning.",
+                "The eval dataset is too small to meaningfully separate strong outputs from weak ones.",
+                "The model doing the grading has its temperature set too low, compressing its range of scores.",
+                "The outputs genuinely are all mediocre, and the grader is accurately reflecting that."
               ],
-              "correct": 3,
-              "explain": "A flat band around 6 is the documented signature of a grader asked for a number and nothing else."
+              "correct": 0,
+              "explain": "A flat band clustered around 6 is the documented signature of a grading prompt that asks for a bare score and nothing else — without having to justify the number, a model defaults to a noncommittal 'about 6' regardless of actual quality. A dataset of 200 cases is plenty large enough to show a spread if one exists, so size isn't the bottleneck here. Grader temperature affects wording variation, not this specific compression toward a middle score. And the engineer's own spot-check contradicts the theory that the outputs are genuinely all mediocre — the scores are the thing that's uninformative, not the outputs."
             },
             {
               "id": "q_modelgrade_1b",
-              "q": "What should a model grader be asked to return?",
+              "q": "A team is designing the return format for their model grader's prompt. One option is to ask for just a 1–10 score to keep parsing simple. Given the known bare-score failure mode, what should the grader actually be asked to return?",
               "options": [
-                "A score only, for consistency's sake",
-                "Strengths, weaknesses, reasoning, score",
-                "A pass/fail verdict plus a rewrite",
-                "A score and its confidence interval"
+                "A pass/fail verdict along with a suggested rewrite of the output being graded for improvement.",
+                "Only the numeric score, since that is the only field actually used in the final averaged result.",
+                "Strengths, weaknesses, the reasoning connecting them to a verdict, and a final score.",
+                "A numeric score together with a confidence interval expressing how certain the grader is."
               ],
-              "correct": 1,
-              "explain": "All four. The reasoning is what stops the score collapsing to the middle."
+              "correct": 2,
+              "explain": "Asking for strengths, weaknesses, reasoning, and score forces the model to justify the number before producing it, which is what stops the score from collapsing to a noncommittal middle value. Asking for a pass/fail plus a rewrite conflates grading with fixing the output, which is a different task from scoring it. Requesting only the numeric score is exactly the bare-score pattern that produces the flat-band failure mode in the first place — the fact that only the score gets averaged doesn't mean only the score should be requested. And a confidence interval addresses the model's certainty about its own number, not the underlying reasoning that makes the number trustworthy."
             }
           ]
         }
@@ -289,27 +289,27 @@
       "reviewQuestions": [
         {
           "id": "r_modelgrade_1",
-          "q": "What should be stored per test case from a model grader?",
+          "q": "After a model-graded eval run finishes, an engineer is deciding what to persist for each of 500 test cases so the team can later diagnose why a prompt is underperforming. What should be stored per case from the model grader?",
           "options": [
-            "The score and the reasoning",
-            "The score, and nothing else",
-            "The graded output and the score",
-            "The score and the grader's model id"
+            "The score and the grader model's identifier, so the results can be traced back to which model produced them.",
+            "The score and nothing else, since averaging is all that matters for comparing prompt versions.",
+            "The graded output itself along with the numeric score, but not the grader's stated reasoning.",
+            "The score together with the reasoning the grader gave when arriving at that particular score."
           ],
-          "correct": 0,
-          "explain": "Score plus reasoning, averaged across the dataset — the reasoning is what tells you where a prompt is failing."
+          "correct": 3,
+          "explain": "Storing the reasoning alongside the score is what lets the team diagnose where a prompt is failing, not just that it's failing — a low average alone doesn't say why, but a pattern in the reasoning across cases usually does. Storing only the score plus a model identifier drops exactly the diagnostic content that matters. Storing only the score, with nothing else, throws away the same information and additionally loses the trace of what was graded. And keeping the output but discarding the reasoning still leaves the team without the grader's own account of what it weighed to reach that number."
         },
         {
           "id": "r_modelgrade_2",
-          "q": "Which qualities is a model grader suited to judging?",
+          "q": "A team is splitting up grading responsibilities between a code grader and a model grader for a customer-support prompt. Which set of qualities belongs to the model grader rather than the code grader?",
           "options": [
-            "Quality, instruction-following, safety",
-            "Syntax validity and output length",
-            "Token cost and end-to-end latency",
-            "Schema conformance of the output"
+            "Token cost and end-to-end latency involved in generating the response.",
+            "Overall quality, instruction-following, and safety of the response.",
+            "Whether the output conforms exactly to a fixed, pre-defined JSON schema.",
+            "Whether the output syntax is valid and its length falls within limits."
           ],
-          "correct": 0,
-          "explain": "The judgement calls. Anything mechanically checkable belongs to the code grader, which is cheaper and never wrong."
+          "correct": 1,
+          "explain": "Quality, instruction-following, and safety are judgment calls with no mechanical check for correctness, which is exactly what a second Claude call as grader is suited to assess. Token cost and latency are operational metrics captured by instrumentation around the API call, not something either grader type scores. Schema conformance is mechanically checkable — a code grader can verify it directly and more cheaply. And syntax validity and length are likewise the code grader's territory, since both have a programmatically verifiable right answer."
         }
       ]
     },
@@ -324,27 +324,27 @@
           "questions": [
             {
               "id": "q_gradechoice_1a",
-              "q": "Outputs must be valid Python and must actually solve the problem. How do you grade that?",
+              "q": "A coding-assistant prompt must produce output that is both syntactically valid Python and actually solves the stated problem. The team needs a single score per case that reflects both criteria. How should they grade it?",
               "options": [
-                "A model grader, since it can read code",
-                "A human grader; both criteria are subjective",
-                "A code grader with a much stricter validator",
-                "Code for syntax, model for quality, averaged"
+                "Run a code grader for syntax and a model grader for problem-solving quality, then average the two scores.",
+                "Use a model grader alone, since a model can read code and judge both syntax and correctness in one pass.",
+                "Use a human grader for every case, since both syntax validity and problem-solving are ultimately subjective calls.",
+                "Use a code grader with a stricter validator that also checks whether the logic solves the problem."
               ],
-              "correct": 3,
-              "explain": "Two criteria of different kinds, so two graders — combined, e.g. (model_score + syntax_score) / 2."
+              "correct": 0,
+              "explain": "Syntax validity and problem-solving quality are two different kinds of criteria — one mechanically checkable, one a judgment call — so the combination is a code grader for the former, a model grader for the latter, and an average like (model_score + syntax_score) / 2 so an eloquent-but-broken answer and a valid-but-useless one both land at 5 instead of 10. Relying on a model grader alone forfeits the deterministic, cheap check that `ast.parse` already provides. Treating syntax validity as subjective is wrong — it has an objectively verifiable right answer, which is precisely what a code grader is for. And a code grader, however strict its validator, has no mechanism for judging whether logic actually solves a problem — that's a `try/except`, not a reasoning process."
             },
             {
               "id": "q_gradechoice_1b",
-              "q": "What is the human grader's stated trade-off?",
+              "q": "A team is deciding when to bring in a human grader instead of relying on code or model graders. What tradeoff should they expect from choosing human review?",
               "options": [
-                "Cheapest but also the least accurate",
-                "The fastest option for large datasets",
-                "Most flexible on nuance, but very slow",
-                "Only usable for a final safety review"
+                "It's the cheapest option available, though also the least accurate of the three grader types.",
+                "It's the most flexible option for judging nuance, comprehensiveness, and relevance, but also the slowest.",
+                "It's usable only as a final safety review step, and not for grading quality more broadly.",
+                "It's the fastest option for grading large datasets, since a person can skim many outputs quickly."
               ],
-              "correct": 2,
-              "explain": "Flexibility at the cost of throughput, which is why it is reserved for nuance."
+              "correct": 1,
+              "explain": "Human review is the most flexible grader for nuance, comprehensiveness, depth, and relevance — exactly the qualities hardest to pin down programmatically or with a model prompt — but that flexibility comes at the cost of being the slowest of the three options. It isn't the cheapest; manual review time is typically the most expensive per case, not the least. It isn't restricted to safety review specifically — its use case is any judgment requiring the depth only a person reliably brings. And it isn't the fastest for large datasets — throughput is exactly what a human grader trades away for flexibility."
             }
           ]
         }
@@ -352,15 +352,15 @@
       "reviewQuestions": [
         {
           "id": "r_gradechoice_1",
-          "q": "Why average a code score with a model score rather than using whichever is lower?",
+          "q": "Instead of averaging a code grader's syntax score with a model grader's quality score, a teammate proposes just taking whichever of the two scores is lower, arguing it's a more conservative measure. Why does the pipeline average them instead?",
           "options": [
-            "Averaging is simply cheaper to compute",
-            "Each grader's blind spot is the other's",
-            "The minimum would always be the code score",
-            "Averaging keeps every score inside 1–10"
+            "Averaging is simply cheaper to compute than comparing two scores and selecting whichever is the minimum.",
+            "Taking the minimum would always just equal the code grader's score anyway, since it tends to score lower.",
+            "Averaging keeps the combined result within the same familiar 1–10 range used everywhere else in the pipeline.",
+            "Each grader's blind spot is the other grader's specialty, so both deserve representation in the final score."
           ],
-          "correct": 1,
-          "explain": "You are measuring two different things and want both represented, not the worse of them."
+          "correct": 3,
+          "explain": "The code grader can't judge quality and the model grader can't reliably catch a syntax error, so averaging is how both dimensions end up represented in the final score instead of one masking the other. Comparing computational cost between averaging and taking a minimum is a non-issue — both are trivial arithmetic, so that's not the actual reason for the choice. The minimum wouldn't reliably track the code score either; which grader scores lower depends entirely on the specific output, not a fixed pattern. And while an average of two 1–10 scores does stay in range, a minimum of two 1–10 scores would too, so range-preservation doesn't distinguish between the two approaches."
         }
       ]
     }
