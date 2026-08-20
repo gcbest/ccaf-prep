@@ -94,8 +94,19 @@
     .btn-ghost { background: none; color: var(--rust-dark); border-color: var(--line); }
     .btn-ghost:hover, .btn-ghost:focus-visible { background: var(--paper-deep); color: var(--rust-dark); border-color: var(--rust-dark); }
     .row { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; }
+    .row-between { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
     .muted { color: var(--muted); }
     .small { font: 13px/1.6 system-ui, sans-serif; }
+    .small.sys { color: var(--muted); }
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    button.primary, button.ghost {
+      font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .05em; padding: 10px 16px;
+      border-radius: 3px; cursor: pointer;
+    }
+    button.primary { background: var(--rust); color: #fff; border: 1px solid var(--rust); }
+    button.primary:hover { background: var(--rust-dark); border-color: var(--rust-dark); }
+    button.ghost { background: none; color: var(--rust-dark); border: 1px solid var(--line); }
+    button.ghost:hover { background: var(--paper-deep); border-color: var(--rust-dark); }
     .chip {
       display: inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line);
       font: 700 10px/1.7 system-ui, sans-serif; letter-spacing: .07em; text-transform: uppercase; color: var(--muted);
@@ -272,8 +283,10 @@
 
       <h2>Sources</h2>
       <p>Content is drawn from <code>08-claude-agent-sdk/notes.md</code> in this repo, which is built from the official Agent SDK references cross-checked against the CCA-F Exam Guide v1.0. Method from <a href="https://www.mathacademy.com/">Math Academy</a>'s <em>The Math Academy Way</em> (Justin Skycak). Data format modelled on <a href="https://github.com/withmarbleapp/os-taxonomy">withmarbleapp/os-taxonomy</a> — topics as nodes, dependencies as edges with a strength and a reason, plus an encompassings file this graph adds.</p>
-      <p class="small muted">The taxonomy lives in <code>learning-graph/data/*.json</code> and is validated with <code>node learning-graph/scripts/validate.mjs</code>. Your progress is stored in this browser only, separately from the Section 3 graph. There is a <a href="section-03/index.html">Section 3 graph</a> too, running on the same scheduler.</p>
+      <p class="small muted">The taxonomy lives in <code>learning-graph/data/*.json</code> and is validated with <code>node learning-graph/scripts/validate.mjs</code>. Your progress is stored in this browser, separately from the Section 3 graph, and can be synced across devices — see the sync panel below. There is a <a href="section-03/index.html">Section 3 graph</a> too, running on the same scheduler.</p>
     </section>
+
+    <div class="card" id="syncPanel"></div>
 
     <footer>
       <p>Progress is saved locally in this browser. <button type="button" class="btn btn-ghost small" id="resetBtn">Reset all progress</button></p>

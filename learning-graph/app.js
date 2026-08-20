@@ -1219,6 +1219,8 @@
       },
       getUpdatedAt: function () { return state.updatedAt || 0; }
     });
+    var mount = document.getElementById("syncPanel");
+    if (mount) sync.mountUI(mount);
     sync.syncOnLoad();
   }
 
