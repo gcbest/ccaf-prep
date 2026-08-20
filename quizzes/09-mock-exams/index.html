@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>(function(){try{var t=localStorage.getItem('ccaf-theme');if(!t){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <title>Mock exams — CCA-F Quizzes</title>
+  <style>
+    :root {
+      --ink: #242321;
+      --muted: #706b63;
+      --paper: #f7f3ec;
+      --paper-deep: #ece4d7;
+      --rust: #a84e31;
+      --rust-dark: #7d3825;
+      --line: #d6ccbd;
+      --white: #fffdfa;
+      --good: #3d7a4a;
+      --good-bg: #e6f0e4;
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --ink: #ece7de;
+      --muted: #a89d8f;
+      --paper: #17140f;
+      --paper-deep: #221e17;
+      --line: #3a3327;
+      --white: #211d16;
+      --rust-dark: #c96549;
+      --good: #77c57b;
+      --good-bg: #172b19;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.7 Georgia, 'Times New Roman', serif;
+    }
+    main { max-width: 780px; margin: 0 auto; padding: 44px 24px 80px; }
+    .masthead {
+      position: sticky; top: 0; z-index: 5; background: var(--paper);
+      display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+      border-bottom: 1px solid var(--line); padding-bottom: 10px;
+      color: var(--muted); font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .13em; text-transform: uppercase;
+    }
+    .masthead a { color: var(--muted); }
+    nav.crumbs { font: 600 12px/1.5 system-ui, sans-serif; color: var(--muted); margin: 22px 0 0; }
+    nav.crumbs a { color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--line); }
+    nav.crumbs a:hover { color: var(--rust-dark); border-color: var(--rust-dark); }
+    h1 { max-width: 680px; margin: 10px 0 12px; font: 700 clamp(2.2rem, 8vw, 3.6rem)/1.02 Georgia, serif; letter-spacing: -.03em; }
+    .dek { max-width: 670px; margin: 0 0 24px; color: var(--muted); font-size: 1.1rem; }
+    p { max-width: 70ch; margin: 0 0 13px; }
+    a { color: var(--rust-dark); }
+    code { background: var(--paper-deep); color: var(--ink); padding: .08em .28em; border-radius: 3px; }
+
+    .note { margin: 20px 0 30px; padding: 16px 18px; background: var(--paper-deep); }
+    .note p:last-child { margin-bottom: 0; }
+
+    .card {
+      position: relative; display: block; margin: 14px 0 0; padding: 18px 22px 20px;
+      background: var(--white); border: 1px solid var(--line); border-radius: 3px;
+      color: inherit; text-decoration: none;
+    }
+    .card::before { content: ''; position: absolute; left: -1px; top: 0; bottom: 0; width: 4px; background: var(--accent, var(--rust)); }
+    .card:hover, .card:focus-visible { background: #fffaf3; outline: none; box-shadow: 0 0 0 3px rgba(168, 78, 49, .16); }
+    :root[data-theme="dark"] .card:hover, :root[data-theme="dark"] .card:focus-visible { background: #2a251c; }
+    .card .kicker { display: block; margin: 0 0 5px; color: var(--accent, var(--rust-dark)); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    .card .title { display: block; margin: 0 0 6px; font: 700 1.25rem/1.25 Georgia, serif; }
+    .card .blurb { display: block; max-width: 66ch; color: var(--muted); font-size: .95rem; }
+    .card .status { display: block; margin-top: 10px; font: 600 13px/1.5 system-ui, sans-serif; color: var(--muted); }
+    .card .status.done { color: var(--good); }
+    .card .status .pass-pill { display: inline-block; margin-left: 6px; padding: 1px 8px; background: var(--good-bg); color: var(--good); border-radius: 999px; font: 700 10.5px/1.6 system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase; }
+
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr)); gap: 10px; margin: 18px 0 0; }
+    .stat-box { background: var(--white); border: 1px solid var(--line); border-radius: 3px; padding: 13px 14px; text-align: center; }
+    .stat-num { font: 700 1.5rem/1.2 Georgia, serif; color: var(--rust-dark); }
+    .stat-label { font: 600 10.5px/1.4 system-ui, sans-serif; color: var(--muted); margin-top: 3px; letter-spacing: .03em; text-transform: uppercase; }
+
+    .sync-card { margin: 26px 0 0; padding: 18px 22px 20px; background: var(--white); border: 1px solid var(--line); border-radius: 3px; }
+    .row-between { display: flex; justify-content: space-between; align-items: center; }
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+    select, button {
+      font: 600 13px/1.3 system-ui, sans-serif; padding: 8px 13px; border-radius: 3px; border: 1px solid var(--line);
+      background: var(--white); color: var(--ink); cursor: pointer;
+    }
+    button.primary { background: var(--rust); color: #fffdfa; border-color: var(--rust); }
+    button.primary:hover { filter: brightness(1.08); }
+    button.ghost { background: var(--white); color: var(--rust-dark); border-color: var(--line); }
+    button.ghost:hover { background: var(--paper-deep); }
+    input[type=password] { font: 400 13px/1.3 system-ui, sans-serif; padding: 8px 13px; border-radius: 3px; border: 1px solid var(--line); background: var(--white); color: var(--ink); flex: 1; min-width: 180px; }
+    .small { font: 400 13px/1.5 Georgia, serif; color: var(--muted); }
+    .small.sys { font: 400 12.5px/1.5 system-ui, sans-serif; color: var(--muted); }
+
+    footer { margin-top: 34px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; }
+    .theme-toggle {
+      flex: none; width: 28px; height: 28px; padding: 0; margin: 0; border-radius: 999px;
+      border: 1px solid var(--line); background: none; color: var(--muted);
+      font-size: 13px; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    }
+    .theme-toggle:hover, .theme-toggle:focus-visible { background: var(--paper-deep); outline: none; }
+    @media (max-width: 560px) {
+      main { padding: 28px 18px 60px; }
+      .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
+      .card { padding: 16px 16px 18px; }
+    }
+      .autohide-header { transition: transform .28s ease; will-change: transform; }
+    .autohide-header--hidden { transform: translateY(-100%); }
+</style>
+</head>
+<body>
+  <main>
+    <div class="masthead"><a href="../../index.html">CCA-F Study System</a><span>Mock exams</span><button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button></div>
+    <nav class="crumbs"><a href="../../index.html">Home</a> › <a href="../index.html">Quizzes</a> › Mock exams</nav>
+    <h1>Mock exams</h1>
+    <p class="dek">Six full-length, timed 60-question practice exams — 360 questions total, shaped exactly like the real CCA-F: same five domains, same weighting, same 2-hour pausable clock, score withheld until you submit.</p>
+
+    <div class="note">
+      <p><strong>Different from the section quizzes above.</strong> Those drill one topic at a time with instant feedback. These simulate exam day: no feedback until the end, a question palette, flag-for-review, and a per-domain score breakdown afterward.</p>
+      <p><strong>Completion is tracked automatically</strong> — each card below shows your attempts and best score, pulled from this browser. Connect gist sync (below) once per device to carry that across desktop and mobile.</p>
+    </div>
+
+    <div class="stat-grid" id="statGrid"></div>
+
+    <div id="batchCards"></div>
+
+    <div class="sync-card" id="syncCard">
+      <div class="row-between"><strong style="font:700 13px/1.4 system-ui, sans-serif; color:var(--rust-dark);">Sync across devices</strong></div>
+      <div id="syncPanel" style="margin-top:10px;"></div>
+    </div>
+
+    <footer>
+      <p>Source: six independent practice mocks compiled by <a href="https://github.com/pvs156/anthropic_ccaf_mocks" target="_blank" rel="noopener">pvs156/anthropic_ccaf_mocks</a>, imported as-is with navigation and cross-device progress tracking added. Not affiliated with or endorsed by Anthropic — verify current objectives against the official CCA-F exam guide.</p>
+      <p><a href="../index.html">← All section quizzes</a></p>
+    </footer>
+  </main>
+<script src="../../assets/js/gist-sync.js"></script>
+<script src="../../assets/js/mock-exam-progress.js"></script>
+<script>
+const BATCHES = [
+  { id: "batch1", n: 1, accent: "#a84e31", accentDark: "#c96549" },
+  { id: "batch2", n: 2, accent: "#3f6b86", accentDark: "#4f87a9" },
+  { id: "batch3", n: 3, accent: "#5f6b3a", accentDark: "#7c8c4c" },
+  { id: "batch4", n: 4, accent: "#7a4a6b", accentDark: "#a8779a" },
+  { id: "batch5", n: 5, accent: "#96652a", accentDark: "#ae7531" },
+  { id: "batch6", n: 6, accent: "#55578f", accentDark: "#7b7db0" }
+];
+
+function renderCards() {
+  const state = window.MockExamProgress.loadState();
+  let attempted = 0, passed = 0, bestOverall = 0;
+  let html = "";
+  BATCHES.forEach(b => {
+    const rec = state.batches[b.id];
+    let status = '<span class="status">Not attempted yet</span>';
+    if (rec && rec.attempts.length) {
+      attempted += 1;
+      if (rec.best && rec.best.pass) passed += 1;
+      if (rec.best) bestOverall = Math.max(bestOverall, rec.best.pct);
+      const passPill = rec.best && rec.best.pass ? '<span class="pass-pill">On track</span>' : '';
+      status = `<span class="status done">Attempts: ${rec.attempts.length} &middot; Best: ${rec.best.correct}/60 (${rec.best.pct}%)${passPill}</span>`;
+    }
+    html += `<a class="card" href="${b.id}.html" style="--accent:${b.accent}; --accent-dark:${b.accentDark}">
+      <span class="kicker">Batch ${b.n} of 6</span>
+      <span class="title">CCA-F Mock Exam — Batch ${b.n}</span>
+      <span class="blurb">60 questions, 2-hour pausable timer, results and domain breakdown shown only at the end.</span>
+      ${status}
+    </a>`;
+  });
+  document.getElementById("batchCards").innerHTML = html;
+  document.getElementById("statGrid").innerHTML = `
+    <div class="stat-box"><div class="stat-num">${attempted}/6</div><div class="stat-label">Batches attempted</div></div>
+    <div class="stat-box"><div class="stat-num">${passed}/6</div><div class="stat-label">Passed (&ge;72%)</div></div>
+    <div class="stat-box"><div class="stat-num">${bestOverall}%</div><div class="stat-label">Best single score</div></div>
+  `;
+}
+
+const sync = window.GistSync ? window.GistSync.create(window.MockExamProgress.STORAGE_KEY, {
+  getState: () => window.MockExamProgress.loadState(),
+  getUpdatedAt: () => window.MockExamProgress.loadState()._updatedAt || 0,
+  setState: (remote) => { window.MockExamProgress.saveState(remote); renderCards(); }
+}) : null;
+
+renderCards();
+if (sync) { sync.mountUI(document.getElementById("syncPanel")); sync.syncOnLoad().then(renderCards); }
+
+function toggleTheme() {
+  var html = document.documentElement;
+  var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  try { localStorage.setItem('ccaf-theme', next); } catch(e) {}
+  var btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = next === 'dark' ? '☀️' : '🌙';
+}
+(function() {
+  var btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+})();
+</script>
+  <script src="../../assets/js/header-scroll.js"></script>
+</body>
+</html>
