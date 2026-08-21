@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>(function(){try{var t=localStorage.getItem('ccaf-theme');if(!t){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <title>Introduction to Agent Skills Quiz — CCA-F Quiz</title>
+  <style>
+    :root {
+      --ink: #242321;
+      --muted: #706b63;
+      --paper: #f7f3ec;
+      --paper-deep: #ece4d7;
+      --rust: #a84e31;
+      --rust-dark: #7d3825;
+      --line: #d6ccbd;
+      --white: #fffdfa;
+      --accent: #2f6f6b;
+      --accent-text: #2f6f6b;
+      --good: #3d7a4a;
+      --good-bg: #e6f0e4;
+      --bad: #a13a2e;
+      --bad-bg: #f7e6e2;
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --ink: #ece7de;
+      --muted: #a89d8f;
+      --paper: #17140f;
+      --paper-deep: #221e17;
+      --line: #3a3327;
+      --white: #211d16;
+      --accent-text: #5aa9a4;
+      --good: #77c57b;
+      --good-bg: #172b19;
+      --bad: #cf786e;
+      --bad-bg: #2b1917;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.7 Georgia, 'Times New Roman', serif;
+    }
+    main { max-width: 720px; margin: 0 auto; padding: 40px 22px 80px; }
+    .masthead {
+      position: sticky; top: 0; z-index: 5; background: var(--paper);
+      display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+      border-bottom: 1px solid var(--line); padding-bottom: 10px;
+      color: var(--muted); font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .13em; text-transform: uppercase;
+    }
+    .masthead a { color: var(--muted); }
+    .theme-toggle {
+      flex: none; width: 28px; height: 28px; padding: 0; margin: 0; border-radius: 999px;
+      border: 1px solid var(--line); background: none; color: var(--muted);
+      font-size: 13px; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    }
+    .theme-toggle:hover, .theme-toggle:focus-visible { background: var(--paper-deep); outline: none; }
+    .kicker { display: block; margin: 22px 0 6px; color: var(--accent-text); font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    h1 { max-width: 680px; margin: 0 0 10px; font: 700 clamp(1.8rem, 6vw, 2.7rem)/1.08 Georgia, serif; letter-spacing: -.02em; }
+    .dek { max-width: 640px; margin: 0 0 24px; color: var(--muted); font-size: 1.02rem; }
+    p { max-width: 70ch; margin: 0 0 13px; }
+    a { color: var(--rust-dark); }
+    code { background: var(--paper-deep); color: var(--ink); padding: .08em .28em; border-radius: 3px; }
+
+    nav.crumbs { font: 600 12px/1.5 system-ui, sans-serif; color: var(--muted); margin-bottom: 6px; }
+    nav.crumbs a { color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--line); }
+    nav.crumbs a:hover { color: var(--rust-dark); border-color: var(--rust-dark); }
+
+    .tabs { display: flex; gap: 4px; margin: 26px 0 18px; border-bottom: 1px solid var(--line); }
+    .tab {
+      padding: 9px 14px; cursor: pointer; font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .04em;
+      color: var(--muted); border-bottom: 2px solid transparent; user-select: none; background: none; border-top: none; border-left: none; border-right: none;
+    }
+    .tab.active { color: var(--accent-text); border-bottom-color: var(--accent-text); }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .card {
+      background: var(--white); border: 1px solid var(--line); border-radius: 3px;
+      padding: 20px 22px; margin-bottom: 14px;
+    }
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+    select, button {
+      font: 600 13px/1.3 system-ui, sans-serif; padding: 8px 13px; border-radius: 3px; border: 1px solid var(--line);
+      background: var(--white); color: var(--ink); cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: #fffdfa; border-color: var(--accent); }
+    button.primary:hover { filter: brightness(1.08); }
+    button.ghost { background: var(--white); color: var(--accent-text); border-color: var(--line); }
+    button.ghost:hover { background: var(--paper-deep); }
+    .small { font: 400 13px/1.5 Georgia, serif; color: var(--muted); }
+    .small.sys { font: 400 12.5px/1.5 system-ui, sans-serif; color: var(--muted); }
+
+    .qmeta { display: flex; justify-content: space-between; align-items: center; font: 600 12px/1.4 system-ui, sans-serif; color: var(--muted); margin-bottom: 10px; }
+    .badge { font: 700 10.5px/1.4 system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: var(--paper-deep); color: var(--rust-dark); }
+    .qtext { font: 700 1.18rem/1.4 Georgia, serif; margin-bottom: 16px; }
+    .option {
+      display: block; width: 100%; text-align: left; padding: 11px 14px; margin-bottom: 9px;
+      border: 1px solid var(--line); border-radius: 3px; background: var(--white);
+      font: 400 15px/1.5 Georgia, serif; color: var(--ink); cursor: pointer;
+    }
+    .option:hover:not(.disabled) { border-color: var(--accent-text); background: var(--paper); }
+    .option .optkey { display: inline-block; width: 20px; font-weight: 700; color: var(--muted); }
+    .option.correct { background: var(--good-bg); border-color: var(--good); }
+    .option.wrong { background: var(--bad-bg); border-color: var(--bad); }
+    .option.disabled { cursor: default; }
+    .feedback { font: 700 13px/1.5 system-ui, sans-serif; margin: 12px 0 4px; padding: 10px 13px; border-radius: 3px; }
+    .feedback.good { background: var(--good-bg); color: var(--good); }
+    .feedback.bad { background: var(--bad-bg); color: var(--bad); }
+    .explain { font: 400 15px/1.6 Georgia, serif; color: var(--ink); margin-top: 8px; padding: 12px 14px; background: var(--paper-deep); border-radius: 3px; }
+    .explain strong { color: var(--rust-dark); }
+
+    .progress-bar-outer { width: 100%; height: 8px; background: var(--paper-deep); border-radius: 999px; overflow: hidden; margin: 6px 0 2px; }
+    .progress-bar-inner { height: 100%; border-radius: 999px; background: var(--accent); }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 10px; margin-bottom: 14px; }
+    .stat-box { background: var(--white); border: 1px solid var(--line); border-radius: 3px; padding: 13px 14px; text-align: center; }
+    .stat-num { font: 700 1.5rem/1.2 Georgia, serif; color: var(--rust-dark); }
+    .stat-label { font: 600 10.5px/1.4 system-ui, sans-serif; color: var(--muted); margin-top: 3px; letter-spacing: .03em; text-transform: uppercase; }
+    table { width: 100%; border-collapse: collapse; font: 400 13.5px/1.5 Georgia, serif; }
+    th, td { text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font: 600 10.5px/1.4 system-ui, sans-serif; text-transform: uppercase; letter-spacing: .03em; }
+    .row-between { display: flex; justify-content: space-between; align-items: center; }
+    .mastery-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+
+    footer { margin-top: 34px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: .88rem; }
+    @media (max-width: 560px) {
+      main { padding: 26px 16px 60px; }
+      .masthead { display: block; } .masthead span { display: block; margin-top: 7px; }
+      .card { padding: 16px 16px; }
+    }
+      .autohide-header { transition: transform .28s ease; will-change: transform; }
+    .autohide-header--hidden { transform: translateY(-100%); }
+</style>
+</head>
+<body>
+<main>
+  <div class="masthead"><a href="../../index.html">CCA-F Study System</a><span>Companion · Agent Skills</span><button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button></div>
+
+  <nav class="crumbs"><a href="../../index.html">Home</a> › <a href="../index.html">Quizzes</a> › Introduction to Agent Skills</nav>
+  <span class="kicker">Companion material · Not part of the CCA-F domain map</span>
+  <h1>Introduction to Agent Skills Quiz</h1>
+  <p class="dek">24 multiple-choice questions covering Anthropic's "Introduction to Agent Skills" Skilljar course: what a skill is, writing a SKILL.md, multi-file and tool-restricted configuration, how skills differ from subagents, slash commands, hooks, and MCP tools, sharing skills across a team, and troubleshooting a skill that won't trigger. This course isn't one of the seven official CCA-F prep courses and isn't mapped to an exam domain in <code>EXAM-DOMAINS.md</code> — treat it as supplementary practice, not certification prep.</p>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="quiz">Quiz</button>
+    <button class="tab" data-tab="progress">My progress</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="panel active" id="panel-quiz">
+    <div class="card" id="quizSetup">
+      <div class="controls">
+        <select id="quizLen">
+          <option value="10">10 questions</option>
+          <option value="20">20 questions</option>
+          <option value="999" selected>All 24 questions</option>
+        </select>
+        <select id="quizMode">
+          <option value="weak" selected>Missed &amp; new first (recommended)</option>
+          <option value="random">Fully random</option>
+          <option value="sequential">In order</option>
+        </select>
+        <button class="primary" id="startQuizBtn">Start quiz</button>
+        <button class="ghost" id="reviewMissedBtn">Review only missed</button>
+      </div>
+      <div class="small sys">"Missed &amp; new first" weights questions you've gotten wrong or haven't seen, so review sessions target real gaps. "Review only missed" quizzes you exclusively on questions currently marked wrong.</div>
+    </div>
+    <div id="quizArea"></div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="panel" id="panel-progress">
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="card">
+      <div class="row-between"><strong style="font:700 13px/1.4 system-ui, sans-serif; color:var(--rust-dark);">Mastery</strong></div>
+      <div class="progress-bar-outer"><div class="progress-bar-inner" id="masteryBar" style="width:0%"></div></div>
+      <div class="small sys" id="masteryLabel" style="margin-top:6px;"></div>
+    </div>
+    <div class="card">
+      <div class="row-between"><strong style="font:700 13px/1.4 system-ui, sans-serif; color:var(--rust-dark);">Questions currently missed</strong></div>
+      <div id="weakTable" style="margin-top:8px;"></div>
+    </div>
+    <div class="card">
+      <div class="row-between">
+        <span class="small sys">Progress is saved in this browser and persists across visits.</span>
+        <button class="ghost" id="resetBtn">Reset progress</button>
+      </div>
+    </div>
+    <div class="card" id="syncPanel"></div>
+  </div>
+
+  <footer>
+    <p>Source: the lesson structure of Anthropic's "Introduction to Agent Skills" Skilljar course, cross-checked against Claude Code's Agent Skills behavior.</p>
+    <p><a href="../index.html">← All section quizzes</a></p>
+  </footer>
+</main>
+
+<script src="../../assets/js/gist-sync.js"></script>
+<script>
+/* ---------- QUESTION BANK ---------- */
+const QUESTIONS = [
+  {
+    "id": "as01",
+    "q": "Structurally, what is a Skill?",
+    "options": [
+      "A single slash-command definition stored under .claude/commands and invoked by typing its name",
+      "A subagent definition that always runs inside its own isolated context window during a task",
+      "A directory holding a SKILL.md file with name and description frontmatter plus instructions",
+      "A remote MCP server endpoint that gets registered in a project's .mcp.json configuration"
+    ],
+    "correct": 2,
+    "explain": "A skill is a folder plus a Markdown file with a small frontmatter contract — not a network endpoint, not an isolated agent, and not a command binding."
+  },
+  {
+    "id": "as02",
+    "q": "How does Claude decide when to use a skill during a conversation?",
+    "options": [
+      "Claude compares the request against each skill's description and invokes a match automatically",
+      "The user must type a slash command that exactly matches the skill's folder name before anything runs",
+      "A hook fires on every single turn and manually chooses which skill should be used next",
+      "Skills only activate when they are explicitly listed in allowedTools for that particular turn"
+    ],
+    "correct": 0,
+    "explain": "The description field is the trigger condition, matched against context — invocation is model-initiated, not user-typed."
+  },
+  {
+    "id": "as03",
+    "q": "Before any skill is triggered, what does Claude actually hold in context about the skills that are available?",
+    "options": [
+      "Nothing at all about any skill, until one is explicitly named by the user in the conversation",
+      "The complete SKILL.md body content of every single skill installed in the project",
+      "Only whichever skills happened to be used earlier in that same session, and nothing else",
+      "Only each skill's name and description — a lightweight index used to judge relevance"
+    ],
+    "correct": 3,
+    "explain": "This is progressive disclosure's first level: a thin index of what's available, with the expensive body content deferred until a skill actually matches."
+  },
+  {
+    "id": "as04",
+    "q": "Compared to writing every instruction directly into the system prompt, what does packaging instructions as a skill buy you?",
+    "options": [
+      "Noticeably faster model responses, since skills are routed through a dedicated inference pathway",
+      "The instructions enter context only when relevant, instead of always taking up space",
+      "The ability to skip tool-use permission checks that would otherwise apply to that instruction",
+      "Automatic translation of the skill's instructions into whichever language the user is writing in"
+    ],
+    "correct": 1,
+    "explain": "A system prompt is always-on rent; a skill is pay-per-use. Ten rarely-needed skills cost far less baseline context than ten always-loaded paragraphs."
+  },
+  {
+    "id": "as05",
+    "q": "What is the minimum a valid SKILL.md needs in its frontmatter?",
+    "options": [
+      "A name field and a description field, nothing else strictly required",
+      "A name, a description, and a version number tracked for compatibility",
+      "Only a description field — the name is always inferred from the folder",
+      "A name, a description, and an explicit allowed-tools list restricting access"
+    ],
+    "correct": 0,
+    "explain": "Everything else — allowed-tools, extra files, scripts — is optional configuration layered on top of that base contract."
+  },
+  {
+    "id": "as06",
+    "q": "What is the primary job of a skill's description field?",
+    "options": [
+      "To give a human-readable summary for a documentation page a person might browse",
+      "To set the skill's display name shown in a menu of available skills",
+      "To tell Claude when the skill is relevant, so it can be matched to a request",
+      "To specify which underlying model the skill's instructions should run on"
+    ],
+    "correct": 2,
+    "explain": "A vague description ('helps with documents') gives Claude nothing to match against. A specific one ('use when generating a PDF report from tabular data') is the actual trigger."
+  },
+  {
+    "id": "as07",
+    "q": "Where does a personal skill only you should access live, versus one shared with a project team?",
+    "options": [
+      "Both live in one shared global location, with no meaningful distinction drawn between the two",
+      "Personal skills live under your home directory; project skills live inside the repo",
+      "Personal skills require a paid account tier that project-scoped skills do not require",
+      "Personal skills exist only in browser localStorage and never touch the filesystem"
+    ],
+    "correct": 1,
+    "explain": "Same file shape, different scope: one follows you across projects, the other travels with the repo and whoever clones it."
+  },
+  {
+    "id": "as08",
+    "q": "A skill's folder name and its frontmatter name don't match. What's the practical downside worth avoiding?",
+    "options": [
+      "It becomes ambiguous which identifier really names the skill, inviting debugging confusion",
+      "The skill silently refuses to load at all whenever the two strings differ",
+      "Nothing at all — the two identifiers are entirely unrelated with no consequence",
+      "The folder automatically renames itself to match the frontmatter the next time it runs"
+    ],
+    "correct": 0,
+    "explain": "Keeping folder name and frontmatter name identical, in kebab-case, is a convention that avoids exactly this kind of self-inflicted ambiguity."
+  },
+  {
+    "id": "as09",
+    "q": "What does an allowed-tools field in a skill's frontmatter do?",
+    "options": [
+      "Lists tools the author merely recommends, without enforcing anything at runtime",
+      "Grants the skill extra tools it would not otherwise have, bypassing project settings",
+      "Determines which particular subagent definition the skill should delegate its work to",
+      "Restricts which tools may be used while active, narrowing its tool surface"
+    ],
+    "correct": 3,
+    "explain": "It's a scope-down, not a scope-up — useful for a skill like 'read-only repo audit' where you want to guarantee no Write or Bash call happens no matter what the instructions say."
+  },
+  {
+    "id": "as10",
+    "q": "Why bundle a large reference document as a separate file inside a skill folder instead of pasting it into SKILL.md directly?",
+    "options": [
+      "The file is pulled into context on demand, costing nothing unless needed",
+      "Separate files are strictly required by the SKILL.md file format specification itself",
+      "It makes no difference — content in either location loads exactly the same way",
+      "SKILL.md has a hard length limit that makes pasting large references impossible"
+    ],
+    "correct": 0,
+    "explain": "This is progressive disclosure's deeper level: SKILL.md is the always-loaded index once triggered, and files it points to are read only when the task actually calls for them."
+  },
+  {
+    "id": "as11",
+    "q": "A skill folder includes a helper script alongside SKILL.md. How does that script typically get used?",
+    "options": [
+      "It is read into context as plain reference text, same as any documentation file",
+      "It permanently replaces SKILL.md the moment it is present in the folder",
+      "It runs as a tool call rather than loaded as text, so its logic costs no context tokens",
+      "It is ignored outright, since skill folders cannot contain executable files"
+    ],
+    "correct": 2,
+    "explain": "Deterministic logic belongs in a script that runs; explanatory material belongs in a file that gets read. Mixing the two wastes context on code nobody needed to see."
+  },
+  {
+    "id": "as12",
+    "q": "What does a typical multi-file skill directory look like beyond the required SKILL.md?",
+    "options": [
+      "SKILL.md alone — additional files violate the format's own constraints",
+      "SKILL.md plus subdirectories such as references/ for docs and scripts/ for helper code",
+      "One combined skill.json manifest that fully replaces SKILL.md's frontmatter",
+      "A separate SKILL.md written for each programming language the skill supports"
+    ],
+    "correct": 1,
+    "explain": "SKILL.md stays the entry point and table of contents; everything it references stays out of context until pulled in."
+  },
+  {
+    "id": "as13",
+    "q": "How does a skill's relationship to context differ from a subagent's?",
+    "options": [
+      "They are functionally identical — a skill is simply a subagent using a different file extension",
+      "A skill injects instructions into the current conversation; a subagent runs isolated",
+      "A skill always runs in a separate process, while a subagent always shares the parent's context",
+      "Skills can only ever be invoked from inside a subagent, never from the main conversation"
+    ],
+    "correct": 1,
+    "explain": "One adds a page to the notebook you're already writing in; the other hands the work to someone in a different room who reports back with a summary."
+  },
+  {
+    "id": "as14",
+    "q": "What's the key difference in how a skill and a slash command get invoked?",
+    "options": [
+      "There is no real difference — both need the exact same typed slash-command syntax",
+      "A skill requires explicit typed invocation while a slash command triggers from context alone",
+      "Slash commands can only ever be authored by project administrators, unlike ordinary skills",
+      "A slash command needs typing by the user; a skill triggers automatically on a description match"
+    ],
+    "correct": 3,
+    "explain": "One is a button the user presses; the other is a judgment call the model makes on the user's behalf."
+  },
+  {
+    "id": "as15",
+    "q": "How does skill invocation differ from a hook firing?",
+    "options": [
+      "Both are triggered by the exact same event system, with identical guarantees either way",
+      "Skills are optional once installed, while hooks become mandatory the moment they exist",
+      "Hooks fire deterministically on events; a skill fires only at the model's discretion when relevant",
+      "Skills fire on every single tool call, while hooks fire only once at session start"
+    ],
+    "correct": 2,
+    "explain": "A hook is a rule that always applies when its event happens; a skill is a suggestion the model can decide to reach for. Use a hook where you need a guarantee, a skill where you need judgment."
+  },
+  {
+    "id": "as16",
+    "q": "How do skills differ from MCP tools?",
+    "options": [
+      "An MCP tool is an executable function with a schema; a skill is instructions",
+      "They describe the exact same underlying concept, just presented under two different naming conventions",
+      "Skills can only exist inside an MCP server and have no function independent of one",
+      "MCP tools can only exist bundled inside a skill and are never callable on their own"
+    ],
+    "correct": 0,
+    "explain": "A tool does something when called; a skill tells Claude how and when to do something — often including which tools to reach for."
+  },
+  {
+    "id": "as17",
+    "q": "A team wants every member to have the same skill automatically after cloning the repo. What's the right scope?",
+    "options": [
+      "A project-scoped skill committed inside the repository, so it travels with every clone",
+      "A personal skill under each teammate's home directory, copied individually to each machine",
+      "Emailing the SKILL.md file directly to each teammate every time it changes",
+      "Skills simply cannot be shared between team members under any configuration"
+    ],
+    "correct": 0,
+    "explain": "Put it where the repo already goes, and it arrives with every clone — no separate distribution step required."
+  },
+  {
+    "id": "as18",
+    "q": "For distributing a skill more broadly than a single repository, what's the packaging mechanism?",
+    "options": [
+      "Skills simply cannot be distributed outside of a single project, under any circumstances",
+      "Compiling the SKILL.md file down into a standalone platform-specific binary executable",
+      "Publishing the skill as its own standalone MCP server with a network endpoint",
+      "Packaging it as, or inside, a plugin distributed to others through a marketplace"
+    ],
+    "correct": 3,
+    "explain": "A plugin is the shipping container; it can carry one or more skills, along with other components, to be installed somewhere else entirely."
+  },
+  {
+    "id": "as19",
+    "q": "A personal skill and a project skill share the exact same name. What should you expect?",
+    "options": [
+      "Claude Code refuses to start entirely until the naming conflict is resolved by hand",
+      "One scope consistently takes precedence, so the shared skill can be unexpectedly shadowed",
+      "The two skill definitions automatically merge together into a single combined skill",
+      "Whichever file was edited most recently always wins, regardless of which scope it's in"
+    ],
+    "correct": 1,
+    "explain": "Name collisions across scopes are exactly the kind of thing that produces 'it works on my machine' — worth choosing distinctive names to sidestep entirely."
+  },
+  {
+    "id": "as20",
+    "q": "What makes a skill written for one project actually reusable when shared with a different codebase?",
+    "options": [
+      "It has to be rewritten completely from scratch for every new repository it's shared with",
+      "It first needs to be converted into a hook before any other project can make use of it",
+      "A description and instructions general enough to fit outside the original project's assumptions",
+      "The receiving project must use the exact same folder structure as the original one did"
+    ],
+    "correct": 2,
+    "explain": "A skill full of one repo's file paths and jargon is really a private note that happens to be shareable, not a portable skill."
+  },
+  {
+    "id": "as21",
+    "q": "A skill exists and looks correct, but Claude never seems to reach for it. What's the first thing worth checking?",
+    "options": [
+      "Whether the user's account subscription tier actually supports using skills at all",
+      "Whether the skill's folder has execute permissions set correctly at the filesystem level",
+      "Whether the skill was created more than roughly thirty days before the current session",
+      "Whether the description is specific enough for Claude to recognize it as relevant"
+    ],
+    "correct": 3,
+    "explain": "A skill that never triggers is almost always a matching problem, not an installation problem — the description is the only signal Claude has to go on."
+  },
+  {
+    "id": "as22",
+    "q": "A skill triggers correctly but then fails partway, unable to complete a step it clearly describes. What to check?",
+    "options": [
+      "Whether the skill's frontmatter name is shorter than roughly ten characters",
+      "Whether the conversation has already exceeded some fixed total number of turns",
+      "Whether allowed-tools on the skill is blocking a tool the instructions actually depend on",
+      "Whether the skill's folder includes a version field somewhere in its frontmatter"
+    ],
+    "correct": 2,
+    "explain": "Instructions can describe an action the skill isn't actually permitted to take — the gap between what a skill says to do and what it's allowed to do is a common failure mode."
+  },
+  {
+    "id": "as23",
+    "q": "Two installed skills have descriptions that overlap heavily for the same kinds of requests. What problem results?",
+    "options": [
+      "Matching becomes ambiguous, since neither description gives Claude a strong signal to prefer",
+      "No real problem occurs — Claude simply tries running both matching skills at once",
+      "The two overlapping skill definitions automatically merge into a single skill",
+      "Only whichever skill sorts first alphabetically will ever be considered again"
+    ],
+    "correct": 0,
+    "explain": "Distinct, specific descriptions aren't just good style — they're the mechanism that keeps skill selection from becoming a coin flip."
+  },
+  {
+    "id": "as24",
+    "q": "You edit a skill's SKILL.md mid-session, but the running conversation doesn't reflect the change. What's going on?",
+    "options": [
+      "SKILL.md edits are permanently ignored and the file must be renamed before anything takes effect",
+      "Skill content typically loads at session start, so a mid-session edit may need a fresh session",
+      "Edits only ever apply to project-scoped skills and are never picked up for personal ones",
+      "The change requires a full restart of the operating system before it can take effect"
+    ],
+    "correct": 1,
+    "explain": "If a fix isn't showing up, check whether you're looking at stale, already-loaded skill content before assuming the fix itself is wrong."
+  }
+];
+
+/* ---------- STATE / PERSISTENCE ---------- */
+const STORAGE_KEY = "ccaf_quiz_agentskills_v1";
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return { q: {}, totalAnswers: 0, totalCorrect: 0 };
+}
+function saveState() {
+  state._updatedAt = Date.now();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (sync) sync.schedulePush();
+}
+let state = loadState();
+
+/* ---------- CROSS-DEVICE SYNC ---------- */
+const sync = window.GistSync ? window.GistSync.create(STORAGE_KEY, {
+  getState: () => state,
+  getUpdatedAt: () => state._updatedAt || 0,
+  setState: (remote) => {
+    state = remote;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    renderProgress();
+  }
+}) : null;
+
+function getStat(id) {
+  if (!state.q[id]) state.q[id] = { seen: 0, correct: 0, wrong: 0, mastery: 0, lastResult: null };
+  return state.q[id];
+}
+function recordAnswer(id, wasCorrect) {
+  const s = getStat(id);
+  s.seen += 1;
+  if (wasCorrect) { s.correct += 1; s.mastery = Math.min(3, s.mastery + 1); s.lastResult = "correct"; }
+  else { s.wrong += 1; s.mastery = 0; s.lastResult = "wrong"; }
+  state.totalAnswers = (state.totalAnswers||0) + 1;
+  if (wasCorrect) state.totalCorrect = (state.totalCorrect||0) + 1;
+  saveState();
+}
+
+/* ---------- TABS ---------- */
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
+    if (tab.dataset.tab === "progress") renderProgress();
+  });
+});
+
+/* ---------- QUIZ ---------- */
+let quizQueue = [];
+let quizIndex = 0;
+let quizScore = 0;
+
+function pickQuizQuestions(len, mode) {
+  let pool = QUESTIONS.slice();
+  if (mode === "weak") {
+    pool.sort((a,b) => {
+      const ma = getStat(a.id).mastery, mb = getStat(b.id).mastery;
+      if (ma !== mb) return ma - mb;
+      return Math.random() - 0.5;
+    });
+  } else if (mode === "random") {
+    pool.sort(() => Math.random() - 0.5);
+  }
+  return pool.slice(0, Math.min(len, pool.length));
+}
+
+function startQuiz(pool) {
+  quizQueue = pool;
+  quizIndex = 0;
+  quizScore = 0;
+  renderQuizQuestion();
+}
+
+document.getElementById("startQuizBtn").addEventListener("click", () => {
+  const len = parseInt(document.getElementById("quizLen").value, 10);
+  const mode = document.getElementById("quizMode").value;
+  startQuiz(pickQuizQuestions(len, mode));
+});
+
+document.getElementById("reviewMissedBtn").addEventListener("click", () => {
+  const missed = QUESTIONS.filter(q => getStat(q.id).lastResult === "wrong");
+  if (!missed.length) {
+    alert("No questions are currently marked wrong. Take a quiz first, or nice work — you're clean!");
+    return;
+  }
+  missed.sort(() => Math.random() - 0.5);
+  startQuiz(missed);
+});
+
+function renderQuizQuestion() {
+  const area = document.getElementById("quizArea");
+  if (quizIndex >= quizQueue.length) {
+    area.innerHTML = `<div class="card">
+      <div class="qtext">Session complete: ${quizScore} / ${quizQueue.length} correct</div>
+      <div class="small sys">Progress has been saved. Check "My progress" for what's still missed, or start another round above.</div>
+    </div>`;
+    return;
+  }
+  const q = quizQueue[quizIndex];
+  const letters = ["A","B","C","D"];
+  const optHtml = q.options.map((opt, i) =>
+    `<button class="option" data-idx="${i}"><span class="optkey">${letters[i]}.</span>${opt}</button>`
+  ).join("");
+  area.innerHTML = `<div class="card">
+    <div class="qmeta">
+      <span>Question ${quizIndex+1} of ${quizQueue.length}</span>
+      <span class="badge">Agent Skills</span>
+    </div>
+    <div class="qtext">${q.q}</div>
+    <div id="quizOptions">${optHtml}</div>
+    <div id="quizFeedback"></div>
+    <div id="quizNextWrap"></div>
+  </div>`;
+  document.querySelectorAll("#quizOptions .option").forEach(btn => {
+    btn.addEventListener("click", () => handleQuizAnswer(q, parseInt(btn.dataset.idx,10)));
+  });
+}
+
+function handleQuizAnswer(q, idx) {
+  const correct = idx === q.correct;
+  if (correct) quizScore += 1;
+  recordAnswer(q.id, correct);
+  document.querySelectorAll("#quizOptions .option").forEach((btn, i) => {
+    btn.classList.add("disabled");
+    btn.disabled = true;
+    if (i === q.correct) btn.classList.add("correct");
+    else if (i === idx) btn.classList.add("wrong");
+  });
+  document.getElementById("quizFeedback").innerHTML =
+    `<div class="feedback ${correct ? "good" : "bad"}">${correct ? "Correct." : "Not quite."}</div>
+     <div class="explain"><strong>Why:</strong> ${q.explain}</div>`;
+  document.getElementById("quizNextWrap").innerHTML = `<button class="primary" id="nextQBtn" style="margin-top:12px;">${quizIndex+1 < quizQueue.length ? "Next question" : "See results"}</button>`;
+  document.getElementById("nextQBtn").addEventListener("click", () => { quizIndex += 1; renderQuizQuestion(); });
+}
+
+/* ---------- PROGRESS ---------- */
+function masteryColor(mastery) {
+  if (mastery >= 3) return "#3d7a4a";
+  if (mastery === 2) return "#8bc34a";
+  if (mastery === 1) return "#e0a34a";
+  return "#cfcfd4";
+}
+function renderProgress() {
+  const total = QUESTIONS.length;
+  let masteredCount = 0, sumMastery = 0, missedCount = 0;
+  QUESTIONS.forEach(q => {
+    const s = getStat(q.id);
+    sumMastery += s.mastery;
+    if (s.mastery >= 3) masteredCount += 1;
+    if (s.lastResult === "wrong") missedCount += 1;
+  });
+  const pct = Math.round((sumMastery / (total * 3)) * 100);
+  const acc = state.totalAnswers ? Math.round((state.totalCorrect / state.totalAnswers) * 100) : 0;
+
+  document.getElementById("statGrid").innerHTML = `
+    <div class="stat-box"><div class="stat-num">${masteredCount}/${total}</div><div class="stat-label">Mastered</div></div>
+    <div class="stat-box"><div class="stat-num">${missedCount}</div><div class="stat-label">Currently missed</div></div>
+    <div class="stat-box"><div class="stat-num">${state.totalAnswers||0}</div><div class="stat-label">Answers given</div></div>
+    <div class="stat-box"><div class="stat-num">${acc}%</div><div class="stat-label">Accuracy</div></div>
+  `;
+  document.getElementById("masteryBar").style.width = pct + "%";
+  document.getElementById("masteryLabel").textContent = pct + "% overall mastery across " + total + " questions";
+
+  const missed = QUESTIONS.filter(q => getStat(q.id).lastResult === "wrong")
+    .sort((a,b) => getStat(b.id).wrong - getStat(a.id).wrong);
+  let html;
+  if (!missed.length) {
+    html = `<div class="small sys">Nothing currently marked wrong. Take the quiz to build up a review queue.</div>`;
+  } else {
+    html = `<table><thead><tr><th></th><th>Question</th><th>Times wrong</th><th>Seen</th></tr></thead><tbody>`;
+    missed.forEach(q => {
+      const s = getStat(q.id);
+      const qtext = q.q.length > 90 ? q.q.slice(0,87) + "…" : q.q;
+      html += `<tr><td><span class="mastery-dot" style="background:${masteryColor(s.mastery)}"></span></td><td>${qtext}</td><td>${s.wrong}</td><td>${s.seen}</td></tr>`;
+    });
+    html += `</tbody></table>`;
+  }
+  document.getElementById("weakTable").innerHTML = html;
+}
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (confirm("Reset all quiz progress for this section? This can't be undone.")) {
+    state = { q: {}, totalAnswers: 0, totalCorrect: 0 };
+    saveState();
+    renderProgress();
+  }
+});
+
+/* ---------- THEME TOGGLE ---------- */
+function toggleTheme() {
+  var html = document.documentElement;
+  var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  try { localStorage.setItem('ccaf-theme', next); } catch(e) {}
+  var btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = next === 'dark' ? '☀️' : '🌙';
+}
+(function() {
+  var btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+})();
+
+/* ---------- INIT ---------- */
+renderProgress();
+if (sync) { sync.mountUI(document.getElementById("syncPanel")); sync.syncOnLoad(); }
+</script>
+  <script src="../../assets/js/header-scroll.js"></script>
+</body>
+</html>
