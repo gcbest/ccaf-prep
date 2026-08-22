@@ -1,8 +1,7 @@
-/* Homepage-only search across every lesson.
-   Lazily fetches each lesson page on first open, indexes it the same way
-   lesson-search.js indexes a single lesson, and jumps to the matching
-   section on the target page (which flashes it on arrival via its own hash
-   handling in lesson-search.js). */
+/* Homepage-only search across every lesson and every notes/reference page.
+   Lazily fetches each page on first open, indexes it (lessons the same way
+   lesson-search.js indexes a single lesson; notes pages via structure-specific
+   extractors below), and jumps to the matching section on the target page. */
 (function () {
   "use strict";
 
@@ -15,6 +14,15 @@
 
   function escapeHtml(s) {
     return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function cleanText(root) {
+    if (!root) return "";
+    var clone = root.cloneNode(true);
+    clone.querySelectorAll("script, style, .theme-toggle, .home-link, .csb-trigger, .csb-menu").forEach(function (el) {
+      el.remove();
+    });
+    return collapse(clone.textContent);
   }
 
   function sectionHeading(section) {
@@ -32,6 +40,7 @@
       var titleEl = link.querySelector(".title");
       var sectionEl = link.querySelector(".section");
       lessons.push({
+        kind: "lesson",
         href: link.getAttribute("href"),
         title: titleEl ? collapse(titleEl.textContent) : collapse(link.textContent),
         section: sectionEl ? collapse(sectionEl.textContent) : ""
@@ -40,17 +49,32 @@
     return lessons;
   }
 
-  function indexDoc(doc, lesson) {
+  function getNotes() {
+    var links = document.querySelectorAll("#reference-section .companions a[href]");
+    var notes = [];
+    links.forEach(function (a) {
+      var titleEl = a.querySelector(".title");
+      var href = a.getAttribute("href");
+      notes.push({
+        kind: "note",
+        href: href,
+        title: titleEl ? collapse(titleEl.textContent) : collapse(a.textContent),
+        absoluteUrl: new URL(href, document.baseURI).href
+      });
+    });
+    return notes;
+  }
+
+  function indexLessonDoc(doc, lesson) {
     var sections = doc.querySelectorAll("main section.scene, main section.end");
     var entries = [];
     sections.forEach(function (section, i) {
       var id = section.id || "search-jump-" + i;
       var time = section.querySelector(".time");
       entries.push({
-        lessonHref: lesson.href,
-        lessonTitle: lesson.title,
-        lessonSection: lesson.section,
-        id: id,
+        sourceHref: lesson.href + "#" + id,
+        sourceTitle: lesson.title,
+        sourceGroup: lesson.section,
         heading: sectionHeading(section),
         eyebrow: time ? collapse(time.textContent) : "",
         body: collapse(section.textContent)
@@ -59,28 +83,97 @@
     return entries;
   }
 
-  function buildGlobalIndex(lessons) {
+  // study-companion/index.html: takeaways grouped under section.sec-block > .topic,
+  // each .topic's own heading links out to the anchor that actually has a stable id
+  // (the full course notes page) — so results jump straight there.
+  function indexTakeawaysDoc(doc, note) {
+    var entries = [];
+    doc.querySelectorAll("section.sec-block").forEach(function (sec) {
+      var courseTitle = sec.querySelector("h2");
+      courseTitle = courseTitle ? collapse(courseTitle.textContent) : note.title;
+      sec.querySelectorAll(".topic").forEach(function (topic) {
+        var link = topic.querySelector("h4 a[href]");
+        var takeaways = topic.querySelector("ul.takeaways");
+        entries.push({
+          sourceHref: link ? new URL(link.getAttribute("href"), note.absoluteUrl).href : note.absoluteUrl + "#" + (sec.id || ""),
+          sourceTitle: note.title,
+          sourceGroup: courseTitle,
+          heading: link ? collapse(link.textContent) : courseTitle,
+          body: takeaways ? collapse(takeaways.textContent) : cleanText(topic)
+        });
+      });
+    });
+    return entries;
+  }
+
+  // companion/evals-to-agents.html: lessons grouped under section.section[id] > article.lesson.
+  // Only the enclosing section carries a stable id, so results jump to that section.
+  function indexGuideDoc(doc, note) {
+    var entries = [];
+    doc.querySelectorAll("section.section[id]").forEach(function (sec) {
+      var groupTitle = sec.getAttribute("data-title");
+      if (!groupTitle) {
+        var h2 = sec.querySelector("h2");
+        groupTitle = h2 ? collapse(h2.textContent) : note.title;
+      }
+      sec.querySelectorAll("article.lesson").forEach(function (art) {
+        var h3 = art.querySelector("h3");
+        entries.push({
+          sourceHref: note.absoluteUrl + "#" + sec.id,
+          sourceTitle: note.title,
+          sourceGroup: groupTitle,
+          heading: h3 ? collapse(h3.textContent) : groupTitle,
+          body: cleanText(art)
+        });
+      });
+    });
+    return entries;
+  }
+
+  // Fallback for any other notes/reference page: index it as a single entry.
+  function indexGenericDoc(doc, note) {
+    var main = doc.querySelector("main") || doc.body;
+    return [{
+      sourceHref: note.absoluteUrl,
+      sourceTitle: note.title,
+      sourceGroup: "",
+      heading: note.title,
+      body: cleanText(main)
+    }];
+  }
+
+  function indexNoteDoc(doc, note) {
+    if (doc.querySelector("section.sec-block") && doc.querySelector(".topic")) {
+      return indexTakeawaysDoc(doc, note);
+    }
+    if (doc.querySelector("section.section[data-num]") && doc.querySelector("article.lesson")) {
+      return indexGuideDoc(doc, note);
+    }
+    return indexGenericDoc(doc, note);
+  }
+
+  function buildGlobalIndex(sources) {
     var parser = new DOMParser();
     return Promise.all(
-      lessons.map(function (lesson) {
-        return fetch(lesson.href)
+      sources.map(function (source) {
+        return fetch(source.href)
           .then(function (res) {
             if (!res.ok) throw new Error("HTTP " + res.status);
             return res.text();
           })
           .then(function (html) {
             var doc = parser.parseFromString(html, "text/html");
-            return indexDoc(doc, lesson);
+            return source.kind === "note" ? indexNoteDoc(doc, source) : indexLessonDoc(doc, source);
           })
           .catch(function () {
             return null;
           });
       })
-    ).then(function (perLesson) {
-      var ok = perLesson.filter(Boolean);
+    ).then(function (perSource) {
+      var ok = perSource.filter(Boolean);
       var flat = [];
       ok.forEach(function (entries) { flat.push.apply(flat, entries); });
-      return { entries: flat, failed: perLesson.length - ok.length, total: perLesson.length };
+      return { entries: flat, failed: perSource.length - ok.length, total: perSource.length };
     });
   }
 
@@ -158,7 +251,7 @@
       ".gs-result{display:block;width:100%;text-align:left;border:none;background:none;" +
       "padding:9px 11px;border-radius:5px;cursor:pointer;color:var(--ink);}" +
       ".gs-result:hover,.gs-result.active{background:var(--paper-deep);}" +
-      ".gs-result .gs-lesson{display:block;color:var(--rust-dark);font:700 10px/1.2 system-ui,sans-serif;" +
+      ".gs-result .gs-source{display:block;color:var(--rust-dark);font:700 10px/1.2 system-ui,sans-serif;" +
       "letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px;}" +
       ".gs-result .gs-heading{display:block;font:700 14.5px/1.3 Georgia,serif;color:var(--ink);}" +
       ".gs-result .gs-snippet{display:block;margin-top:3px;font:13px/1.4 system-ui,sans-serif;" +
@@ -171,7 +264,9 @@
 
   function init() {
     var lessons = getLessons();
-    if (!lessons.length) return;
+    var notes = getNotes();
+    var sources = lessons.concat(notes);
+    if (!sources.length) return;
 
     var masthead = document.querySelector(".masthead");
     var themeToggle = document.getElementById("themeToggle");
@@ -179,7 +274,7 @@
     var toggleBtn = document.createElement("button");
     toggleBtn.type = "button";
     toggleBtn.className = "gs-toggle";
-    toggleBtn.setAttribute("aria-label", "Search all lessons (press /)");
+    toggleBtn.setAttribute("aria-label", "Search all lessons and notes (press /)");
     toggleBtn.textContent = "🔍";
     if (masthead) {
       if (themeToggle) masthead.insertBefore(toggleBtn, themeToggle);
@@ -190,7 +285,7 @@
     overlay.className = "gs-overlay";
     overlay.setAttribute("role", "dialog");
     overlay.setAttribute("aria-modal", "true");
-    overlay.setAttribute("aria-label", "Search all lessons");
+    overlay.setAttribute("aria-label", "Search all lessons and notes");
     overlay.innerHTML =
       '<div class="gs-panel">' +
       '<div class="gs-input-row">' +
@@ -198,8 +293,8 @@
       '<circle cx="7" cy="7" r="5.2" stroke="currentColor" stroke-width="1.4"/>' +
       '<line x1="10.8" y1="11" x2="14.5" y2="14.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>' +
       "</svg>" +
-      '<input type="text" class="gs-input" placeholder="Search all 9 lessons…" ' +
-      'aria-label="Search all lessons" autocomplete="off" spellcheck="false">' +
+      '<input type="text" class="gs-input" placeholder="Search all ' + lessons.length + ' lessons and ' + notes.length + ' notes…" ' +
+      'aria-label="Search all lessons and notes" autocomplete="off" spellcheck="false">' +
       '<span class="gs-esc">Esc</span>' +
       "</div>" +
       '<div class="gs-results"></div>' +
@@ -219,7 +314,7 @@
 
     function ensureIndex() {
       if (!indexPromise) {
-        indexPromise = buildGlobalIndex(lessons).then(function (result) {
+        indexPromise = buildGlobalIndex(sources).then(function (result) {
           globalIndex = result.entries;
           failedCount = result.failed;
           return globalIndex;
@@ -232,11 +327,11 @@
       currentResults = results;
       activeIndex = results.length ? 0 : -1;
       if (!input.value.trim()) {
-        resultsEl.innerHTML = '<div class="gs-hint">Type to search headings and section text across every lesson — Enter jumps to the top match.</div>';
+        resultsEl.innerHTML = '<div class="gs-hint">Type to search headings and text across every lesson and notes page — Enter jumps to the top match.</div>';
         return;
       }
       if (!results.length) {
-        resultsEl.innerHTML = '<div class="gs-empty">No matches across the lessons.</div>';
+        resultsEl.innerHTML = '<div class="gs-empty">No matches across the lessons or notes.</div>';
         return;
       }
       resultsEl.innerHTML = "";
@@ -245,7 +340,7 @@
         btn.type = "button";
         btn.className = "gs-result" + (i === 0 ? " active" : "");
         btn.innerHTML =
-          '<span class="gs-lesson">' + escapeHtml(r.entry.lessonSection || r.entry.lessonTitle) + "</span>" +
+          '<span class="gs-source">' + escapeHtml(r.entry.sourceGroup || r.entry.sourceTitle) + "</span>" +
           '<span class="gs-heading">' + (r.headingMatch ? r.snippetHtml : escapeHtml(r.entry.heading)) + "</span>" +
           '<span class="gs-snippet">' + (r.headingMatch ? "" : r.snippetHtml) + "</span>";
         btn.addEventListener("click", function () { jumpTo(r.entry); });
@@ -260,7 +355,7 @@
     }
 
     function jumpTo(entry) {
-      window.location.href = entry.lessonHref + "#" + entry.id;
+      window.location.href = entry.sourceHref;
     }
 
     function runSearch() {
@@ -277,11 +372,11 @@
       if (globalIndex) {
         renderResults([]);
       } else {
-        resultsEl.innerHTML = '<div class="gs-hint">Indexing lessons…</div>';
+        resultsEl.innerHTML = '<div class="gs-hint">Indexing lessons and notes…</div>';
         ensureIndex().then(function () {
           if (!overlay.classList.contains("visible")) return;
           if (!globalIndex.length) {
-            resultsEl.innerHTML = '<div class="gs-empty">Couldn’t load lesson content to search. Try this over the published site (http/https) rather than a local file.</div>';
+            resultsEl.innerHTML = '<div class="gs-empty">Couldn’t load content to search. Try this over the published site (http/https) rather than a local file.</div>';
             return;
           }
           runSearch();
