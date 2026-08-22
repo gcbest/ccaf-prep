@@ -82,6 +82,19 @@
     :root[data-theme="dark"] .companions a:hover, :root[data-theme="dark"] .companions a:focus-visible { background: #2a251c; }
     .companions .title { font: 700 1rem/1.3 Georgia, serif; }
     .companions .blurb { display: block; color: var(--muted); font-size: .9rem; margin-top: 3px; }
+    .companions.grid-2 { grid-template-columns: 1fr; }
+    @media (min-width: 640px) {
+      .companions.grid-2 { grid-template-columns: 1fr 1fr; }
+    }
+    .jumpnav { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 30px; padding: 0; list-style: none; }
+    .jumpnav a {
+      padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--white);
+      color: var(--rust-dark); text-decoration: none; font: 600 12px/1.4 system-ui, sans-serif; letter-spacing: .03em;
+    }
+    .jumpnav a:hover, .jumpnav a:focus-visible { background: var(--paper-deep); outline: none; }
+    h2[id] { scroll-margin-top: 64px; }
+    section { margin-top: 44px; }
+    section:first-of-type { margin-top: 0; }
     footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; }
     a { color: var(--rust-dark); }
     code { background: var(--paper-deep); color: var(--ink); padding: .08em .28em; border-radius: 3px; }
@@ -104,46 +117,32 @@
   <main>
     <div class="masthead"><span>Claude Certified Architect · Foundations</span><span>Study system</span><button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button></div>
     <h1>CCA-F study system</h1>
-    <p class="dek">A 60-card speed run, eleven narrative lessons, a glossary quiz, and a quick-reference sheet — built to prep for the Claude Certified Architect – Foundations exam. Bookmark this page on your phone for quick access.</p>
+    <p class="dek">Built to prep for the Claude Certified Architect – Foundations exam. Bookmark this page on your phone for quick access.</p>
 
-    <a class="hub" href="speedrun/index.html">
-      <span class="kicker">Start here</span>
-      <span class="title">The speed run — 60 cards, ~45 minutes</span>
-      <span class="blurb">The whole exam compressed and weighted the way it's actually scored. Take this first: it tells you where you stand, then sends you to the lessons only where you need them.</span>
-    </a>
+    <nav class="jumpnav" aria-label="Jump to section">
+      <a href="#start">Start here</a>
+      <a href="#learn">Learn</a>
+      <a href="#practice">Practice &amp; drill</a>
+      <a href="#reference">Reference &amp; notes</a>
+    </nav>
 
-    <a class="hub" href="lessons/index.html">
-      <span class="kicker">Then go deep</span>
-      <span class="title">The Northstar Dispatch — all 11 lessons</span>
-      <span class="blurb">One company, one continuous story, told across all seven official prep courses — plus the Agent SDK, which has no course of its own.</span>
-    </a>
+    <section id="start-section">
+      <h2 id="start">Start here</h2>
+      <a class="hub" href="speedrun/index.html">
+        <span class="kicker">Do this first</span>
+        <span class="title">The speed run — 60 cards, ~45 minutes</span>
+        <span class="blurb">The whole exam compressed and weighted the way it's actually scored. It tells you where you stand, then sends you to the lessons only where you need them.</span>
+      </a>
+    </section>
 
-    <a class="hub" href="quizzes/index.html">
-      <span class="kicker">Practice</span>
-      <span class="title">Section quizzes — 408 multiple-choice questions</span>
-      <span class="blurb">Four-option questions per section, exam-style, with automatic right/wrong tracking so you can review what you keep missing.</span>
-    </a>
-
-    <a class="hub" href="quizzes/09-mock-exams/index.html">
-      <span class="kicker">Simulate exam day</span>
-      <span class="title">Mock exams — six timed 60-question practice tests</span>
-      <span class="blurb">Full-length, five-domain-weighted practice exams with a pausable 2-hour clock and scoring withheld until the end — closer to the real thing than the topic quizzes above.</span>
-    </a>
-
-    <a class="hub" href="learning-graph/index.html">
-      <span class="kicker">Drill the heaviest domain</span>
-      <span class="title">Section 8 learning graph — the Agent SDK, one topic at a time</span>
-      <span class="blurb">Forty-four micro-topics wired by prerequisite. It places you, serves only what you're ready for, stops the lesson when you stall twice and shores up the ground underneath, then keeps everything alive with spaced review. Built the Math Academy way.</span>
-    </a>
-
-    <a class="hub" href="learning-graph/section-03/index.html">
-      <span class="kicker">Drill the widest section</span>
-      <span class="title">Section 3 learning graph — the Claude API, one topic at a time</span>
-      <span class="blurb">The same machinery over the largest course on the list: 68 micro-topics from your first <code>messages.create</code> out to retrieval, caching, and orchestration, nine layers deep from a single entry point. It decides what you are ready for; you answer questions until you have earned the next one.</span>
-    </a>
-
-    <h2>Lessons</h2>
-    <ol class="lessons">
+    <section id="learn-section">
+      <h2 id="learn">Learn the material</h2>
+      <a class="hub" href="lessons/index.html">
+        <span class="kicker">The narrative course</span>
+        <span class="title">The Northstar Dispatch — all 11 lessons</span>
+        <span class="blurb">One company, one continuous story, told across all seven official prep courses — plus the Agent SDK, which has no course of its own.</span>
+      </a>
+      <ol class="lessons">
       <li><a class="lesson-link" href="lessons/0002-ai-fluency-the-four-d-framework.html"><span><span class="title">The week Northstar decided how to work</span><span class="section">Section 1 · AI Fluency: Framework &amp; Foundations</span></span></a><a class="quiz-link" href="quizzes/01-ai-fluency-framework-foundations/index.html">Quiz →</a></li>
       <li><a class="lesson-link" href="lessons/0001-claude-101-choose-the-right-surface.html"><span><span class="title">The Northstar launch</span><span class="section">Section 2 · Claude 101</span></span></a><a class="quiz-link" href="quizzes/02-claude-101/index.html">Quiz →</a></li>
       <li><a class="lesson-link" href="lessons/0003-claude-api-the-first-integration.html"><span><span class="title">The first integration</span><span class="section">Section 3, part 1 · Building with the Claude API</span></span></a><a class="quiz-link" href="quizzes/03-building-with-the-claude-api/index.html?part=1">Quiz →</a></li>
@@ -155,47 +154,60 @@
       <li><a class="lesson-link" href="lessons/0009-claude-code-in-action.html"><span><span class="title">The keys to the repo</span><span class="section">Section 7 · Claude Code in Action</span></span></a><a class="quiz-link" href="quizzes/07-claude-code-in-action/index.html">Quiz →</a></li>
       <li><a class="lesson-link" href="lessons/0010-claude-agent-sdk-orchestration.html"><span><span class="title">The second engine</span><span class="section">Section 8, part 1 · The Claude Agent SDK</span></span></a><a class="quiz-link" href="quizzes/08-claude-agent-sdk/index.html">Quiz →</a></li>
       <li><a class="lesson-link" href="lessons/0011-claude-agent-sdk-hooks-and-reliability.html"><span><span class="title">The gates</span><span class="section">Section 8, part 2 · The Claude Agent SDK</span></span></a><a class="quiz-link" href="quizzes/08-claude-agent-sdk/index.html">Quiz →</a></li>
-    </ol>
+      </ol>
+    </section>
 
-    <h2>Companion material</h2>
-    <div class="companions">
-      <a href="study-companion/index.html">
-        <span class="title">Study companion — notes-derived takeaways</span>
-        <span class="blurb">Every course with an <code>anthropic-notes.md</code> file (Sections 3&ndash;7), distilled into the genuinely important takeaways and organized by topic group and lesson. Each takeaway links straight to its heading in the full course notes, also newly converted to HTML.</span>
-      </a>
-      <a href="speedrun/index.html">
-        <span class="title">Speed run — 60 weighted cards</span>
-        <span class="blurb">The compressed core, a printable cheat sheet, a confusable-pairs drill, and a readiness dashboard that pulls together your progress from every other page.</span>
-      </a>
-      <a href="reference/claude-101-quick-reference.html">
-        <span class="title">Claude 101 quick reference</span>
-        <span class="blurb">One-page cheat sheet for surfaces, Projects, Skills, Artifacts, and connectors.</span>
-      </a>
-      <a href="glossary/ccaf_glossary_quiz_tracker.html">
-        <span class="title">Glossary quiz tracker</span>
-        <span class="blurb">Self-contained quiz covering 64 exam-specific terms across all 5 domains. Tracks mastery locally.</span>
-      </a>
-      <a href="quizzes/index.html">
-        <span class="title">Section quizzes</span>
-        <span class="blurb">408 four-option multiple-choice questions, one set per section, with automatic right/wrong tracking.</span>
-      </a>
-      <a href="quizzes/09-mock-exams/index.html">
-        <span class="title">Mock exams</span>
-        <span class="blurb">Six full-length, timed 60-question practice exams — 360 questions, shaped like the real thing, with per-batch completion tracking.</span>
-      </a>
-      <a href="quizzes/agent-skills/index.html">
-        <span class="title">Introduction to Agent Skills quiz</span>
-        <span class="blurb">24 questions on Claude Code's Agent Skills feature — not part of the CCA-F domain map, kept as standalone supplementary practice.</span>
-      </a>
-      <a href="quizzes/subagents/index.html">
-        <span class="title">Introduction to Subagents quiz</span>
-        <span class="blurb">20 questions on Claude Code's subagents feature — not part of the CCA-F domain map, kept as standalone supplementary practice.</span>
-      </a>
-      <a href="companion/evals-to-agents.html">
-        <span class="title">Evals to Agents — Claude API course companion</span>
-        <span class="blurb">168 diagrams and section-by-section notes covering the back half of Building with the Claude API, from prompt evaluation through agents and workflows.</span>
-      </a>
-    </div>
+    <section id="practice-section">
+      <h2 id="practice">Practice &amp; drill</h2>
+      <div class="companions grid-2">
+        <a href="quizzes/index.html">
+          <span class="title">Section quizzes</span>
+          <span class="blurb">408 four-option multiple-choice questions, one set per section, with automatic right/wrong tracking.</span>
+        </a>
+        <a href="quizzes/09-mock-exams/index.html">
+          <span class="title">Mock exams</span>
+          <span class="blurb">Six full-length, timed 60-question practice exams — 360 questions, five-domain-weighted with a pausable 2-hour clock, scoring withheld until the end.</span>
+        </a>
+        <a href="learning-graph/index.html">
+          <span class="title">Section 8 learning graph — the Agent SDK</span>
+          <span class="blurb">Forty-four micro-topics wired by prerequisite. Places you, serves only what you're ready for, and keeps everything alive with spaced review. Built the Math Academy way.</span>
+        </a>
+        <a href="learning-graph/section-03/index.html">
+          <span class="title">Section 3 learning graph — the Claude API</span>
+          <span class="blurb">The same adaptive machinery over the largest course on the list: 68 micro-topics from your first <code>messages.create</code> out to retrieval, caching, and orchestration.</span>
+        </a>
+        <a href="glossary/ccaf_glossary_quiz_tracker.html">
+          <span class="title">Glossary quiz tracker</span>
+          <span class="blurb">Self-contained quiz covering 64 exam-specific terms across all 5 domains. Tracks mastery locally.</span>
+        </a>
+        <a href="quizzes/agent-skills/index.html">
+          <span class="title">Introduction to Agent Skills quiz</span>
+          <span class="blurb">24 questions on Claude Code's Agent Skills feature — not part of the CCA-F domain map, kept as standalone supplementary practice.</span>
+        </a>
+        <a href="quizzes/subagents/index.html">
+          <span class="title">Introduction to Subagents quiz</span>
+          <span class="blurb">20 questions on Claude Code's subagents feature — not part of the CCA-F domain map, kept as standalone supplementary practice.</span>
+        </a>
+      </div>
+    </section>
+
+    <section id="reference-section">
+      <h2 id="reference">Reference &amp; notes</h2>
+      <div class="companions">
+        <a href="study-companion/index.html">
+          <span class="title">Study companion — notes-derived takeaways</span>
+          <span class="blurb">Every course with an <code>anthropic-notes.md</code> file (Sections 3&ndash;7), distilled into the genuinely important takeaways and organized by topic group and lesson. Each takeaway links straight to its heading in the full course notes, also newly converted to HTML.</span>
+        </a>
+        <a href="reference/claude-101-quick-reference.html">
+          <span class="title">Claude 101 quick reference</span>
+          <span class="blurb">One-page cheat sheet for surfaces, Projects, Skills, Artifacts, and connectors.</span>
+        </a>
+        <a href="companion/evals-to-agents.html">
+          <span class="title">Evals to Agents — Claude API course companion</span>
+          <span class="blurb">168 diagrams and section-by-section notes covering the back half of Building with the Claude API, from prompt evaluation through agents and workflows.</span>
+        </a>
+      </div>
+    </section>
 
     <footer>
       <p>Not sure where to start? Run the <a href="speedrun/index.html">speed run</a> — its "Where I stand" tab reads your progress from every quiz on this site and tells you which domain to open next.</p>
