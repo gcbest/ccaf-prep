@@ -1,0 +1,1259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>(function(){try{var t=localStorage.getItem('ccaf-theme');if(!t){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<title>Building with the Claude API — Course Notes</title>
+<style>
+:root {
+  --ink: #242321;
+  --muted: #706b63;
+  --paper: #f7f3ec;
+  --paper-deep: #ece4d7;
+  --rust: #a84e31;
+  --rust-dark: #7d3825;
+  --line: #d6ccbd;
+  --white: #fffdfa;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #ece7de;
+  --muted: #a89d8f;
+  --paper: #17140f;
+  --paper-deep: #221e17;
+  --line: #3a3327;
+  --white: #211d16;
+  --rust-dark: #c96549;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 17px/1.7 Georgia, 'Times New Roman', serif;
+}
+a { color: var(--rust-dark); }
+code { background: var(--paper-deep); color: var(--ink); padding: .08em .28em; border-radius: 3px; font-size: .92em; }
+pre { background: var(--paper-deep); border: 1px solid var(--line); border-radius: 4px; padding: 12px 14px; overflow-x: auto; }
+pre code { background: none; padding: 0; }
+
+.layout { display: grid; grid-template-columns: 270px minmax(0, 1fr); max-width: 1180px; margin: 0 auto; }
+
+.sidebar {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 26px 16px 26px 22px; border-right: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 18px;
+  font: 15px/1.4 Georgia, serif;
+}
+.home-link { display: inline-flex; align-items: center; gap: 5px; font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
+.home-link:hover { color: var(--rust-dark); }
+.brand-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.brand { font: 700 1.15rem/1.3 Georgia, serif; }
+.brand .sub { display: block; margin-top: 5px; font: 600 11px/1.3 system-ui, sans-serif; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+.theme-toggle {
+  flex: none; width: 28px; height: 28px; padding: 0; margin: 0; border-radius: 999px;
+  border: 1px solid var(--line); background: none; color: var(--muted);
+  font-size: 13px; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+}
+.theme-toggle:hover, .theme-toggle:focus-visible { background: var(--paper-deep); outline: none; }
+.nav { display: flex; flex-direction: column; gap: 1px; }
+.nav-group-label { margin: 12px 0 2px; padding: 0 10px; font: 700 11px/1.3 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.nav-group-label:first-child { margin-top: 0; }
+.nav-link {
+  display: flex; align-items: baseline; gap: 9px; padding: 6px 10px; border-radius: 5px;
+  color: var(--ink); text-decoration: none; font-size: .88rem;
+}
+.nav-link:hover { background: var(--paper-deep); }
+.nav-link.active { background: var(--paper-deep); color: var(--rust-dark); font-weight: 700; }
+.nav-num { font: 600 .72rem/1 system-ui, sans-serif; color: var(--rust-dark); min-width: 1.6em; }
+.sidebar-foot { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); font-size: .78rem; color: var(--muted); }
+
+main { min-width: 0; padding: 0 0 70px; }
+.hero { padding: 54px 48px 34px; border-bottom: 1px solid var(--line); }
+.hero .kicker { font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--rust-dark); }
+.hero h1 { font: 700 clamp(1.9rem, 4vw, 2.8rem)/1.1 Georgia, serif; margin: 14px 0 14px; letter-spacing: -.02em; max-width: 20ch; }
+.hero p { max-width: 66ch; color: var(--muted); font-size: 1.03rem; margin: 0 0 10px; }
+.hero .meta { margin-top: 18px; display: flex; gap: 20px; flex-wrap: wrap; font: 600 12px/1.3 system-ui, sans-serif; color: var(--muted); letter-spacing: .02em; }
+.hero .meta b { color: var(--rust-dark); }
+
+.group-section { padding: 44px 48px 6px; border-bottom: 1px solid var(--line); }
+.group-head { max-width: 70ch; margin-bottom: 24px; }
+.group-eyebrow { font: 700 11px/1.3 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.group-head h2 { font: 700 clamp(1.3rem, 2.4vw, 1.7rem)/1.25 Georgia, serif; margin: 6px 0 0; }
+
+article.note { max-width: 740px; margin: 0 0 34px; padding-bottom: 4px; }
+article.note h3 { font: 700 1.15rem/1.3 Georgia, serif; margin: 0 0 12px; scroll-margin-top: 14px; }
+article.note h3 a.anchor { color: var(--muted); text-decoration: none; font-size: .8em; margin-left: 6px; opacity: 0; }
+article.note h3:hover a.anchor { opacity: 1; }
+article.note p { margin: 0 0 10px; max-width: 68ch; }
+article.note ul, article.note ol { margin: 0 0 14px; padding-left: 1.2em; }
+article.note li { margin: 0 0 6px; font-size: .97rem; }
+article.note strong { color: var(--rust-dark); }
+
+footer.page-foot { padding: 40px 48px 60px; color: var(--muted); font-size: .9rem; max-width: 66ch; }
+footer.page-foot a { color: var(--rust-dark); }
+
+@media (max-width: 880px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--line); }
+  .hero, .group-section, footer.page-foot { padding-left: 22px; padding-right: 22px; }
+}
+.autohide-header { transition: transform .28s ease; will-change: transform; }
+.autohide-header--hidden { transform: translateY(-100%); }
+</style>
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar">
+    <a class="home-link" href="../index.html">&larr; CCA-F study system</a>
+    <div class="brand-row">
+      <div class="brand">Building with the Claude API<span class="sub">Course notes &middot; Section 03</span></div>
+      <button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button>
+    </div>
+    <div class="nav">
+      <div class="nav-group-label">Claude API Basics</div>
+<a class="nav-link" href="#overview-of-claude-models">Overview of Claude Models</a>
+<a class="nav-link" href="#accessing-the-api">Accessing the API</a>
+<a class="nav-link" href="#making-a-request">Making a Request</a>
+<a class="nav-link" href="#multi-turn-conversations">Multi-Turn Conversations</a>
+<a class="nav-link" href="#system-prompts">System Prompts</a>
+<a class="nav-link" href="#temperature">Temperature</a>
+<a class="nav-link" href="#response-streaming">Response Streaming</a>
+<a class="nav-link" href="#controlling-model-output">Controlling Model Output</a>
+<a class="nav-link" href="#structured-data">Structured Data</a>
+<div class="nav-group-label">Prompt Evaluation</div>
+<a class="nav-link" href="#prompt-evaluation">Prompt Evaluation</a>
+<a class="nav-link" href="#a-typical-eval-workflow">A Typical Eval Workflow</a>
+<a class="nav-link" href="#generating-test-datasets">Generating Test Datasets</a>
+<a class="nav-link" href="#running-the-eval">Running the Eval</a>
+<a class="nav-link" href="#model-based-grading">Model Based Grading</a>
+<a class="nav-link" href="#code-based-grading">Code Based Grading</a>
+<div class="nav-group-label">Prompt Engineering</div>
+<a class="nav-link" href="#prompt-engineering">Prompt Engineering</a>
+<a class="nav-link" href="#being-clear-and-direct">Being Clear and Direct</a>
+<a class="nav-link" href="#being-specific">Being Specific</a>
+<a class="nav-link" href="#structure-with-xml-tags">Structure with XML Tags</a>
+<a class="nav-link" href="#providing-examples">Providing Examples</a>
+<div class="nav-group-label">Tool Use</div>
+<a class="nav-link" href="#introducing-tool-use">Introducing Tool Use</a>
+<a class="nav-link" href="#project-overview">Project Overview</a>
+<a class="nav-link" href="#tool-functions">Tool Functions</a>
+<a class="nav-link" href="#tool-schemas">Tool Schemas</a>
+<a class="nav-link" href="#handling-message-blocks">Handling Message Blocks</a>
+<a class="nav-link" href="#sending-tool-results">Sending Tool Results</a>
+<a class="nav-link" href="#multi-turn-conversations-with-tools">Multi-Turn Conversations with Tools</a>
+<a class="nav-link" href="#implementing-multiple-turns">Implementing Multiple Turns</a>
+<a class="nav-link" href="#using-multiple-tools">Using Multiple Tools</a>
+<a class="nav-link" href="#the-batch-tool">The Batch Tool</a>
+<a class="nav-link" href="#tools-for-structured-data">Tools for Structured Data</a>
+<a class="nav-link" href="#fine-grained-tool-calling">Fine Grained Tool Calling</a>
+<a class="nav-link" href="#the-text-edit-tool">The Text Edit Tool</a>
+<a class="nav-link" href="#the-web-search-tool">The Web Search Tool</a>
+<div class="nav-group-label">Retrieval-Augmented Generation</div>
+<a class="nav-link" href="#introducing-retrieval-augmented-generation">Introducing Retrieval Augmented Generation</a>
+<a class="nav-link" href="#text-chunking-strategies">Text Chunking Strategies</a>
+<a class="nav-link" href="#text-embeddings">Text Embeddings</a>
+<a class="nav-link" href="#the-full-rag-flow">The Full RAG Flow</a>
+<a class="nav-link" href="#implementing-the-rag-flow">Implementing the Rag Flow</a>
+<a class="nav-link" href="#bm25-lexical-search">BM25 Lexical Search</a>
+<a class="nav-link" href="#a-multi-index-rag-pipeline">A Multi-Index Rag Pipeline</a>
+<a class="nav-link" href="#reranking-results">Reranking Results</a>
+<a class="nav-link" href="#contextual-retrieval">Contextual Retrieval</a>
+<div class="nav-group-label">Claude Features</div>
+<a class="nav-link" href="#extended-thinking">Extended Thinking</a>
+<a class="nav-link" href="#image-support">Image Support</a>
+<a class="nav-link" href="#pdf-support">PDF Support</a>
+<a class="nav-link" href="#citations">Citations</a>
+<a class="nav-link" href="#prompt-caching">Prompt Caching</a>
+<a class="nav-link" href="#rules-of-prompt-caching">Rules of Prompt Caching</a>
+<a class="nav-link" href="#prompt-caching-in-action">Prompt Caching in Action</a>
+<a class="nav-link" href="#code-execution-and-the-files-api">Code Execution and the Files API</a>
+<div class="nav-group-label">Model Context Protocol</div>
+<a class="nav-link" href="#introducing-mcp">Introducing MCP</a>
+<a class="nav-link" href="#mcp-clients">MCP Clients</a>
+<a class="nav-link" href="#project-setup">Project Setup</a>
+<a class="nav-link" href="#defining-tools-with-mcp">Defining Tools with MCP</a>
+<a class="nav-link" href="#the-server-inspector">The Server Inspector</a>
+<a class="nav-link" href="#implementing-a-client">Implementing a Client</a>
+<a class="nav-link" href="#defining-resources">Defining Resources</a>
+<a class="nav-link" href="#accessing-resources">Accessing Resources</a>
+<a class="nav-link" href="#defining-prompts">Defining Prompts</a>
+<a class="nav-link" href="#prompts-in-the-client">Prompts in the Client</a>
+<div class="nav-group-label">Anthropic Apps: Claude Code &amp; Computer Use</div>
+<a class="nav-link" href="#anthropic-apps">Anthropic Apps</a>
+<a class="nav-link" href="#claude-code-setup">Claude Code Setup</a>
+<a class="nav-link" href="#claude-code-in-action">Claude Code in Action</a>
+<a class="nav-link" href="#enhancements-with-mcp-servers">Enhancements with MCP Servers</a>
+<a class="nav-link" href="#parallelizing-claude-code">Parallelizing Claude Code</a>
+<a class="nav-link" href="#automated-debugging">Automated Debugging</a>
+<a class="nav-link" href="#computer-use">Computer Use</a>
+<a class="nav-link" href="#how-computer-use-works">How Computer Use Works</a>
+<div class="nav-group-label">Agents and Workflows</div>
+<a class="nav-link" href="#agents-and-workflows">Agents and Workflows</a>
+<a class="nav-link" href="#parallelization-workflows">Parallelization Workflows</a>
+<a class="nav-link" href="#chaining-workflows">Chaining Workflows</a>
+<a class="nav-link" href="#routing-workflows">Routing Workflows</a>
+<a class="nav-link" href="#agents-and-tools">Agents and Tools</a>
+<a class="nav-link" href="#environment-inspection">Environment Inspection</a>
+<a class="nav-link" href="#workflows-vs-agents">Workflows vs Agents</a>
+    </div>
+    <div class="sidebar-foot">
+      Full notes converted from <code>anthropic-notes.md</code>. See the <a href="../study-companion/index.html">study companion</a> for distilled takeaways linking back here.
+    </div>
+  </nav>
+  <main>
+    <div class="hero">
+      <span class="kicker">Section 03 &middot; Course notes</span>
+      <h1>Building with the Claude API</h1>
+      <p>The full condensed course notes for this section, one lesson per heading, with a link icon on every heading for direct citation from the study companion.</p>
+      <div class="meta"><span><b>76</b> lessons</span><span><b>9</b> topic groups</span></div>
+    </div>
+    <section class="group-section">
+  <div class="group-head">
+    <span class="group-eyebrow">Course notes</span>
+    <h2>Claude API Basics</h2>
+  </div>
+  <article class="note" id="overview-of-claude-models" data-spy>
+  <h3>Overview of Claude Models<a class="anchor" href="#overview-of-claude-models" aria-label="Link to this section">#</a></h3>
+  <p>Claude has three model families optimized for different priorities:</p>
+<p><strong>Opus =</strong> highest intelligence model for complex, multi-step tasks requiring deep reasoning and planning. Trade-off: higher cost and latency.</p>
+<p><strong>Sonnet =</strong> balanced model with good intelligence, speed, and cost efficiency. Strong coding abilities and precise code editing. Best for most practical use cases.</p>
+<p><strong>Haiku =</strong> fastest model optimized for speed and cost efficiency. No reasoning capabilities like Opus/Sonnet. Best for real-time user interactions and high-volume processing.</p>
+<p><strong>Selection framework:</strong> Intelligence priority → Opus. Speed priority → Haiku. Balanced requirements → Sonnet.</p>
+<p><strong>Common approach =</strong> use multiple models in same application based on specific task requirements rather than single model selection.</p>
+<p><strong>All models share core capabilities:</strong> text generation, coding, image analysis. Main difference is optimization focus.</p>
+
+</article>
+<article class="note" id="accessing-the-api" data-spy>
+  <h3>Accessing the API<a class="anchor" href="#accessing-the-api" aria-label="Link to this section">#</a></h3>
+  <p><strong>API Access Flow =</strong> 5-step process from user input to response display</p>
+<p><strong>Step 1:</strong> Client sends user text to developer's server (never access Anthropic API directly from client apps to keep API key secret)</p>
+<p><strong>Step 2:</strong> Server makes request to Anthropic API using SDK (Python, TypeScript, JavaScript, Go, Ruby) or plain HTTP. Required parameters = API key + model name + messages list + max_tokens limit</p>
+<p><strong>Step 3: Text generation process has 4 stages:</strong></p>
+<ul><li><strong>Tokenization =</strong> breaking input into tokens (words/word parts/symbols/spaces)</li><li><strong>Embedding =</strong> converting tokens to number lists representing all possible word meanings</li><li><strong>Contextualization =</strong> adjusting embeddings based on neighboring tokens to determine precise meaning</li><li><strong>Generation =</strong> output layer produces probabilities for next word, model selects using probability + randomness, adds selected word, repeats process</li></ul>
+<p><strong>Step 4:</strong> Model stops when max_tokens reached or special end_of_sequence token generated</p>
+<p><strong>Step 5:</strong> API returns response with generated text + usage counts + stop_reason to server, server sends to client for display</p>
+<p><strong>Token =</strong> text chunk (word/part/symbol) Embedding = numerical representation of word meanings Contextualization = meaning refinement using neighboring words Max_tokens = generation length limit Stop_reason = why model stopped generating</p>
+
+</article>
+<article class="note" id="making-a-request" data-spy>
+  <h3>Making a Request<a class="anchor" href="#making-a-request" aria-label="Link to this section">#</a></h3>
+  <p><strong>Making API Request to Anthropic =</strong> Process involving 4 setup steps and understanding message structure</p>
+<p><strong>Setup Steps:</strong></p>
+<ol><li><strong>Install packages =</strong> pip install anthropic python-dotenv in Jupyter notebook</li><li><strong>Store API key =</strong> Create .env file with ANTHROPIC_API_KEY="your_key" (ignore in version control)</li><li><strong>Load environment variable =</strong> Use python-dotenv to securely load API key</li><li><strong>Create client =</strong> Initialize anthropic client and define model variable (claude-3-sonnet)</li></ol>
+<p><strong>API Request Structure:</strong></p>
+<ul><li><strong>Function =</strong> client.messages.create()</li><li><strong>Required arguments =</strong> model, max_tokens, messages</li><li><strong>Model =</strong> Name of Claude model to use</li><li><strong>Max_tokens =</strong> Safety limit for generation length (not target length)</li><li><strong>Messages =</strong> List containing conversation exchanges</li></ul>
+<p><strong>Message Types:</strong></p>
+<ul><li><strong>User message =</strong> {"role": "user", "content": "your text"} (human-authored content)</li><li><strong>Assistant message =</strong> Contains model-generated responses</li></ul>
+<p><strong>Response Access:</strong></p>
+<ul><li><strong>Full response =</strong> Contains metadata and nested structure</li><li><strong>Text only =</strong> message.content[0].text extracts just generated text</li></ul>
+<p><strong>Example request structure:</strong> client.messages.create(model=model, max_tokens=1000, messages=[{"role": "user", "content": "What is quantum computing?"}])</p>
+
+</article>
+<article class="note" id="multi-turn-conversations" data-spy>
+  <h3>Multi-Turn Conversations<a class="anchor" href="#multi-turn-conversations" aria-label="Link to this section">#</a></h3>
+  <p><strong>Multi-Turn Conversations =</strong> conversations with multiple back-and-forth exchanges that maintain context.</p>
+<p><strong>Key limitation:</strong> Anthropic API stores no messages. Each request is independent with no memory of previous exchanges.</p>
+<p><strong>Solution requires two steps:</strong></p>
+<ol><li>Manually maintain message list in code</li><li>Send entire conversation history with every follow-up request</li></ol>
+<p><strong>Message structure =</strong> list of dictionaries with "role" (user/assistant) and "content" fields.</p>
+<p><strong>Conversation flow:</strong></p>
+<ul><li>Send initial user message</li><li>Receive assistant response</li><li>Append assistant response to message history</li><li>Add new user message to history</li><li>Send complete history for context-aware follow-up</li></ul>
+<p><strong>Helper functions needed:</strong></p>
+<ul><li>add_user_message(messages, text) = appends user message to history</li><li>add_assistant_message(messages, text) = appends assistant response to history  </li><li><strong>chat(messages) =</strong> sends message history to API and returns response</li></ul>
+<p><strong>Without message history =</strong> responses lack context and continuity. With complete history = Claude maintains conversation context and provides relevant follow-ups.</p>
+
+</article>
+<article class="note" id="system-prompts" data-spy>
+  <h3>System Prompts<a class="anchor" href="#system-prompts" aria-label="Link to this section">#</a></h3>
+  <p><strong>System Prompts =</strong> technique to customize Claude's response style and tone by assigning it a specific role or behavior pattern.</p>
+<p><strong>Implementation =</strong> pass system prompt as plain string to create function using system keyword argument.</p>
+<p><strong>Purpose =</strong> control how Claude responds rather than what it responds. Example: math tutor role makes Claude give hints instead of direct answers.</p>
+<p><strong>Structure =</strong> first line typically assigns role ("You are a patient math tutor"), followed by specific behavioral instructions.</p>
+<p><strong>Key principle =</strong> system prompts guide response approach, not content. Same question gets different treatment based on assigned role.</p>
+<p><strong>Technical implementation =</strong> create params dictionary, conditionally add system key if prompt provided, pass params to create function with ** unpacking. Handle None case by excluding system parameter entirely.</p>
+<p><strong>Use case example =</strong> Math tutor that gives guidance/hints rather than complete solutions, encouraging student thinking over direct answers.</p>
+
+</article>
+<article class="note" id="temperature" data-spy>
+  <h3>Temperature<a class="anchor" href="#temperature" aria-label="Link to this section">#</a></h3>
+  <p><strong>Temperature =</strong> parameter (0-1) that controls randomness in Claude's text generation by influencing token selection probabilities.</p>
+<p><strong>Text generation process:</strong> Input text → tokenization → probability assignment to possible next tokens → token selection based on probabilities → repeat.</p>
+<p><strong>Temperature effects:</strong></p>
+<ul><li><strong>Temperature 0 =</strong> deterministic output, always selects highest probability token</li><li><strong>Higher temperature =</strong> increases chance of selecting lower probability tokens, more creative/unexpected outputs</li></ul>
+<p><strong>Usage guidelines:</strong></p>
+<ul><li><strong>Low temperature (near 0) =</strong> data extraction, factual tasks requiring consistency</li><li><strong>High temperature (near 1) =</strong> creative tasks like brainstorming, writing, jokes, marketing</li></ul>
+<p><strong>Implementation:</strong> Add temperature parameter to model API calls. Higher values don't guarantee different outputs, just increase probability of variation.</p>
+<p><strong>Key insight:</strong> Temperature directly manipulates the probability distribution of next token selection, making high-probability tokens more/less dominant in the selection process.</p>
+
+</article>
+<article class="note" id="response-streaming" data-spy>
+  <h3>Response Streaming<a class="anchor" href="#response-streaming" aria-label="Link to this section">#</a></h3>
+  <p><strong>Response Streaming =</strong> technique to display AI responses chunk-by-chunk as they're generated instead of waiting for complete response.</p>
+<p><strong>Problem solved:</strong> AI responses can take 10-30 seconds. Users expect immediate feedback, not just spinners.</p>
+<p><strong>How it works:</strong></p>
+<ol><li>Server sends user message to Claude</li><li>Claude immediately sends initial response (no text, just acknowledgment)</li><li>Stream of events follows, each containing text chunks</li><li>Server forwards chunks to frontend for real-time display</li></ol>
+<p><strong>Event types:</strong></p>
+<ul><li><strong>message_start =</strong> initial acknowledgment</li><li><strong>content_block_start =</strong> text generation begins</li><li><strong>content_block_delta =</strong> contains actual text chunks (most important)</li><li><strong>content_block_stop/message_stop =</strong> generation complete</li></ul>
+<p><strong>Implementation:</strong> Basic: client.messages.create(stream=True) returns event iterator Simplified: client.messages.stream() with text_stream property extracts just text Final message: stream.get_final_message() assembles all chunks for storage</p>
+<p><strong>Key benefits:</strong> Better UX through immediate response visibility, complete message capture for database storage.</p>
+
+</article>
+<article class="note" id="controlling-model-output" data-spy>
+  <h3>Controlling Model Output<a class="anchor" href="#controlling-model-output" aria-label="Link to this section">#</a></h3>
+  <p>**Controlling Model Output = Two key techniques beyond prompt modification**</p>
+<p>**Pre-filling Assistant Messages = Manually adding assistant message at end of conversation to steer response direction**</p>
+<p><strong>How it works:</strong></p>
+<ul><li>Assemble messages list with user prompt + manual assistant message</li><li>Claude sees assistant message as already authored content</li><li>Claude continues response from exact end of pre-filled text</li><li>Response gets steered toward pre-filled direction</li></ul>
+<p><strong>Key point:</strong> Claude continues from exact endpoint of pre-fill, not complete sentences. Must stitch together pre-fill + generated response.</p>
+<p><strong>Example:</strong> Pre-fill "Coffee is better because" → Claude continues with justification for coffee</p>
+<p>**Stop Sequences = Force Claude to halt generation when specific string appears**</p>
+<p><strong>How it works:</strong></p>
+<ul><li>Provide stop sequence string in chat function</li><li>When Claude generates that exact string, response immediately stops</li><li>Generated stop sequence text not included in final output</li></ul>
+<p><strong>Example:</strong> Prompt "count 1 to 10" + stop sequence "five" → Output stops at "four, " (five not included)</p>
+<p><strong>Refinement:</strong> Stop sequence ", five" → Clean output "one, two, three, four"</p>
+<p>Both techniques provide precise control over response direction and length without changing core prompts.</p>
+
+</article>
+<article class="note" id="structured-data" data-spy>
+  <h3>Structured Data<a class="anchor" href="#structured-data" aria-label="Link to this section">#</a></h3>
+  <p><strong>Structured Data Generation =</strong> technique using assistant message prefilling + stop sequences to get raw output without Claude's natural explanatory headers/footers.</p>
+<p><strong>Problem =</strong> Claude automatically adds markdown formatting, headers, commentary when generating JSON/code/structured content. Users often want just the raw data for copy/paste functionality.</p>
+<p><strong>Solution Pattern:</strong></p>
+<ol><li><strong>User message =</strong> request for structured data</li><li><strong>Assistant message prefill =</strong> opening delimiter (e.g., "<pre><code>json")  
+3. Stop sequence = closing delimiter (e.g., "</code></pre>")</li></ol>
+<p><strong>How it works =</strong> Claude sees prefilled message, assumes it already started response, generates only the requested content, stops when hitting delimiter.</p>
+<p><strong>Result =</strong> Raw structured data output with no extra formatting or commentary.</p>
+<p><strong>Application =</strong> Works for any structured data type (JSON, Python code, lists, etc.), not just JSON. Use whenever you need clean, parseable output without explanatory text.</p>
+<p><strong>Key benefit =</strong> Output can be directly used/copied without manual selection or parsing of unwanted text.</p>
+
+</article>
+</section>
+<section class="group-section">
+  <div class="group-head">
+    <span class="group-eyebrow">Course notes</span>
+    <h2>Prompt Evaluation</h2>
+  </div>
+  <article class="note" id="prompt-evaluation" data-spy>
+  <h3>Prompt Evaluation<a class="anchor" href="#prompt-evaluation" aria-label="Link to this section">#</a></h3>
+  <p><strong>Prompt Engineering =</strong> techniques for writing/editing prompts to help Claude understand requests and desired responses.</p>
+<p><strong>Prompt Evaluation =</strong> automated testing of prompts using objective metrics to measure effectiveness.</p>
+<p><strong>Three paths after writing a prompt:</strong></p>
+<ol><li>Test once/twice, deploy to production (trap)</li><li>Test with custom inputs, minor tweaks for corner cases (trap)  </li><li>Run through evaluation pipeline for objective scoring (recommended)</li></ol>
+<p><strong>Key takeaway:</strong> Engineers commonly under-test prompts. Use evaluation pipelines to get objective performance scores before iterating and deploying prompts.</p>
+
+</article>
+<article class="note" id="a-typical-eval-workflow" data-spy>
+  <h3>A Typical Eval Workflow<a class="anchor" href="#a-typical-eval-workflow" aria-label="Link to this section">#</a></h3>
+  <p><strong>Typical Eval Workflow =</strong> 6-step iterative process for prompt improvement</p>
+<p><strong>Step 1:</strong> Write initial prompt draft - create baseline prompt to optimize</p>
+<p><strong>Step 2:</strong> Create evaluation dataset - collection of test inputs (can be 3 examples or thousands, hand-written or LLM-generated)</p>
+<p><strong>Step 3:</strong> Generate prompt variations - interpolate each dataset input into prompt template</p>
+<p><strong>Step 4:</strong> Get LLM responses - feed each prompt variation to Claude, collect outputs</p>
+<p><strong>Step 5:</strong> Grade responses - use grader system to score each response (e.g. 1-10 scale), average scores for overall prompt performance</p>
+<p><strong>Step 6:</strong> Iterate - modify prompt based on scores, repeat entire process, compare versions</p>
+<p><strong>Key points:</strong> No standard methodology exists. Many open-source/paid tools available. Can start simple with custom implementation. Grading complexity varies. Objective scoring enables systematic prompt improvement through A/B comparison.</p>
+
+</article>
+<article class="note" id="generating-test-datasets" data-spy>
+  <h3>Generating Test Datasets<a class="anchor" href="#generating-test-datasets" aria-label="Link to this section">#</a></h3>
+  <p><strong>Custom prompt evaluation workflow =</strong> build prompt + generate test dataset + evaluate performance</p>
+<p><strong>Goal =</strong> AWS code assistance prompt that outputs only Python, JSON config, or regex without explanations</p>
+<p><strong>Dataset generation approaches =</strong> manual assembly or automated with Claude (use faster models like Haiku for generation)</p>
+<p><strong>Dataset structure =</strong> array of JSON objects with task property describing user requests</p>
+<p><strong>Generation process =</strong> prompt Claude to create test cases → use pre-filling with assistant message "<pre><code>json" → set stop sequence "</code></pre>" → parse response as JSON → save to file</p>
+<p><strong>Key implementation =</strong> generate_dataset() function that sends prompt to Claude, gets structured JSON response of test tasks, saves to dataset.json file for later evaluation use</p>
+<p>Test dataset enables systematic evaluation by running prompt against multiple input scenarios to measure performance consistency.</p>
+
+</article>
+<article class="note" id="running-the-eval" data-spy>
+  <h3>Running the Eval<a class="anchor" href="#running-the-eval" aria-label="Link to this section">#</a></h3>
+  <p><strong>Eval execution process =</strong> merging test cases with prompts, running through LLM, and grading outputs.</p>
+<p><strong>Test case =</strong> individual record from dataset (JSON object).</p>
+<p><strong>Three core functions:</strong></p>
+<ul><li><strong>run_prompt =</strong> merges test case with prompt, sends to Claude, returns output</li><li><strong>run_test_case =</strong> calls run_prompt, grades result, returns summary dictionary </li><li><strong>run_eval =</strong> loops through dataset, calls run_test_case for each, assembles results</li></ul>
+<p><strong>Basic prompt structure =</strong> "Please solve the following task: [test_case_task]" (v1 starting point).</p>
+<p><strong>Current limitations =</strong> no output formatting instructions, hardcoded scoring (score=10), verbose Claude responses.</p>
+<p><strong>Runtime =</strong> ~31 seconds with Haiku model for full dataset execution.</p>
+<p><strong>Output format =</strong> array of objects containing Claude output, original test case, and score.</p>
+<p><strong>Next step =</strong> implement proper grading system to replace hardcoded scores.</p>
+<p><strong>Eval pipeline core =</strong> dataset + prompt + LLM + grader, with minimal code complexity.</p>
+
+</article>
+<article class="note" id="model-based-grading" data-spy>
+  <h3>Model Based Grading<a class="anchor" href="#model-based-grading" aria-label="Link to this section">#</a></h3>
+  <p><strong>Model Based Grading =</strong> evaluation system that takes model outputs and assigns objective scores (typically 1-10 scale, 10 = highest quality)</p>
+<p><strong>Three grader types:</strong></p>
+<ul><li><strong>Code graders =</strong> programmatic checks (length, word presence, syntax validation, readability scores)</li><li><strong>Model graders =</strong> additional API call to evaluate original model output, highly flexible for quality/instruction-following assessment</li><li><strong>Human graders =</strong> person evaluates responses, most flexible but time-consuming and tedious</li></ul>
+<p><strong>Key requirements:</strong> Must return objective signal (usually numerical score). Define evaluation criteria upfront.</p>
+<p><strong>Implementation pattern for model graders:</strong></p>
+<ul><li>Create detailed prompt requesting strengths/weaknesses/reasoning/score (not just score alone to avoid default middling scores)</li><li>Use JSON response format with pre-filled assistant message and stop sequences</li><li>Parse returned JSON for score and reasoning</li><li>Calculate average scores across test cases for final metric</li></ul>
+<p>Model graders offer high flexibility but may be inconsistent. Still provides objective baseline for prompt optimization.</p>
+
+</article>
+<article class="note" id="code-based-grading" data-spy>
+  <h3>Code Based Grading<a class="anchor" href="#code-based-grading" aria-label="Link to this section">#</a></h3>
+  <p><strong>Code Based Grading =</strong> automated validation system for LLM outputs containing code, JSON, or regex</p>
+<p><strong>Core Implementation:</strong></p>
+<ul><li><strong>validate_json() =</strong> attempts JSON parsing, returns 10 if valid, 0 if error</li><li><strong>validate_python() =</strong> attempts AST parsing, returns 10 if valid, 0 if error  </li><li><strong>validate_regex() =</strong> attempts regex compilation, returns 10 if valid, 0 if error</li></ul>
+<p><strong>Dataset Requirements:</strong></p>
+<ul><li>Must include "format" key specifying expected output type (JSON/Python/RegEx)</li><li>Updated via prompt template modification for automated dataset generation</li></ul>
+<p><strong>Prompt Engineering:</strong></p>
+<ul><li>Instruct model to respond only with raw code/JSON/regex</li><li>No comments, explanations, or commentary</li><li>Use pre-filled Assistant message with<pre><code>code</code></pre>blocks</li><li>Add stop sequences to extract clean output</li></ul>
+<p><strong>Scoring System:</strong></p>
+<ul><li><strong>Final score =</strong> (model_score + syntax_score) / 2</li><li>Combines semantic evaluation with syntax validation</li><li>Enables measurement of both correctness and technical validity</li></ul>
+<p><strong>Key Limitation =</strong> requires known expected format for proper validator selection</p>
+
+</article>
+</section>
+<section class="group-section">
+  <div class="group-head">
+    <span class="group-eyebrow">Course notes</span>
+    <h2>Prompt Engineering</h2>
+  </div>
+  <article class="note" id="prompt-engineering" data-spy>
+  <h3>Prompt Engineering<a class="anchor" href="#prompt-engineering" aria-label="Link to this section">#</a></h3>
+  <p><strong>Prompt Engineering =</strong> improving prompts to get more reliable, higher-quality outputs from language models.</p>
+<p><strong>Module Structure:</strong> Start with initial poor prompt → Apply prompt engineering techniques step-by-step → Evaluate improvements after each technique → Observe performance gains over time.</p>
+<p><strong>Example Goal:</strong> Generate one-day meal plan for athletes based on height, weight, physical goal, dietary restrictions.</p>
+<p><strong>Technical Setup:</strong></p>
+<ul><li>Updated eval pipeline with flexible prompt evaluator class</li><li>Supports concurrency (adjust max_concurrent_tasks based on rate limits)</li><li>generate_dataset() method creates test cases with specified inputs</li><li>run_prompt() function processes each test case individually</li></ul>
+<p><strong>Key Components:</strong></p>
+<ul><li><strong>prompt_input_spec =</strong> dictionary defining required prompt inputs</li><li><strong>extra_criteria =</strong> additional validation requirements for model grading</li><li><strong>output.html =</strong> formatted evaluation report showing test case results and scores</li></ul>
+<p><strong>Process:</strong> Write initial prompt → Interpolate test case inputs → Run evaluation → Apply engineering techniques → Re-evaluate → Repeat until satisfactory performance.</p>
+<p><strong>Initial Results:</strong> Expect poor scores (example: 2.32) with basic prompts, especially when using less capable models. Scores improve as techniques are applied.</p>
+
+</article>
+<article class="note" id="being-clear-and-direct" data-spy>
+  <h3>Being Clear and Direct<a class="anchor" href="#being-clear-and-direct" aria-label="Link to this section">#</a></h3>
+  <p><strong>Being Clear and Direct =</strong> Use simple, direct language with action verbs in the first line of prompts to specify the exact task.</p>
+<p><strong>First line importance =</strong> Most critical part of prompt that sets the foundation for AI response.</p>
+<p><strong>Structure =</strong> Action verb + clear task description + output specifications.</p>
+<p><strong>Examples:</strong></p>
+<ul><li>"Write three paragraphs about how solar panels work"</li><li>"Identify three countries that use geothermal energy and for each include generation stats"</li><li>"Generate a one day meal plan for an athlete that meets their dietary restrictions"</li></ul>
+<p><strong>Key components =</strong> Action verb at start + direct task statement + expected output details.</p>
+<p><strong>Result =</strong> Improved prompt performance (example showed score increase from 2.32 to 3.92).</p>
+
+</article>
+<article class="note" id="being-specific" data-spy>
+  <h3>Being Specific<a class="anchor" href="#being-specific" aria-label="Link to this section">#</a></h3>
+  <p><strong>Being Specific =</strong> adding guidelines or steps to direct model output in particular direction</p>
+<p><strong>Two types of guidelines:</strong> Type A (Attributes) = list qualities/attributes desired in output (length, structure, format) Type B (Steps) = provide specific steps for model to follow in reasoning process</p>
+<p>Type A controls output characteristics. Type B controls how model arrives at answer.</p>
+<p>Both techniques often combined in professional prompts.</p>
+<p><strong>When to use:</strong></p>
+<ul><li><strong>Type A (attributes):</strong> recommended for almost all prompts</li><li><strong>Type B (steps):</strong> use for complex problems where you want model to consider broader perspective or additional viewpoints it might not naturally consider</li></ul>
+<p><strong>Example improvement:</strong> meal planning prompt score jumped from 3.92 to 7.86 when guidelines added, demonstrating significant quality improvement through specificity.</p>
+
+</article>
+<article class="note" id="structure-with-xml-tags" data-spy>
+  <h3>Structure with XML Tags<a class="anchor" href="#structure-with-xml-tags" aria-label="Link to this section">#</a></h3>
+  <p><strong>XML Tags for Prompt Structure =</strong> Using XML tags to organize and delineate different content sections within prompts to improve AI comprehension.</p>
+<p><strong>Purpose =</strong> When interpolating large amounts of content into prompts, XML tags help AI models distinguish between different types of information and understand text grouping.</p>
+<p><strong>Implementation =</strong> Wrap content sections in descriptive XML tags like &lt;sales_records&gt;&lt;/sales_records&gt; or &lt;my_code&gt;&lt;/my_code&gt; rather than dumping unstructured text.</p>
+<p><strong>Tag naming =</strong> Use descriptive, specific tag names (e.g., "sales_records" better than "data") to provide context about content nature.</p>
+<p><strong>Example use case =</strong> Debugging prompt with mixed code and documentation becomes clearer when separated into &lt;my_code&gt; and &lt;docs&gt; tags.</p>
+<p><strong>Benefits =</strong> Makes prompt structure obvious to AI, reduces confusion about content boundaries, improves output quality even for smaller content blocks.</p>
+<p><strong>Application =</strong> Can wrap any interpolated content like &lt;athlete_information&gt; even when content is short, to clarify it's external input requiring consideration.</p>
+
+</article>
+<article class="note" id="providing-examples" data-spy>
+  <h3>Providing Examples<a class="anchor" href="#providing-examples" aria-label="Link to this section">#</a></h3>
+  <p><strong>One-shot/Multi-shot prompting =</strong> providing examples in prompts to guide model behavior. One-shot = single example, multi-shot = multiple examples.</p>
+<p><strong>Implementation:</strong> Structure examples with XML tags containing sample input and ideal output. Always wrap examples clearly to distinguish from actual prompt content.</p>
+<p><strong>Key applications:</strong></p>
+<ul><li>Corner case handling (sarcasm detection, edge scenarios)</li><li>Complex output formatting (JSON structures, specific formats)</li><li>Clarifying expected response quality/style</li></ul>
+<p><strong>Best practices:</strong></p>
+<ul><li>Add context for corner cases ("be especially careful with sarcasm")</li><li>Include reasoning explaining why output is ideal</li><li>Use highest-scoring examples from prompt evaluations as templates</li><li>Place examples after main instructions/guidelines</li></ul>
+<p><strong>Effectiveness boost:</strong> Combine examples with explanations of what makes them ideal to reinforce desired output characteristics.</p>
+
+</article>
+</section>
+<section class="group-section">
+  <div class="group-head">
+    <span class="group-eyebrow">Course notes</span>
+    <h2>Tool Use</h2>
+  </div>
+  <article class="note" id="introducing-tool-use" data-spy>
+  <h3>Introducing Tool Use<a class="anchor" href="#introducing-tool-use" aria-label="Link to this section">#</a></h3>
+  <p><strong>Tool use =</strong> method for Claude to access external information beyond training data.</p>
+<p><strong>Default limitation:</strong> Claude only knows information from training data, lacks current/real-time information.</p>
+<p><strong>Tool use flow:</strong></p>
+<ol><li>Send initial request to Claude + instructions for external data access</li><li>Claude evaluates if external data needed, requests specific information</li><li>Server runs code to fetch requested data from external sources</li><li>Send follow-up request to Claude with retrieved data</li><li>Claude generates final response using original prompt + external data</li></ol>
+<p><strong>Weather example:</strong> User asks current weather → Claude requests weather data → Server calls weather API → Claude receives weather data → Claude provides informed weather response.</p>
+<p><strong>Key concept:</strong> Tools enable Claude to augment responses with live/current information by orchestrating external data retrieval between Claude's requests.</p>
+
+</article>
+<article class="note" id="project-overview" data-spy>
+  <h3>Project Overview<a class="anchor" href="#project-overview" aria-label="Link to this section">#</a></h3>
+  <p>**Project Overview**</p>
+<p><strong>Goal =</strong> Teach Claude to set time-based reminders through tool implementation in Jupyter notebook</p>
+<p><strong>Target interaction =</strong> User: "Set reminder for doctor's appointment, week from Thursday" → Claude: "I will remind you at that point in time"</p>
+<p>**Three core problems requiring tools:**</p>
+<ol><li><strong>Time knowledge gap =</strong> Claude knows current date but not exact time</li><li><strong>Time calculation errors =</strong> Claude sometimes miscalculates time-based addition (e.g., 379 days from January 13th, 1973)</li><li><strong>No reminder mechanism =</strong> Claude understands reminder concept but lacks implementation capability</li></ol>
+<p>**Three corresponding tools to build:**</p>
+<ol><li><strong>Current datetime tool =</strong> Gets current date + time</li><li><strong>Duration addition tool =</strong> Adds time duration to datetime (e.g., current date + 20 days)</li><li><strong>Reminder setting tool =</strong> Actually sets the reminder</li></ol>
+<p><strong>Implementation approach =</strong> One tool at a time, building toward multi-tool coordination</p>
+
+</article>
+<article class="note" id="tool-functions" data-spy>
+  <h3>Tool Functions<a class="anchor" href="#tool-functions" aria-label="Link to this section">#</a></h3>
+  <p><strong>Tool Functions =</strong> Python functions executed automatically when Claude needs extra information to help users.</p>
+<p><strong>Key characteristics:</strong></p>
+<ul><li>Plain Python functions called by Claude when it determines additional data is needed</li><li>Must use descriptive function names and argument names</li><li>Should validate inputs and raise errors with meaningful messages</li><li>Error messages are visible to Claude, allowing it to retry with corrected parameters</li></ul>
+<p><strong>Best practices:</strong></p>
+<ol><li>Well-named functions and arguments</li><li>Input validation with immediate error raising for invalid inputs</li><li>Meaningful error messages that guide correction</li></ol>
+<p><strong>Example implementation pattern:</strong></p><pre><code>def get_current_datetime(date_format="%Y%m%d %H:%M:%S"):
+    if not date_format:
+        raise ValueError("date format cannot be empty")
+    return datetime.now().strftime(date_format)</code></pre><p><strong>Tool function workflow:</strong> Claude identifies need for information → calls tool function → receives result or error → may retry with corrections if error occurred.</p>
+<p><strong>Purpose:</strong> Extend Claude's capabilities beyond its training data by providing access to real-time information like current datetime, weather, etc.</p>
+
+</article>
+<article class="note" id="tool-schemas" data-spy>
+  <h3>Tool Schemas<a class="anchor" href="#tool-schemas" aria-label="Link to this section">#</a></h3>
+  <p><strong>Tool Schemas =</strong> JSON schema specifications that describe tool functions and their parameters for language models</p>
+<p><strong>JSON Schema =</strong> data validation specification (not ML-specific) used to validate JSON data, adopted by ML community for tool calling</p>
+<p><strong>Tool Schema Structure:</strong></p>
+<ul><li><strong>name:</strong> tool identifier </li><li><strong>description:</strong> 3-4 sentences explaining what tool does, when to use, what data it returns</li><li><strong>input_schema:</strong> actual JSON schema describing function arguments with types and descriptions</li></ul>
+<p><strong>Schema Generation Trick:</strong></p>
+<ol><li>Take tool function to Claude.ai</li><li><strong>Prompt:</strong> "write valid JSON schema spec for tool calling for this function, follow best practices in attached documentation"</li><li>Attach Anthropic API documentation tool use page</li><li>Copy generated schema</li></ol>
+<p><strong>Implementation Pattern:</strong></p>
+<ul><li>Name functions descriptively</li><li>Name schemas as [function_name]_schema</li><li>Import ToolParam from anthropic.types</li><li>Wrap schema dictionary with ToolParam() to prevent type errors</li></ul>
+<p><strong>Purpose =</strong> inform Claude about available tools, required arguments, and usage context through standardized JSON validation format</p>
+
+</article>
+<article class="note" id="handling-message-blocks" data-spy>
+  <h3>Handling Message Blocks<a class="anchor" href="#handling-message-blocks" aria-label="Link to this section">#</a></h3>
+  <p>**Tool-Enabled Claude Requests**</p>
+<p><strong>Step 3:</strong> Making requests to Claude with tools = include tool schema in request alongside user message using <code>tools</code> keyword argument containing JSON schema specs.</p>
+<p>**Multi-Block Messages**</p>
+<p><strong>Content structure change =</strong> messages now contain multiple blocks instead of just text blocks.</p>
+<p><strong>Tool response format = assistant message with:</strong></p>
+<ul><li><strong>Text block =</strong> user-facing explanation </li><li><strong>Tool use block =</strong> contains function name + arguments for tool execution</li></ul>
+<p>**Message History Management**</p>
+<p><strong>Critical requirement =</strong> manually maintain conversation history since Claude stores nothing.</p>
+<p><strong>Multi-block handling =</strong> append entire response.content (all blocks) to messages list, not just text.</p>
+<p><strong>Helper function updates needed =</strong> add_user_message and add_assistant_message functions must support multiple blocks instead of single text blocks only.</p>
+<p><strong>Conversation flow =</strong> user message → assistant response with tool use block → execute tool → respond back to Claude with full history.</p>
+
+</article>
+<article class="note" id="sending-tool-results" data-spy>
+  <h3>Sending Tool Results<a class="anchor" href="#sending-tool-results" aria-label="Link to this section">#</a></h3>
+  <p><strong>Tool Results =</strong> Results from executed tool functions sent back to Claude in follow-up requests.</p>
+<p><strong>Process:</strong> Execute tool function requested by Claude → Create tool result block → Send follow-up request with full conversation history.</p>
+<p><strong>Tool Result Block Structure:</strong></p>
+<ul><li><strong>tool_use_id =</strong> Matches ID from original tool use block to pair requests with results</li><li><strong>content =</strong> Tool function output converted to string (usually JSON)</li><li><strong>is_error =</strong> Boolean flag for function execution errors (default false)</li></ul>
+<p><strong>Tool Use ID Purpose =</strong> Links multiple tool requests to correct results when Claude makes simultaneous tool calls. Each tool use gets unique ID, tool results must reference matching IDs.</p>
+<p><strong>Follow-up Request Requirements:</strong></p>
+<ul><li>Include complete message history (original user message + assistant tool use message + new user message with tool result)</li><li>Must include original tool schemas even if not using tools again</li><li>Tool result block goes in user message, not assistant message</li></ul>
+<p><strong>Conversation Flow:</strong> User request → Claude assistant response (text + tool use blocks) → Server executes tool → User message with tool result block → Claude final response with integrated results.</p>
+
+</article>
+<article class="note" id="multi-turn-conversations-with-tools" data-spy>
+  <h3>Multi-Turn Conversations with Tools<a class="anchor" href="#multi-turn-conversations-with-tools" aria-label="Link to this section">#</a></h3>
+  <p><strong>Multi-Turn Tool Conversations =</strong> conversations where Claude uses multiple tools sequentially to answer a single user query.</p>
+<p><strong>Tool Chaining Process =</strong> user asks question → Claude requests first tool → tool executed → result returned → Claude requests second tool → tool executed → result returned → Claude provides final answer.</p>
+<p><strong>Example Flow =</strong> user asks "what day is 103 days from today" → Claude calls get_current_datetime → Claude calls add_duration_to_datetime → Claude provides answer.</p>
+<p><strong>Implementation Pattern =</strong> while loop that continues calling Claude until no more tool requests, checking each response for tool_use blocks.</p>
+<p><strong>run_conversation Function =</strong> takes initial messages, loops through Claude calls, executes requested tools, adds results to conversation, continues until final response.</p>
+<p><strong>Required Refactors:</strong></p>
+<ul><li><strong>add_user_message/add_assistant_message =</strong> updated to handle multiple message blocks instead of just plain text</li><li><strong>chat function =</strong> accepts tools parameter, returns entire message instead of just first text block</li><li><strong>text_from_message helper =</strong> extracts all text blocks from a message with multiple content blocks</li></ul>
+<p><strong>Key Insight =</strong> can't predict how many tools user queries will require, so system must handle arbitrary chains of tool calls automatically.</p>
+
+</article>
+<article class="note" id="implementing-multiple-turns" data-spy>
+  <h3>Implementing Multiple Turns<a class="anchor" href="#implementing-multiple-turns" aria-label="Link to this section">#</a></h3>
+  <p>**Multiple Turns Implementation = continuously calling Claude until it stops requesting tools**</p>
+<p>**Stop Reason Field = indicates why Claude stopped generating text**</p>
+<ul><li><strong>stop_reason =</strong> "tool_use" means Claude wants to call a tool</li><li>Other values exist but tool_use is most commonly checked</li></ul>
+<p>**run_conversation Function = main loop that:**</p>
+<ol><li>Calls Claude with messages + available tools</li><li>Adds assistant response to conversation history</li><li>Checks stop_reason - if not "tool_use", breaks loop</li><li>If tool_use, calls run_tools function</li><li>Adds tool results as user message</li><li>Repeats until no more tool requests</li></ol>
+<p>**run_tools Function = processes multiple tool use blocks:**</p>
+<ol><li>Filters message.content for blocks with type="tool_use"</li><li>Iterates through each tool request</li><li>Runs appropriate tool function via run_tool helper</li><li><strong>Creates tool_result blocks with:</strong> type="tool_result", tool_use_id=original_id, content=JSON_encoded_output, is_error=boolean</li><li>Returns list of all tool result blocks</li></ol>
+<p>**run_tool Function = dispatcher that:**</p>
+<ul><li>Takes tool_name and tool_input</li><li>Uses if statements to match tool names to functions</li><li>Executes appropriate tool function</li><li>Scalable for adding multiple tools</li></ul>
+<p>**Error Handling = try/except blocks around tool execution:**</p>
+<ul><li><strong>Success:</strong> is_error=false, content=tool_output</li><li><strong>Failure:</strong> is_error=true, content=error_message</li></ul>
+<p>**Key Architecture Points:**</p>
+<ul><li>Assistant messages can contain multiple blocks (text + multiple tool_use)</li><li>Each tool_use block gets separate tool_result response</li><li>Tool results sent back as user message containing all results</li><li>Process repeats until Claude provides final text-only response</li></ul>
+
+</article>
+<article class="note" id="using-multiple-tools" data-spy>
+  <h3>Using Multiple Tools<a class="anchor" href="#using-multiple-tools" aria-label="Link to this section">#</a></h3>
+  <p><strong>Multiple Tools Implementation =</strong> Adding additional tools to an existing tool system after initial framework setup.</p>
+<p><strong>Process =</strong> 3 steps: (1) Add tool schemas to RunConversation function's tools list, (2) Add conditional cases in RunTool function to handle new tool names, (3) Implement actual tool functions.</p>
+<p><strong>Key Components:</strong></p>
+<ul><li><strong>RunConversation function =</strong> Contains tools list that makes Claude aware of available tools</li><li><strong>RunTool function =</strong> Routes tool calls to appropriate functions based on tool name</li><li><strong>Tool schemas =</strong> Define tool structure for the AI model</li><li><strong>Tool functions =</strong> Actual implementation code</li></ul>
+<p><strong>Example Tools Added:</strong></p>
+<ul><li><strong>AddDurationToDateTime =</strong> Calculates date/time with duration offset</li><li><strong>SetReminder =</strong> Creates reminder (mock implementation that prints confirmation)</li></ul>
+<p><strong>Tool Chaining =</strong> AI can use multiple tools sequentially in single conversation (e.g., calculate date first, then set reminder with result).</p>
+<p><strong>Message Structure =</strong> Assistant responses can contain multiple blocks: text blocks + tool use blocks in same message.</p>
+<p><strong>Scalability =</strong> After initial framework setup, adding new tools becomes simple pattern of schema + routing + implementation.</p>
+
+</article>
+<article class="note" id="the-batch-tool" data-spy>
+  <h3>The Batch Tool<a class="anchor" href="#the-batch-tool" aria-label="Link to this section">#</a></h3>
+  <p><strong>Batch Tool =</strong> tool that enables Claude to run multiple tools in parallel within a single Assistant message instead of making separate sequential requests.</p>
+<p><strong>Problem:</strong> Claude can technically send multiple tool use blocks in one message but rarely does so in practice, leading to unnecessary sequential tool calls.</p>
+<p><strong>Solution:</strong> Create batch tool schema that takes list of invocations (each containing tool name + arguments). Instead of calling tools directly, Claude calls batch tool with array of desired tool executions.</p>
+<p><strong>Implementation:</strong></p>
+<ul><li>Add batch tool to schema with invocations parameter</li><li>Create run_batch function that iterates through invocations list</li><li>Extract tool name and JSON-parsed arguments from each invocation</li><li>Call run_tool function for each requested tool</li><li>Return batch_output list containing results from all tool executions</li></ul>
+<p><strong>Mechanism:</strong> Tricks Claude into parallel tool execution by providing higher-level abstraction that manually handles what multiple tool use blocks would accomplish automatically.</p>
+<p><strong>Result:</strong> Single request-response cycle instead of multiple sequential rounds for parallel-executable tasks.</p>
+
+</article>
+<article class="note" id="tools-for-structured-data" data-spy>
+  <h3>Tools for Structured Data<a class="anchor" href="#tools-for-structured-data" aria-label="Link to this section">#</a></h3>
+  <p><strong>Tools for Structured Data =</strong> alternative method to extract structured JSON from data sources using Claude's tool system instead of message pre-fill and stop sequences.</p>
+<p><strong>Key differences from prompt-based extraction:</strong></p>
+<ul><li>More reliable output</li><li>More complex setup</li><li>Requires JSON schema specification</li></ul>
+<p><strong>Core Process:</strong></p>
+<ol><li><strong>Define JSON schema for tool where inputs =</strong> desired data structure</li><li>Send prompt + schema to Claude</li><li>Claude calls tool with structured arguments matching schema</li><li>Extract JSON from tool use block (no tool result needed)</li></ol>
+<p><strong>Critical requirement =</strong> Force tool calling using tool_choice parameter:</p>
+<ul><li><strong>tool_choice =</strong> {"type": "tool", "name": "your_tool_name"}</li><li>Ensures Claude always calls specified tool</li></ul>
+<p><strong>Implementation steps:</strong></p>
+<ol><li>Create schema definition for extraction tool</li><li>Update chat function to accept tool_choice parameter</li><li>Pass tool_choice to client.messages.create()</li><li>Access structured data from response.content[0].input</li></ol>
+<p><strong>Use cases =</strong> When reliability more important than simplicity. Prompt-based methods better for quick/simple extractions, tools better for complex/reliable extractions.</p>
+
+</article>
+<article class="note" id="fine-grained-tool-calling" data-spy>
+  <h3>Fine Grained Tool Calling<a class="anchor" href="#fine-grained-tool-calling" aria-label="Link to this section">#</a></h3>
+  <p><strong>Tool Streaming =</strong> streaming API responses while using tools with Claude</p>
+<p><strong>Key Components:</strong></p>
+<ul><li>Standard streaming returns content_block_delta events</li><li>Tool streaming adds input_json_delta events with partial_json (chunk) and snapshot (cumulative sum)</li><li>Implementation requires handling additional event type in streaming pipeline</li></ul>
+<p><strong>Fine-Grained Tool Calling =</strong> feature that disables JSON validation for faster streaming</p>
+<p><strong>Default Behavior:</strong></p>
+<ul><li>Claude generates JSON chunks for tool arguments</li><li>API buffers chunks until complete top-level key-value pair is generated</li><li>Validates JSON against schema before sending chunks to server</li><li>Results in delays followed by burst of chunks arriving simultaneously</li></ul>
+<p><strong>Fine-Grained Mode (fine_grained: true):</strong></p>
+<ul><li>Disables API-side JSON validation</li><li>Sends chunks immediately as generated</li><li>Provides traditional streaming experience</li><li>Requires client-side error handling for invalid JSON</li></ul>
+<p><strong>Trade-offs:</strong></p>
+<ul><li><strong>Default =</strong> slower but validated JSON</li><li><strong>Fine-grained =</strong> faster streaming but potential invalid JSON (like "undefined" instead of null)</li><li>Invalid JSON in default mode gets wrapped as string rather than proper object structure</li></ul>
+<p><strong>Use Cases:</strong></p>
+<ul><li>Fine-grained useful for immediate UI updates or early processing of tool arguments</li><li>Default sufficient when validation delays acceptable</li></ul>
+
+</article>
+<article class="note" id="the-text-edit-tool" data-spy>
+  <h3>The Text Edit Tool<a class="anchor" href="#the-text-edit-tool" aria-label="Link to this section">#</a></h3>
+  <p><strong>Text Editor Tool =</strong> built-in Claude tool for file/text operations (read, write, create, replace, undo files/directories)</p>
+<p><strong>Key characteristics:</strong></p>
+<ul><li>Only JSON schema built into Claude, implementation must be custom-coded</li><li>Schema stub sent to Claude gets auto-expanded to full schema</li><li>Schema type string varies by Claude model version (3.5 vs 3.7 have different dates)</li><li>Enables Claude to act as software engineer out-of-the-box</li></ul>
+<p><strong>Required implementation:</strong></p>
+<ul><li>Custom class/functions to handle Claude's tool use requests</li><li><strong>Functions for:</strong> view files, string replace, create files, etc.</li><li>Actual file system operations not provided by Claude</li></ul>
+<p><strong>Workflow:</strong></p>
+<ol><li>Send minimal schema stub to Claude (name + type with version-specific date)</li><li>Claude expands to full schema internally</li><li>Claude sends tool use requests</li><li>Custom implementation executes actual file operations</li><li>Results sent back to Claude</li></ol>
+<p><strong>Use cases:</strong></p>
+<ul><li>Replicate AI code editor functionality</li><li>File system operations where native editors unavailable</li><li>Automated code generation/refactoring</li><li>Multi-file project manipulation</li></ul>
+<p><strong>Benefits =</strong> approximates fancy code editor capabilities through API calls rather than GUI interaction.</p>
+
+</article>
+<article class="note" id="the-web-search-tool" data-spy>
+  <h3>The Web Search Tool<a class="anchor" href="#the-web-search-tool" aria-label="Link to this section">#</a></h3>
+  <p><strong>Web Search Tool =</strong> built-in Claude tool for searching web to find up-to-date/specialized information for user questions</p>
+<p><strong>Implementation =</strong> no custom code needed, Claude handles search execution automatically</p>
+<p><strong>Schema Requirements:</strong></p>
+<ul><li><strong>type:</strong> "web_search_20250305"  </li><li><strong>name:</strong> "web_search"</li><li><strong>max_uses:</strong> number (limits total searches, default 5)</li><li><strong>allowed_domains:</strong> optional list to restrict search to specific domains</li></ul>
+<p><strong>Response Structure:</strong></p>
+<ul><li><strong>Text blocks =</strong> Claude's explanatory text</li><li><strong>Tool use blocks =</strong> search queries Claude executed  </li><li><strong>Web search result blocks =</strong> found pages (title, URL)</li><li><strong>Citation blocks =</strong> specific text supporting Claude's statements</li></ul>
+<p><strong>Key Features:</strong></p>
+<ul><li>Multiple searches possible per request (up to max_uses limit)</li><li>Domain restriction available for quality control</li><li>Citation system links statements to source material</li></ul>
+<p><strong>UI Rendering Pattern:</strong></p>
+<ul><li>Display text blocks as normal text</li><li>Show search results as reference list</li><li>Highlight citations with source attribution (domain, title, URL, quoted text)</li></ul>
+<p><strong>Use Case Example:</strong> Restricting to NIH.gov for medical/exercise advice ensures scientifically-backed information vs generic web content.</p>
+
+</article>
+</section>
+<section class="group-section">
+  <div class="group-head">
+    <span class="group-eyebrow">Course notes</span>
+    <h2>Retrieval-Augmented Generation</h2>
+  </div>
+  <article class="note" id="introducing-retrieval-augmented-generation" data-spy>
+  <h3>Introducing Retrieval Augmented Generation<a class="anchor" href="#introducing-retrieval-augmented-generation" aria-label="Link to this section">#</a></h3>
+  <p><strong>RAG =</strong> Retrieval Augmented Generation technique for querying large documents using language models.</p>
+<p><strong>Problem:</strong> How to extract specific information from large documents (100-1000+ pages) using Claude without hitting context limits.</p>
+<p><strong>Option 1 (Direct approach):</strong> Place entire document text directly into prompt.</p>
+<ul><li><strong>Limitations:</strong> Hard token limits, decreased effectiveness with longer prompts, higher costs, slower processing</li></ul>
+<p><strong>Option 2 (RAG approach):</strong> Two-step process</p>
+<ul><li><strong>Step 1:</strong> Break document into small chunks</li><li><strong>Step 2:</strong> For user questions, find most relevant chunks and include only those in prompt</li></ul>
+<p><strong>RAG benefits:</strong> Model focuses on relevant content, scales to large/multiple documents, smaller prompts, lower costs, faster processing</p>
+<p><strong>RAG downsides:</strong> More complexity, requires preprocessing, needs search mechanism to find relevant chunks, no guarantee chunks contain complete context, multiple chunking strategies possible (equal portions vs header-based)</p>
+<p><strong>Key challenge:</strong> Defining relevance and optimal chunking strategy for specific use cases.</p>
+<p>RAG trades simplicity for scalability and efficiency but requires careful implementation and evaluation.</p>
+
+</article>
+<article class="note" id="text-chunking-strategies" data-spy>
+  <h3>Text Chunking Strategies<a class="anchor" href="#text-chunking-strategies" aria-label="Link to this section">#</a></h3>
+  <p><strong>Text Chunking Strategies =</strong> process of dividing documents into smaller pieces for RAG pipelines</p>
+<p><strong>Core Problem:</strong> Chunking quality directly impacts RAG performance. Poor chunking leads to irrelevant context retrieval (e.g., medical "bug" text retrieved for software engineering query about bugs).</p>
+<p><strong>Three Main Strategies:</strong></p>
+<ol><li><strong>Size-Based Chunking =</strong> dividing text into equal-length strings</li></ol>
+<ul><li><strong>Pros:</strong> Easy to implement, most common in production</li><li><strong>Cons:</strong> Cut-off words, lacks context</li><li><strong>Solution:</strong> Overlap strategy = include characters from neighboring chunks to preserve context</li><li><strong>Trade-off:</strong> Creates text duplication but improves chunk meaning</li></ul>
+<ol><li><strong>Structure-Based Chunking =</strong> dividing based on document structure (headers, paragraphs, sections)</li></ol>
+<ul><li>Best for structured documents (markdown, HTML)</li><li><strong>Limitation:</strong> Requires guaranteed document formatting</li><li><strong>Example:</strong> Split on markdown headers (##) to create section-based chunks</li></ul>
+<ol><li><strong>Semantic-Based Chunking =</strong> using NLP to group related sentences/sections</li></ol>
+<ul><li>Most advanced technique</li><li>Groups consecutive sentences based on semantic similarity</li><li>Complex implementation</li></ul>
+<p><strong>Key Implementation Notes:</strong></p>
+<ul><li><strong>Chunk by character =</strong> most reliable fallback, works with any document type</li><li><strong>Chunk by sentence =</strong> good middle ground if sentence detection works reliably</li><li><strong>Chunk by section =</strong> optimal results but requires structured input</li><li>Strategy choice depends on document type guarantees and use case requirements</li></ul>
+<p><strong>Rule:</strong> No universal best chunking method - depends on document structure guarantees and specific use case.</p>
+
+</article>
+<article class="note" id="text-embeddings" data-spy>
+  <h3>Text Embeddings<a class="anchor" href="#text-embeddings" aria-label="Link to this section">#</a></h3>
+  <p><strong>Text Embeddings =</strong> numerical representation of text meaning generated by embedding models</p>
+<p><strong>Embedding Model =</strong> takes text input, outputs long list of numbers (range -1 to +1)</p>
+<p><strong>Embedding Numbers =</strong> scores representing unknown qualities/features of input text. Each number theoretically scores different aspects (happiness, topic relevance, etc.) but actual meaning is unknown to users.</p>
+<p><strong>Semantic Search =</strong> uses text embeddings to find text chunks related to user questions in RAG pipelines. Solves the search problem of matching user queries to relevant document chunks.</p>
+<p><strong>RAG Pipeline Process =</strong> extract text chunks → user submits query → find related chunks using semantic search → add relevant chunks as context to prompt</p>
+<p><strong>Implementation =</strong> Anthropic recommends Voyage AI for embedding generation. Requires separate account/API key. Free to start, easy integration via SDK.</p>
+<p><strong>Key Insight =</strong> Embeddings enable semantic similarity matching rather than keyword matching, allowing better understanding of text relationships for retrieval tasks.</p>
+
+</article>
+<article class="note" id="the-full-rag-flow" data-spy>
+  <h3>The Full RAG Flow<a class="anchor" href="#the-full-rag-flow" aria-label="Link to this section">#</a></h3>
+  <p><strong>RAG Flow =</strong> 7-step process combining text chunking, embeddings, and vector search to retrieve relevant context for LLM queries.</p>
+<p><strong>Step 1:</strong> Text Chunking = Split source documents into separate text pieces Step 2: Generate Embeddings = Convert text chunks into numerical vectors using embedding models Step 3: Normalization = Scale vector magnitudes to 1.0 (handled automatically by embedding APIs) Step 4: Vector Database Storage = Store embeddings in specialized database optimized for numerical vector operations Step 5: Query Processing = Convert user question into embedding using same model Step 6: Similarity Search = Find most similar stored embeddings using cosine similarity calculation Step 7: Prompt Assembly = Combine user question with retrieved relevant text chunks, send to LLM</p>
+<p><strong>Key Math Concepts:</strong></p>
+<ul><li><strong>Cosine Similarity =</strong> cosine of angle between vectors, returns values -1 to 1, closer to 1 means more similar</li><li><strong>Cosine Distance =</strong> 1 minus cosine similarity, values closer to 0 mean higher similarity</li><li><strong>Vector Database =</strong> performs similarity calculations to find closest matching embeddings</li></ul>
+<p><strong>Process Flow:</strong> Pre-processing (steps 1-4) → User Query → Real-time retrieval (steps 5-7) → LLM Response</p>
+
+</article>
+<article class="note" id="implementing-the-rag-flow" data-spy>
+  <h3>Implementing the Rag Flow<a class="anchor" href="#implementing-the-rag-flow" aria-label="Link to this section">#</a></h3>
+  <p><strong>RAG Flow Implementation =</strong> practical walkthrough of 5-step retrieval-augmented generation process</p>
+<p><strong>Step 1:</strong> Text Chunking = split document into sections using chunk_by_section function on report.MD file</p>
+<p><strong>Step 2:</strong> Embedding Generation = create vector representations for each chunk using generate_embedding function (supports single string or list of strings input)</p>
+<p><strong>Step 3:</strong> Vector Store Population = create vector index instance, loop through chunk-embedding pairs using zip(), store each pair with store.add_vector(embedding, {content: chunk}). Store original text with embeddings for meaningful retrieval results.</p>
+<p><strong>Step 4:</strong> Query Processing = user asks question "what did software engineering department do last year", generate embedding for user query</p>
+<p><strong>Step 5:</strong> Similarity Search = use store.search(user_embedding, 2) to find 2 most relevant chunks, returns results with cosine distances (0.71 for section two, 0.72 for methodology section)</p>
+<p><strong>Key Components:</strong></p>
+<ul><li><strong>Vector Index Class =</strong> custom vector database implementation</li><li><strong>Cosine Distance =</strong> similarity metric between query and stored embeddings</li><li><strong>Metadata Storage =</strong> storing original text content alongside embeddings enables meaningful retrieval</li></ul>
+<p>Workflow complete but has limitations requiring further improvements.</p>
+
+</article>
+<article class="note" id="bm25-lexical-search" data-spy>
+  <h3>BM25 Lexical Search<a class="anchor" href="#bm25-lexical-search" aria-label="Link to this section">#</a></h3>
+  <p><strong>BM25 =</strong> Best Match 25, a lexical search algorithm commonly used in RAG pipelines to complement semantic search.</p>
+<p><strong>Problem with semantic search alone =</strong> Can miss exact term matches, returning irrelevant results even when specific terms appear frequently in certain documents.</p>
+<p><strong>Hybrid search approach =</strong> Combines semantic search (embeddings/vector database) with lexical search (BM25) in parallel, then merges results for better balance.</p>
+<p><strong>BM25 algorithm steps:</strong></p>
+<ol><li>Tokenize user query into separate terms (remove punctuation, split on spaces)</li><li>Count frequency of each term across all text chunks/documents</li><li>Assign relative importance to terms based on usage frequency (rare terms = higher importance, common terms like "a" = lower importance)</li><li>Rank text chunks by how often they contain higher-weighted terms</li></ol>
+<p><strong>Key insight =</strong> Frequently used terms across corpus are less important for search relevance than rare, specific terms.</p>
+<p><strong>BM25 advantages =</strong> Better at finding exact term matches, prioritizes documents containing rare/specific search terms, complements semantic search weaknesses.</p>
+<p><strong>Implementation =</strong> Both semantic and lexical search systems use similar APIs (add_document, search functions) making them easy to combine.</p>
+<p><strong>Next step =</strong> Merge results from both search systems to get benefits of semantic understanding plus exact term matching.</p>
+
+</article>
+<article class="note" id="a-multi-index-rag-pipeline" data-spy>
+  <h3>A Multi-Index Rag Pipeline<a class="anchor" href="#a-multi-index-rag-pipeline" aria-label="Link to this section">#</a></h3>
+  <p><strong>Multi-Index RAG Pipeline =</strong> system combining semantic search (vector index) and lexical search (BM25 index) for improved retrieval accuracy.</p>
+<p><strong>Key Components:</strong></p>
+<ul><li><strong>Vector Index =</strong> semantic similarity search using embeddings</li><li><strong>BM25 Index =</strong> lexical/keyword-based search </li><li><strong>Retriever Class =</strong> wrapper that forwards queries to both indexes and merges results</li></ul>
+<p><strong>Reciprocal Rank Fusion =</strong> technique for merging search results from different indexes. Formula: RRF_score = sum of (1/(rank + 1)) across all search methods for each document. Documents ranked by highest combined score.</p>
+<p><strong>Example:</strong> Vector search returns [doc2, doc7, doc6], BM25 returns [doc6, doc2, doc7]. After RRF calculation, final ranking becomes [doc2, doc6, doc7] because doc2 ranked high in both methods.</p>
+<p><strong>Benefits:</strong></p>
+<ul><li>Improved search accuracy by combining different search paradigms</li><li>Modular design with standardized API (search() and add_document() methods)</li><li>Easy to extend with additional search indexes</li><li>Better handling of edge cases where single method fails</li></ul>
+<p>Implementation pattern allows multiple search methodologies to work together while maintaining separate, isolated index classes.</p>
+
+</article>
+<article class="note" id="reranking-results" data-spy>
+  <h3>Reranking Results<a class="anchor" href="#reranking-results" aria-label="Link to this section">#</a></h3>
+  <p><strong>Reranking =</strong> post-processing step that uses LLM to reorder search results by relevance after initial retrieval.</p>
+<p><strong>Process:</strong> Run vector + BM25 search → merge results → pass to LLM with prompt asking to rank documents by relevance → get reordered results.</p>
+<p><strong>Implementation details:</strong> Use document IDs instead of full text for efficiency. LLM receives user query + candidate documents + instruction to return most relevant docs in decreasing order. Assistant message pre-fill + stop sequence ensures structured JSON output.</p>
+<p><strong>Tradeoffs:</strong> Increases search accuracy by leveraging LLM's understanding of semantic relevance. Increases latency due to additional LLM call. Particularly effective when initial retrieval methods miss nuanced query intent (e.g., "ENG team" vs "engineering team").</p>
+<p><strong>Example improvement:</strong> Query "What did engineering team do with incident 2023?" correctly prioritized software engineering section over cybersecurity section after reranking, despite hybrid search initially ranking it lower.</p>
+
+</article>
+<article class="note" id="contextual-retrieval" data-spy>
+  <h3>Contextual Retrieval<a class="anchor" href="#contextual-retrieval" aria-label="Link to this section">#</a></h3>
+  <p><strong>Contextual Retrieval =</strong> technique to improve RAG pipeline accuracy by adding context to document chunks before embedding.</p>
+<p><strong>Problem:</strong> When documents are split into chunks, individual chunks lose context from the original document, reducing retrieval accuracy.</p>
+<p><strong>Solution:</strong> Pre-processing step that adds contextual information to each chunk before inserting into retriever database.</p>
+<p><strong>Process:</strong></p>
+<ol><li>Take individual chunk + original source document</li><li>Send to LLM (Claude) with prompt asking to generate situating context</li><li>LLM generates brief context explaining chunk's relationship to larger document</li><li><strong>Join generated context with original chunk =</strong> "contextualized chunk"</li><li>Use contextualized chunk as input to vector/BM25 indexes</li></ol>
+<p><strong>Large Document Handling:</strong> If source document too large for single prompt, use selective context strategy:</p>
+<ul><li>Include starter chunks (1-3) from document beginning for summary/abstract</li><li>Include chunks immediately before target chunk for local context</li><li>Skip middle chunks that provide less relevant context</li></ul>
+<p><strong>Implementation:</strong> add_context function takes text chunk + source text, generates context via LLM, concatenates context with original chunk, returns contextualized version.</p>
+<p><strong>Benefit:</strong> Chunks retain ties to larger document structure and cross-references, improving retrieval accuracy for complex documents with interconnected sections.</p>
+
+</article>
+</section>
+<section class="group-section">
+  <div class="group-head">
+    <span class="group-eyebrow">Course notes</span>
+    <h2>Claude Features</h2>
+  </div>
+  <article class="note" id="extended-thinking" data-spy>
+  <h3>Extended Thinking<a class="anchor" href="#extended-thinking" aria-label="Link to this section">#</a></h3>
+  <p><strong>Extended Thinking =</strong> Claude feature that allows reasoning time before generating final response</p>
+<p><strong>Key mechanics:</strong></p>
+<ul><li>Displays separate thinking process visible to users</li><li>Increases accuracy for complex tasks but adds cost (charged for thinking tokens) and latency</li><li><strong>Thinking budget =</strong> minimum 1024 tokens allocated for thinking phase</li><li>Max tokens must exceed thinking budget (e.g., budget 1024 requires max_tokens ≥ 1025)</li></ul>
+<p><strong>When to use:</strong></p>
+<ul><li>Enable after prompt optimization fails to achieve desired accuracy</li><li>Use prompt evals to determine necessity</li></ul>
+<p><strong>Response structure:</strong></p>
+<ul><li><strong>Thinking block =</strong> contains reasoning text + cryptographic signature</li><li><strong>Text block =</strong> final response</li><li><strong>Signature =</strong> prevents tampering with thinking text (safety measure)</li></ul>
+<p><strong>Special cases:</strong></p>
+<ul><li><strong>Redacted thinking blocks =</strong> encrypted thinking text flagged by safety systems</li><li>Provided for conversation continuity without losing context</li><li><strong>Can force redacted blocks using test string:</strong> "entropic magic string triggered redacted thinking [special characters]"</li></ul>
+<p><strong>Implementation:</strong></p>
+<ul><li>Set thinking=true and thinking_budget parameter</li><li>Ensure max_tokens &gt; thinking_budget for adequate response generation capacity</li></ul>
+
+</article>
+<article class="note" id="image-support" data-spy>
+  <h3>Image Support<a class="anchor" href="#image-support" aria-label="Link to this section">#</a></h3>
+  <p><strong>Claude Vision Capabilities =</strong> ability to process images within user messages for analysis, comparison, counting, and description tasks.</p>
+<p><strong>Image Limitations:</strong></p>
+<ul><li>Max 100 images per request</li><li>Size/dimension restrictions apply</li><li>Images consume tokens (charged based on pixel height/width calculation)</li></ul>
+<p><strong>Image Block Structure =</strong> special block type within user messages that holds either raw image data (base64) or URL reference to online image. Multiple image blocks allowed per message.</p>
+<p><strong>Critical Success Factor =</strong> strong prompting techniques required for accurate results. Simple prompts often fail.</p>
+<p><strong>Prompting Techniques for Images:</strong></p>
+<ul><li>Step-by-step analysis instructions</li><li>One-shot/multi-shot examples (alternating image and text pairs)</li><li>Clear guidelines and verification steps</li><li>Structured analysis frameworks</li></ul>
+<p><strong>Example Use Case =</strong> automated fire risk assessment from satellite imagery analyzing tree density, property access, roof overhang, and assigning numerical risk scores.</p>
+<p><strong>Implementation =</strong> base64 encode image data, create message with image block (type: image, source: base64, media_type, data) followed by text block containing detailed prompt instructions.</p>
+<p><strong>Key Takeaway =</strong> image accuracy depends entirely on prompt sophistication, not just image quality.</p>
+
+</article>
+<article class="note" id="pdf-support" data-spy>
+  <h3>PDF Support<a class="anchor" href="#pdf-support" aria-label="Link to this section">#</a></h3>
+  <p><strong>PDF Support in Claude:</strong></p>
+<p>Claude can read PDF files directly using similar code to image processing.</p>
+<p><strong>Key implementation changes:</strong></p>
+<ul><li><strong>File type =</strong> "document" instead of "image"</li><li><strong>Media type =</strong> "application/pdf" instead of "image/png"</li><li><strong>Variable naming =</strong> file_bytes instead of image_bytes</li></ul>
+<p><strong>Claude PDF capabilities =</strong> read text + images + charts + tables + mixed content extraction</p>
+<p><strong>PDF processing =</strong> one-stop solution for comprehensive document analysis</p>
+<p><strong>Usage pattern =</strong> same as image input but with document-specific parameters</p>
+
+</article>
+<article class="note" id="citations" data-spy>
+  <h3>Citations<a class="anchor" href="#citations" aria-label="Link to this section">#</a></h3>
+  <p><strong>Citations =</strong> feature allowing Claude to reference source documents and show where information comes from</p>
+<p><strong>Citation types:</strong></p>
+<ul><li><strong>citation_page_location =</strong> for PDF documents, shows document index/title/start page/end page/cited text</li><li><strong>citation_char_location =</strong> for plain text, shows character position in text block</li></ul>
+<p><strong>Implementation:</strong></p>
+<ul><li>Add "citations": {"enabled": true} to request</li><li>Add "title" field to identify source document</li><li>Works with both PDF files and plain text sources</li></ul>
+<p><strong>Response structure =</strong> content becomes list of text blocks, some containing citations arrays with location data</p>
+<p><strong>Purpose =</strong> transparency for users to verify Claude's information sources and check accuracy of interpretations</p>
+<p><strong>UI benefit =</strong> enables citation popups/overlays showing source document, page numbers, and exact cited text when users hover over referenced content</p>
+<p><strong>Key use case =</strong> ensuring users can investigate how Claude builds responses from source materials rather than appearing to speak from memory alone</p>
+
+</article>
+<article class="note" id="prompt-caching" data-spy>
+  <h3>Prompt Caching<a class="anchor" href="#prompt-caching" aria-label="Link to this section">#</a></h3>
+  <p><strong>Prompt Caching =</strong> feature that speeds up Claude's responses and reduces text generation costs by reusing computational work from previous requests.</p>
+<p><strong>Normal request flow:</strong> User sends message → Claude processes input (creates internal data structures, performs calculations) → Claude generates output → Claude discards all processing work → Ready for next request.</p>
+<p><strong>Problem:</strong> When follow-up requests contain identical input messages, Claude must repeat all the same computational work it just threw away, creating inefficiency.</p>
+<p><strong>Solution:</strong> Prompt caching stores the results of input message processing in temporary cache instead of discarding. When identical input appears in subsequent requests, Claude retrieves cached work rather than reprocessing, dramatically speeding response generation.</p>
+<p><strong>Key benefit:</strong> Reuses previous computational work to avoid redundant processing of repeated content.</p>
+
+</article>
+<article class="note" id="rules-of-prompt-caching" data-spy>
+  <h3>Rules of Prompt Caching<a class="anchor" href="#rules-of-prompt-caching" aria-label="Link to this section">#</a></h3>
+  <p><strong>Prompt Caching =</strong> system that saves processing work from initial request to reuse in follow-up requests with identical content</p>
+<p><strong>Core mechanism:</strong> Initial request → Claude processes + saves work to cache → Follow-up requests with identical content → Claude retrieves cached work instead of reprocessing</p>
+<p><strong>Cache duration =</strong> 1 hour maximum</p>
+<p>Cache activation requires manual cache breakpoint addition to message blocks</p>
+<p><strong>Text block formats:</strong></p>
+<ul><li><strong>Shorthand:</strong> content = "text string" (cannot add cache control)</li><li><strong>Longhand:</strong> content = [{"type": "text", "text": "content", "cache_control": {...}}] (required for caching)</li></ul>
+<p><strong>Cache scope =</strong> all content up to and including breakpoint gets cached</p>
+<p><strong>Cache invalidation =</strong> any change in content before breakpoint invalidates entire cache</p>
+<p><strong>Content processing order =</strong> tools → system prompt → messages (joined together)</p>
+<p><strong>Cache breakpoint placement options:</strong></p>
+<ul><li>Tool schemas</li><li>System prompts  </li><li>Message blocks (text, image, tool use, tool result)</li></ul>
+<p><strong>Maximum breakpoints =</strong> 4 per request</p>
+<p><strong>Multiple breakpoints =</strong> create multiple cache layers, partial cache hits possible if only later content changes</p>
+<p><strong>Minimum cache threshold =</strong> 1024 tokens required for content to be cached</p>
+<p><strong>Best use cases =</strong> repeated identical content (system prompts, tool definitions, static message prefixes)</p>
+
+</article>
+<article class="note" id="prompt-caching-in-action" data-spy>
+  <h3>Prompt Caching in Action<a class="anchor" href="#prompt-caching-in-action" aria-label="Link to this section">#</a></h3>
+  <p><strong>Prompt Caching Implementation =</strong> automatically caches tool schemas and system prompts to reduce token usage</p>
+<p><strong>Setup =</strong> modify chat function to enable caching by default for tools and system prompts</p>
+<p><strong>Tool Schema Caching =</strong> add cache_control field with type "ephemeral" to last tool in list. Best practice: create copy of tools list, clone last tool schema, add cache control, then overwrite to avoid modifying original schemas</p>
+<p><strong>System Prompt Caching =</strong> wrap system prompt in text block dictionary with cache_control type "ephemeral"</p>
+<p><strong>Multiple Cache Breakpoints =</strong> can set cache points for both tools and system prompt in single request</p>
+<p><strong>Cache Order =</strong> tools → system prompt → messages</p>
+<p><strong>Token Usage Patterns:</strong></p>
+<ul><li><strong>cache_creation_input_tokens =</strong> tokens written to cache on first use</li><li><strong>cache_read_input_tokens =</strong> tokens retrieved from cache on subsequent identical requests</li><li>Partial cache reads possible when some content matches cached data</li></ul>
+<p><strong>Cache Invalidation =</strong> any change to cached content (tools or system prompt) invalidates cache, forces new cache creation</p>
+<p><strong>Use Cases =</strong> identical content across requests - same tool schemas, system prompts, or message sequences</p>
+
+</article>
+<article class="note" id="code-execution-and-the-files-api" data-spy>
+  <h3>Code Execution and the Files API<a class="anchor" href="#code-execution-and-the-files-api" aria-label="Link to this section">#</a></h3>
+  <p><strong>Files API =</strong> allows uploading files ahead of time and referencing them later via file ID instead of including raw file data in each request. Upload file → get file metadata object with ID → use ID in future requests.</p>
+<p><strong>Code Execution =</strong> server-based tool where Claude executes Python code in isolated Docker containers. No implementation needed, just include predefined tool schema. Claude can run code multiple times, interpret results, generate final response.</p>
+<p><strong>Key constraints:</strong> Docker containers have no network access. Data input/output relies on Files API integration.</p>
+<p><strong>Combined workflow:</strong> Upload file via Files API → get file ID → include ID in container upload block → ask Claude to analyze → Claude writes/executes code with access to uploaded file → returns analysis and results.</p>
+<p>Claude can generate files (plots, reports) inside container that can be downloaded using file IDs returned in response.</p>
+<p><strong>Use cases:</strong> Data analysis, file processing, automated code generation for complex tasks. Response contains code blocks, execution results, and final analysis.</p>
+<p><strong>Implementation:</strong> Use container upload block with file ID, include analysis prompt, Claude handles code execution automatically.</p>
+
+</article>
+</section>
+<section class="group-section">
+  <div class="group-head">
+    <span class="group-eyebrow">Course notes</span>
+    <h2>Model Context Protocol</h2>
+  </div>
+  <article class="note" id="introducing-mcp" data-spy>
+  <h3>Introducing MCP<a class="anchor" href="#introducing-mcp" aria-label="Link to this section">#</a></h3>
+  <p><strong>MCP =</strong> Model Context Protocol, communication layer providing Claude with context and tools without requiring developers to write tedious code.</p>
+<p><strong>Architecture:</strong> MCP client connects to MCP server. Server contains tools, resources, and prompts as internal components.</p>
+<p><strong>Problem solved:</strong> Eliminates burden of authoring/maintaining numerous tool schemas and functions for service integrations. Example: GitHub chatbot would require implementing tools for repositories, pull requests, issues, projects - significant developer effort.</p>
+<p><strong>Solution:</strong> MCP server handles tool definition and execution instead of your application server. MCP servers = interfaces to outside services, wrapping functionality into ready-to-use tools.</p>
+<p><strong>Key benefits:</strong> Developers avoid writing tool schemas and function implementations themselves.</p>
+<p><strong>Common questions:</strong></p>
+<ul><li>Who creates MCP servers? Anyone, often service providers make official implementations (AWS, etc.)</li><li>vs direct API calls? MCP eliminates need to author tool schemas/functions yourself</li><li>vs tool use? MCP and tool use are complementary - MCP handles WHO does the work (server vs developer), both still involve tools</li></ul>
+<p><strong>Core value:</strong> Shifts integration burden from application developers to MCP server maintainers.</p>
+
+</article>
+<article class="note" id="mcp-clients" data-spy>
+  <h3>MCP Clients<a class="anchor" href="#mcp-clients" aria-label="Link to this section">#</a></h3>
+  <p><strong>MCP Client =</strong> communication interface between your server and MCP server, provides access to server's tools</p>
+<p><strong>Transport agnostic =</strong> client/server can communicate via multiple protocols (stdio, HTTP, WebSockets)</p>
+<p><strong>Common setup =</strong> client and server on same machine using standard input/output</p>
+<p><strong>Communication =</strong> message exchange defined by MCP spec</p>
+<p><strong>Key message types:</strong></p>
+<ul><li><strong>list tools request =</strong> client asks server for available tools</li><li><strong>list tools result =</strong> server responds with tool list  </li><li><strong>call tool request =</strong> client asks server to run tool with arguments</li><li><strong>call tool result =</strong> server responds with tool execution result</li></ul>
+<p><strong>Typical flow:</strong></p>
+<ol><li>User queries server</li><li>Server requests tool list from MCP client</li><li>MCP client sends list tools request to MCP server</li><li>MCP server responds with list tools result</li><li>Server sends query + tools to Claude</li><li>Claude requests tool execution</li><li>Server asks MCP client to run tool</li><li>MCP client sends call tool request to MCP server</li><li>MCP server executes tool (e.g. GitHub API call)</li><li><strong>Results flow back through chain:</strong> MCP server → MCP client → server → Claude → user</li></ol>
+<p><strong>Purpose =</strong> enables servers to delegate tool execution to specialized MCP servers while maintaining Claude integration</p>
+
+</article>
+<article class="note" id="project-setup" data-spy>
+  <h3>Project Setup<a class="anchor" href="#project-setup" aria-label="Link to this section">#</a></h3>
+  <p><strong>CLI-based chatbot project =</strong> teaches MCP client-server interaction through hands-on implementation</p>
+<p><strong>Project components:</strong></p>
+<ul><li><strong>MCP client =</strong> connects to custom MCP server</li><li><strong>MCP server =</strong> provides 2 tools (read document, update document)</li><li><strong>Document collection =</strong> fake documents stored in memory only</li></ul>
+<p><strong>Key distinction:</strong> Normal projects implement either client OR server, not both. This project implements both for educational purposes.</p>
+<p><strong>Setup process:</strong></p>
+<ol><li>Download CLI_project.zip starter code</li><li>Extract and open in code editor</li><li>Follow readme.md setup directions</li><li>Add API key to .env file</li><li>Install dependencies (with/without UV)</li><li><strong>Run project:</strong> "uv run main.py" or "python main.py"</li><li>Test with chat prompt</li></ol>
+<p><strong>Expected outcome =</strong> working chat interface that responds to basic queries, ready for MCP feature additions.</p>
+
+</article>
+<article class="note" id="defining-tools-with-mcp" data-spy>
+  <h3>Defining Tools with MCP<a class="anchor" href="#defining-tools-with-mcp" aria-label="Link to this section">#</a></h3>
+  <p>MCP server implementation using Python SDK creates tools through decorators rather than manual JSON schemas.</p>
+<p><strong>MCP Python SDK =</strong> Official package that auto-generates tool JSON schemas from Python function definitions using @mcp.tool decorator.</p>
+<p><strong>Tool definition syntax =</strong> @mcp.tool(name="tool_name", description="description") + function with typed parameters using Field() for argument descriptions.</p>
+<p><strong>Two tools implemented:</strong></p>
+<ol><li><strong>read_doc_contents =</strong> Takes doc_id string, returns document content from in-memory docs dictionary</li><li><strong>edit_document =</strong> Takes doc_id, old_string, new_string parameters, performs find/replace on document content</li></ol>
+<p><strong>Error handling =</strong> Check if doc_id exists in docs dictionary, raise ValueError if not found.</p>
+<p><strong>Key advantage =</strong> SDK eliminates manual JSON schema writing, generates schemas automatically from Python function signatures and decorators.</p>
+<p><strong>Required imports =</strong> Field from pydantic for parameter descriptions, mcp package for server and tool decorators.</p>
+<p><strong>Implementation pattern =</strong> Decorator defines tool metadata, function parameters define tool arguments with types and descriptions, function body contains tool logic.</p>
+
+</article>
+<article class="note" id="the-server-inspector" data-spy>
+  <h3>The Server Inspector<a class="anchor" href="#the-server-inspector" aria-label="Link to this section">#</a></h3>
+  <p><strong>MCP Inspector =</strong> in-browser debugger for testing MCP servers without connecting to applications</p>
+<p><strong>Access:</strong> Run <code>mcp dev [server_file.py]</code> in terminal → opens server on port → navigate to provided URL in browser</p>
+<p><strong>Interface:</strong> Left sidebar has connect button → top menu shows resources/prompts/tools sections → tools section lists available tools → click tool to open right panel for manual testing</p>
+<p><strong>Testing workflow:</strong> Connect to server → navigate to tools → select specific tool → input required parameters → click run tool → verify output</p>
+<p><strong>Key features:</strong> Live development testing, manual tool invocation, parameter input forms, success/failure feedback, no need for full application integration</p>
+<p><strong>Note:</strong> UI actively changing during development, core functionality remains similar</p>
+<p><strong>Example usage:</strong> Test document tools by inputting document IDs, verify read operations, test edit operations, chain operations to verify changes</p>
+<p><strong>Primary benefit:</strong> Debug MCP server implementations efficiently during development phase</p>
+
+</article>
+<article class="note" id="implementing-a-client" data-spy>
+  <h3>Implementing a Client<a class="anchor" href="#implementing-a-client" aria-label="Link to this section">#</a></h3>
+  <p><strong>MCP Client Implementation:</strong></p>
+<p><strong>MCP Client =</strong> wrapper class around client session for resource cleanup and connection management to MCP server</p>
+<p><strong>Client Session =</strong> actual connection to MCP server from MCP Python SDK, requires resource cleanup on close</p>
+<p><strong>Client Purpose =</strong> exposes MCP server functionality to rest of codebase, enables reaching out to server for tool lists and tool execution</p>
+<p><strong>Key Functions:</strong></p>
+<ul><li><strong>list_tools() =</strong> await self.session.list_tools(), return result.tools</li><li><strong>call_tool() =</strong> await self.session.call_tool(tool_name, tool_input)</li></ul>
+<p><strong>Usage Flow =</strong> client gets tool definitions to send to Claude, then executes tools when Claude requests them</p>
+<p><strong>Common Pattern =</strong> wrap client session in larger class for resource management rather than use session directly</p>
+<p><strong>Testing =</strong> can run client file directly with testing harness to verify server connection and tool retrieval</p>
+<p><strong>Integration =</strong> other code in project calls client functions to interact with MCP server, enabling Claude to inspect/edit documents through defined tools</p>
+
+</article>
+<article class="note" id="defining-resources" data-spy>
+  <h3>Defining Resources<a class="anchor" href="#defining-resources" aria-label="Link to this section">#</a></h3>
+  <p><strong>MCP Resources =</strong> mechanism allowing MCP servers to expose data to clients for read operations</p>
+<p><strong>Resource Types =</strong> 2 types: direct (static URI like "docs://documents") and templated (parameterized URI like "docs://documents/{doc_id}")</p>
+<p><strong>URI =</strong> address/identifier for accessing specific resource, defined when creating resource</p>
+<p><strong>Resource Flow =</strong> client sends read resource request with URI → server matches URI to function → server executes function → returns data in read resource result</p>
+<p><strong>Implementation =</strong> use @mcp.resource decorator with URI and MIME type parameters</p>
+<p><strong>MIME Types =</strong> hint to client about returned data format (application/json for structured data, text/plain for plain text)</p>
+<p><strong>Templated Resources =</strong> URI parameters automatically parsed by SDK and passed as keyword arguments to handler function</p>
+<p><strong>Resource vs Tools =</strong> resources provide data proactively (fetch document contents when @ mentioned), tools perform actions reactively (when Claude decides to call them)</p>
+<p><strong>Data Return =</strong> SDK automatically serializes returned data to strings, client responsible for deserialization</p>
+<p><strong>Testing =</strong> MCP inspector can list direct resources separately from templated resources, allows testing individual resource calls</p>
+
+</article>
+<article class="note" id="accessing-resources" data-spy>
+  <h3>Accessing Resources<a class="anchor" href="#accessing-resources" aria-label="Link to this section">#</a></h3>
+  <p><strong>MCP Resource Access Implementation:</strong></p>
+<p><strong>Resource Reading Function =</strong> client-side function to request and parse resources from MCP server</p>
+<p><strong>Function Parameters =</strong> URI (resource identifier)</p>
+<p><strong>Implementation Steps:</strong></p>
+<ul><li>Import json module + AnyURL from pydantic</li><li>Call await self.session.read_resource(AnyURL(uri))</li><li>Extract first element from result.contents[0]</li><li>Check resource.mime_type for parsing strategy</li></ul>
+<p><strong>Content Parsing Logic:</strong></p>
+<ul><li>If mime_type == "application/json" → return json.loads(resource.text)</li><li>Otherwise → return resource.text (plain text)</li></ul>
+<p><strong>Server Response Structure =</strong> result.contents list with first element containing type/mime_type metadata</p>
+<p><strong>Resource Integration =</strong> MCP client functions called by other application components to fetch document contents for prompts</p>
+<p><strong>End Result =</strong> Document contents automatically included in Claude prompts without requiring tool calls</p>
+<p><strong>Key Point =</strong> Resources expose server information directly to clients through structured request/response pattern</p>
+
+</article>
+<article class="note" id="defining-prompts" data-spy>
+  <h3>Defining Prompts<a class="anchor" href="#defining-prompts" aria-label="Link to this section">#</a></h3>
+  <p><strong>MCP Prompts =</strong> Pre-defined, tested prompt templates that MCP servers expose to client applications for specialized tasks.</p>
+<p><strong>Purpose =</strong> Instead of users writing ad-hoc prompts, server authors create high-quality, evaluated prompts tailored to their server's domain.</p>
+<p><strong>Implementation =</strong> Use @mcpserver.prompt decorator with name/description, define function that returns list of messages (user/assistant messages that can be sent directly to Claude).</p>
+<p><strong>Example Use Case =</strong> Document formatting prompt that takes document ID, instructs Claude to read document using tools, reformat to markdown, and save changes.</p>
+<p><strong>Key Benefits =</strong> Server-specific expertise, pre-tested quality, reusable across client applications, better results than user-generated prompts.</p>
+<p><strong>Message Structure =</strong> Returns base.UserMessage objects containing the formatted prompt text with interpolated parameters.</p>
+<p><strong>Client Integration =</strong> Prompts appear as autocomplete options (slash commands) in client applications, prompt user for required parameters, then execute the pre-built prompt workflow.</p>
+
+</article>
+<article class="note" id="prompts-in-the-client" data-spy>
+  <h3>Prompts in the Client<a class="anchor" href="#prompts-in-the-client" aria-label="Link to this section">#</a></h3>
+  <p><strong>MCP Client Prompt Implementation:</strong></p>
+<p><strong>List prompts =</strong> await self.session.list_prompts(), return result.prompts Get prompt = await self.session.get_prompt(prompt_name, arguments), return result.messages</p>
+<p><strong>Prompt workflow:</strong></p>
+<ol><li>Define prompt in MCP server with expected arguments (e.g., document_id)</li><li>Client calls get_prompt with prompt name + arguments dictionary</li><li>Arguments passed as keyword arguments to prompt function</li><li>Function interpolates arguments into prompt text</li><li>Returns messages array for direct feeding to LLM</li></ol>
+<p><strong>Key concept:</strong> Prompts are server-defined templates that clients can invoke with specific arguments to generate contextualized instructions for LLMs. Arguments flow from client call → prompt function → interpolated prompt text → LLM consumption.</p>
+
+</article>
+</section>
+<section class="group-section">
+  <div class="group-head">
+    <span class="group-eyebrow">Course notes</span>
+    <h2>Anthropic Apps: Claude Code &amp; Computer Use</h2>
+  </div>
+  <article class="note" id="anthropic-apps" data-spy>
+  <h3>Anthropic Apps<a class="anchor" href="#anthropic-apps" aria-label="Link to this section">#</a></h3>
+  <p><strong>Anthropic Apps =</strong> two deployed applications by Anthropic: Claude Code and Computer Use.</p>
+<p><strong>Claude Code =</strong> terminal-based coding assistant that serves as example of agent architecture.</p>
+<p><strong>Computer Use =</strong> toolset that expands Claude's capabilities beyond text generation.</p>
+<p><strong>Key purpose =</strong> these apps demonstrate agent concepts and provide practical examples for understanding agent design and implementation.</p>
+<p><strong>Setup process =</strong> involves terminal configuration for Claude Code usage on sample projects.</p>
+<p><strong>Agent connection =</strong> both applications exemplify how agents work, serving as learning models for building effective agents.</p>
+
+</article>
+<article class="note" id="claude-code-setup" data-spy>
+  <h3>Claude Code Setup<a class="anchor" href="#claude-code-setup" aria-label="Link to this section">#</a></h3>
+  <p><strong>Claude Code =</strong> terminal-based coding assistant program that helps with code-related tasks</p>
+<p><strong>Core capabilities =</strong> search/read/edit files + advanced tools (web fetching, terminal access) + MCP client support for expanded functionality via MCP servers</p>
+<p><strong>Setup process:</strong></p>
+<ol><li>Install Node.js (check with "npm help" command)</li><li>Run npm install to install Claude Code</li><li>Execute "claude" command in terminal to login to Anthropic account</li></ol>
+<p><strong>Full setup guide =</strong> docs.anthropic.com</p>
+<p><strong>MCP client functionality =</strong> can consume tools from MCP servers to extend capabilities beyond basic file operations</p>
+
+</article>
+<article class="note" id="claude-code-in-action" data-spy>
+  <h3>Claude Code in Action<a class="anchor" href="#claude-code-in-action" aria-label="Link to this section">#</a></h3>
+  <p><strong>Claude Code =</strong> AI coding assistant that functions as a collaborative engineer on projects, not just a code generator.</p>
+<p><strong>Key capabilities:</strong> project setup, feature design, code writing, testing, deployment, error fixing in production.</p>
+<p><strong>Setup workflow:</strong></p>
+<ul><li>Download project, open in editor</li><li>Run <code>claude</code> command to launch</li><li>Ask Claude to read README and execute setup directions</li><li><strong>Run <code>init</code> command =</strong> Claude scans codebase for architecture/coding style, creates claude.md file</li><li><strong>claude.md =</strong> automatically included context for future requests</li></ul>
+<p><strong>Memory types:</strong> Project (shared), Local, User memory files.</p>
+<p><strong>Context management:</strong></p>
+<ul><li>Use # symbol to add specific notes to memory</li><li>Can manually edit claude.md or rerun init to update</li><li>Claude can handle Git operations (staging, committing)</li></ul>
+<p><strong>Effective prompting strategies:</strong></p>
+<p><strong>Method 1 - Three-step workflow:</strong></p>
+<ol><li>Identify relevant files, ask Claude to analyze them</li><li>Describe feature, ask Claude to plan solution (no code yet)</li><li>Ask Claude to implement the plan</li></ol>
+<p><strong>Method 2 - Test-driven development:</strong></p>
+<ol><li>Provide relevant context</li><li>Ask Claude to suggest tests for the feature</li><li>Select and implement chosen tests</li><li>Ask Claude to write code until tests pass</li></ol>
+<p><strong>Core principle:</strong> Claude Code = effort multiplier. More detailed instructions = significantly better results. Treat as collaborative engineer, not just code generator.</p>
+
+</article>
+<article class="note" id="enhancements-with-mcp-servers" data-spy>
+  <h3>Enhancements with MCP Servers<a class="anchor" href="#enhancements-with-mcp-servers" aria-label="Link to this section">#</a></h3>
+  <p><strong>Claude Code =</strong> AI assistant with embedded MCP (Model Context Protocol) client that can connect to MCP servers to expand functionality.</p>
+<p><strong>MCP Server Integration =</strong> Connect external tools/services to Claude Code via command: <code>claude mcp add [server-name] [startup-command]</code> </p>
+<p><strong>Example Implementation =</strong> Document processing server exposing "Document Path to Markdown" tool, allowing Claude Code to read PDF/Word documents by running <code>uv run main.py</code> </p>
+<p><strong>Dynamic Capability Expansion =</strong> MCP servers add new functions to Claude Code in real-time without core modifications.</p>
+<p><strong>Common Use Cases =</strong> Production monitoring (Sentry), project management (Jira), communication (Slack), custom development workflow tools.</p>
+<p><strong>Key Benefit =</strong> Significant flexibility increase for development workflows through modular server connections.</p>
+<p><strong>Setup Process =</strong> 1) Create MCP server with tools, 2) Add server to Claude Code with name and startup command, 3) Restart Claude Code to access new capabilities.</p>
+
+</article>
+<article class="note" id="parallelizing-claude-code" data-spy>
+  <h3>Parallelizing Claude Code<a class="anchor" href="#parallelizing-claude-code" aria-label="Link to this section">#</a></h3>
+  <p><strong>Parallelizing Claude Code =</strong> running multiple Claude instances simultaneously to complete different tasks in parallel</p>
+<p><strong>Core Problem =</strong> multiple Claude instances modifying same files simultaneously creates conflicts and invalid code</p>
+<p><strong>Solution =</strong> Git work trees providing isolated workspaces per Claude instance</p>
+<p><strong>Git Work Trees =</strong> feature creating complete project copies in separate directories, each corresponding to different Git branches</p>
+<p><strong>Workflow =</strong> create work tree → assign task to Claude instance → work in isolation → commit changes → merge back to main branch</p>
+<p><strong>Custom Commands =</strong> automating work tree creation/management through .claude/commands directory with markdown files containing prompts</p>
+<p><strong>Command Structure =</strong> .claude/commands/filename.md with $ARGUMENTS placeholder for dynamic values</p>
+<p><strong>Parallel Execution Benefits =</strong> single developer commanding virtual team of software engineers, major productivity scaling limited only by engineer's management capacity</p>
+<p><strong>Merge Conflicts =</strong> Claude automatically resolves conflicts during branch merging process</p>
+<p><strong>Cleanup =</strong> Claude handles work tree removal after feature completion</p>
+<p><strong>Key Advantage =</strong> scales to unlimited parallel instances based on developer's capacity to manage simultaneous tasks</p>
+
+</article>
+<article class="note" id="automated-debugging" data-spy>
+  <h3>Automated Debugging<a class="anchor" href="#automated-debugging" aria-label="Link to this section">#</a></h3>
+  <p><strong>Automated Debugging =</strong> using AI (Claude) to automatically detect, analyze, and fix production errors without manual intervention.</p>
+<p><strong>Core Workflow:</strong></p>
+<ol><li>GitHub Action runs daily to check production environment</li><li>Fetches CloudWatch logs from last 24 hours</li><li>Claude identifies errors, deduplicates them</li><li>Claude analyzes each error and generates fixes</li><li>Creates pull request with proposed solutions</li></ol>
+<p><strong>Key Components:</strong></p>
+<ul><li>GitHub Actions for scheduling/automation</li><li>AWS CLI for log retrieval</li><li>Claude Code for error analysis and code fixes</li><li>CloudWatch for production error monitoring</li></ul>
+<p><strong>Benefits:</strong></p>
+<ul><li>Catches production-only errors (issues not present in development)</li><li>Reduces manual log hunting and debugging time</li><li>Provides context-aware fixes with explanations</li><li>Creates reviewable pull requests for changes</li></ul>
+<p><strong>Common Use Case:</strong> Configuration errors between environments (invalid model IDs, API keys, etc. that work locally but fail in production)</p>
+<p><strong>Implementation Requirements:</strong> Repository access, cloud logging service, AI coding assistant, CI/CD pipeline integration.</p>
+
+</article>
+<article class="note" id="computer-use" data-spy>
+  <h3>Computer Use<a class="anchor" href="#computer-use" aria-label="Link to this section">#</a></h3>
+  <p><strong>Computer Use =</strong> Claude's ability to interact with computer interfaces through visual observation and control actions.</p>
+<p><strong>Key capabilities:</strong></p>
+<ul><li>Takes screenshots of applications/browsers</li><li>Clicks buttons, types text, navigates interfaces</li><li>Follows multi-step instructions autonomously</li><li>Performs QA testing and automation tasks</li></ul>
+<p><strong>How it works:</strong></p>
+<ul><li>Runs in isolated Docker container environment</li><li>User provides instructions via chat interface</li><li>Claude observes screen visually and executes actions</li><li>Generates reports on task completion/results</li></ul>
+<p><strong>Primary use cases:</strong></p>
+<ul><li>Automated QA testing of web applications</li><li>UI interaction testing across different scenarios</li><li>Time-saving for repetitive computer tasks</li><li>Bug identification through systematic testing</li></ul>
+<p><strong>Setup requirement =</strong> Reference implementation available for local testing</p>
+<p><strong>Example workflow:</strong> User describes testing requirements → Claude navigates to application → Executes test cases → Reports pass/fail results with detailed findings</p>
+
+</article>
+<article class="note" id="how-computer-use-works" data-spy>
+  <h3>How Computer Use Works<a class="anchor" href="#how-computer-use-works" aria-label="Link to this section">#</a></h3>
+  <p><strong>Computer use =</strong> tool system implementation allowing Claude to interact with computing environments</p>
+<p><strong>Tool use flow:</strong> User sends message + tool schema → Claude responds with tool use request (ID, name, input) → Server executes code → Result sent back to Claude as tool result</p>
+<p><strong>Computer use follows identical flow:</strong></p>
+<ul><li>Special tool schema sent to Claude (small schema expands to larger structure behind scenes)</li><li>Expanded schema includes action function with arguments: mouse move, left click, screenshot, etc.</li><li>Claude sends tool use request</li><li>Developers must fulfill request via computing environment (typically Docker container)</li><li>Container executes programmatic key presses/mouse movements</li><li>Response sent back to Claude</li></ul>
+<p><strong>Key points:</strong></p>
+<ul><li>Claude doesn't directly manipulate computers</li><li><strong>Computer use =</strong> tool system + developer-provided computing environment</li><li>Anthropic provides reference implementation (Docker container with pre-built mouse/keyboard execution code)</li><li>Setup requires Docker + simple command execution</li><li>Enables direct chat interface for testing Claude's computer use functionality</li></ul>
+<p><strong>Computer use =</strong> abstraction layer where tool system handles Claude communication while Docker container handles actual computer interactions.</p>
+
+</article>
+</section>
+<section class="group-section">
+  <div class="group-head">
+    <span class="group-eyebrow">Course notes</span>
+    <h2>Agents and Workflows</h2>
+  </div>
+  <article class="note" id="agents-and-workflows" data-spy>
+  <h3>Agents and Workflows<a class="anchor" href="#agents-and-workflows" aria-label="Link to this section">#</a></h3>
+  <p><strong>Workflows and agents =</strong> strategies for handling user tasks that can't be completed by Claude in a single request.</p>
+<p><strong>Decision rule:</strong> Use workflows when you have precise task understanding and know exact steps sequence. Use agents when task details are unclear.</p>
+<p><strong>Workflow =</strong> series of calls to Claude for specific problems where steps are predetermined.</p>
+<p><strong>Example workflow:</strong> Image to 3D model converter</p>
+<ul><li><strong>Step 1:</strong> Claude describes uploaded image in detail</li><li><strong>Step 2:</strong> Claude uses CADQuery Python library to model object from description</li><li><strong>Step 3:</strong> Create rendering of model</li><li><strong>Step 4:</strong> Claude compares rendering to original image</li><li><strong>Step 5:</strong> If inaccurate, repeat from step 2 with feedback</li></ul>
+<p><strong>This follows evaluator-optimizer pattern:</strong></p>
+<ul><li><strong>Producer =</strong> generates output (Claude + CADQuery modeling)</li><li><strong>Evaluator =</strong> assesses output quality (comparison step)</li><li>Loop continues until evaluator accepts output</li></ul>
+<p><strong>Key point:</strong> Workflows are implementation patterns that other engineers have successfully used. Identifying workflow patterns doesn't automatically implement them - you still need to write the actual code.</p>
+
+</article>
+<article class="note" id="parallelization-workflows" data-spy>
+  <h3>Parallelization Workflows<a class="anchor" href="#parallelization-workflows" aria-label="Link to this section">#</a></h3>
+  <p><strong>Parallelization Workflows =</strong> breaking one complex task into multiple simultaneous subtasks, then aggregating results.</p>
+<p><strong>Example:</strong> Material selection for parts</p>
+<ul><li><strong>Instead of:</strong> One large prompt asking Claude to choose between metal/polymer/ceramic/composite with all criteria</li><li><strong>Use:</strong> Separate parallel requests, each evaluating one material's suitability, then final aggregation step to compare results</li></ul>
+<p><strong>Structure:</strong> Input → Multiple parallel subtasks → Aggregator → Final output</p>
+<p><strong>Benefits:</strong></p>
+<ul><li><strong>Focus =</strong> Each subtask handles one specific analysis instead of juggling multiple considerations</li><li><strong>Modularity =</strong> Individual prompts can be improved/evaluated separately  </li><li><strong>Scalability =</strong> Easy to add new subtasks without affecting existing ones</li><li><strong>Quality =</strong> Reduces confusion from overly complex single prompts</li></ul>
+<p><strong>Key principle:</strong> Decompose complex decisions into specialized parallel analyses, then synthesize results.</p>
+
+</article>
+<article class="note" id="chaining-workflows" data-spy>
+  <h3>Chaining Workflows<a class="anchor" href="#chaining-workflows" aria-label="Link to this section">#</a></h3>
+  <p><strong>Chaining Workflows =</strong> breaking large tasks into series of distinct sequential steps rather than single complex prompt</p>
+<p><strong>Core concept:</strong> Instead of one massive prompt with multiple requirements, split into separate calls where each focuses on one specific subtask.</p>
+<p><strong>Example workflow:</strong> User enters topic → search trending topics → Claude selects most interesting → Claude researches topic → Claude writes script → generate video → post to social media</p>
+<p><strong>Key benefit:</strong> Allows AI to focus on individual tasks rather than juggling multiple constraints simultaneously</p>
+<p><strong>Primary use case:</strong> When Claude consistently ignores constraints in complex prompts despite repetition. Common with long prompts containing many "don't do X" requirements.</p>
+<p><strong>Problem scenario:</strong> Long prompt with constraints (don't mention AI, no emojis, professional tone) → Claude violates some constraints regardless of repetition</p>
+<p><strong>Solution:</strong> Step 1 - Send initial prompt, accept imperfect output. Step 2 - Follow-up prompt asking Claude to rewrite based on specific violations found.</p>
+<p><strong>Critical insight:</strong> Even simple-seeming workflow becomes essential when dealing with constraint-heavy prompts that AI struggles to follow completely in single pass.</p>
+
+</article>
+<article class="note" id="routing-workflows" data-spy>
+  <h3>Routing Workflows<a class="anchor" href="#routing-workflows" aria-label="Link to this section">#</a></h3>
+  <p><strong>Routing Workflows =</strong> workflow pattern that categorizes user input to determine appropriate processing pipeline</p>
+<p><strong>Key mechanism:</strong> Initial request to Claude categorizes user input into predefined genres/categories. Based on categorization response, system routes to specialized processing pipeline with customized prompts/tools.</p>
+<p><strong>Example flow:</strong></p>
+<ol><li>User enters topic (e.g., "Python functions")</li><li>Claude categorizes topic (e.g., "educational")</li><li>System uses educational-specific prompt template</li><li>Claude generates script with educational tone/structure</li></ol>
+<p><strong>Benefits:</strong> Ensures output matches topic nature. Programming topics get educational treatment with definitions/explanations. Entertainment topics get trendy language/engaging hooks.</p>
+<p><strong>Structure:</strong> One routing step → Multiple specialized processing pipelines → Each pipeline has customized prompts/tools for specific category</p>
+<p><strong>Use case:</strong> Social media video script generation where different topics require different tones and approaches.</p>
+
+</article>
+<article class="note" id="agents-and-tools" data-spy>
+  <h3>Agents and Tools<a class="anchor" href="#agents-and-tools" aria-label="Link to this section">#</a></h3>
+  <p><strong>Agents =</strong> AI systems that create plans to complete tasks using provided tools, effective when exact steps are unknown. Workflows = better when precise steps are known.</p>
+<p><strong>Key differences:</strong> Workflows require predetermined steps, agents dynamically plan using available tools.</p>
+<p><strong>Agent advantages:</strong> Flexibility to solve variety of tasks with same toolset, can combine tools in unexpected ways.</p>
+<p><strong>Tool abstraction principle:</strong> Provide generic/abstract tools rather than hyper-specialized ones. Example - Claude code uses bash, web_fetch, file_write (abstract) rather than refactor_tool, install_dependencies (specialized).</p>
+<p><strong>Tool combination examples:</strong> get_current_datetime + add_duration + set_reminder can solve various time-related tasks through different combinations.</p>
+<p><strong>Agent behavior:</strong> Can request additional information when needed, combines tools creatively to achieve goals, works best with small set of flexible tools.</p>
+<p><strong>Design approach:</strong> Give agent abstract tools that can be pieced together rather than single-purpose specialized tools. This enables dynamic problem-solving and unexpected use cases.</p>
+
+</article>
+<article class="note" id="environment-inspection" data-spy>
+  <h3>Environment Inspection<a class="anchor" href="#environment-inspection" aria-label="Link to this section">#</a></h3>
+  <p><strong>Environment Inspection =</strong> agents evaluating their environment and action results to understand progress and handle errors.</p>
+<p><strong>Core concept:</strong> After each action, agents need feedback mechanisms beyond basic tool returns to understand new environment state.</p>
+<p><strong>Computer use example:</strong> Claude takes screenshot after every action (typing, clicking) to see how environment changed, since it cannot predict exact results of actions like button clicks.</p>
+<p><strong>Code editing example:</strong> Before modifying files, agents must read current file contents to understand existing state.</p>
+<p><strong>Social media video agent applications:</strong></p>
+<ul><li>Use Whisper CPP via bash to generate timestamped captions, verify dialogue placement</li><li>Use FFmpeg to extract video screenshots at intervals, inspect visual results</li><li>Validate video creation meets expectations before posting</li></ul>
+<p><strong>Key benefit:</strong> Environment inspection enables agents to gauge task progress, detect errors, and adapt to unexpected results rather than operating blindly.</p>
+
+</article>
+<article class="note" id="workflows-vs-agents" data-spy>
+  <h3>Workflows vs Agents<a class="anchor" href="#workflows-vs-agents" aria-label="Link to this section">#</a></h3>
+  <p><strong>Workflows =</strong> pre-defined series of calls to Claude with known exact steps. Agents = flexible approach using basic tools that Claude combines to complete unknown tasks.</p>
+<p><strong>Key differences:</strong></p>
+<p><strong>Task division:</strong> Workflows break big tasks into smaller, specific subtasks enabling higher focus and accuracy. Agents handle varied challenges creatively without predetermined steps.</p>
+<p><strong>Testing/evaluation:</strong> Workflows easier to test due to known execution sequence. Agents harder to test since execution path unpredictable.</p>
+<p><strong>User experience:</strong> Workflows require specific inputs. Agents create own inputs from user queries and can request additional input when needed.</p>
+<p><strong>Success rates:</strong> Workflows = higher task completion rates due to structured approach. Agents = lower completion rates due to delegated complexity.</p>
+<p><strong>Recommendation:</strong> Prioritize workflows for reliability. Use agents only when flexibility truly required. Users want 100% working products over fancy agents.</p>
+<p><strong>Core principle:</strong> Solve problems reliably first, innovation second.</p>
+
+</article>
+</section>
+    <footer class="page-foot">
+      <p><a href="../study-companion/index.html">&larr; Back to the study companion</a> &middot; <a href="../index.html">CCA-F study system home</a></p>
+    </footer>
+  </main>
+</div>
+<script>
+function toggleTheme() {
+  var html = document.documentElement;
+  var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  try { localStorage.setItem('ccaf-theme', next); } catch (e) {}
+  var btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = next === 'dark' ? '☀️' : '🌙';
+}
+(function () {
+  var btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+})();
+</script>
+<script>
+(function () {
+  var sections = Array.prototype.slice.call(document.querySelectorAll('[data-spy]'));
+  var navLinks = Array.prototype.slice.call(document.querySelectorAll('.nav-link'));
+  var OFFSET = 40;
+  function update() {
+    var current = null;
+    for (var i = 0; i < sections.length; i++) {
+      if (sections[i].getBoundingClientRect().top <= OFFSET) current = sections[i]; else break;
+    }
+    if (!current) return;
+    var id = '#' + current.id;
+    navLinks.forEach(function (l) { l.classList.toggle('active', l.getAttribute('href') === id); });
+  }
+  var ticking = false;
+  window.addEventListener('scroll', function () {
+    if (!ticking) { window.requestAnimationFrame(function () { update(); ticking = false; }); ticking = true; }
+  }, { passive: true });
+  update();
+})();
+</script>
+</body>
+</html>

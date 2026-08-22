@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>(function(){try{var t=localStorage.getItem('ccaf-theme');if(!t){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<title>Claude Code in Action — Course Notes</title>
+<style>
+:root {
+  --ink: #242321;
+  --muted: #706b63;
+  --paper: #f7f3ec;
+  --paper-deep: #ece4d7;
+  --rust: #a84e31;
+  --rust-dark: #7d3825;
+  --line: #d6ccbd;
+  --white: #fffdfa;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #ece7de;
+  --muted: #a89d8f;
+  --paper: #17140f;
+  --paper-deep: #221e17;
+  --line: #3a3327;
+  --white: #211d16;
+  --rust-dark: #c96549;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 17px/1.7 Georgia, 'Times New Roman', serif;
+}
+a { color: var(--rust-dark); }
+code { background: var(--paper-deep); color: var(--ink); padding: .08em .28em; border-radius: 3px; font-size: .92em; }
+pre { background: var(--paper-deep); border: 1px solid var(--line); border-radius: 4px; padding: 12px 14px; overflow-x: auto; }
+pre code { background: none; padding: 0; }
+
+.layout { display: grid; grid-template-columns: 270px minmax(0, 1fr); max-width: 1180px; margin: 0 auto; }
+
+.sidebar {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 26px 16px 26px 22px; border-right: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 18px;
+  font: 15px/1.4 Georgia, serif;
+}
+.home-link { display: inline-flex; align-items: center; gap: 5px; font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
+.home-link:hover { color: var(--rust-dark); }
+.brand-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.brand { font: 700 1.15rem/1.3 Georgia, serif; }
+.brand .sub { display: block; margin-top: 5px; font: 600 11px/1.3 system-ui, sans-serif; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+.theme-toggle {
+  flex: none; width: 28px; height: 28px; padding: 0; margin: 0; border-radius: 999px;
+  border: 1px solid var(--line); background: none; color: var(--muted);
+  font-size: 13px; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+}
+.theme-toggle:hover, .theme-toggle:focus-visible { background: var(--paper-deep); outline: none; }
+.nav { display: flex; flex-direction: column; gap: 1px; }
+.nav-group-label { margin: 12px 0 2px; padding: 0 10px; font: 700 11px/1.3 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.nav-group-label:first-child { margin-top: 0; }
+.nav-link {
+  display: flex; align-items: baseline; gap: 9px; padding: 6px 10px; border-radius: 5px;
+  color: var(--ink); text-decoration: none; font-size: .88rem;
+}
+.nav-link:hover { background: var(--paper-deep); }
+.nav-link.active { background: var(--paper-deep); color: var(--rust-dark); font-weight: 700; }
+.nav-num { font: 600 .72rem/1 system-ui, sans-serif; color: var(--rust-dark); min-width: 1.6em; }
+.sidebar-foot { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); font-size: .78rem; color: var(--muted); }
+
+main { min-width: 0; padding: 0 0 70px; }
+.hero { padding: 54px 48px 34px; border-bottom: 1px solid var(--line); }
+.hero .kicker { font: 700 12px/1.2 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--rust-dark); }
+.hero h1 { font: 700 clamp(1.9rem, 4vw, 2.8rem)/1.1 Georgia, serif; margin: 14px 0 14px; letter-spacing: -.02em; max-width: 20ch; }
+.hero p { max-width: 66ch; color: var(--muted); font-size: 1.03rem; margin: 0 0 10px; }
+.hero .meta { margin-top: 18px; display: flex; gap: 20px; flex-wrap: wrap; font: 600 12px/1.3 system-ui, sans-serif; color: var(--muted); letter-spacing: .02em; }
+.hero .meta b { color: var(--rust-dark); }
+
+.group-section { padding: 44px 48px 6px; border-bottom: 1px solid var(--line); }
+.group-head { max-width: 70ch; margin-bottom: 24px; }
+.group-eyebrow { font: 700 11px/1.3 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.group-head h2 { font: 700 clamp(1.3rem, 2.4vw, 1.7rem)/1.25 Georgia, serif; margin: 6px 0 0; }
+
+article.note { max-width: 740px; margin: 0 0 34px; padding-bottom: 4px; }
+article.note h3 { font: 700 1.15rem/1.3 Georgia, serif; margin: 0 0 12px; scroll-margin-top: 14px; }
+article.note h3 a.anchor { color: var(--muted); text-decoration: none; font-size: .8em; margin-left: 6px; opacity: 0; }
+article.note h3:hover a.anchor { opacity: 1; }
+article.note p { margin: 0 0 10px; max-width: 68ch; }
+article.note ul, article.note ol { margin: 0 0 14px; padding-left: 1.2em; }
+article.note li { margin: 0 0 6px; font-size: .97rem; }
+article.note strong { color: var(--rust-dark); }
+
+footer.page-foot { padding: 40px 48px 60px; color: var(--muted); font-size: .9rem; max-width: 66ch; }
+footer.page-foot a { color: var(--rust-dark); }
+
+@media (max-width: 880px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--line); }
+  .hero, .group-section, footer.page-foot { padding-left: 22px; padding-right: 22px; }
+}
+.autohide-header { transition: transform .28s ease; will-change: transform; }
+.autohide-header--hidden { transform: translateY(-100%); }
+</style>
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar">
+    <a class="home-link" href="../index.html">&larr; CCA-F study system</a>
+    <div class="brand-row">
+      <div class="brand">Claude Code in Action<span class="sub">Course notes &middot; Section 07</span></div>
+      <button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button>
+    </div>
+    <div class="nav">
+      <div class="nav-group-label">Steering &amp; Context</div>
+<a class="nav-link" href="#steering-long-sessions">Steering Long Sessions</a>
+<a class="nav-link" href="#a-claudemd-that-follows">A CLAUDE.md That Follows</a>
+<a class="nav-link" href="#verification-skills">Verification Skills</a>
+<div class="nav-group-label">Automation &amp; Safety</div>
+<a class="nav-link" href="#permission-modes">Permission Modes</a>
+<a class="nav-link" href="#hooks">Hooks</a>
+<a class="nav-link" href="#routines-and-headless">Routines and Headless</a>
+<a class="nav-link" href="#github-actions-and-code-review">GitHub Actions and Code Review</a>
+<a class="nav-link" href="#trust-it-verifying-unsupervised-runs">Trust It: Verifying Unsupervised Runs</a>
+<a class="nav-link" href="#plugins">Plugins</a>
+    </div>
+    <div class="sidebar-foot">
+      Full notes converted from <code>anthropic-notes.md</code>. See the <a href="../study-companion/index.html">study companion</a> for distilled takeaways linking back here.
+    </div>
+  </nav>
+  <main>
+    <div class="hero">
+      <span class="kicker">Section 07 &middot; Course notes</span>
+      <h1>Claude Code in Action</h1>
+      <p>The full condensed course notes for this section, one lesson per heading, with a link icon on every heading for direct citation from the study companion.</p>
+      <div class="meta"><span><b>9</b> lessons</span><span><b>2</b> topic groups</span></div>
+    </div>
+    <section class="group-section">
+  <div class="group-head">
+    <span class="group-eyebrow">Course notes</span>
+    <h2>Steering &amp; Context</h2>
+  </div>
+  <article class="note" id="steering-long-sessions" data-spy>
+  <h3>Steering Long Sessions<a class="anchor" href="#steering-long-sessions" aria-label="Link to this section">#</a></h3>
+  <p>Long tasks (multi-file refactors, new features) can run for hours - two habits keep them on track: scope first, steer while running.</p>
+<p><strong>Scope with plan mode:</strong></p>
+<ul><li>Claude researches in read-only mode and hands you a plan to review before writing any code</li><li>Actually read the plan, don't skim - a thorough plan means fewer surprises during execution</li><li>Iterating on a plan is much faster than letting Claude run and cleaning up after</li></ul>
+<p><strong>Steer with compaction:</strong></p>
+<ul><li>/compact summarizes the conversation, uses the summary as new context, deletes old messages</li><li><strong>Risk:</strong> something important gets dropped and Claude drifts</li><li>Add instructions after the command to shape the summary (e.g., "/compact Focus on the --version flag implementation")</li></ul>
+<p><strong>Rewind (recover from wrong paths):</strong></p>
+<ul><li>Every user prompt creates a checkpoint; double-tap escape on an empty prompt opens the rewind menu</li><li><strong>Options:</strong> restore code and conversation, restore conversation only, restore code only</li><li>"Summarize from here" compresses everything after a checkpoint (good for side conversations)</li><li>"Summarize up to here" compresses everything before it (good for long setup phases)</li></ul>
+<p><strong>Autonomous options:</strong></p>
+<ul><li>/goal sets a completion condition - Claude keeps working across turns until a fast evaluator confirms the condition is met (e.g., "/goal all tests in src/billing pass, and the type checker reports zero errors"); /goal clear cancels</li><li><strong>Constraint:</strong> the evaluator only reads the transcript, so conditions must be checkable from output Claude produces (like test results)</li><li>Loop runs a prompt on an interval between turns (fixed or self-paced) - useful for polling external state like CI or deploys; escape stops it</li></ul>
+<p><strong>Parallel work with worktrees:</strong></p>
+<ul><li>Multiple sessions on one codebase conflict; worktrees give each session its own independent file tree</li><li>Clean worktrees are auto-removed when a session exits</li><li>A .worktreeinclude file at the repo root lists git-ignored files (env files, local config) to copy into each worktree</li></ul>
+<p><strong>Essential Points:</strong></p>
+<ul><li>Scope first, then steer</li><li>Direct compaction so summaries keep what matters</li><li>Rewind to course-correct instead of prompting your way out</li><li>Set a goal when you can describe "done" better than the steps</li><li>Run parallel work in worktrees</li></ul>
+
+</article>
+<article class="note" id="a-claudemd-that-follows" data-spy>
+  <h3>A CLAUDE.md That Follows<a class="anchor" href="#a-claudemd-that-follows" aria-label="Link to this section">#</a></h3>
+  <p><strong>CLAUDE.md =</strong> guidance, not enforced configuration. Every line competes with every other line for attention - the longer the file, the less reliably Claude follows any single rule.</p>
+<p><strong>First question:</strong> is CLAUDE.md the right surface?</p>
+<ul><li>A hard rule like "never push to main" belongs in a PreToolUse hook, which stops the action even if Claude tries it</li><li>CLAUDE.md and skills are instructions Claude follows; hooks are code that runs</li></ul>
+<p><strong>Four memory locations, all loaded together:</strong></p>
+<ol><li>Managed policy (org-wide, always in play)</li><li>User (your global preferences)</li><li>Project (shared with the team)</li><li>Local (just yours, in this project - e.g., holding your own architectural decisions during a refactor)</li></ol>
+<p><strong>Imports:</strong></p>
+<ul><li>Split large files with path imports; Claude expands imported files inline at launch</li><li>Imports organize content but do NOT reduce context - everything still loads up front</li></ul>
+<p><strong>Phrasing rules that get followed:</strong></p>
+<ul><li><strong>Be specific and checkable:</strong> not "follow best practices" but "put new API routes in src/api/handlers, one per file"</li><li><strong>Name the replacement:</strong> not "don't use default exports" but "use named exports, not default exports"</li><li><strong>Emphasis is a budget:</strong> IMPORTANT and "you must" raise priority only relative to quieter rules around them - spend on the 2-3 rules that hurt when broken</li></ul>
+<p><strong>Keep the file under revision:</strong></p>
+<ul><li>When Claude does the wrong thing, treat it as a bug report against the file - tell Claude "add that to CLAUDE.md" and it writes the rule</li><li><strong>Treat CLAUDE.md like production code:</strong> if you can't justify a line, delete it</li></ul>
+<p><strong>Essential Points:</strong></p>
+<ul><li><strong>Lean file =</strong> more of it followed</li><li>Move enforcement to hooks, organize with imports</li><li>Scope task-specific conventions into skills so they load only when they apply</li></ul>
+
+</article>
+<article class="note" id="verification-skills" data-spy>
+  <h3>Verification Skills<a class="anchor" href="#verification-skills" aria-label="Link to this section">#</a></h3>
+  <p><strong>Skill =</strong> a folder with a skill.md holding a name, a description that triggers it, and a procedure. Only descriptions load until a skill is needed.</p>
+<p><strong>The verification skill (the one to build first):</strong></p>
+<ul><li>Fires when its description matches (e.g., after Claude edits code)</li><li>Runs the test suite, reads the diff, checks no test was weakened just to pass, reports pass/fail with evidence</li><li>Checking work no longer depends on you remembering to ask</li></ul>
+<p>The same shape carries any repeated procedure: release checklists, migration recipes. If you've typed the same multi-step instruction twice, that's a skill.</p>
+<p><strong>Skill folder structure:</strong></p>
+<ul><li>skill.md stays lean - the entry point</li><li>reference.md alongside for detailed material, linked from skill.md; Claude reads it only when it needs depth</li><li>Scripts in the folder are executed rather than loaded, so a skill can carry its own tooling</li></ul>
+<p><strong>The three instruction surfaces:</strong></p>
+<ul><li><strong>Conventions that apply all the time:</strong> CLAUDE.md</li><li>Procedures/reference material tied to a kind of task: skills</li><li><strong>Rules Claude must not be able to skip:</strong> hooks</li></ul>
+<p><strong>Essential Points:</strong></p>
+<ul><li>Package every procedure you repeat; start with verification</li><li>Check skills into .claude/skills so the whole team inherits them</li></ul>
+
+</article>
+</section>
+<section class="group-section">
+  <div class="group-head">
+    <span class="group-eyebrow">Course notes</span>
+    <h2>Automation &amp; Safety</h2>
+  </div>
+  <article class="note" id="permission-modes" data-spy>
+  <h3>Permission Modes<a class="anchor" href="#permission-modes" aria-label="Link to this section">#</a></h3>
+  <p>Permission modes decide once what Claude can run without asking. Shift-tab cycles the everyday ones; the status bar shows the current mode.</p>
+<p><strong>The modes:</strong></p>
+<ul><li><strong>Manual:</strong> reads run without prompting; everything else asks</li><li><strong>Accept edits:</strong> reads, file edits, and common file-system bash commands run; for iterating on code you review after the fact</li><li><strong>Plan:</strong> read-only; researches and proposes without editing</li><li><strong>Auto:</strong> accepts everything, with a separate classifier model reviewing each action before it runs</li><li><strong>Don't ask:</strong> only pre-approved tools run; everything else is auto-denied with no prompt (right for CI and unattended pipelines - the run never hangs on an approval no one will give)</li><li><strong>Bypass permissions:</strong> skips all checks; equivalent to dangerously-skip-permissions - only run inside an isolated container or VM</li></ul>
+<p><strong>How auto mode works:</strong></p>
+<ul><li><strong>The classifier guards INTENT:</strong> designed to block moves that escalate beyond your request (production deploys and migrations, force pushes, piping downloaded code into a shell, sending sensitive data to external endpoints, destroying files outside the session)</li><li><strong>It allows everyday work:</strong> local edits in your project, installing dependencies from the lockfile, read-only requests, pushing to your own branch</li><li><strong>It never judges CORRECTNESS:</strong> broken code isn't dangerous, so it waves broken code through</li><li>Pair auto mode with a stop hook that runs your tests - the classifier watches what Claude tries to do, the hook confirms the code actually works</li><li>Auto mode guardrails are still evolving; check the docs for current block/allow lists</li></ul>
+<p><strong>Essential Points:</strong></p>
+<ul><li>Match the mode to the job</li><li><strong>Auto is the hands-off mode:</strong> classifier checks intent before, stop hook checks correctness after</li><li>Don't ask for unattended pipelines; bypass only inside isolated containers/VMs</li></ul>
+
+</article>
+<article class="note" id="hooks" data-spy>
+  <h3>Hooks<a class="anchor" href="#hooks" aria-label="Link to this section">#</a></h3>
+  <p><strong>Hook =</strong> deterministic code at a fixed point in the loop. Turns "Claude usually listens" into "Claude can't skip it" - guarantees behavior even on runs you're not watching.</p>
+<p>Claude Code fires around 30 hook events. The ones you'll reach for:</p>
+<ul><li><strong>PreToolUse:</strong> fires before a tool call - the enforcement primitive</li><li><strong>PostToolUse:</strong> fires after a successful tool call - where auto-format/auto-lint go</li><li><strong>Stop:</strong> fires when Claude wants to end its turn - refuse if conditions aren't met</li><li><strong>SubagentStop:</strong> same signal for a subagent finishing</li><li><strong>PreCompact/PostCompact:</strong> fire around compaction; to re-inject context after compaction use SessionStart with the compact matcher, not PostCompact</li><li><strong>InstructionsLoaded:</strong> fires when a CLAUDE.md or rule file loads - audit what made it into context</li><li><strong>SessionStart:</strong> primes the environment; check source=startup to run only on fresh starts</li></ul>
+<p><strong>Controlling the loop with JSON (PreToolUse):</strong></p>
+<ul><li>Return JSON with exit 0 and a permissionDecision field: allow, deny, or ask</li><li>A fourth value, defer, applies only to non-interactive -p runs (a calling process pauses and resumes the tool)</li><li>updatedInput modifies the tool call without blocking (e.g., redact a secret from a bash command) - it replaces the WHOLE input object, so echo back fields you aren't changing</li></ul>
+<p><strong>Exit codes (for hooks that don't return JSON):</strong></p>
+<ul><li>0 = success; JSON on stdout is parsed; plain text is ignored on most events but added to context on SessionStart, UserPromptSubmit, and prompt expansion</li><li>2 = blocking error; stderr is fed back to Claude as context (blocks almost everywhere; exception: WorktreeCreate aborts on any non-zero)</li><li><strong>Anything else =</strong> non-blocking, just logged. Watch out: exit 1 feels like an error but does NOT block - Claude runs the command anyway</li><li>Exit 2 can block Stop ("no, you're not done"); PostToolUse fires after the tool already ran, so it can't stop the call but can feed text back</li><li>A few events ignore blocking (Notification, SessionStart, FileChange): stderr shown, execution carries on</li></ul>
+<p><strong>Patterns:</strong></p>
+<ul><li><strong>Guardrail that redacts instead of blocking:</strong> matcher picks the tool (e.g., bash), optional if-clause narrows to a command; deny stops it, updatedInput rewrites it so the command still runs without the secret</li><li><strong>Context preservation:</strong> SessionStart hook with compact matcher prints a short summary of working files right after compaction; the summary goes back into context so Claude picks up where it was</li></ul>
+<p><strong>Essential Points:</strong></p>
+<ul><li><strong>Reach past auto-formatting:</strong> guard tools with PreToolUse, gate the turn with Stop, preserve state across compaction</li><li>Pays back the first time it catches something on an unwatched run</li></ul>
+
+</article>
+<article class="note" id="routines-and-headless" data-spy>
+  <h3>Routines and Headless<a class="anchor" href="#routines-and-headless" aria-label="Link to this section">#</a></h3>
+  <p>Once you trust Claude with a task, stop doing it by hand. Two paths: routines (build nothing) and headless mode / Agent SDK (full control).</p>
+<p><strong>Routines:</strong></p>
+<ul><li>A saved prompt + repositories + connectors that runs on Anthropic's managed infrastructure on a trigger: cron schedule, HTTP POST to its API endpoint, or a GitHub event (like a new PR)</li><li>No machine of yours stays on; no workflow file to maintain</li><li>Create from the web at claude.ai/code/routines or inside Claude Code (e.g., /schedule daily dependency audit at 9am)</li><li>Fits anything that's the same prompt on a recurring trigger: morning dependency audits, PR triagers</li></ul>
+<p><strong>Three limits before you rely on routines:</strong></p>
+<ul><li>Research preview - behavior and limits will keep moving</li><li>Recurring schedules run at most hourly</li><li>Each run starts from a fresh clone of your default branch and can only push to claude/-prefixed branches unless you loosen that per repo (the guardrail keeping autonomous runs from rewriting main)</li></ul>
+<p><strong>Headless mode:</strong></p>
+<ul><li>The -p flag (alias --print) runs Claude Code as a one-shot command with no interactive TUI; reads stdin, writes stdout, pipes like any shell tool</li><li>--bare skips auto-discovery of hooks, skills, plugins, MCP servers, and CLAUDE.md: you get Claude plus only the tools you allow explicitly; faster startup</li><li><strong>Structured output:</strong> pair a JSON schema with --output-format json and Claude constrains output to the schema; the result lands in the structured_output field - pull it with jq into a database or another script</li><li><strong>Multi-step automation:</strong> capture the session ID from JSON output and resume later with full context</li></ul>
+<p><strong>Agent SDK:</strong></p>
+<ul><li>TypeScript and Python libraries embedding Claude Code in your own application</li><li>Both expose a query function with the same primitives as the CLI: prompt plus options (allowed tools, system prompt, permission mode), then iterate the streamed messages</li></ul>
+<p><strong>Essential Points:</strong></p>
+<ul><li>Routines are the default for repeat work (nothing to host)</li><li>Drop to headless when the job needs your pipeline: -p to pipe data, --bare for deterministic CI runs, the SDK when the work belongs inside your own product</li></ul>
+
+</article>
+<article class="note" id="github-actions-and-code-review" data-spy>
+  <h3>GitHub Actions and Code Review<a class="anchor" href="#github-actions-and-code-review" aria-label="Link to this section">#</a></h3>
+  <p>The pull request is the best place to hand off repetitive work. Two paths: managed Code Review (turn it on) and the Claude Code GitHub action (wire it yourself).</p>
+<p><strong>Managed Code Review:</strong></p>
+<ul><li>Anthropic-hosted service reviewing PRs through the Claude GitHub app; nothing to build or host</li><li>An org admin enables it from Claude Code admin settings, installs the app, picks repos and when it runs (PR open, every push, or on "@claude review" comments)</li><li>Review agents analyze the diff against the full codebase and post findings as inline comments on specific lines, tagged by severity, with a summary table in the check run</li><li>Deduplicates and ranks findings - a handful of real issues, not a wall of nits</li><li>Never approves or blocks the PR; judgment stays with a human</li><li>Research preview, currently for Team and Enterprise plans</li><li>No managed autofix - the service posts findings only; apply them locally with /code-review and its --fix flag</li></ul>
+<p><strong>The GitHub action (beyond review):</strong></p>
+<ul><li>For implementing changes from a comment, scheduled reports, anything you'd write a workflow for</li><li>/install-github-app (needs repo admin) walks through installing the app and setting the API key secret</li><li>The action is anthropics/claude-code-action@v1</li><li><strong>Inputs:</strong> anthropic_api_key, github_token (defaults to secrets.GITHUB_TOKEN), trigger_phrase (defaults to @claude), provider switches for Bedrock/Vertex, prompt, and claude_args (CLI arguments passed through)</li><li>A workflow listening for @claude on PR/issue comments: someone writes "@claude implement the spec in the linked issue" and the action picks it up, pushes commits, posts comments</li><li><strong>A cron rollup:</strong> schedule fires (e.g., 9am UTC), action runs, Claude posts results; workflow_dispatch also allows manual runs from the Actions tab</li><li><strong>Tuning via claude_args:</strong> max turns caps the agent loop, permission mode "don't ask" for unattended runs, allowed tools scoped to the job (read-only for a report)</li></ul>
+<p><strong>Essential Points:</strong></p>
+<ul><li>Take the managed path for PR review; apply fixes locally with /code-review --fix</li><li>Reach for the action when the job is more than review</li></ul>
+
+</article>
+<article class="note" id="trust-it-verifying-unsupervised-runs" data-spy>
+  <h3>Trust It: Verifying Unsupervised Runs<a class="anchor" href="#trust-it-verifying-unsupervised-runs" aria-label="Link to this section">#</a></h3>
+  <p>Verification makes hands-off Claude Code safe to rely on. Verify in proportion to how unsupervised the run was: a watched session needs a glance; an unattended or CI run needs a real check because nobody saw it happen.</p>
+<p><strong>Ground rules for unattended runs:</strong></p>
+<ul><li>Keep them in auto mode, not bypass - the classifier still reviews each action for danger</li><li>The classifier never judges correctness, so the verification bar stays where it was</li></ul>
+<p><strong>Start from the diff, not the summary:</strong></p>
+<ul><li>Run /code-review to walk the changes and flag issues, then put your eyes on git diff</li><li><strong>The trap:</strong> a tidy summary that reads fine while the diff touched files you didn't expect</li><li>Read what changed; read the files that were in the plan first</li></ul>
+<p><strong>Make tests the real gate:</strong></p>
+<ul><li>The question is whether tests passed AND whether Claude actually ran them or only claimed to - don't leave that to trust</li><li><strong>Wire it as a hook:</strong> a Stop hook that runs the tests and refuses to end the turn on failure, or a PostToolUse hook that lints and type-checks after every edit</li><li>A hook exiting with code 2 feeds the failure straight back to Claude, which reads it and fixes it unprompted</li><li>The check fires on every run whether or not you remember to ask</li></ul>
+<p><strong>Cold second opinion:</strong></p>
+<ul><li>Open a fresh session or subagent to review the changed code with no memory of how it was built</li><li>It has no stake in the approach and catches what the original run talked itself past</li></ul>
+<p><strong>Headless runs:</strong></p>
+<ul><li>Verify by their JSON result and exit code</li></ul>
+<p><strong>Essential Points:</strong></p>
+<ul><li>The less you watched, the more you verify</li><li>Diff first, tests as a hook-enforced gate, fresh-context review for anything that matters</li></ul>
+
+</article>
+<article class="note" id="plugins" data-spy>
+  <h3>Plugins<a class="anchor" href="#plugins" aria-label="Link to this section">#</a></h3>
+  <p>Plugins are how Claude Code packages a setup and moves it between people. Two sides: using published plugins, and packaging your own.</p>
+<p><strong>What a plugin is:</strong></p>
+<ul><li>One installable unit bundling skills, subagents, hooks, and MCP server configs, plus LSP servers, background monitors, themes, and a slice of settings.json</li><li><strong>Install directly:</strong> /plugin install org-name@plugin-name (then /reload-plugins)</li><li>For a team, add a private marketplace once: /plugin marketplace add your-org/claude-plugins - every install after that resolves through it (centralized discovery, version tracking, updates); browse via the Discover tab</li></ul>
+<p><strong>Read before you install:</strong></p>
+<ul><li>A plugin runs code on your machine with your privileges; its hooks fire on every matching tool call</li><li>Install for the skills and you also get its PreToolUse and Stop hooks, whether you read them or not</li><li>A community plugin could ship a Stop hook that calls a network endpoint every time with no warning from your configuration</li><li>The in-app submission form posts to the community marketplace after Anthropic's automated review; the official marketplace is curated separately</li><li>Reviewed is NOT the same as trusted - automated review catches some things, not everything</li><li><strong>Check the plugin's details:</strong> Claude Code shows what it will install and estimates context cost</li></ul>
+<p><strong>Components run alongside yours:</strong></p>
+<ul><li><strong>Hooks stack:</strong> a plugin's PreToolUse hook and your own both fire on every tool call - neither replaces the other</li><li>Skills, agents, and commands are namespaced under the plugin name, so they never clash</li><li>A plugin's settings.json is honored narrowly: only the agent and subagent status line keys</li><li>The agent key promotes one of the plugin's subagents to the main thread (its system prompt, tool restrictions, and model) - enabling the plugin can change how Claude Code behaves by default</li></ul>
+<p><strong>Packaging your own:</strong></p>
+<ul><li><strong>Same .claude shape you already use:</strong> one folder per skill, one markdown file per subagent under agents/, hooks/hooks.json and .mcp.json at the plugin root - components discovered by directory convention</li><li>Optional manifest at .claude-plugin/plugin.json with name, version, description, author</li><li>Name is the only required field; it namespaces skills as plugin-name:skill-name</li><li>Version it like any other dependency</li></ul>
+<p><strong>Essential Points:</strong></p>
+<ul><li><strong>Read before you install:</strong> check every hook, agent, and MCP server a plugin adds</li><li>Package your .claude the moment it works - one manifest, one install, the whole team inherits it</li></ul>
+
+</article>
+</section>
+    <footer class="page-foot">
+      <p><a href="../study-companion/index.html">&larr; Back to the study companion</a> &middot; <a href="../index.html">CCA-F study system home</a></p>
+    </footer>
+  </main>
+</div>
+<script>
+function toggleTheme() {
+  var html = document.documentElement;
+  var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  try { localStorage.setItem('ccaf-theme', next); } catch (e) {}
+  var btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = next === 'dark' ? '☀️' : '🌙';
+}
+(function () {
+  var btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+})();
+</script>
+<script>
+(function () {
+  var sections = Array.prototype.slice.call(document.querySelectorAll('[data-spy]'));
+  var navLinks = Array.prototype.slice.call(document.querySelectorAll('.nav-link'));
+  var OFFSET = 40;
+  function update() {
+    var current = null;
+    for (var i = 0; i < sections.length; i++) {
+      if (sections[i].getBoundingClientRect().top <= OFFSET) current = sections[i]; else break;
+    }
+    if (!current) return;
+    var id = '#' + current.id;
+    navLinks.forEach(function (l) { l.classList.toggle('active', l.getAttribute('href') === id); });
+  }
+  var ticking = false;
+  window.addEventListener('scroll', function () {
+    if (!ticking) { window.requestAnimationFrame(function () { update(); ticking = false; }); ticking = true; }
+  }, { passive: true });
+  update();
+})();
+</script>
+</body>
+</html>
