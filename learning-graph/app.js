@@ -92,6 +92,7 @@
     state.updatedAt = Date.now();
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
     if (sync) sync.schedulePush();
+    renderMilestones();
   }
 
   function ts(id) {
@@ -292,6 +293,17 @@
     return c;
   }
 
+  /* One entry per cluster that has topics — the "milestone" tally. Shared by
+     renderStats()'s per-cluster bars and the always-visible milestone strip so
+     both read the exact same numbers. */
+  function clusterProgress() {
+    return G.clusters.map(function (c) {
+      var list = G.topics.filter(function (t) { return t.cluster === c.id; });
+      var done = list.filter(function (t) { return isMastered(t.id); }).length;
+      return { cluster: c, list: list, done: done, total: list.length, complete: list.length > 0 && done === list.length };
+    }).filter(function (cp) { return cp.total > 0; });
+  }
+
   function shuffle(arr) {
     var a = arr.slice();
     for (var i = a.length - 1; i > 0; i--) {
@@ -361,6 +373,72 @@
     topics: document.getElementById("panel-topics"),
     stats: document.getElementById("panel-stats")
   };
+
+  /* ---------- rendering: milestone strip ---------- */
+
+  var msMount = document.getElementById("msStrip");
+
+  function injectMilestoneStyles() {
+    var style = document.createElement("style");
+    style.id = "ms-strip-styles";
+    style.textContent =
+      ".ms-strip{margin:14px 0 22px;}" +
+      ".ms-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:0 0 8px;}" +
+      ".ms-count{flex:none;color:var(--ink);font:700 12px/1.2 system-ui,sans-serif;letter-spacing:.06em;}" +
+      ".ms-bar{flex:1 1 140px;min-width:90px;max-width:220px;}" +
+      ".ms-next{flex:none;}" +
+      ".ms-chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;}" +
+      ".ms-chip{flex:none;min-width:120px;padding:8px 10px;border:1px solid var(--line);" +
+        "border-radius:4px;background:var(--white);color:var(--ink);}" +
+      ".ms-chip-name{display:block;margin:0 0 2px;font:700 11px/1.3 system-ui,sans-serif;color:inherit;}" +
+      ".ms-chip-frac{display:block;margin:0 0 5px;font:600 11px/1.4 system-ui,sans-serif;color:var(--muted);}" +
+      ".ms-chip-bar{height:4px;}" +
+      ".ms-chip .bar i{transition:width .2s ease,background-color .2s ease;}" +
+      ".ms-chip.done{border-color:var(--good);background:var(--good-bg);color:var(--good);}" +
+      ".ms-chip.done .ms-chip-frac{color:var(--good);}" +
+      "@media (max-width:620px){.ms-chip{min-width:104px;}.ms-strip{margin:12px 0 18px;}}";
+    document.head.appendChild(style);
+  }
+
+  function renderMilestones() {
+    if (!msMount) return;
+    msMount.innerHTML = "";
+
+    var cp = clusterProgress();
+    if (!cp.length) return;
+    var doneCount = cp.filter(function (x) { return x.complete; }).length;
+    var dark = document.documentElement.getAttribute("data-theme") === "dark";
+
+    var head = el("div", "ms-head");
+    head.appendChild(el("span", "ms-count", doneCount + " / " + cp.length + " milestones"));
+    var bar = el("div", "bar ms-bar");
+    var fill = el("i");
+    fill.style.width = Math.round((doneCount / cp.length) * 100) + "%";
+    bar.appendChild(fill);
+    head.appendChild(bar);
+
+    var nearest = cp.filter(function (x) { return !x.complete; })
+      .sort(function (a, b) { return (b.done / b.total) - (a.done / a.total); })[0];
+    head.appendChild(el("span", "ms-next small muted",
+      nearest ? "Nearest: " + nearest.cluster.name + " " + nearest.done + "/" + nearest.total
+              : "All milestones complete"));
+    msMount.appendChild(head);
+
+    var chips = el("div", "ms-chips");
+    cp.forEach(function (x) {
+      var chip = el("div", "ms-chip" + (x.complete ? " done" : ""));
+      chip.appendChild(el("span", "ms-chip-name", x.cluster.name));
+      chip.appendChild(el("span", "ms-chip-frac", x.complete ? x.total + "/" + x.total + " ✓" : x.done + "/" + x.total));
+      var cbar = el("div", "bar ms-chip-bar");
+      var cfill = el("i");
+      cfill.style.width = Math.round((x.done / x.total) * 100) + "%";
+      if (!x.complete) cfill.style.background = dark ? x.cluster.colorDark : x.cluster.color;
+      cbar.appendChild(cfill);
+      chip.appendChild(cbar);
+      chips.appendChild(chip);
+    });
+    msMount.appendChild(chips);
+  }
 
   function renderToday(summaryNode) {
     var root = panels.today;
@@ -1126,18 +1204,16 @@
     root.appendChild(head);
 
     root.appendChild(el("h2", null, "By cluster"));
-    G.clusters.forEach(function (cluster) {
-      var list = G.topics.filter(function (t) { return t.cluster === cluster.id; });
-      var done = list.filter(function (t) { return isMastered(t.id); }).length;
+    clusterProgress().forEach(function (cp) {
       var box = el("div", "cluster-stat");
       var row = el("div", "row");
-      row.appendChild(el("span", null, cluster.name));
-      row.appendChild(el("span", "muted small", done + " / " + list.length));
+      row.appendChild(el("span", null, cp.cluster.name));
+      row.appendChild(el("span", "muted small", cp.done + " / " + cp.total));
       box.appendChild(row);
       var bar = el("div", "bar");
       var fill = el("i");
-      fill.style.width = Math.round((done / list.length) * 100) + "%";
-      fill.style.background = document.documentElement.getAttribute("data-theme") === "dark" ? cluster.colorDark : cluster.color;
+      fill.style.width = Math.round((cp.done / cp.total) * 100) + "%";
+      fill.style.background = document.documentElement.getAttribute("data-theme") === "dark" ? cp.cluster.colorDark : cp.cluster.color;
       bar.appendChild(fill);
       box.appendChild(bar);
       root.appendChild(box);
@@ -1216,6 +1292,7 @@
         state.updatedAt = updatedAt || next.updatedAt || Date.now();
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
         renderToday();
+        renderMilestones();
       },
       getUpdatedAt: function () { return state.updatedAt || 0; }
     });
@@ -1227,6 +1304,8 @@
   /* ---------- init ---------- */
 
   loadState();
+  injectMilestoneStyles();
+  renderMilestones();
 
   TABS.forEach(function (t) {
     document.getElementById("tab-" + t).addEventListener("click", function () { showTab(t); });
