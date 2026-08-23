@@ -74,7 +74,10 @@
   var sync = null;
 
   function freshState() {
-    return { version: 1, updatedAt: 0, xpByDay: {}, topics: {}, remedials: [], placed: false, log: [] };
+    return {
+      version: 1, updatedAt: 0, xpByDay: {}, topics: {}, remedials: [], placed: false, log: [],
+      startedAt: Date.now(), goalDate: null, masteredByDay: {}
+    };
   }
 
   function loadState() {
@@ -86,6 +89,9 @@
     if (!state.xpByDay) state.xpByDay = {};
     if (!state.remedials) state.remedials = [];
     if (!state.log) state.log = [];
+    if (!state.masteredByDay) state.masteredByDay = {};
+    if (!state.startedAt) state.startedAt = Date.now();
+    if (state.goalDate === undefined) state.goalDate = null;
   }
 
   function save() {
@@ -93,6 +99,7 @@
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
     if (sync) sync.schedulePush();
     renderMilestones();
+    renderGoal();
   }
 
   function ts(id) {
@@ -114,6 +121,13 @@
   }
   function awardXp(n) {
     state.xpByDay[today()] = xpToday() + n;
+  }
+
+  /* Logged the day a topic first reaches mastered — the raw material the goal-pace
+     tracker uses to tell your recent pace from your all-time average. */
+  function recordMastery() {
+    var d = today();
+    state.masteredByDay[d] = (state.masteredByDay[d] || 0) + 1;
   }
 
   /* ---------- frontier & scheduling ---------- */
@@ -304,6 +318,51 @@
     }).filter(function (cp) { return cp.total > 0; });
   }
 
+  /* Burndown against a target date: "expected" is where a straight line from
+     when you started to the goal date would have you by now; comparing it to
+     actual mastered count is what tells "on track" from "falling behind"
+     apart, independent of how many topics the section happens to have. Pace
+     is a trailing 7-day rate, so a stale streak shows up immediately rather
+     than being smoothed away by an all-time average. */
+  function goalStats() {
+    if (!state.goalDate) return null;
+    var target = new Date(state.goalDate + "T23:59:59").getTime();
+    if (isNaN(target)) return null;
+    var now = Date.now();
+    var total = G.topics.length;
+    var mastered = counts().mastered;
+    var remaining = total - mastered;
+    var daysLeft = Math.ceil((target - now) / DAY);
+
+    var start = state.startedAt || now;
+    var span = Math.max(DAY, target - start);
+    var elapsed = Math.min(span, Math.max(0, now - start));
+    var expected = Math.min(total, Math.round((elapsed / span) * total));
+    var deltaTopics = mastered - expected;
+
+    var recentDays = 7, recentCount = 0;
+    for (var i = 0; i < recentDays; i++) {
+      var d = new Date(now - i * DAY).toISOString().slice(0, 10);
+      recentCount += state.masteredByDay[d] || 0;
+    }
+    var pace = recentCount / recentDays;
+    var neededPerDay = daysLeft > 0 ? remaining / daysLeft : Infinity;
+    var projectedDays = pace > 0 ? Math.ceil(remaining / pace) : null;
+    var projectedAt = projectedDays != null ? now + projectedDays * DAY : null;
+
+    var status;
+    if (remaining <= 0) status = "done";
+    else if (daysLeft <= 0) status = "overdue";
+    else if (deltaTopics >= 0) status = "ontrack";
+    else status = "behind";
+
+    return {
+      total: total, mastered: mastered, remaining: remaining, daysLeft: daysLeft,
+      expected: expected, deltaTopics: deltaTopics, pace: pace,
+      neededPerDay: neededPerDay, projectedAt: projectedAt, status: status
+    };
+  }
+
   function shuffle(arr) {
     var a = arr.slice();
     for (var i = a.length - 1; i > 0; i--) {
@@ -438,6 +497,151 @@
       chips.appendChild(chip);
     });
     msMount.appendChild(chips);
+  }
+
+  /* ---------- rendering: goal / daily pace ---------- */
+
+  var goalMount = document.getElementById("goalStrip");
+
+  function injectGoalStyles() {
+    var style = document.createElement("style");
+    style.id = "goal-strip-styles";
+    style.textContent =
+      ".goal-strip{margin:0 0 22px;padding:14px 16px;border:1px solid var(--line);border-radius:4px;background:var(--white);}" +
+      ".goal-strip.status-behind,.goal-strip.status-overdue{border-color:var(--bad);}" +
+      ".goal-strip.status-ontrack,.goal-strip.status-done{border-color:var(--good);}" +
+      ".goal-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 14px;}" +
+      ".goal-title{font:700 12px/1.2 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);}" +
+      ".goal-badge{flex:none;display:inline-block;padding:3px 9px;border-radius:999px;border:1px solid var(--line);" +
+        "color:var(--muted);font:700 10px/1.6 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;}" +
+      ".goal-badge.ontrack,.goal-badge.done{color:var(--good);border-color:var(--good);background:var(--good-bg);}" +
+      ".goal-badge.behind,.goal-badge.overdue{color:var(--bad);border-color:var(--bad);background:var(--bad-bg);}" +
+      ".goal-body{margin:8px 0 0;font:13.5px/1.6 system-ui,sans-serif;color:var(--ink);}" +
+      ".goal-stats{display:flex;flex-wrap:wrap;gap:14px 24px;margin-top:10px;}" +
+      ".goal-stat b{display:block;font:700 1.15rem/1.15 Georgia,serif;color:var(--ink);}" +
+      ".goal-stat span{display:block;color:var(--muted);font:600 10px/1.6 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;}" +
+      ".goal-edit{margin-top:10px;}" +
+      ".goal-form{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px;}" +
+      ".goal-form input[type=date]{padding:7px 9px;border:1px solid var(--line);border-radius:3px;" +
+        "background:var(--white);color:var(--ink);font:13px system-ui,sans-serif;}" +
+      "@media (max-width:620px){.goal-strip{padding:12px 14px;}}";
+    document.head.appendChild(style);
+  }
+
+  function formatGoalDate(iso) {
+    var d = new Date(iso + "T00:00:00");
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  }
+
+  function goalBadgeLabel(status) {
+    if (status === "done") return "Goal complete";
+    if (status === "overdue") return "Deadline passed";
+    if (status === "behind") return "Falling behind";
+    return "On track";
+  }
+
+  function goalMessage(stats) {
+    if (stats.status === "done") {
+      return "Every topic in " + SECTION + " is mastered. Goal met.";
+    }
+    var needed = isFinite(stats.neededPerDay)
+      ? (stats.neededPerDay < 1 ? "less than 1" : Math.ceil(stats.neededPerDay))
+      : "—";
+    if (stats.status === "overdue") {
+      return "The target date has passed with " + stats.remaining + " topic" + (stats.remaining === 1 ? "" : "s") +
+        " still to master. Set a new date to get a fresh daily pace.";
+    }
+    if (stats.status === "behind") {
+      var behindBy = Math.abs(stats.deltaTopics);
+      var projected = stats.projectedAt
+        ? formatGoalDate(new Date(stats.projectedAt).toISOString().slice(0, 10))
+        : "no projection yet — nothing mastered in the last 7 days";
+      return "You're " + behindBy + " topic" + (behindBy === 1 ? "" : "s") +
+        " behind the pace needed to finish on time. At " + stats.pace.toFixed(1) +
+        "/day this week you're projected to finish around " + projected +
+        ". Master about " + needed + " topic" + (needed === 1 ? "" : "s") + "/day from here to catch up.";
+    }
+    return "On pace — you're averaging " + stats.pace.toFixed(1) + "/day this week. Master about " + needed +
+      " topic" + (needed === 1 ? "" : "s") + "/day to finish by " + formatGoalDate(state.goalDate) + ".";
+  }
+
+  function goalForm() {
+    var form = el("div", "goal-form");
+    var input = document.createElement("input");
+    input.type = "date";
+    input.value = state.goalDate || "";
+    input.min = today();
+
+    var setBtn = el("button", "btn small", "Set goal");
+    setBtn.type = "button";
+    setBtn.addEventListener("click", function () {
+      if (!input.value) return;
+      state.goalDate = input.value;
+      save();
+    });
+    form.appendChild(input);
+    form.appendChild(setBtn);
+
+    if (state.goalDate) {
+      var clearBtn = el("button", "btn btn-ghost small", "Clear goal");
+      clearBtn.type = "button";
+      clearBtn.addEventListener("click", function () {
+        state.goalDate = null;
+        save();
+      });
+      form.appendChild(clearBtn);
+    }
+    return form;
+  }
+
+  function renderGoal() {
+    if (!goalMount) return;
+    goalMount.innerHTML = "";
+
+    if (!state.goalDate) {
+      var offer = el("div", "goal-strip");
+      offer.appendChild(el("span", "goal-title", "Set a target date"));
+      offer.appendChild(el("p", "goal-body",
+        "Pick a date to finish all of " + SECTION + " by, and this strip will tell you the daily pace you need and whether you're keeping up."));
+      offer.appendChild(goalForm());
+      goalMount.appendChild(offer);
+      return;
+    }
+
+    var stats = goalStats();
+    var card = el("div", "goal-strip status-" + stats.status);
+    var head = el("div", "goal-head");
+    head.appendChild(el("span", "goal-title", "Goal · finish by " + formatGoalDate(state.goalDate)));
+    head.appendChild(el("span", "goal-badge " + stats.status, goalBadgeLabel(stats.status)));
+    card.appendChild(head);
+
+    card.appendChild(el("p", "goal-body", goalMessage(stats)));
+
+    var statsRow = el("div", "goal-stats");
+    [
+      [stats.remaining, "Topics left"],
+      [Math.max(0, stats.daysLeft), "Days left"],
+      [isFinite(stats.neededPerDay) ? (stats.neededPerDay < 1 ? stats.neededPerDay.toFixed(1) : Math.ceil(stats.neededPerDay)) : "—", "Needed / day"],
+      [stats.pace.toFixed(1), "Your pace / day"]
+    ].forEach(function (pair) {
+      var box = el("div", "goal-stat");
+      box.appendChild(el("b", null, String(pair[0])));
+      box.appendChild(el("span", null, pair[1]));
+      statsRow.appendChild(box);
+    });
+    card.appendChild(statsRow);
+
+    var editWrap = el("div", "goal-edit");
+    var editBtn = el("button", "btn btn-ghost small", "Change date");
+    editBtn.type = "button";
+    editBtn.addEventListener("click", function () {
+      editWrap.innerHTML = "";
+      editWrap.appendChild(goalForm());
+    });
+    editWrap.appendChild(editBtn);
+    card.appendChild(editWrap);
+
+    goalMount.appendChild(card);
   }
 
   function renderToday(summaryNode) {
@@ -635,7 +839,7 @@
         s.status = "mastered";
         s.kpIndex = 0;
         s.kpFails = {};
-        if (wasNew) { awardXp(15); s.reps = 0; }
+        if (wasNew) { awardXp(15); s.reps = 0; recordMastery(); }
         recordRepetition(t.id, 1);
         var unlocked = hardDependents[t.id].filter(isReady);
         var done = el("div", "card");
@@ -965,6 +1169,7 @@
     G.topics.forEach(function (t) {
       if (diag.verdicts[t.id] !== true) return;
       var s = ts(t.id);
+      var wasNew = s.status !== "mastered";
       var verified = !!diag.askedIds[t.id];
       s.status = "mastered";
       s.inferred = !verified;
@@ -973,6 +1178,7 @@
       // Conditional completion: a pass that was inferred rather than demonstrated comes
       // back the next day, so a wrong inference is caught instead of compounding.
       s.due = Date.now() + (verified ? 3 * DAY : DAY);
+      if (wasNew) recordMastery();
     });
     state.placed = true;
     var known = Object.keys(diag.verdicts).filter(function (k) { return diag.verdicts[k]; }).length;
@@ -1418,6 +1624,7 @@
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
         renderToday();
         renderMilestones();
+        renderGoal();
       },
       getUpdatedAt: function () { return state.updatedAt || 0; }
     });
@@ -1430,8 +1637,10 @@
 
   loadState();
   injectMilestoneStyles();
+  injectGoalStyles();
   injectAskClaudeStyles();
   renderMilestones();
+  renderGoal();
 
   TABS.forEach(function (t) {
     document.getElementById("tab-" + t).addEventListener("click", function () { showTab(t); });
