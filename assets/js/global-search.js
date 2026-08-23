@@ -65,6 +65,29 @@
     return notes;
   }
 
+  // The full per-topic course notes (sections 3–7) aren't linked from the homepage
+  // directly — only study-companion's curated takeaway bullets point into them — so
+  // getNotes() above never finds them. Index the full prose here instead, so a
+  // question can match text that didn't make it into a takeaway bullet.
+  var ANTHROPIC_NOTES_PAGES = [
+    { href: "03-building-with-the-claude-api/anthropic-notes.html", title: "Building with the Claude API — Notes" },
+    { href: "04-claude-with-amazon-bedrock/anthropic-notes.html", title: "Claude with Amazon Bedrock — Notes" },
+    { href: "05-claude-on-google-cloud/anthropic-notes.html", title: "Claude on Google Cloud — Notes" },
+    { href: "06-introduction-to-mcp/anthropic-notes.html", title: "Introduction to MCP — Notes" },
+    { href: "07-claude-code-in-action/anthropic-notes.html", title: "Claude Code in Action — Notes" }
+  ];
+
+  function getAnthropicNotesPages() {
+    return ANTHROPIC_NOTES_PAGES.map(function (p) {
+      return {
+        kind: "note",
+        href: p.href,
+        title: p.title,
+        absoluteUrl: new URL(p.href, document.baseURI).href
+      };
+    });
+  }
+
   function indexLessonDoc(doc, lesson) {
     var sections = doc.querySelectorAll("main section.scene, main section.end");
     var entries = [];
@@ -142,7 +165,37 @@
     }];
   }
 
+  // */anthropic-notes.html: full per-topic course notes, one <article class="note" id="slug">
+  // per topic inside <section class="group-section"><h2>. The ids are the same citation
+  // anchors study-companion's takeaway links already use, so results jump straight there.
+  function indexAnthropicNotesDoc(doc, note) {
+    var entries = [];
+    doc.querySelectorAll("article.note[id]").forEach(function (art) {
+      var h3 = art.querySelector("h3");
+      var heading = note.title;
+      if (h3) {
+        var h3Clone = h3.cloneNode(true);
+        var anchor = h3Clone.querySelector(".anchor");
+        if (anchor) anchor.remove();
+        heading = collapse(h3Clone.textContent);
+      }
+      var group = art.closest("section.group-section");
+      var groupHeading = group ? group.querySelector(".group-head h2, h2") : null;
+      entries.push({
+        sourceHref: note.absoluteUrl + "#" + art.id,
+        sourceTitle: note.title,
+        sourceGroup: groupHeading ? collapse(groupHeading.textContent) : note.title,
+        heading: heading,
+        body: cleanText(art)
+      });
+    });
+    return entries;
+  }
+
   function indexNoteDoc(doc, note) {
+    if (doc.querySelector("article.note[id]")) {
+      return indexAnthropicNotesDoc(doc, note);
+    }
     if (doc.querySelector("section.sec-block") && doc.querySelector(".topic")) {
       return indexTakeawaysDoc(doc, note);
     }
@@ -177,46 +230,96 @@
     });
   }
 
-  function snippetAround(text, query) {
-    var lower = text.toLowerCase();
-    var qi = lower.indexOf(query.toLowerCase());
-    if (qi === -1) return text.slice(0, SNIPPET_RADIUS * 2);
-    var start = Math.max(0, qi - SNIPPET_RADIUS);
-    var end = Math.min(text.length, qi + query.length + SNIPPET_RADIUS);
+  function snippetAroundIndex(text, idx) {
+    var start = Math.max(0, idx - SNIPPET_RADIUS);
+    var end = Math.min(text.length, idx + SNIPPET_RADIUS);
     return (start > 0 ? "…" : "") + text.slice(start, end) + (end < text.length ? "…" : "");
   }
 
-  function highlightHtml(text, query) {
-    var idx = text.toLowerCase().indexOf(query.toLowerCase());
-    if (idx === -1) return escapeHtml(text);
-    return (
-      escapeHtml(text.slice(0, idx)) +
-      "<mark>" + escapeHtml(text.slice(idx, idx + query.length)) + "</mark>" +
-      escapeHtml(text.slice(idx + query.length))
-    );
+  function highlightTokens(text, tokens) {
+    var escaped = tokens.map(function (t) { return t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); });
+    var re = new RegExp("(" + escaped.join("|") + ")", "ig");
+    var out = "";
+    var last = 0;
+    var m;
+    while ((m = re.exec(text))) {
+      out += escapeHtml(text.slice(last, m.index)) + "<mark>" + escapeHtml(m[0]) + "</mark>";
+      last = m.index + m[0].length;
+      if (m.index === re.lastIndex) re.lastIndex++;
+    }
+    out += escapeHtml(text.slice(last));
+    return out;
   }
 
+  function tokenize(s) {
+    return s.toLowerCase().split(/[^a-z0-9]+/).filter(function (t) { return t.length > 1; });
+  }
+
+  // Picks the body position whose surrounding window covers the most distinct
+  // query tokens, so a multi-word question lands on the sentence that answers
+  // it rather than just the first place any single word happens to appear.
+  function bestWindowIndex(bodyLower, tokens) {
+    var positions = [];
+    tokens.forEach(function (t) {
+      var idx = bodyLower.indexOf(t);
+      while (idx !== -1) {
+        positions.push({ token: t, idx: idx });
+        idx = bodyLower.indexOf(t, idx + 1);
+      }
+    });
+    if (!positions.length) return 0;
+    var best = positions[0].idx;
+    var bestCount = -1;
+    positions.forEach(function (p) {
+      var winEnd = p.idx + SNIPPET_RADIUS * 2;
+      var seen = {};
+      positions.forEach(function (q) {
+        if (q.idx >= p.idx && q.idx < winEnd) seen[q.token] = true;
+      });
+      var count = Object.keys(seen).length;
+      if (count > bestCount) {
+        bestCount = count;
+        best = p.idx;
+      }
+    });
+    return best;
+  }
+
+  // Ranked, tokenized matching (not just literal substring): a natural-language
+  // question is split into words, every entry is scored by how many of those
+  // words appear (heading hits weighted above body hits, an exact phrase hit
+  // weighted above either), and results are sorted by score so the single best
+  // match reads like an answer rather than just the first thing found.
   function search(index, rawQuery) {
-    var query = rawQuery.trim();
-    if (!query) return [];
-    var q = query.toLowerCase();
+    var phrase = collapse(rawQuery).toLowerCase();
+    if (!phrase) return [];
+    var tokens = tokenize(phrase);
+    if (!tokens.length) return [];
     var results = [];
     index.forEach(function (entry) {
-      var headingIdx = entry.heading.toLowerCase().indexOf(q);
-      var bodyIdx = headingIdx === -1 ? entry.body.toLowerCase().indexOf(q) : -1;
-      if (headingIdx === -1 && bodyIdx === -1) return;
-      results.push({
-        entry: entry,
-        headingMatch: headingIdx !== -1,
-        snippetHtml: headingIdx !== -1
-          ? highlightHtml(entry.heading, query)
-          : highlightHtml(snippetAround(entry.body, query), query)
+      var headingLower = entry.heading.toLowerCase();
+      var bodyLower = entry.body.toLowerCase();
+      var score = 0;
+      var headingHit = false;
+      if (phrase.length > 2 && headingLower.indexOf(phrase) !== -1) {
+        score += 20;
+        headingHit = true;
+      }
+      if (phrase.length > 2 && bodyLower.indexOf(phrase) !== -1) score += 8;
+      tokens.forEach(function (t) {
+        if (headingLower.indexOf(t) !== -1) {
+          score += 5;
+          headingHit = true;
+        }
+        if (bodyLower.indexOf(t) !== -1) score += 1;
       });
+      if (score <= 0) return;
+      var snippetHtml = headingHit
+        ? highlightTokens(entry.heading, tokens)
+        : highlightTokens(snippetAroundIndex(entry.body, bestWindowIndex(bodyLower, tokens)), tokens);
+      results.push({ entry: entry, score: score, headingMatch: headingHit, snippetHtml: snippetHtml });
     });
-    results.sort(function (a, b) {
-      if (a.headingMatch !== b.headingMatch) return a.headingMatch ? -1 : 1;
-      return 0;
-    });
+    results.sort(function (a, b) { return b.score - a.score; });
     return results.slice(0, MAX_RESULTS);
   }
 
@@ -253,6 +356,9 @@
       ".gs-result:hover,.gs-result.active{background:var(--paper-deep);}" +
       ".gs-result .gs-source{display:block;color:var(--rust-dark);font:700 10px/1.2 system-ui,sans-serif;" +
       "letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px;}" +
+      ".gs-result .gs-best{display:inline-block;margin-right:6px;padding:1px 6px;border-radius:999px;" +
+      "background:var(--rust);color:#fff;font:700 9px/1.5 system-ui,sans-serif;letter-spacing:.05em;" +
+      "text-transform:uppercase;}" +
       ".gs-result .gs-heading{display:block;font:700 14.5px/1.3 Georgia,serif;color:var(--ink);}" +
       ".gs-result .gs-snippet{display:block;margin-top:3px;font:13px/1.4 system-ui,sans-serif;" +
       "color:var(--muted);}" +
@@ -264,7 +370,7 @@
 
   function init() {
     var lessons = getLessons();
-    var notes = getNotes();
+    var notes = getNotes().concat(getAnthropicNotesPages());
     var sources = lessons.concat(notes);
     if (!sources.length) return;
 
@@ -274,7 +380,7 @@
     var toggleBtn = document.createElement("button");
     toggleBtn.type = "button";
     toggleBtn.className = "gs-toggle";
-    toggleBtn.setAttribute("aria-label", "Search all lessons and notes (press /)");
+    toggleBtn.setAttribute("aria-label", "Ask a question or search all lessons and notes (press /)");
     toggleBtn.textContent = "🔍";
     if (masthead) {
       if (themeToggle) masthead.insertBefore(toggleBtn, themeToggle);
@@ -285,7 +391,7 @@
     overlay.className = "gs-overlay";
     overlay.setAttribute("role", "dialog");
     overlay.setAttribute("aria-modal", "true");
-    overlay.setAttribute("aria-label", "Search all lessons and notes");
+    overlay.setAttribute("aria-label", "Ask a question or search all lessons and notes");
     overlay.innerHTML =
       '<div class="gs-panel">' +
       '<div class="gs-input-row">' +
@@ -293,8 +399,8 @@
       '<circle cx="7" cy="7" r="5.2" stroke="currentColor" stroke-width="1.4"/>' +
       '<line x1="10.8" y1="11" x2="14.5" y2="14.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>' +
       "</svg>" +
-      '<input type="text" class="gs-input" placeholder="Search all ' + lessons.length + ' lessons and ' + notes.length + ' notes…" ' +
-      'aria-label="Search all lessons and notes" autocomplete="off" spellcheck="false">' +
+      '<input type="text" class="gs-input" placeholder="Ask a question or search ' + lessons.length + ' lessons and ' + notes.length + ' notes…" ' +
+      'aria-label="Ask a question or search all lessons and notes" autocomplete="off" spellcheck="false">' +
       '<span class="gs-esc">Esc</span>' +
       "</div>" +
       '<div class="gs-results"></div>' +
@@ -327,7 +433,7 @@
       currentResults = results;
       activeIndex = results.length ? 0 : -1;
       if (!input.value.trim()) {
-        resultsEl.innerHTML = '<div class="gs-hint">Type to search headings and text across every lesson and notes page — Enter jumps to the top match.</div>';
+        resultsEl.innerHTML = '<div class="gs-hint">Ask a question in plain words — the closest matching note comes back first, with a link straight to that spot. Enter jumps to it.</div>';
         return;
       }
       if (!results.length) {
@@ -339,8 +445,9 @@
         var btn = document.createElement("button");
         btn.type = "button";
         btn.className = "gs-result" + (i === 0 ? " active" : "");
+        var badge = i === 0 ? '<span class="gs-best">Best match</span>' : "";
         btn.innerHTML =
-          '<span class="gs-source">' + escapeHtml(r.entry.sourceGroup || r.entry.sourceTitle) + "</span>" +
+          '<span class="gs-source">' + badge + escapeHtml(r.entry.sourceGroup || r.entry.sourceTitle) + "</span>" +
           '<span class="gs-heading">' + (r.headingMatch ? r.snippetHtml : escapeHtml(r.entry.heading)) + "</span>" +
           '<span class="gs-snippet">' + (r.headingMatch ? "" : r.snippetHtml) + "</span>";
         btn.addEventListener("click", function () { jumpTo(r.entry); });
