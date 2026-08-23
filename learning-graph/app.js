@@ -584,7 +584,7 @@
       runner.qIndex = 0;
     }
     var q = kp.questions[runner.order[runner.qIndex]];
-    card.appendChild(questionBlock(q, function (correct) {
+    card.appendChild(questionBlock(q, t, function (correct) {
       var s = ts(t.id);
       if (correct) { s.right += 1; } else { s.wrong += 1; }
 
@@ -693,7 +693,7 @@
       card.appendChild(el("p", "small muted", "Question " + (runner.idx + 1) + " of " + runner.items.length));
     }
 
-    card.appendChild(questionBlock(item.q, function (correct) {
+    card.appendChild(questionBlock(item.q, topicById[item.topicId], function (correct) {
       var s = ts(item.topicId);
       if (correct) { s.right += 1; runner.right += 1; } else { s.wrong += 1; }
       runner.idx += 1;
@@ -746,8 +746,10 @@
     root.appendChild(card);
   }
 
-  /* One multiple-choice question, with the answer revealed before you move on. */
-  function questionBlock(q, done) {
+  /* One multiple-choice question, with the answer revealed before you move on.
+     `topic` (optional — the item may belong to a mixed set) supplies the "Read
+     more" links and grounds the Ask Claude prompt; either is skipped if absent. */
+  function questionBlock(q, topic, done) {
     var wrap = el("div");
     wrap.appendChild(el("p", null, q.q));
     var list = el("div", "opts");
@@ -769,6 +771,22 @@
         ex.appendChild(el("strong", null, correct ? "Correct. " : "Not quite. "));
         ex.appendChild(document.createTextNode(q.explain));
         wrap.appendChild(ex);
+
+        if (topic && topic.sources && topic.sources.length) {
+          var srcRow = el("p", "small muted q-sources");
+          srcRow.appendChild(document.createTextNode("Read more: "));
+          topic.sources.forEach(function (src, i2) {
+            if (i2) srcRow.appendChild(document.createTextNode(" · "));
+            var a = el("a", null, src.label);
+            a.href = src.href;
+            a.target = "_blank";
+            a.rel = "noopener noreferrer";
+            srcRow.appendChild(a);
+          });
+          wrap.appendChild(srcRow);
+        }
+        wrap.appendChild(askClaudeRow(buildAskClaudePrompt(topic, q)));
+
         var next = el("button", "btn", "Continue →");
         next.style.marginTop = "12px";
         next.addEventListener("click", function () { done(correct); });
@@ -779,6 +797,111 @@
     });
     wrap.appendChild(list);
     return wrap;
+  }
+
+  /* ---------- Ask Claude ---------- */
+
+  var CLAUDE_URL = "https://claude.ai/new";
+  var askToastEl = null, askToastTimer = null;
+
+  function showAskToast(message) {
+    if (!askToastEl) {
+      askToastEl = document.createElement("div");
+      askToastEl.className = "ask-claude-toast";
+      document.body.appendChild(askToastEl);
+    }
+    askToastEl.textContent = message;
+    askToastEl.classList.add("visible");
+    if (askToastTimer) clearTimeout(askToastTimer);
+    askToastTimer = setTimeout(function () { askToastEl.classList.remove("visible"); }, 3200);
+  }
+
+  function buildAskClaudePrompt(topic, q) {
+    var lines = [
+      "You are a coach for the Claude Certified Architect (Foundations) exam.",
+      "Subject: " + G.subject + " (" + G.section + ")"
+    ];
+    if (topic) lines.push("Topic: " + topic.name);
+    lines.push("");
+    lines.push("I just answered this practice question and want to understand the underlying concept more deeply:");
+    lines.push("");
+    lines.push(q.q);
+    q.options.forEach(function (opt, i) {
+      lines.push(String.fromCharCode(65 + i) + ") " + opt + (i === q.correct ? "  [correct answer]" : ""));
+    });
+    lines.push("");
+    lines.push("Explanation given: " + q.explain);
+    lines.push("");
+    lines.push("Help me understand why this is true, and quiz me with a follow-up question on the same idea.");
+    return lines.join("\n");
+  }
+
+  function askClaudeRow(promptText) {
+    var row = el("div", "ask-claude-row");
+    var btn = el("button", "ask-claude-btn", "Ask Claude about this ↗");
+    btn.type = "button";
+
+    var fallback = document.createElement("textarea");
+    fallback.className = "ask-claude-fallback";
+    fallback.readOnly = true;
+    fallback.setAttribute("aria-label", "Prompt to copy manually");
+
+    btn.addEventListener("click", function () {
+      var clipboardPromise;
+      try {
+        clipboardPromise = navigator.clipboard && navigator.clipboard.writeText
+          ? navigator.clipboard.writeText(promptText)
+          : Promise.reject(new Error("Clipboard API unavailable"));
+      } catch (e) {
+        clipboardPromise = Promise.reject(e);
+      }
+
+      // Fired synchronously, right next to the clipboard call, with no await
+      // in between — Safari revokes the click's user-activation otherwise,
+      // silently blocking the popup and/or the clipboard write.
+      window.open(CLAUDE_URL, "_blank", "noopener");
+
+      clipboardPromise.then(
+        function () {
+          showAskToast("Copied — paste it into the new Claude tab (Cmd/Ctrl+V).");
+          fallback.classList.remove("visible");
+        },
+        function () {
+          fallback.value = promptText;
+          fallback.classList.add("visible");
+          fallback.focus();
+          fallback.select();
+        }
+      );
+    });
+
+    row.appendChild(btn);
+    row.appendChild(fallback);
+    return row;
+  }
+
+  function injectAskClaudeStyles() {
+    var style = document.createElement("style");
+    style.id = "ask-claude-styles";
+    style.textContent =
+      ".q-sources{margin-top:10px;}" +
+      ".ask-claude-row{margin-top:10px;display:flex;align-items:center;flex-wrap:wrap;gap:10px;}" +
+      ".ask-claude-btn{border:1px solid var(--line);border-radius:3px;background:none;" +
+      "color:var(--muted);padding:5px 10px;font:600 11px/1 system-ui,sans-serif;" +
+      "letter-spacing:.04em;cursor:pointer;}" +
+      ".ask-claude-btn:hover,.ask-claude-btn:focus-visible{background:var(--rust);" +
+      "border-color:var(--rust);color:#fff;outline:none;}" +
+      ".ask-claude-fallback{display:none;width:100%;min-height:70px;margin-top:6px;" +
+      "padding:8px;border:1px solid var(--line);border-radius:3px;" +
+      "background:var(--paper-deep);color:var(--ink);font:12px/1.4 ui-monospace,monospace;}" +
+      ".ask-claude-fallback.visible{display:block;}" +
+      ".ask-claude-toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,8px);" +
+      "background:var(--rust-dark);color:#fff8f1;padding:9px 16px;border-radius:4px;" +
+      "font:600 12px/1.3 system-ui,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.25);" +
+      "opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;z-index:1000;" +
+      "max-width:88vw;text-align:center;}" +
+      ".ask-claude-toast.visible{opacity:1;transform:translate(-50%,0);}";
+    document.head.appendChild(style);
   }
 
   /* ---------- placement diagnostic ---------- */
@@ -878,7 +1001,7 @@
     card.appendChild(el("span", "kicker", "Placement check · " + (diag.asked + 1) + " of at most " + MAX_DIAGNOSTIC));
     card.appendChild(el("h3", null, t.name));
     var q = t.reviewQuestions[0];
-    card.appendChild(questionBlock(q, function (correct) {
+    card.appendChild(questionBlock(q, t, function (correct) {
       applyVerdict(t.id, correct, true);
       diag.asked += 1;
       renderDiagnostic();
@@ -1116,6 +1239,8 @@
         if (i) srcs.appendChild(document.createTextNode(" · "));
         var a = el("a", null, src.label);
         a.href = src.href;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
         srcs.appendChild(a);
       });
       row("Read more", srcs);
@@ -1305,6 +1430,7 @@
 
   loadState();
   injectMilestoneStyles();
+  injectAskClaudeStyles();
   renderMilestones();
 
   TABS.forEach(function (t) {
