@@ -102,7 +102,8 @@
       border: 1px solid var(--line); border-radius: 3px; background: var(--white);
       font: 400 15px/1.5 Georgia, serif; color: var(--ink); cursor: pointer;
     }
-    .option:hover:not(.disabled), .option:focus-visible:not(.disabled) { border-color: var(--accent-text); background: var(--paper); outline: none; }
+    @media (hover: hover) { .option:hover:not(.disabled) { border-color: var(--accent-text); background: var(--paper); } }
+    .option:focus-visible:not(.disabled) { border-color: var(--accent-text); background: var(--paper); outline: none; }
     .option .optkey { display: inline-block; width: 20px; font-weight: 700; color: var(--muted); }
     .option.correct { background: var(--good-bg); border-color: var(--good); }
     .option.wrong { background: var(--bad-bg); border-color: var(--bad); }

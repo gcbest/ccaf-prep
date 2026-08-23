@@ -157,7 +157,8 @@
       border: 1px solid var(--line); border-radius: 3px; background: var(--white); color: inherit;
       font: 15px/1.5 system-ui, sans-serif; cursor: pointer;
     }
-    .opt:hover:not([disabled]), .opt:focus-visible:not([disabled]) { border-color: var(--rust); outline: none; }
+    @media (hover: hover) { .opt:hover:not([disabled]) { border-color: var(--rust); } }
+    .opt:focus-visible:not([disabled]) { border-color: var(--rust); outline: none; }
     .opt[disabled] { cursor: default; }
     .opt.right { border-color: var(--good); background: var(--good-bg); }
     .opt.wrong { border-color: var(--bad); background: var(--bad-bg); }
