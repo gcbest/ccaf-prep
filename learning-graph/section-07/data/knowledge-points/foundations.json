@@ -1,0 +1,175 @@
+{
+  "$comment": "Knowledge points for cl_foundations.",
+  "cluster": "cl_foundations",
+  "topics": [
+    {
+      "topicId": "mt_agentic_loop_cc",
+      "knowledgePoints": [
+        {
+          "id": "kp_agentic_loop_cc_1",
+          "name": "Prompt in, verified action out",
+          "keyPrerequisites": [],
+          "teach": "<p class='kp-key'>Prompt in \u2192 gather context and produce text or a tool call \u2192 take the action \u2192 verify against the original intent \u2192 stop or loop back.</p><p>Claude Code is the same agentic loop you'd find anywhere else Claude calls tools, except the tools that come back with results act on your actual files, terminal, and codebase \u2014 an edit really lands, a command really runs. Three things make that loop \"agentic\" rather than a single completion: a <strong>context window</strong> that's finite, so Claude has to strategically find information instead of loading everything; <strong>permissions</strong>, which ask before edits and commands by default; and the plain fact that Claude <strong>can make mistakes</strong> \u2014 the loop's own verification step, and you staying in it, are what catch those early.</p>",
+          "questions": [
+            {
+              "id": "q_agentic_loop_cc_1a",
+              "q": "A developer notices that after asking Claude Code to add input validation to a form handler, Claude read the handler file, added a validation check, then re-read the file and compared the change against the original request before replying 'done.' Which concept does this re-read-and-compare step demonstrate?",
+              "options": [
+                "The loop's verification phase, where the result is checked against the original intent before the loop stops or retries",
+                "The permissions system, which requires explicit approval before any file edit is allowed to proceed",
+                "Context compaction, which summarizes the conversation and discards older tool output once too much history has accumulated across the session",
+                "The hook lifecycle, where a PostToolUse hook automatically re-reads any file Claude has just edited"
+              ],
+              "correct": 0,
+              "explain": "Re-reading the file and comparing it to the original request is the loop's verification step, checking the result against intent before deciding whether to stop or loop back. Approval gating, context summarization, and an automatic PostToolUse re-read are each a different mechanism entirely, none of which describe comparing the outcome to the original goal."
+            },
+            {
+              "id": "q_agentic_loop_cc_1b",
+              "q": "Two developers argue about whether Claude Code should be described as 'an LLM that answers questions' or 'an agent.' Which fact makes 'agent' the accurate description here?",
+              "options": [
+                "It uses a larger context window than earlier chat-only models, letting it read more of the codebase per turn",
+                "It runs in a loop that gathers context, takes real actions like edits and commands, and verifies its own results against the original goal",
+                "It has been fine-tuned specifically on software engineering tasks rather than general conversation",
+                "It runs inside a terminal application instead of a web browser, which changes the interface but not the underlying request-response mechanics involved"
+              ],
+              "correct": 1,
+              "explain": "What makes it an agent is the loop itself: gathering context, taking real actions on the environment, and verifying the outcome against the goal before stopping or continuing. Context window size, task-specific tuning, and the terminal interface are all incidental details that don't define the agentic loop."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_agentic_loop_cc_1",
+          "q": "A new team member asks why Claude Code doesn't just 'read the whole codebase' before starting every task instead of exploring strategically. What in the loop's design explains this?",
+          "options": [
+            "Permission mode restricts which directories Claude is allowed to read from during exploration",
+            "Hooks intercept read calls once a certain file count is reached and automatically block any further reads for the rest of that turn",
+            "The context window is finite, so Claude searches for relevant information deliberately rather than loading everything up front",
+            "The verification step only checks the final result, so exploration depth doesn't affect correctness anyway"
+          ],
+          "correct": 2,
+          "explain": "The context window is finite working memory, which is exactly why the loop searches strategically for relevant information instead of loading an entire codebase up front. Permission modes govern write actions rather than reads, hooks aren't a file-count limiter, and exploration depth does affect whether the loop has what it needs to verify correctly."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_epcc_workflow",
+      "knowledgePoints": [
+        {
+          "id": "kp_epcc_workflow_1",
+          "name": "Four phases, cheapest correction first",
+          "keyPrerequisites": [
+            "mt_agentic_loop_cc"
+          ],
+          "teach": "<p class='kp-key'>Explore, then Plan, then Code, then Commit \u2014 in that order, because a plan is far cheaper to correct than code that's already been written.</p><p><strong>Explore</strong> \u2014 let Claude investigate the codebase before acting, rather than assuming. <strong>Plan</strong> \u2014 the best place to course-correct, precisely because it happens before any code exists; revising a plan costs a conversation, revising committed code costs an undo. <strong>Code</strong> \u2014 define explicit success criteria up front, give Claude a way to verify its own work (a test suite, a tool like Claude in Chrome for UI changes), and keep validating continuously rather than only at the end. <strong>Commit</strong> \u2014 behind a fresh subagent review, with <code>/commit-push-pr</code> handling commit, push, and PR creation in one step.</p>",
+          "questions": [
+            {
+              "id": "q_epcc_workflow_1a",
+              "q": "A team lead insists Claude should skip straight from a one-line prompt to writing code on a multi-file refactor, since 'planning just adds a step.' What does the workflow say is lost by skipping the Plan phase specifically?",
+              "options": [
+                "The only opportunity to run the test suite, since tests can't be executed once the Code phase has already started",
+                "The chance to assign the task to a subagent, since subagent delegation is only available during the Plan phase",
+                "The step where Claude Code chooses which permission mode to run in for the rest of the session, a decision that otherwise defaults to whatever mode the terminal last used",
+                "The cheapest point to catch a wrong approach, since reviewing and revising a plan costs far less than reviewing and undoing code that's already been written"
+              ],
+              "correct": 3,
+              "explain": "Plan is deliberately the cheapest point to course-correct: revising a proposed approach is far less costly than reviewing and undoing code that already exists. Tests remain runnable in the Code phase, subagent delegation isn't restricted to Plan, and permission-mode selection isn't what the phase is for."
+            },
+            {
+              "id": "q_epcc_workflow_1b",
+              "q": "During the Code phase of a task, a developer wants to reduce how often they have to manually check whether Claude's changes actually work. Which practice does the workflow recommend for this?",
+              "options": [
+                "Defining explicit success criteria up front and giving Claude a way to verify its own work, such as a reliable test suite",
+                "Switching to Accept-edits permission mode so file changes apply without any review at all",
+                "Asking Claude to summarize its own confidence level in the change before moving on, instead of checking the result against anything concrete",
+                "Delaying all verification until the Commit phase, when the full diff can be reviewed at once"
+              ],
+              "correct": 0,
+              "explain": "Setting explicit success criteria and giving Claude a way to check its own work \u2014 like a reliable test suite \u2014 is what reduces reliance on manual checking during Code. A permission-mode switch changes who approves edits, not whether the work is verified; a self-reported confidence level isn't evidence; and deferring all verification to Commit throws away the whole point of continuous validation during Code."
+            },
+            {
+              "id": "q_epcc_workflow_1c",
+              "q": "Before making a single change, Claude Code spends several tool calls reading related files and searching for existing patterns similar to what it's about to build. Which phase of the workflow is this, and what is it meant to prevent?",
+              "options": [
+                "Plan \u2014 meant to prevent Claude from proposing an approach without first stating success criteria",
+                "Explore \u2014 meant to prevent Claude from acting on assumptions about a codebase it hasn't actually investigated",
+                "Code \u2014 meant to prevent Claude from writing tests before the implementation itself exists",
+                "Commit \u2014 meant to prevent Claude from pushing a change to the remote before a fresh subagent has had a chance to review it"
+              ],
+              "correct": 1,
+              "explain": "Reading related files and searching for existing patterns before acting is the Explore phase, meant to prevent Claude from acting on assumptions about a codebase it hasn't actually investigated. Stating success criteria belongs to Plan, test-writing order is a Code-phase concern, and subagent review before pushing belongs to Commit."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_epcc_workflow_1",
+          "q": "A developer wants Claude to verify UI changes visually rather than just by reading the code. What kind of tool does the Code phase recommend adding for this?",
+          "options": [
+            "A tool that automatically writes the commit message once the diff is finalized, summarizing the change for the pull request description",
+            "A tool that restricts which files Claude is allowed to open during the Code phase",
+            "A tool that lets Claude verify its own work directly, such as a browser-automation tool for checking UI changes",
+            "A tool that summarizes the conversation once the Code phase exceeds a certain length"
+          ],
+          "correct": 2,
+          "explain": "The Code phase recommends giving Claude a way to verify its own work directly \u2014 for UI changes, that means a browser-automation tool that can check the result, not just read the source. A commit-message writer, a file-access restrictor, and a conversation summarizer are unrelated to self-verification of the work itself."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_commit_review",
+      "knowledgePoints": [
+        {
+          "id": "kp_commit_review_1",
+          "name": "A reviewer with no stake in the outcome",
+          "keyPrerequisites": [
+            "mt_epcc_workflow"
+          ],
+          "teach": "<p class='kp-key'>Review with a fresh subagent, not the session that just wrote the code \u2014 it has no stake in believing its own work is already correct.</p><p>The session that just implemented a change has been reasoning its way toward that implementation for a while; asking it to review its own diff inherits all of that same-session bias. A subagent spun up specifically for review starts with the diff and nothing else, and catches what the implementing session would talk itself past. <code>/commit-push-pr</code> runs commit, push, and PR creation as one step, and can post the PR link to a configured Slack MCP server automatically. <code>claude --from-pr &lt;PR_NUMBER&gt;</code> resumes a session already linked to a specific pull request, picking back up with its full context intact.</p>",
+          "questions": [
+            {
+              "id": "q_commit_review_1a",
+              "q": "A developer asks the same session that just implemented a feature to also review its own diff before committing, reasoning that it has the most complete context on the change. What's the problem with this approach?",
+              "options": [
+                "The same session cannot technically read its own prior tool calls once the turn has ended, so it would effectively be reviewing the diff blind without that history",
+                "Reviewing a diff requires a different permission mode than editing files, which the same session can't switch into",
+                "Reviewing a diff requires a different permission mode than editing files, and the same session can't switch into that mode without ending its current turn first",
+                "The session has already reasoned its way toward this implementation, so it inherits the same bias toward believing the result is correct that a fresh reviewer wouldn't have"
+              ],
+              "correct": 3,
+              "explain": "Having just reasoned its way toward the implementation, the same session carries a bias toward believing its own result is already correct \u2014 exactly what a fresh reviewer doesn't inherit. It can read its own prior tool calls, review doesn't require a different permission mode, and context cost isn't the actual problem being described."
+            },
+            {
+              "id": "q_commit_review_1b",
+              "q": "A developer wants to resume work on a change that already has an open pull request, picking back up with the full context of that PR rather than starting a fresh session. What lets them do that directly?",
+              "options": [
+                "claude --from-pr <PR_NUMBER>, which resumes a session already linked to that specific pull request",
+                "claude --resume <PR_NUMBER>, which reopens the most recent session that touched that PR's branch",
+                "/commit-push-pr <PR_NUMBER>, which re-runs the commit-push-PR sequence against the existing PR",
+                "claude --checkout <PR_NUMBER>, which switches the working session's local files onto that pull request's branch"
+              ],
+              "correct": 0,
+              "explain": "claude --from-pr <PR_NUMBER> is the command that resumes a session already linked to that specific pull request, with its context intact. --resume takes a session name rather than a PR number, /commit-push-pr is for creating a PR in the first place, and there's no --checkout flag serving this purpose."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_commit_review_1",
+          "q": "A team has an MCP server for Slack configured in their CLAUDE.md. What can /commit-push-pr do as a result, beyond committing, pushing, and opening the PR?",
+          "options": [
+            "Automatically assign the PR to a reviewer based on the Slack channel's on-call rotation",
+            "Automatically post the PR link to Slack using the configured MCP server",
+            "Automatically summarize the Slack channel's recent discussion into the PR description",
+            "Automatically block the commit if the Slack channel reports an ongoing incident"
+          ],
+          "correct": 1,
+          "explain": "With a Slack MCP server configured, /commit-push-pr can automatically post the PR link to Slack. Assigning reviewers by on-call rotation, pulling channel discussion into the PR description, and blocking commits based on incident status are not part of what this command does."
+        }
+      ]
+    }
+  ]
+}

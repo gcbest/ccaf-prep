@@ -1,0 +1,34 @@
+{
+  "$comment": "Source standards this graph is aligned to. Two families: CCA-F exam-guide domains (ccaf:*) and the study-reference glossary terms (ccaf-glossary:*). Topics reference these by id in their `standards` array. Only the glossary terms Section 7 actually teaches are listed.",
+  "standards": [
+    { "id": "ccaf:d1", "family": "ccaf", "code": "Domain 1", "name": "Agentic Architecture & Orchestration", "weight": 0.27, "source": "CCA-F Exam Guide v1.0 (effective July 2026)" },
+    { "id": "ccaf:d2", "family": "ccaf", "code": "Domain 2", "name": "Tool Design & MCP Integration", "weight": 0.18, "source": "CCA-F Exam Guide v1.0 (effective July 2026)" },
+    { "id": "ccaf:d3", "family": "ccaf", "code": "Domain 3", "name": "Prompt Engineering & Structured Output", "weight": 0.20, "source": "CCA-F Exam Guide v1.0 (effective July 2026)" },
+    { "id": "ccaf:d4", "family": "ccaf", "code": "Domain 4", "name": "Claude Code Configuration & Workflows", "weight": 0.20, "source": "CCA-F Exam Guide v1.0 (effective July 2026)" },
+    { "id": "ccaf:d5", "family": "ccaf", "code": "Domain 5", "name": "Context Management & Reliability", "weight": 0.15, "source": "CCA-F Exam Guide v1.0 (effective July 2026)" },
+
+    { "id": "ccaf-glossary:t9", "family": "ccaf-glossary", "code": "t9", "name": "Programmatic enforcement vs. prompt guidance", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t21", "family": "ccaf-glossary", "code": "t21", "name": ".mcp.json", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t22", "family": "ccaf-glossary", "code": "t22", "name": "~/.claude.json", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t23", "family": "ccaf-glossary", "code": "t23", "name": "Environment variable expansion", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t25", "family": "ccaf-glossary", "code": "t25", "name": "Grep (built-in tool)", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t26", "family": "ccaf-glossary", "code": "t26", "name": "Glob (built-in tool)", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t28", "family": "ccaf-glossary", "code": "t28", "name": "CLAUDE.md hierarchy", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t29", "family": "ccaf-glossary", "code": "t29", "name": "@import syntax", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t30", "family": "ccaf-glossary", "code": "t30", "name": ".claude/rules/", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t31", "family": "ccaf-glossary", "code": "t31", "name": "/memory command", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t32", "family": "ccaf-glossary", "code": "t32", "name": ".claude/commands/", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t33", "family": "ccaf-glossary", "code": "t33", "name": "~/.claude/commands/", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t34", "family": "ccaf-glossary", "code": "t34", "name": "SKILL.md frontmatter", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t35", "family": "ccaf-glossary", "code": "t35", "name": "context: fork", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t36", "family": "ccaf-glossary", "code": "t36", "name": "allowed-tools (skill frontmatter)", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t37", "family": "ccaf-glossary", "code": "t37", "name": "argument-hint", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t38", "family": "ccaf-glossary", "code": "t38", "name": "Plan mode", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t39", "family": "ccaf-glossary", "code": "t39", "name": "Direct execution", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t40", "family": "ccaf-glossary", "code": "t40", "name": "Explore subagent", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t41", "family": "ccaf-glossary", "code": "t41", "name": "Interview pattern", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t42", "family": "ccaf-glossary", "code": "t42", "name": "-p / --print flag", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t43", "family": "ccaf-glossary", "code": "t43", "name": "--output-format json / --json-schema", "source": "study-reference/ccaf_study_reference.md" },
+    { "id": "ccaf-glossary:t60", "family": "ccaf-glossary", "code": "t60", "name": "/compact", "source": "study-reference/ccaf_study_reference.md" }
+  ]
+}

@@ -1,0 +1,1061 @@
+{
+  "$comment": "Micro-topics for Section 7 · Claude Code in Action. centrality and layer are derived by scripts/build-web-data.mjs and written back in place.",
+  "subject": "Claude Code in Action",
+  "sourceSection": "07-claude-code-in-action/notes.md",
+  "topics": [
+    {
+      "id": "mt_agentic_loop_cc",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_foundations",
+      "name": "The agentic loop, run by the CLI",
+      "description": "Claude Code runs the same agentic loop as any other Claude-based agent, but the tools it calls act on your real files and terminal: prompt in, Claude gathers context and produces text or a tool call, the action runs, the result is checked against the original intent, and it stops or loops back.",
+      "core": true,
+      "estMinutes": 5,
+      "evidence": [
+        "State the five-step shape of the loop from prompt to stop-or-retry",
+        "Name the three concepts (context window, permissions, fallibility) that make the loop 'agentic' rather than a single completion"
+      ],
+      "assessmentPrompt": "What happens between the moment you submit a prompt to Claude Code and the moment it stops and waits for your next one?",
+      "standards": [
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Notes · What Claude Code is",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 1,
+      "layer": 0
+    },
+    {
+      "id": "mt_epcc_workflow",
+      "type": "PROCEDURAL",
+      "cluster": "cl_foundations",
+      "name": "Explore → Plan → Code → Commit",
+      "description": "The recommended default shape for a Claude Code task: Explore the codebase before acting, Plan because a plan is far cheaper to correct than written code, Code against explicit success criteria with a way to self-verify, then Commit behind a fresh review.",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "Name all four phases in order and what each one buys",
+        "Explain why correcting a plan is cheaper than correcting code that already exists"
+      ],
+      "assessmentPrompt": "Why does the workflow put Plan before Code as a separate phase rather than letting Claude plan and implement in the same pass?",
+      "standards": [
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Explore → Plan → Code → Commit",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0.075,
+      "layer": 1
+    },
+    {
+      "id": "mt_commit_review",
+      "type": "PROCEDURAL",
+      "cluster": "cl_foundations",
+      "name": "A cold review before commit",
+      "description": "Before committing, run a subagent code review in a fresh context rather than trusting the same session that just wrote the code — a fresh reviewer has no same-session bias toward believing its own work is correct. claude --from-pr <PR_NUMBER> resumes a session already linked to a specific pull request.",
+      "core": false,
+      "estMinutes": 5,
+      "evidence": [
+        "Explain why the review subagent needs a context the implementing session did not have",
+        "Recall what --from-pr resumes"
+      ],
+      "assessmentPrompt": "Why run the pre-commit code review in a fresh subagent rather than asking the same session that wrote the code to review it?",
+      "standards": [
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Explore → Plan → Code → Commit",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0.05,
+      "layer": 2
+    },
+    {
+      "id": "mt_permission_modes_six",
+      "type": "FACTUAL",
+      "cluster": "cl_control_surface",
+      "name": "The six permission modes",
+      "description": "The six permission modes form a risk spectrum from most to least supervised: Manual (reads only), Accept edits (reads and edits run unasked), Plan (read-only, proposes without editing), Auto (accepts everything but a classifier reviews intent first), Don't ask (only pre-approved tools run, everything else auto-denied), and Bypass (skips all checks, container-only).",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Order all six modes by how much runs without asking",
+        "Say which mode is appropriate for an unattended CI job versus a container-isolated experiment"
+      ],
+      "assessmentPrompt": "Put the six permission modes in order from most to least supervised, and say which one an unattended CI pipeline should run under.",
+      "standards": [
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Permission modes — the full six",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0.1,
+      "layer": 1
+    },
+    {
+      "id": "mt_auto_classifier",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_control_surface",
+      "name": "Auto mode's classifier checks intent, not correctness",
+      "description": "In Auto mode, a separate classifier model reviews each action before it runs, checking whether it matches your intent — blocking things like production deploys, force-pushes, or piping downloaded code into a shell. It does not check correctness, so broken-but-safe code still runs; pairing Auto with a Stop hook that runs tests covers what the classifier can't.",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "State what the Auto-mode classifier checks and what it explicitly does not check",
+        "Name the mechanism that has to cover the gap the classifier leaves"
+      ],
+      "assessmentPrompt": "A teammate says Auto mode is safe to leave running overnight because 'the classifier catches anything dangerous.' What is the classifier actually checking, and what does that claim miss?",
+      "standards": [
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Permission modes — the full six",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 2
+    },
+    {
+      "id": "mt_plan_vs_direct",
+      "type": "PROCEDURAL",
+      "cluster": "cl_control_surface",
+      "name": "Plan mode versus direct execution",
+      "description": "Plan mode (read-only, researches and proposes before any edit) earns its cost on large-scale changes, unfamiliar codebases, or genuine architectural decisions with multiple valid approaches. Direct execution suits a well-scoped, single-location change where the fix is already clear — entering plan mode there just adds a review step nothing needed.",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "State the two or three conditions that make plan mode worth the extra step",
+        "Recognize a well-scoped single-file change as a direct-execution case"
+      ],
+      "assessmentPrompt": "A developer is asked to add one null-check to a function whose signature and fix are already clear. Should that start in plan mode or direct execution, and why?",
+      "standards": [
+        "ccaf:d4",
+        "ccaf-glossary:t38",
+        "ccaf-glossary:t39"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Basic permission modes",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0.05,
+      "layer": 2
+    },
+    {
+      "id": "mt_interview_pattern",
+      "type": "PROCEDURAL",
+      "cluster": "cl_control_surface",
+      "name": "The interview pattern",
+      "description": "The interview pattern asks Claude to question you about requirements, constraints, and assumptions before proposing any design — useful specifically when you suspect there are design considerations, edge cases, or tradeoffs you haven't thought to specify, such as security-sensitive or unfamiliar-architecture work.",
+      "core": false,
+      "estMinutes": 5,
+      "evidence": [
+        "Explain what problem the interview pattern solves that a detailed upfront spec does not",
+        "Recognize a scenario (unfamiliar codebase, high-stakes design) that calls for it"
+      ],
+      "assessmentPrompt": "Before implementing a new authentication module, a team lead wants Claude to surface security considerations and edge cases nobody on the team has thought to ask about yet. Which technique fits, and why does writing a more detailed spec not solve the same problem?",
+      "standards": [
+        "ccaf:d3",
+        "ccaf:d4",
+        "ccaf-glossary:t41"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Course-derived operating checklist",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 3
+    },
+    {
+      "id": "mt_explore_subagent_cc",
+      "type": "PROCEDURAL",
+      "cluster": "cl_control_surface",
+      "name": "The Explore subagent isolates discovery",
+      "description": "Verbose plan-mode discovery — full file reads, search output, dependency traces — can fill the main session's context before a plan is even finished. The Explore subagent isolates that discovery in its own context window and returns a structured summary, keeping the raw output out of the main conversation entirely.",
+      "core": true,
+      "estMinutes": 5,
+      "evidence": [
+        "Explain why Explore fixes the problem rather than just delaying it, unlike running /compact mid-exploration",
+        "State what crosses back into the main session versus what stays isolated"
+      ],
+      "assessmentPrompt": "Plan-mode exploration of a large codebase is filling up the main session's context before the plan is finished. What technique isolates that discovery, and what does it hand back to the main session?",
+      "standards": [
+        "ccaf:d4",
+        "ccaf:d5",
+        "ccaf-glossary:t40"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Course-derived operating checklist",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 3
+    },
+    {
+      "id": "mt_claudemd_basic",
+      "type": "FACTUAL",
+      "cluster": "cl_claudemd",
+      "name": "What CLAUDE.md solves",
+      "description": "CLAUDE.md is read automatically at the start of every session and its contents are appended to the prompt — without it, Claude re-explores your codebase and re-derives assumptions from scratch each time. /init generates a starting file; a good habit is starting lean and adding a rule only once you've actually had to correct Claude on it.",
+      "core": true,
+      "estMinutes": 5,
+      "evidence": [
+        "State what problem CLAUDE.md solves and when it gets loaded",
+        "Explain why starting with an empty or minimal file is recommended over front-loading it"
+      ],
+      "assessmentPrompt": "What breaks, session to session, if a project has no CLAUDE.md at all — and why is 'start without one' still reasonable advice?",
+      "standards": [
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Notes · CLAUDE.md — the basic model",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0.425,
+      "layer": 1
+    },
+    {
+      "id": "mt_claudemd_hierarchy",
+      "type": "FACTUAL",
+      "cluster": "cl_claudemd",
+      "name": "Four locations, one stack",
+      "description": "Four CLAUDE.md locations load together and stack at launch: managed policy (org-level, cannot be excluded), user (personal, follows you across projects, never committed), project (shared with the team, checked into the repo), and local (git-ignored, personal notes for this one repo). /memory shows which files actually loaded this session.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Name all four locations and which ones are version-controlled versus personal",
+        "Diagnose a 'works for me but not my teammate' report as a user-level-file symptom"
+      ],
+      "assessmentPrompt": "A senior engineer's detailed standards live only in ~/.claude/CLAUDE.md. A new teammate clones the repo and Claude doesn't follow those standards. What's the most likely cause, and where should the standards have gone instead?",
+      "standards": [
+        "ccaf:d4",
+        "ccaf-glossary:t28",
+        "ccaf-glossary:t31"
+      ],
+      "sources": [
+        {
+          "label": "Notes · A CLAUDE.md that Claude actually follows",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0.075,
+      "layer": 2
+    },
+    {
+      "id": "mt_claudemd_imports",
+      "type": "FACTUAL",
+      "cluster": "cl_claudemd",
+      "name": "@import: organization, not context savings",
+      "description": "@import (e.g. @.claude/conventions/code-style.md) pulls another file's content into CLAUDE.md, expanded inline at launch — so imports help organize a large file into pieces, but do not reduce how much of it lands in context. The pattern that scales across a monorepo: package-specific CLAUDE.md files plus a root file that imports the conventions shared by all of them.",
+      "core": false,
+      "estMinutes": 5,
+      "evidence": [
+        "State precisely what @import does and does not save (organization, not context size)",
+        "Design an import layout for shared-plus-package-specific conventions"
+      ],
+      "assessmentPrompt": "A monorepo has five packages, each with its own linting and testing conventions, plus conventions all five share. What's the most maintainable CLAUDE.md layout, and does splitting the file with @import actually shrink what loads into context?",
+      "standards": [
+        "ccaf:d4",
+        "ccaf-glossary:t29"
+      ],
+      "sources": [
+        {
+          "label": "Notes · A CLAUDE.md that Claude actually follows",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 3
+    },
+    {
+      "id": "mt_claude_rules",
+      "type": "PROCEDURAL",
+      "cluster": "cl_claudemd",
+      "name": ".claude/rules/: path-scoped conventions",
+      "description": ".claude/rules/ splits conventions into topic-focused files, each with YAML frontmatter naming glob patterns (e.g. paths: [\"infra/**/*\"]) that scope when the rule loads — so Terraform conventions only enter context in a session touching .tf files, instead of sitting in every session via one long root CLAUDE.md.",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "Explain what problem path-scoped rules solve that a single growing CLAUDE.md doesn't",
+        "Write the shape of a frontmatter path scope for a directory-specific rule"
+      ],
+      "assessmentPrompt": "A 400-line root CLAUDE.md mixes Python, TypeScript, infrastructure, and testing rules, and Claude keeps applying the wrong ones to the wrong files. What reorganizes this so each rule set only loads for its own files?",
+      "standards": [
+        "ccaf:d4",
+        "ccaf-glossary:t30"
+      ],
+      "sources": [
+        {
+          "label": "Notes · A CLAUDE.md that Claude actually follows",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 3
+    },
+    {
+      "id": "mt_claudemd_phrasing",
+      "type": "PROCEDURAL",
+      "cluster": "cl_claudemd",
+      "name": "Phrasing that sticks, and emphasis as a budget",
+      "description": "CLAUDE.md is guidance competing for attention, not enforced configuration — every added line makes every other line's compliance a little less reliable. Effective phrasing is specific and checkable, names the replacement instead of just banning something ('use named exports' beats 'don't use default exports'), and treats emphasis words like IMPORTANT and YOU MUST as a small budget, not decoration.",
+      "core": false,
+      "estMinutes": 5,
+      "evidence": [
+        "Explain why a longer CLAUDE.md tends to have lower per-rule compliance",
+        "Rewrite a vague, ban-only instruction as a specific, checkable one"
+      ],
+      "assessmentPrompt": "Why does adding a tenth 'IMPORTANT' rule to an already-long CLAUDE.md tend to make Claude follow all ten worse, not just the new one?",
+      "standards": [
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Notes · A CLAUDE.md that Claude actually follows",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0.3,
+      "layer": 2
+    },
+    {
+      "id": "mt_rule_placement",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_mechanism",
+      "name": "The right mechanism for the rule",
+      "description": "Every rule belongs to exactly one of three mechanisms depending on how firm it needs to be: always-true project context and conventions go in CLAUDE.md (guidance), a reusable task-specific procedure becomes a Skill (loaded when relevant), and anything that must never be skippable — a hard constraint, not a preference — becomes a hook (deterministic enforcement).",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Sort a given rule into CLAUDE.md, Skill, or hook based on whether it can ever be skipped",
+        "Explain why a 'must never happen' rule in CLAUDE.md is a category error, not just weak phrasing"
+      ],
+      "assessmentPrompt": "A team wants Claude to never commit directly to main. Is that a CLAUDE.md instruction, a Skill, or a hook — and what makes the other two the wrong mechanism for it?",
+      "standards": [
+        "ccaf:d4",
+        "ccaf-glossary:t9"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Course-derived operating checklist",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0.275,
+      "layer": 3
+    },
+    {
+      "id": "mt_slash_commands",
+      "type": "FACTUAL",
+      "cluster": "cl_mechanism",
+      "name": "Shared versus personal slash commands",
+      "description": "Custom slash commands split the same way CLAUDE.md's locations do: .claude/commands/ in the repo is version-controlled and reaches every developer on clone or pull, while ~/.claude/commands/ is personal and never shared. A /review command meant for the whole team belongs in the project location, not a personal one.",
+      "core": true,
+      "estMinutes": 4,
+      "evidence": [
+        "Place a shared team command and a personal command in their correct directories",
+        "Explain why a personal command directory can't satisfy a 'every developer gets this' requirement"
+      ],
+      "assessmentPrompt": "You want a /review slash command that every developer gets automatically when they clone the repo. Which directory does it go in, and why wouldn't the personal-commands directory work?",
+      "standards": [
+        "ccaf:d4",
+        "ccaf-glossary:t32",
+        "ccaf-glossary:t33"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Course-derived operating checklist",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 3
+    },
+    {
+      "id": "mt_skill_frontmatter",
+      "type": "FACTUAL",
+      "cluster": "cl_mechanism",
+      "name": "SKILL.md frontmatter",
+      "description": "A Skill's SKILL.md frontmatter configures how it runs: context: fork runs the skill in an isolated sub-agent context so its exploratory tool calls never accumulate in the main session, allowed-tools restricts which tools it may call, and argument-hint prompts the caller for the parameters the skill expects. A skill folder can also hold a reference.md and executable scripts Claude runs rather than reads into context.",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "Name what context: fork, allowed-tools, and argument-hint each control",
+        "Pick the frontmatter setting that stops a skill's exploratory output from polluting the main conversation"
+      ],
+      "assessmentPrompt": "A /scaffold skill runs hundreds of lines of exploratory reads and Bash commands before generating output, and teammates complain it pollutes their main conversation. Which frontmatter setting fixes this, and what does it actually change about where the skill runs?",
+      "standards": [
+        "ccaf:d4",
+        "ccaf-glossary:t34",
+        "ccaf-glossary:t35",
+        "ccaf-glossary:t36",
+        "ccaf-glossary:t37"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Course-derived operating checklist",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0.05,
+      "layer": 4
+    },
+    {
+      "id": "mt_verification_skill",
+      "type": "PROCEDURAL",
+      "cluster": "cl_mechanism",
+      "name": "Build a verification skill first",
+      "description": "A verification skill — one that runs the test suite, reads the diff, checks tests weren't weakened just to pass, and reports pass/fail with evidence — is the highest-leverage skill to build first, because it replaces a check you'd otherwise have to remember to ask for by hand every single time.",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "Explain why a verification skill outranks other automation candidates for being built first",
+        "State the shape a verification skill's check should take beyond 'ran the tests'"
+      ],
+      "assessmentPrompt": "Why does 'the code looks right' from a diff read not count as verification, and what does a verification skill add that a manual glance doesn't?",
+      "standards": [
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Verification skills",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 5
+    },
+    {
+      "id": "mt_compact_direction",
+      "type": "PROCEDURAL",
+      "cluster": "cl_sessions",
+      "name": "/compact with a direction",
+      "description": "/compact <instructions> summarizes the conversation so far, and the text after the command shapes what the summary keeps — /compact Focus on the --version flag implementation, for instance. Compacting without any steering risks the summary dropping details that later turns still need.",
+      "core": true,
+      "estMinutes": 5,
+      "evidence": [
+        "Explain what steering text after /compact does to the resulting summary",
+        "State the risk of compacting without any direction"
+      ],
+      "assessmentPrompt": "A long session is about to run out of context, and only the work on one specific feature still matters going forward. What command keeps that feature's details out of the summarization's blind spot?",
+      "standards": [
+        "ccaf:d5",
+        "ccaf-glossary:t60"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Steering long sessions",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0.075,
+      "layer": 1
+    },
+    {
+      "id": "mt_context_clear",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_sessions",
+      "name": "/clear versus /compact, and /context",
+      "description": "/clear wipes the conversation entirely and starts fresh, appropriate when starting a new feature so old-conversation bias doesn't bleed in; /compact keeps going mid-feature by summarizing instead of erasing. /context shows a breakdown of what's actually consuming the context window, and being specific in a prompt saves more context than it costs, since a vague prompt forces more exploration and reasoning.",
+      "core": true,
+      "estMinutes": 5,
+      "evidence": [
+        "Choose /clear versus /compact for a given situation based on whether the task itself has changed",
+        "Explain why a more detailed prompt can cost less context than a vague one"
+      ],
+      "assessmentPrompt": "You're starting a brand-new feature in a session that's been deep in unrelated debugging for an hour. Should you /compact or /clear, and why would carrying the debugging summary forward be worse than starting over?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Steering long sessions",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 2
+    },
+    {
+      "id": "mt_rewind_menu",
+      "type": "PROCEDURAL",
+      "cluster": "cl_sessions",
+      "name": "The rewind menu",
+      "description": "Double-tapping Escape on an empty prompt opens the rewind menu; every user prompt created a checkpoint you can return to. Its five options split code and conversation independently: restore both, restore conversation only, restore code only, summarize from here, or summarize up to here (compressing everything before while keeping the recent implementation intact).",
+      "core": false,
+      "estMinutes": 5,
+      "evidence": [
+        "Recall how a checkpoint is created and how to open the menu",
+        "Pick the correct restore option for 'keep the code, discard the last few messages of conversation'"
+      ],
+      "assessmentPrompt": "An exploratory edit turned out to be a dead end, but the conversation that led up to it is worth keeping. Which rewind option undoes just the code, and how is a checkpoint created in the first place?",
+      "standards": [
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Steering long sessions",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 1
+    },
+    {
+      "id": "mt_goal_loop",
+      "type": "FACTUAL",
+      "cluster": "cl_sessions",
+      "name": "/goal and /loop",
+      "description": "/goal sets a completion condition Claude works toward across turns until a fast evaluator confirms it's met — but the evaluator only reads the transcript, so the condition must be checkable from Claude's own output (like test results), not from state outside the conversation. /loop runs a prompt on an interval, useful for polling external state like a CI run or a deploy and acting on change.",
+      "core": false,
+      "estMinutes": 5,
+      "evidence": [
+        "State the one constraint that limits what a /goal condition can check",
+        "Distinguish when /goal fits versus when /loop does"
+      ],
+      "assessmentPrompt": "Why can't a /goal condition be 'wait until the production deploy finishes,' even though /goal is designed to work across turns until a condition is met?",
+      "standards": [
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Steering long sessions",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 2
+    },
+    {
+      "id": "mt_worktrees",
+      "type": "FACTUAL",
+      "cluster": "cl_sessions",
+      "name": "Worktrees for parallel sessions",
+      "description": "A worktree gives each parallel Claude Code session its own independent file tree, so two sessions working the same repo at once don't clobber each other's changes; worktrees are auto-removed when their session exits. .worktreeinclude lists git-ignored files (env vars, local config) that should still be copied into every new worktree.",
+      "core": false,
+      "estMinutes": 4,
+      "evidence": [
+        "Explain the collision worktrees prevent when running parallel sessions",
+        "State what .worktreeinclude is for"
+      ],
+      "assessmentPrompt": "Two Claude Code sessions are working on unrelated features in the same repository at the same time. What isolates their file changes from each other, and what cleans it up afterward?",
+      "standards": [
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Steering long sessions",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 1
+    },
+    {
+      "id": "mt_hook_events_cc",
+      "type": "FACTUAL",
+      "cluster": "cl_hooks",
+      "name": "The hook event lifecycle",
+      "description": "Roughly 30 hook events fire across a Claude Code session; the most-used are PreToolUse (before a call, can block it), PostToolUse (after a call succeeds, e.g. auto-formatting), Stop (Claude wants to end its turn, can refuse — paired with SubagentStop), PreCompact/PostCompact (around compaction), and SessionStart (primes the environment at launch, or right after compaction via its compact matcher). Project-level hooks live in .claude/settings.json, checked into the repo.",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "Name which events fire before versus after a tool call, and what that timing lets each one do",
+        "State where project-level hooks are configured"
+      ],
+      "assessmentPrompt": "Which hook event fires early enough to block a tool call before it runs, and which one fires too late to stop anything but can still react to what just happened?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Hooks — the deeper model",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0.15,
+      "layer": 4
+    },
+    {
+      "id": "mt_hook_exit_codes",
+      "type": "FACTUAL",
+      "cluster": "cl_hooks",
+      "name": "Exit codes, and the exit-1 trap",
+      "description": "A hook's exit code is how it reports back: 0 means success, 2 is a blocking error whose stderr gets fed back to Claude as context (works almost everywhere, including blocking Stop), and any other code — including 1 — is non-blocking. Exit 1 not blocking is the single most common mistake in hook scripts. PostToolUse fires after the tool already ran, so no exit code there can prevent that call. Notification and SessionStart ignore blocking entirely.",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "State what each of exit 0, exit 2, and exit 1 actually does",
+        "Explain why PostToolUse can never block the call it fires after"
+      ],
+      "assessmentPrompt": "A hook script exits with status 1 when it detects a problem, expecting Claude Code to block the action — but the action goes through anyway. What exit code should it have used, and why did 1 fail silently instead of erroring loudly?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Hooks — the deeper model",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0.1,
+      "layer": 5
+    },
+    {
+      "id": "mt_pretooluse_decision",
+      "type": "FACTUAL",
+      "cluster": "cl_hooks",
+      "name": "permissionDecision",
+      "description": "A PreToolUse hook's JSON response carries a permissionDecision field with three values available interactively: allow, deny, or ask; a fourth value, defer, only applies to non-interactive -p runs. This sits above the general exit-code contract as the PreToolUse-specific way to communicate a finer-grained decision than block-or-not.",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "Name the three permissionDecision values available in an interactive session",
+        "State which fourth value exists and the one context it applies to"
+      ],
+      "assessmentPrompt": "What field does a PreToolUse hook's JSON response use to communicate its decision, and why is one of that field's possible values only meaningful outside an interactive session?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Hooks — the deeper model",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0.025,
+      "layer": 6
+    },
+    {
+      "id": "mt_updated_input",
+      "type": "PROCEDURAL",
+      "cluster": "cl_hooks",
+      "name": "updatedInput: rewrite instead of block",
+      "description": "A PreToolUse hook can return updatedInput to rewrite a tool call instead of blocking it outright — for example, detecting a live secret pattern in a Bash command and swapping it for a placeholder so the command still runs, but the secret never makes it through. updatedInput replaces the whole input object, so a hook that only wants to change one field must still echo back every other field or lose them.",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "Explain the redact-instead-of-block pattern and what it preserves versus a hard deny",
+        "State the one thing a hook using updatedInput must remember to do, and what happens if it doesn't"
+      ],
+      "assessmentPrompt": "A PreToolUse hook wants to strip a live secret out of a Bash command while still letting the (now-redacted) command run. Which field does it return, and what mistake loses the command's other parameters if the hook isn't careful?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Hooks — the deeper model",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 7
+    },
+    {
+      "id": "mt_sessionstart_compact",
+      "type": "FACTUAL",
+      "cluster": "cl_hooks",
+      "name": "SessionStart's compact matcher versus PostCompact",
+      "description": "SessionStart primes the environment when a session launches, and its compact matcher specifically re-injects concise context right after a compaction finishes. PostCompact fires around the same moment but does not feed its output back into the conversation — so re-priming context after a compact has to go through SessionStart's compact matcher, not PostCompact.",
+      "core": false,
+      "estMinutes": 5,
+      "evidence": [
+        "Name which hook actually feeds output back into the conversation after a compaction",
+        "Explain why PostCompact looks like the obvious choice but isn't"
+      ],
+      "assessmentPrompt": "You want to re-inject a short reminder of project context immediately after every /compact. Which hook (and matcher) actually does that, and why doesn't PostCompact work for this even though it also fires around compaction?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Hooks — the deeper model",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 5
+    },
+    {
+      "id": "mt_mcp_scoping_cc",
+      "type": "FACTUAL",
+      "cluster": "cl_mcp_tools",
+      "name": "MCP scoping and .mcp.json",
+      "description": "claude mcp add wires up an MCP server over one of two transports, HTTP (remote/hosted) or Stdio (local process); /mcp manages servers in-session. Scoping controls who gets it: Local (just you, this project), User (all your projects), or Project (.mcp.json, committed to the repo, so the whole team gets identical servers automatically) — with environment variables like ${GITHUB_TOKEN} expanded from the caller's environment rather than stored in the file.",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "Match each scope (Local/User/Project) to who receives the server",
+        "Explain why ${GITHUB_TOKEN}-style expansion belongs in .mcp.json instead of a literal token"
+      ],
+      "assessmentPrompt": "A team wants every developer to get the same MCP server automatically, without anyone committing a personal API token to the repo. Which scope and which config mechanism deliver both at once?",
+      "standards": [
+        "ccaf:d2",
+        "ccaf-glossary:t21",
+        "ccaf-glossary:t22",
+        "ccaf-glossary:t23"
+      ],
+      "sources": [
+        {
+          "label": "Notes · MCP and Hooks — the basic model",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0.05,
+      "layer": 1
+    },
+    {
+      "id": "mt_mcp_context_cost",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_mcp_tools",
+      "name": "MCP's context tax, and tool search mode",
+      "description": "Every configured MCP server's tool definitions load into context regardless of whether that session ever calls them. Once MCP tool definitions exceed roughly 10% of the context window, Claude Code auto-switches to 'tool search mode,' discovering tools on demand rather than holding them all loaded — a tradeoff of reliability for context space.",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "State what triggers the switch to tool search mode and what changes when it does",
+        "Explain why disabling an unused server helps even if that session never called its tools"
+      ],
+      "assessmentPrompt": "A project has six MCP servers connected but a given session only ever uses tools from two of them. What is the unused four still costing, and what threshold makes Claude Code start discovering tools on demand instead of holding them all in context?",
+      "standards": [
+        "ccaf:d2",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Notes · MCP inside Claude Code",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0.025,
+      "layer": 2
+    },
+    {
+      "id": "mt_tool_design_principle",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_mcp_tools",
+      "name": "Abstract, combinable tools",
+      "description": "Claude Code's own toolset — bash, read, write, edit, glob, grep — stays deliberately generic rather than hyper-specialized, so Claude can combine a handful of primitives creatively for tasks nobody anticipated in advance. Preferring a CLI equivalent (gh, aws) over a dedicated MCP server, when one exists, follows the same instinct: fewer, more general tools over many narrow ones.",
+      "core": false,
+      "estMinutes": 5,
+      "evidence": [
+        "Explain why generic primitives beat a large set of narrow, task-specific tools for an open-ended agent",
+        "Recognize the CLI-equivalent preference as an instance of the same principle"
+      ],
+      "assessmentPrompt": "Why does Claude Code ship with a small set of generic tools like bash and grep instead of many narrow, task-specific ones — and what does that same reasoning say about adding an MCP server when a CLI tool already does the job?",
+      "standards": [
+        "ccaf:d2",
+        "ccaf-glossary:t25",
+        "ccaf-glossary:t26"
+      ],
+      "sources": [
+        {
+          "label": "Notes · MCP inside Claude Code",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 3
+    },
+    {
+      "id": "mt_subagent_isolation_cc",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_mcp_tools",
+      "name": "Subagents in Claude Code: isolation and creation",
+      "description": "A subagent runs a delegated task in its own isolated context window in parallel with the main session, returning only a summary — so the exploration trail (every file read, every search) never lands in the main conversation. Create one via /agents → 'Create new agent'; Claude auto-generates the name, description, and prompt, and that description is also what later decides whether Claude invokes it for a future prompt.",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "State what crosses back to the main session from a subagent and what stays isolated",
+        "Explain how a subagent's description does double duty (documentation and invocation trigger)"
+      ],
+      "assessmentPrompt": "You only need the answer to 'where in this codebase is retry logic implemented,' not the search process that finds it. Why does delegating that to a subagent keep the main session cleaner than doing the search directly?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Subagents",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0.025,
+      "layer": 1
+    },
+    {
+      "id": "mt_subagent_skill_preload",
+      "type": "FACTUAL",
+      "cluster": "cl_mcp_tools",
+      "name": "Preloading a skill into a subagent",
+      "description": "Preloading a skill into a subagent via the skill key loads that skill's entire content immediately — unlike the main conversation, where a skill loads progressively, starting with just its name and description until Claude decides it's relevant.",
+      "core": false,
+      "estMinutes": 4,
+      "evidence": [
+        "State the difference between how a skill loads in the main conversation versus preloaded into a subagent",
+        "Explain why immediate full loading is acceptable for a subagent but would be wasteful by default in the main session"
+      ],
+      "assessmentPrompt": "A subagent is configured with a preloaded skill via the skill key. How does that skill's content enter the subagent's context differently than it would enter the main conversation on its own?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Subagents",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 5
+    },
+    {
+      "id": "mt_automation_spectrum",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_automation",
+      "name": "Routines, headless, and the Agent SDK: a spectrum",
+      "description": "Three ways to run Claude Code without a person watching each turn, ordered by how much control they trade for how little setup: Routines (a saved prompt on Anthropic's managed infrastructure, no server or workflow file of your own), Headless mode (-p, one-shot and pipeable inside your own scripting), and the Agent SDK (a library embedding Claude Code inside your own application, owning the loop yourself).",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Order the three approaches by how much of the infrastructure you own",
+        "Pick the right one for 'repeat work,' 'needs my own pipeline,' and 'belongs inside my product'"
+      ],
+      "assessmentPrompt": "A team needs to run the same review prompt on every new pull request with zero infrastructure of their own to maintain. Which point on the automation spectrum defaults to that job, and what would push them toward one of the other two instead?",
+      "standards": [
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Automating repeat work",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0.15,
+      "layer": 1
+    },
+    {
+      "id": "mt_routines",
+      "type": "FACTUAL",
+      "cluster": "cl_automation",
+      "name": "Routines: triggers and constraints",
+      "description": "A Routine is a saved prompt plus a repo and optional connectors, run on Anthropic's managed cloud infrastructure — created via claude.ai/code/routines or /schedule <description>, triggered by a cron schedule, an HTTP POST, or a GitHub event. As a research preview it carries real constraints: a recurring schedule runs at most hourly, each run starts from a fresh clone of the default branch, and it can only push to claude/-prefixed branches by default.",
+      "core": false,
+      "estMinutes": 6,
+      "evidence": [
+        "Name the three trigger types a Routine supports",
+        "State the schedule-frequency and branch-push constraints"
+      ],
+      "assessmentPrompt": "A Routine is scheduled to run every 15 minutes. What actually happens, given the constraints on how often a recurring Routine can fire — and where does each run start from?",
+      "standards": [
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Automating repeat work",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 2
+    },
+    {
+      "id": "mt_headless_flags",
+      "type": "PROCEDURAL",
+      "cluster": "cl_automation",
+      "name": "Headless mode: -p, JSON output, --bare",
+      "description": "Headless mode (-p / --print) runs one-shot with no interactive UI, but it also skips auto-discovery of hooks, skills, plugins, MCP servers, and CLAUDE.md — only explicitly allowed tools are available, trading breadth for a faster startup. --output-format json plus --json-schema '<schema>' puts the result in .structured_output for piping through jq; a multi-step run captures session_id and resumes with claude --resume; --bare gives deterministic, repeatable output for CI.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "State what headless mode skips by default and why that's the tradeoff, not a bug",
+        "Match --output-format json/--json-schema, --resume, and --bare to what each solves"
+      ],
+      "assessmentPrompt": "A CI pipeline needs Claude Code's findings to be machine-parseable with file, line, and comment fields it can post as inline PR comments, instead of unstructured text a regex has to scrape. What combination of flags produces that directly, and why is that more robust than a stricter prompt plus a validator?",
+      "standards": [
+        "ccaf:d4",
+        "ccaf-glossary:t42",
+        "ccaf-glossary:t43"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Automating repeat work",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0.025,
+      "layer": 2
+    },
+    {
+      "id": "mt_github_review_action",
+      "type": "FACTUAL",
+      "cluster": "cl_automation",
+      "name": "Managed Code Review versus the GitHub Action",
+      "description": "Managed Code Review is Anthropic-hosted via the Claude GitHub app: it posts inline PR comments tagged by severity plus a summary, analyzed against the full codebase, triggered on PR open, on every push, or only on an @claude review comment — but it never approves or blocks a PR, and has no managed autofix. The GitHub Action (anthropics/claude-code-action@v1) is do-it-yourself, for anything that needs to act in CI rather than just comment, configured with trigger_phrase, prompt, and claude_args passed straight to the CLI.",
+      "core": false,
+      "estMinutes": 6,
+      "evidence": [
+        "State the one thing managed Code Review never does, no matter the finding's severity",
+        "Choose managed Code Review versus the GitHub Action for a given CI requirement"
+      ],
+      "assessmentPrompt": "A pipeline needs to automatically fix a lint violation Claude finds, not just leave a comment about it. Does managed Code Review or the GitHub Action fit that job, and why can't the other one do it?",
+      "standards": [
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Notes · GitHub Actions and Code Review",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 3
+    },
+    {
+      "id": "mt_plugins",
+      "type": "FACTUAL",
+      "cluster": "cl_automation",
+      "name": "Plugins: bundling, stacking, and trust",
+      "description": "A plugin bundles skills, subagents, hooks, and MCP server configs into one installable unit, solving the 'copy .claude files between machines' problem — installed via /plugin install org-name@plugin-name then /reload-plugins, with /plugin marketplace add centralizing team-wide discovery. Its components run alongside yours rather than replacing them: hooks stack, and skills/agents/commands are namespaced under the plugin name. Its own settings.json only honors two keys. Automated 'reviewed' status is not the same as trusted — a plugin runs its hooks on every matching tool call with your privileges, reviewed or not.",
+      "core": false,
+      "estMinutes": 6,
+      "evidence": [
+        "Name what a plugin bundles and how its hooks interact with your own (stack, don't replace)",
+        "Explain why 'community-reviewed' isn't sufficient grounds to install a plugin"
+      ],
+      "assessmentPrompt": "You install a community plugin that's marked as automated-community-reviewed. What does that label actually verify, and what does installing the plugin hand it access to regardless?",
+      "standards": [
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Plugins",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 4
+    },
+    {
+      "id": "mt_verify_proportional",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_verification",
+      "name": "Verify in proportion to how little you watched",
+      "description": "Verify in proportion to how little you watched: a quick glance suffices for a session you watched scroll by turn by turn, but an unattended or CI run needs a real, reconstructed check, not a summary read. Unattended runs should stay in Auto mode rather than Bypass — the intent classifier is still a safety net, even though it only checks intent, not correctness.",
+      "core": true,
+      "estMinutes": 5,
+      "evidence": [
+        "State the rule that scales verification effort to supervision level",
+        "Explain why Auto, not Bypass, is the right mode for unattended-but-not-isolated work"
+      ],
+      "assessmentPrompt": "How much verification does an overnight unattended run need compared to a session you watched scroll by in real time, and why does that run still belong in Auto mode rather than Bypass?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Trust it: verifying unsupervised runs",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0.05,
+      "layer": 2
+    },
+    {
+      "id": "mt_stop_hook_gate",
+      "type": "PROCEDURAL",
+      "cluster": "cl_verification",
+      "name": "A Stop hook turns tests into a gate",
+      "description": "Turning 'run the tests' into an actual gate — not a promise — means a Stop hook that runs the test suite and refuses to let the turn end on failure; exit code 2 feeds the failure straight back to Claude as context to self-fix, rather than the session ending and the failure going unnoticed.",
+      "core": true,
+      "estMinutes": 5,
+      "evidence": [
+        "Explain the difference between asking Claude to run tests and gating on them via a Stop hook",
+        "State which exit code turns a Stop hook's failure into feedback Claude actually receives"
+      ],
+      "assessmentPrompt": "A CLAUDE.md rule says 'always run the tests before finishing.' Why is a Stop hook a stronger version of that same intent, and what does it do differently when the tests fail?",
+      "standards": [
+        "ccaf:d1",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Trust it: verifying unsupervised runs",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0.025,
+      "layer": 6
+    },
+    {
+      "id": "mt_cold_second_opinion",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_verification",
+      "name": "A cold second opinion",
+      "description": "A cold second opinion — a fresh subagent or session with no memory of how the code was built — catches what the original session rationalized past, because it has no investment in the choices already made. This generalizes the pre-commit review habit to any risky or heavily-iterated change, not just the moment right before a commit.",
+      "core": false,
+      "estMinutes": 5,
+      "evidence": [
+        "Explain why a fresh reviewer catches things the original session wouldn't",
+        "Recognize when a change calls for a cold review beyond the routine pre-commit one"
+      ],
+      "assessmentPrompt": "A session has been iterating on the same tricky bug for two hours and finally believes it's fixed. Why might a fresh subagent reviewing the diff catch something the original session wouldn't, even reading the exact same code?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Trust it: verifying unsupervised runs",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0.025,
+      "layer": 3
+    },
+    {
+      "id": "mt_verification_checklist",
+      "type": "PROCEDURAL",
+      "cluster": "cl_verification",
+      "name": "The seven-step evidence checklist",
+      "description": "A reliable Claude Code workflow leaves evidence in seven steps: state the goal and success criteria, inspect and plan the smallest change, make it with least privilege, run the relevant build/test/lint/type checks, review the diff and confirm tests weren't weakened or deleted, report what was verified and what remains uncertain, and get a cold second opinion when the change is risky or context has run long.",
+      "core": true,
+      "estMinutes": 7,
+      "evidence": [
+        "Recall all seven steps in order",
+        "Explain what 'report what remains uncertain' adds beyond a pass/fail statement"
+      ],
+      "assessmentPrompt": "A change passes its tests and the diff looks clean. What two things does the seven-step checklist still require before calling the work done?",
+      "standards": [
+        "ccaf:d4",
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Notes · Verification and trust",
+          "href": "../../07-claude-code-in-action/notes.md"
+        }
+      ],
+      "centrality": 0,
+      "layer": 7
+    }
+  ]
+}

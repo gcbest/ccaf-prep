@@ -1,0 +1,86 @@
+{
+  "$comment": "Domain summaries. A cluster is a human-facing grouping of micro-topics; the graph, not the cluster, is the source of truth for ordering. Colours are chosen to stay legible against both the light and dark page background.",
+  "clusters": [
+    {
+      "id": "cl_foundations",
+      "name": "The loop, in Claude Code's hands",
+      "subject": "Claude Code in Action",
+      "summary": "The same agentic loop as everywhere else in this graph, but run by the CLI on your actual files and terminal: the Explore → Plan → Code → Commit workflow that gives each phase of the loop a name, and the habit of a fresh subagent reviewing the diff before it lands.",
+      "color": "#3f6b86",
+      "colorDark": "#5f9cc0",
+      "notesPart": "What Claude Code is · Explore → Plan → Code → Commit"
+    },
+    {
+      "id": "cl_control_surface",
+      "name": "Matching control to risk",
+      "subject": "Claude Code in Action",
+      "summary": "The six permission modes as a risk spectrum, what Auto's classifier actually checks (intent, not correctness), when plan mode earns its keep over direct execution, and the two techniques — the interview pattern and the Explore subagent — that make plan mode's discovery phase safe to trust.",
+      "color": "#8f3f3f",
+      "colorDark": "#c67878",
+      "notesPart": "Permission modes · Course-derived operating checklist"
+    },
+    {
+      "id": "cl_claudemd",
+      "name": "CLAUDE.md that Claude follows",
+      "subject": "Claude Code in Action",
+      "summary": "What CLAUDE.md actually is — guidance loaded into every prompt, not enforced configuration — the four stacking locations, @import for sharing conventions across packages, .claude/rules/ for path-scoped conventions, and the phrasing habits that keep a growing file from drowning out its own best rules.",
+      "color": "#7a4a6b",
+      "colorDark": "#a8779a",
+      "notesPart": "CLAUDE.md — the basic model · A CLAUDE.md that Claude actually follows"
+    },
+    {
+      "id": "cl_mechanism",
+      "name": "The right mechanism for the rule",
+      "subject": "Claude Code in Action",
+      "summary": "The three-way split that runs through the whole section — durable context in CLAUDE.md, reusable procedures in a Skill, unskippable enforcement in a hook — plus the concrete surfaces that split maps onto: shared vs. personal slash commands, skill frontmatter, and the verification skill worth building first.",
+      "color": "#5f6b3a",
+      "colorDark": "#8ba055",
+      "notesPart": "Verification skills · Put each rule in the right mechanism"
+    },
+    {
+      "id": "cl_sessions",
+      "name": "Steering a long session",
+      "subject": "Claude Code in Action",
+      "summary": "The habits that keep a multi-hour session legible: /compact with a direction versus /clear's clean slate, the rewind menu's five checkpoints, /goal and /loop for work that spans turns, and worktrees for running parallel sessions without their file changes colliding.",
+      "color": "#3d7a5a",
+      "colorDark": "#63b088",
+      "notesPart": "Steering long sessions"
+    },
+    {
+      "id": "cl_hooks",
+      "name": "Hooks: deterministic enforcement",
+      "subject": "Claude Code in Action",
+      "summary": "The event lifecycle a hook can attach to, the exit-code contract that decides whether Claude even sees the objection (and the exit-1 trap that catches almost everyone once), the PreToolUse permissionDecision field, and updatedInput's whole-object replacement for rewriting a call instead of blocking it.",
+      "color": "#a84e31",
+      "colorDark": "#d4805f",
+      "notesPart": "Hooks — the deeper model"
+    },
+    {
+      "id": "cl_mcp_tools",
+      "name": "MCP and tool design in the CLI",
+      "subject": "Claude Code in Action",
+      "summary": "Where an MCP server is scoped (local, user, or project via .mcp.json), the context-cost tax every configured server pays whether or not it's used, the 10%-of-context threshold that flips Claude Code into tool search mode, and why Claude Code's own toolset stays generic instead of hyper-specialized.",
+      "color": "#4a5a8a",
+      "colorDark": "#8091c4",
+      "notesPart": "MCP and Hooks — the basic model · MCP inside Claude Code"
+    },
+    {
+      "id": "cl_automation",
+      "name": "Routines, headless, and plugins",
+      "subject": "Claude Code in Action",
+      "summary": "The three ways to run Claude Code without someone watching each turn — a managed Routine, a headless -p invocation, or the Agent SDK — the flags that make headless output machine-parseable, managed Code Review versus the GitHub Action, and what a plugin actually bundles.",
+      "color": "#8a5a2b",
+      "colorDark": "#c08a4d",
+      "notesPart": "Automating repeat work · GitHub Actions and Code Review · Plugins"
+    },
+    {
+      "id": "cl_verification",
+      "name": "Trusting an unsupervised run",
+      "subject": "Claude Code in Action",
+      "summary": "Verifying in proportion to how little you watched, turning a promise into a gate with a Stop hook, why a cold second opinion catches what the original session rationalized past, and the seven-step evidence checklist that ties the whole section together.",
+      "color": "#2f6b6b",
+      "colorDark": "#4f9c9c",
+      "notesPart": "Trust it: verifying unsupervised runs · Verification and trust"
+    }
+  ]
+}

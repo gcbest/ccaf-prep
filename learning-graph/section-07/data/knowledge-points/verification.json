@@ -1,0 +1,269 @@
+{
+  "$comment": "Knowledge points for cl_verification.",
+  "cluster": "cl_verification",
+  "topics": [
+    {
+      "topicId": "mt_verify_proportional",
+      "knowledgePoints": [
+        {
+          "id": "kp_verify_proportional_1",
+          "name": "Scale the check to the supervision",
+          "keyPrerequisites": [
+            "mt_automation_spectrum"
+          ],
+          "teach": "<p class='kp-key'>Verify in proportion to how little you watched \u2014 a quick glance suffices for a session you saw scroll by, but an unattended run needs a real, reconstructed check.</p><p>A session run interactively, where every tool call scrolled past in real time, has already been watched \u2014 a final glance at the diff is enough. A session that ran overnight, or in CI, with nobody present, hasn't been watched at all, and deserves the same rigor as if you were reviewing a stranger's pull request. Keep unattended runs in <strong>Auto mode</strong> rather than Bypass: the intent classifier is still a safety net even though it only checks intent, not correctness \u2014 Bypass has no safety net left at all.</p>",
+          "questions": [
+            {
+              "id": "q_verify_proportional_1a",
+              "q": "An unattended overnight run and a session watched scroll by in real time both finish with clean-looking diffs. Does the overnight run need the same level of verification as the interactive one?",
+              "options": [
+                "No \u2014 an unattended run needs less verification, since nobody was present to introduce mistakes through mid-session steering",
+                "Yes, but only because overnight runs are more likely to touch unrelated files than interactive sessions are",
+                "No \u2014 the overnight run needs a real, reconstructed check, since a quick glance is only sufficient for a session that was actually watched as it happened",
+                "Yes, and both need identical verification regardless of how much of either session was actually observed while it was running, since risk doesn't depend on supervision"
+              ],
+              "correct": 2,
+              "explain": "The overnight run needs a real, reconstructed check precisely because nobody watched it happen \u2014 a quick glance is only warranted for a session that was actually observed in real time. It doesn't need less verification for lack of steering, the file-touching claim isn't the actual reasoning given, and treating both runs identically ignores that supervision level is exactly what the rule scales against."
+            },
+            {
+              "id": "q_verify_proportional_1b",
+              "q": "An unattended CI job needs to run without anyone approving each action. Why does the guidance recommend keeping it in Auto mode rather than switching to Bypass for convenience?",
+              "options": [
+                "Bypass mode isn't technically compatible with most CI environments at all, so Auto ends up being the only mode actually available there",
+                "Auto mode runs measurably faster than Bypass mode in practice, since it skips most of the permission-check overhead entirely during a session",
+                "Bypass mode requires an interactive terminal to acknowledge the --dangerously-skip-permissions flag first",
+                "Auto's intent classifier is still a safety net, even though it only checks intent and not correctness \u2014 Bypass leaves no safety net at all"
+              ],
+              "correct": 3,
+              "explain": "Auto keeps the intent classifier active as a safety net, even though it only checks intent rather than correctness; Bypass removes every check, leaving nothing in place. Bypass is technically usable in CI, Auto isn't recommended for being faster, and Bypass doesn't require interactive acknowledgment to run."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_verify_proportional_1",
+          "q": "What's the practical rule connecting how much a run was supervised to how much verification it needs afterward?",
+          "options": [
+            "Verification effort should scale with how little the run was watched \u2014 an unattended run needs a real, reconstructed check, not a summary glance",
+            "Verification effort should be identical for every single run, since the level of supervision doesn't actually change what could have gone wrong",
+            "Verification effort only matters once a run exceeds a fixed time threshold, regardless of who was actually watching it happen",
+            "Verification effort should decrease as a session runs longer, since a longer session implies more self-correction already happened"
+          ],
+          "correct": 0,
+          "explain": "Verification effort should scale with how little a run was actually watched, with an unattended run needing a real, reconstructed check rather than a quick summary glance. Treating every run identically ignores supervision entirely, a fixed time threshold isn't the stated rule, and a longer session doesn't itself imply more reliable self-correction."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_stop_hook_gate",
+      "knowledgePoints": [
+        {
+          "id": "kp_stop_hook_gate_1",
+          "name": "A promise versus a gate",
+          "keyPrerequisites": [
+            "mt_hook_exit_codes",
+            "mt_verify_proportional"
+          ],
+          "teach": "<p class='kp-key'>A Stop hook that runs the tests and refuses to let the turn end on failure turns 'run the tests' from a promise into a gate.</p><p>A CLAUDE.md rule saying 'always run the tests before finishing' is still just guidance \u2014 Claude usually follows it, which isn't the same as always. A Stop hook wired to the same requirement is code that runs on every attempt to end the turn: it runs the suite, and on failure, exits with code <strong>2</strong>, which feeds the failure straight back to Claude as context to self-fix, rather than letting the turn end with the failure unnoticed.</p>",
+          "questions": [
+            {
+              "id": "q_stop_hook_gate_1a",
+              "q": "A CLAUDE.md file already instructs Claude to always run tests before finishing a task, but a Stop hook running the same tests is added anyway. What does the hook add that the instruction alone didn't already guarantee?",
+              "options": [
+                "Nothing meaningfully different \u2014 both mechanisms produce the same guarantee once the instruction is phrased clearly enough",
+                "A guarantee that holds on every attempt to end the turn, rather than a request Claude usually but not always follows",
+                "A faster test run, since hooks execute outside the normal request-response cycle that CLAUDE.md instructions go through",
+                "The ability to run a larger test suite than what CLAUDE.md instructions are capable of triggering"
+              ],
+              "correct": 1,
+              "explain": "The hook guarantees the check runs on every attempt to end the turn, replacing a request Claude usually \u2014 but not always \u2014 follows with code that actually enforces it. No amount of rephrasing turns guidance into a guarantee, the hook isn't valued for test-run speed, and suite size isn't limited by which mechanism triggers it."
+            },
+            {
+              "id": "q_stop_hook_gate_1b",
+              "q": "A Stop hook runs the test suite and finds a failure. What exit code does it need to return for that failure to actually reach Claude as feedback instead of the turn simply ending?",
+              "options": [
+                "Exit code 1, the conventional 'something went wrong' signal most command-line tools use",
+                "Exit code 0, since a successful hook execution is what triggers Claude Code to re-examine the results",
+                "Exit code 2, which blocks the turn from ending and feeds the failure's stderr back to Claude as context",
+                "Any nonzero exit code, since Claude Code treats every nonzero code as a request to retry the last action"
+              ],
+              "correct": 2,
+              "explain": "Exit code 2 is what blocks the turn from ending and feeds the failure's stderr back to Claude as context to act on. Exit 1 is treated as non-blocking, exit 0 signals success rather than triggering re-examination, and nonzero codes other than 2 don't uniformly trigger a retry."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_stop_hook_gate_1",
+          "q": "Why is a Stop hook described as a stronger version of a 'run the tests before finishing' instruction, rather than just a duplicate of it?",
+          "options": [
+            "Because a Stop hook can run a broader range of test frameworks and linters than a CLAUDE.md instruction is technically able to invoke on its own",
+            "Because a Stop hook only applies during unattended runs, while the CLAUDE.md instruction only applies during interactive ones",
+            "Because a Stop hook automatically rewrites failing tests until they pass, something no CLAUDE.md instruction is able to do on its own",
+            "Because the instruction is guidance Claude usually follows, while the hook is code that runs deterministically and can refuse to let the turn end"
+          ],
+          "correct": 3,
+          "explain": "The instruction is guidance Claude usually follows; the hook is code that runs deterministically on every attempt to end the turn and can refuse to let it end on failure. Test-framework breadth isn't the distinction, neither mechanism is restricted to only unattended or only interactive runs, and a Stop hook doesn't rewrite tests to force a pass."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_cold_second_opinion",
+      "knowledgePoints": [
+        {
+          "id": "kp_cold_second_opinion_1",
+          "name": "No stake in the story already told",
+          "keyPrerequisites": [
+            "mt_commit_review"
+          ],
+          "teach": "<p class='kp-key'>A fresh subagent or session with no memory of how the code was built catches what the original session rationalized past \u2014 it has no investment in the choices already made.</p><p>This is the same idea behind the pre-commit review habit, generalized past the moment of commit: any risky or heavily-iterated change benefits from a reviewer who wasn't in the room while the decisions were made. A session that spent two hours converging on a fix has, by then, a story it believes about why the fix is right \u2014 a cold reviewer reads the same diff without that story already installed.</p>",
+          "questions": [
+            {
+              "id": "q_cold_second_opinion_1a",
+              "q": "A session has spent two hours iterating on a tricky bug and is now confident the fix is correct. Why might a fresh subagent reviewing the exact same diff catch something the original session wouldn't?",
+              "options": [
+                "The original session has accumulated a story about why its fix is correct over two hours of iteration; a fresh reviewer reads the diff without that story already in place",
+                "The fresh subagent has access to a larger context window than the original session had left after two hours of iteration",
+                "The fresh subagent automatically re-runs the full test suite from scratch, which the original session may well have skipped by that point in its iteration",
+                "The original session's permission mode restricts it from re-reading its own prior edits once a turn ends, unlike a freshly spawned subagent"
+              ],
+              "correct": 0,
+              "explain": "After two hours of iteration, the original session has a story about why its fix works; a fresh reviewer reads the same diff without that story already installed, which is what lets it catch what the original session rationalized past. Context-window size isn't the mechanism at play, automatic test re-running isn't guaranteed by fresh-review status alone, and permission mode doesn't restrict a session from re-reading its own edits."
+            },
+            {
+              "id": "q_cold_second_opinion_1b",
+              "q": "A team's policy already includes a routine subagent review before every commit. When does the guidance suggest reaching for an additional cold second opinion beyond that routine review?",
+              "options": [
+                "Never \u2014 the routine pre-commit review by a fresh subagent is already considered sufficient for every kind of change, regardless of risk",
+                "Only for changes to test files specifically, since those are considered the most likely to be reviewed carelessly by the original implementing session",
+                "For any change that's especially risky or has accumulated a lot of iteration, where the original session is most likely to have rationalized past a problem",
+                "Only when the original session explicitly requests a second opinion itself, since it can best judge when one is needed"
+              ],
+              "correct": 2,
+              "explain": "A cold second opinion is worth reaching for on changes that are especially risky or heavily iterated, where the original session is most likely to have talked itself past a problem. It's not limited to test-file changes, it isn't reserved only for cases where the original session itself asks, and treating routine review as always sufficient ignores exactly the risk-scaling this generalizes."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_cold_second_opinion_1",
+          "q": "The pre-commit review habit and the cold second opinion are described as the same idea at different scopes. What's the relationship between them?",
+          "options": [
+            "They're unrelated \u2014 pre-commit review checks for bugs, while a cold second opinion checks only for style violations",
+            "The pre-commit review is the single-session version of the same idea; a cold second opinion generalizes it to any risky or heavily-iterated change, not just the moment before commit",
+            "A cold second opinion replaces the need for pre-commit review entirely once a team adopts it as their standard practice for every change",
+            "Pre-commit review is required by a hook that blocks the commit outright, while a cold second opinion is only ever offered as a suggestion somewhere in CLAUDE.md"
+          ],
+          "correct": 1,
+          "explain": "Pre-commit review is the single-session version of the same idea; a cold second opinion generalizes it beyond the moment of commit to any risky or heavily-iterated change. The two aren't scoped to different concerns (bugs versus style), one doesn't replace the other, and neither is defined by being exclusively hook-enforced or exclusively a CLAUDE.md suggestion."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_verification_checklist",
+      "knowledgePoints": [
+        {
+          "id": "kp_verification_checklist_1",
+          "name": "Seven steps, in order",
+          "keyPrerequisites": [
+            "mt_stop_hook_gate",
+            "mt_cold_second_opinion",
+            "mt_rule_placement"
+          ],
+          "teach": "<p class='kp-key'>Seven steps, in order: state the goal and success criteria; inspect and plan the smallest change; make it with least privilege; run the relevant checks; review the diff and confirm tests weren't weakened; report what was verified and what remains uncertain; get a cold second opinion when risk or context length calls for it.</p><p>Each step closes a specific gap the others don't: stating success criteria up front gives later steps something concrete to check against; least privilege limits what a mistake can reach; running the checks and reviewing the diff are separate steps because a passing test suite and an untouched-looking diff aren't the same evidence; and the report step exists because 'done' should mean stated evidence, not a feeling that the code looks right.</p>",
+          "questions": [
+            {
+              "id": "q_verification_checklist_1a",
+              "q": "Which step in the seven-step checklist comes immediately after making the change, and what does it check?",
+              "options": [
+                "State the goal and success criteria \u2014 it checks that the task itself is well-defined before any code is written",
+                "Get a cold second opinion \u2014 it checks that a fresh reviewer agrees with the change before it proceeds any further toward being committed",
+                "Report what was verified and what remains uncertain \u2014 it checks that the evidence gathered is communicated clearly",
+                "Run the relevant build, tests, lint, or type checks \u2014 it checks that the change actually behaves as intended once it exists"
+              ],
+              "correct": 3,
+              "explain": "Running the relevant build, tests, lint, or type checks is the step right after the change is made, confirming it behaves as intended now that it exists. Stating success criteria happens before the change, a cold second opinion is invoked later when risk warrants it, and the report step comes after the checks and diff review, not immediately after coding."
+            },
+            {
+              "id": "q_verification_checklist_1b",
+              "q": "Why does the checklist treat 'run the tests' and 'review the diff and confirm tests weren't weakened' as two separate steps rather than one?",
+              "options": [
+                "A passing test suite and a diff that hasn't quietly weakened or deleted a test are different kinds of evidence \u2014 one can be true while the other silently isn't",
+                "Running tests and reviewing diffs require different permission modes to execute, so the checklist can't combine them into a single step",
+                "The two steps are actually redundant in practice, and the checklist only separates them for readability rather than for any substantive underlying reason",
+                "Reviewing the diff is only necessary when the test suite doesn't cover the changed files, so it's a conditional follow-up to running tests"
+              ],
+              "correct": 0,
+              "explain": "A passing test suite and a diff that hasn't quietly weakened or deleted a test are genuinely different kinds of evidence \u2014 a suite can pass while a test was silently gutted to make it pass. The two steps don't require different permission modes, they aren't redundant, and diff review isn't conditional only on test coverage gaps."
+            }
+          ]
+        },
+        {
+          "id": "kp_verification_checklist_2",
+          "name": "'Done' means stated evidence, not a feeling",
+          "keyPrerequisites": [
+            "mt_stop_hook_gate",
+            "mt_cold_second_opinion",
+            "mt_rule_placement"
+          ],
+          "teach": "<p class='kp-key'>A change that passes its tests and looks clean in the diff still isn't done until what was verified \u2014 and what remains uncertain \u2014 has actually been stated.</p><p>'The code looks right' from reading a diff isn't verification; it's an impression. The checklist's report step asks for something stronger: which checks were actually run, and an honest account of what's still unconfirmed. That last part matters as much as the first \u2014 a report that only lists what passed, without naming what wasn't checked, quietly reintroduces the same gap the rest of the checklist exists to close.</p>",
+          "questions": [
+            {
+              "id": "q_verification_checklist_2a",
+              "q": "A change passes its tests and the diff looks clean. According to the checklist, what's still missing before the work can be called done?",
+              "options": [
+                "Nothing \u2014 passing tests and a clean-looking diff are themselves sufficient evidence that the checklist is satisfied",
+                "A second full test run of the entire suite, since a single passing run isn't considered reliable evidence of correctness on its own",
+                "An explicit report of what was actually verified and what remains uncertain, plus a cold second opinion if the change is risky or context has run long",
+                "A rewrite of the CLAUDE.md file to document the change in detail, since that's treated as the checklist's own definition of what counts as 'reported'"
+              ],
+              "correct": 2,
+              "explain": "The checklist still calls for an explicit report of what was verified and what remains uncertain, plus a cold second opinion when risk or context length warrants it. Passing tests and a clean diff alone aren't treated as sufficient, a second identical test run isn't the missing piece, and 'reported' doesn't mean rewriting CLAUDE.md."
+            },
+            {
+              "id": "q_verification_checklist_2b",
+              "q": "Why does the checklist specifically ask for 'what remains uncertain' in addition to 'what was verified'?",
+              "options": [
+                "Because listing uncertainty is a formality required for compliance audits, unrelated to the actual reliability of the change",
+                "Because it lets the reviewer skip reading the diff themselves entirely, relying only on the stated list of uncertainties to decide whether it's safe",
+                "Because 'what remains uncertain' is only relevant for changes made in Bypass mode, where no checks ran automatically in the first place",
+                "Because a report that only lists what passed can quietly hide the same gap the rest of the checklist exists to close \u2014 omitting what wasn't checked"
+              ],
+              "correct": 3,
+              "explain": "A report that names only what passed can quietly hide exactly the kind of gap the checklist exists to catch, since it says nothing about what wasn't checked. It isn't a compliance formality, it doesn't substitute for a reviewer reading the diff, and it isn't specific to changes made under Bypass mode."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_verification_checklist_1",
+          "q": "What is the first step in the seven-step checklist, before any inspection or code change happens?",
+          "options": [
+            "Make the change with the least privilege needed",
+            "State the goal and success criteria",
+            "Run the relevant build, tests, lint, or type checks",
+            "Ask a cold second opinion whether the plan looks reasonable"
+          ],
+          "correct": 1,
+          "explain": "Stating the goal and success criteria is the checklist's first step, before any inspection, planning, or code change happens. Making the change and running checks both come later in the sequence, and a cold second opinion is reserved for risky or heavily-iterated work, not the opening step."
+        },
+        {
+          "id": "r_verification_checklist_2",
+          "q": "Where does 'make the change with the least privilege needed' fall in the seven-step sequence, and what does it depend on already having been decided?",
+          "options": [
+            "It falls before any inspection happens, and depends only on the developer's general familiarity with the codebase",
+            "It falls after inspecting and planning the smallest change, and depends on already knowing which mechanism \u2014 CLAUDE.md, a skill, or a hook \u2014 should be enforcing what",
+            "It falls after the checks have run and the diff has been reviewed, and depends on the test suite having already passed at least once",
+            "It falls after the cold second opinion step has already concluded, and depends on that outside reviewer having approved the overall approach first"
+          ],
+          "correct": 1,
+          "explain": "Least-privilege implementation comes after inspecting and planning the smallest change, and applying it well depends on already having sorted which mechanism should be enforcing what \u2014 the same distinction rule_placement draws. It isn't the first step, it doesn't come after the checks or the cold second opinion, and it isn't gated on a prior test pass."
+        }
+      ]
+    }
+  ]
+}

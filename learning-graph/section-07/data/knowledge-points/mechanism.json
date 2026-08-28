@@ -1,0 +1,242 @@
+{
+  "$comment": "Knowledge points for cl_mechanism.",
+  "cluster": "cl_mechanism",
+  "topics": [
+    {
+      "topicId": "mt_rule_placement",
+      "knowledgePoints": [
+        {
+          "id": "kp_placement_1",
+          "name": "Three mechanisms, one test",
+          "keyPrerequisites": ["mt_claudemd_phrasing"],
+          "teach": "<p class='kp-key'>Every rule belongs to exactly one of three mechanisms: CLAUDE.md for always-true context, a Skill for a reusable procedure, a hook for anything that must never be skippable.</p><p>The test is whether the rule can ever be allowed to slip: if occasionally missing it is acceptable (a style preference, background context), it belongs in CLAUDE.md, which is guidance the model usually follows. If it's a repeatable multi-step procedure worth reusing across sessions, it becomes a Skill. If it is a hard constraint — the kind where \"usually\" is not good enough — it has to be a hook, because only a hook is code that runs deterministically rather than a request the model may or may not follow.</p><p>Writing a \"must never happen\" rule into CLAUDE.md is a category error, not a phrasing problem: no amount of emphasis turns guidance into enforcement.</p>",
+          "questions": [
+            {
+              "id": "q_placement_1a",
+              "q": "A team wants Claude to never commit directly to main, under any circumstances. Which mechanism actually holds that rule reliably?",
+              "options": [
+                "A CLAUDE.md rule stated with strong emphasis, since 'IMPORTANT: never commit to main' is specific and checkable enough to hold reliably.",
+                "A hook, because the rule must hold on every single commit with no exceptions, which only deterministic enforcement can guarantee.",
+                "A Skill, since a reusable procedure can be written to check the current branch before every commit and refuse if it's main.",
+                "Whichever mechanism the team already has the most experience configuring, since all three enforce a rule with roughly equal reliability."
+              ],
+              "correct": 1,
+              "explain": "'Never commit to main' has to hold on every single occurrence with zero tolerance for a skipped case, and only a hook is code that runs deterministically rather than guidance the model may or may not follow — that's what a genuine 'must never happen' rule requires. No amount of emphasis turns a CLAUDE.md instruction into enforcement, a Skill only runs when Claude decides to invoke it rather than gating every commit automatically, and the three mechanisms are not interchangeable in reliability."
+            },
+            {
+              "id": "q_placement_1b",
+              "q": "A team wants Claude to prefer named exports over default exports across the codebase, but agrees an occasional miss isn't the end of the world. Where does that rule belong?",
+              "options": [
+                "As a hook, since any project convention is worth enforcing with code the moment the team agrees it should apply consistently.",
+                "As a Skill, since preferring named exports is a multi-step procedure that benefits from being triggered automatically when relevant.",
+                "As a CLAUDE.md rule, since it's a project convention that's fine to phrase as guidance rather than something that must never be violated.",
+                "As neither, since stylistic preferences like export style aren't the kind of thing any of the three mechanisms is meant to hold."
+              ],
+              "correct": 2,
+              "explain": "'Prefer named exports over default exports' is an always-true convention where an occasional miss is tolerable, not a hard invariant — exactly the case CLAUDE.md's guidance role fits, rather than spending a hook's deterministic enforcement on something that doesn't need it. It isn't a multi-step reusable procedure that calls for a Skill, escalating it to a hook is more machinery than the rule needs, and it does belong in one of the three mechanisms — CLAUDE.md is the right one."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_placement_1",
+          "q": "A team has a CLAUDE.md rule reading 'YOU MUST always run the linter before finishing a task,' phrased with the strongest emphasis the file uses, but production logs still show sessions ending without the linter having run. What does this reveal about the rule's placement?",
+          "options": [
+            "The rule needs even stronger emphasis than 'YOU MUST,' since emphasis strength is the only lever CLAUDE.md phrasing has.",
+            "The rule was placed correctly; occasional misses are an acceptable and expected part of how any CLAUDE.md rule behaves.",
+            "The rule should move into a Skill instead, since a Skill is guaranteed to run to completion once Claude decides to invoke it.",
+            "The rule is a hard invariant, not guidance, and belongs in a Stop hook that can actually refuse to end the turn without it."
+          ],
+          "correct": 3,
+          "explain": "A rule that must hold every time — no exceptions — is exactly the category CLAUDE.md can't guarantee no matter how it's phrased, since CLAUDE.md is guidance the model usually follows rather than code that runs; the fix is a hook (a Stop hook, specifically) that can refuse to end the turn until the linter has run. There's no stronger emphasis word that closes the gap, occasional misses aren't 'acceptable' when the requirement is 'always,' and a Skill still only runs when Claude chooses to invoke it, which doesn't guarantee it either."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_slash_commands",
+      "knowledgePoints": [
+        {
+          "id": "kp_commands_1",
+          "name": "Shared versus personal",
+          "keyPrerequisites": ["mt_claudemd_hierarchy"],
+          "teach": "<p class='kp-key'>.claude/commands/ is project-scoped and version-controlled; ~/.claude/commands/ is personal and never shared.</p><p>A command meant for the whole team — a <code>/review</code> that runs the team's standard checklist, say — goes in <code>.claude/commands/</code> inside the repository, so every developer gets it automatically on clone or pull, the same way a project-level CLAUDE.md is shared. A command that's just for one developer's own workflow goes in <code>~/.claude/commands/</code> instead, and stays invisible to everyone else.</p><p>CLAUDE.md itself is not where command definitions live — it's for context and instructions, not for defining new slash commands.</p>",
+          "questions": [
+            {
+              "id": "q_commands_1a",
+              "q": "You want to create a custom /review slash command that runs your team's standard code review checklist and should be available to every developer when they clone or pull the repository. Where should you create this command file?",
+              "options": [
+                "In the .claude/commands/ directory within the project repository, so it's version-controlled and available to every developer automatically.",
+                "In ~/.claude/commands/ in each developer's home directory, so every developer installs the same command manually themselves.",
+                "In the CLAUDE.md file at the project root, defined as a named section that Claude Code treats as a callable command.",
+                "In a .claude/config.json file, listed under a commands array alongside the other project-level configuration."
+              ],
+              "correct": 0,
+              "explain": ".claude/commands/ inside the repository is project-scoped and version-controlled, so every developer gets the /review command automatically the moment they clone or pull — no manual install step needed. ~/.claude/commands/ is personal and wouldn't reach anyone but the one developer who created it there, CLAUDE.md holds context and instructions rather than command definitions, and there's no .claude/config.json commands array in the actual mechanism."
+            },
+            {
+              "id": "q_commands_1b",
+              "q": "A developer wants a personal /scratch command for their own workflow, one they don't want teammates to see or use. Where should that command file go?",
+              "options": [
+                "In .claude/commands/, since committing a personal command to the repo is the only way Claude Code will recognize it at all.",
+                "In ~/.claude/commands/, since a personal, non-shared command belongs in the developer's own home directory, not the repo.",
+                "In the project's CLAUDE.md, under a section marked personal so teammates know not to rely on that command themselves.",
+                "In .claude/rules/, scoped with frontmatter naming only that one developer's username as the intended audience."
+              ],
+              "correct": 1,
+              "explain": "A personal command that isn't meant to be shared belongs in ~/.claude/commands/, the developer's own home-directory location, rather than anywhere inside the repository. Committing it to .claude/commands/ would share it with the whole team by definition, CLAUDE.md doesn't hold command definitions, and .claude/rules/ scopes CLAUDE.md-style conventions by file path, not commands by username."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_commands_1",
+          "q": "A team lead wants to confirm a /scaffold command they just added will actually reach every teammate the next time they pull the repository, without anyone running a manual install step. Where must the command file live for that to hold?",
+          "options": [
+            "Anywhere under .claude/, since Claude Code treats the entire .claude/ directory as automatically shared on every pull.",
+            "In ~/.claude/commands/, since personal commands are the ones that sync automatically across a team's machines.",
+            "In .claude/commands/ inside the repository, since that specific location is version-controlled and reaches every clone.",
+            "In the root CLAUDE.md, since any file at the project root is treated as shared regardless of its actual contents."
+          ],
+          "correct": 2,
+          "explain": ".claude/commands/ inside the repository is the specific, version-controlled location that reaches every developer automatically on clone or pull — not the whole .claude/ directory generically, and not any file simply for sitting at the project root. ~/.claude/commands/ is exactly the opposite of shared: it's personal and tied to one developer's own machine."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_skill_frontmatter",
+      "knowledgePoints": [
+        {
+          "id": "kp_frontmatter_1",
+          "name": "Three fields, three jobs",
+          "keyPrerequisites": ["mt_rule_placement"],
+          "teach": "<p class='kp-key'>SKILL.md frontmatter configures how a skill runs: context: fork isolates it, allowed-tools restricts it, argument-hint prompts for its parameters.</p><pre class='kp-code'>---\nname: scaffold\ndescription: Generate boilerplate for a new microservice\ncontext: fork\nallowed-tools: [Read, Grep, Bash]\nargument-hint: service-name\n---</pre><ul><li><code>context: fork</code> — runs the skill in an isolated sub-agent context, so its own tool calls and reasoning don't accumulate in the main session.</li><li><code>allowed-tools</code> — restricts which tools the skill may call; it controls capability, not where the skill's context lives.</li><li><code>argument-hint</code> — prompts the caller for the parameters the skill expects; it documents inputs, it doesn't isolate anything.</li></ul><p>A skill folder can also hold a <code>reference.md</code> for detail only read when needed, and executable scripts Claude runs rather than reads into context.</p>",
+          "questions": [
+            {
+              "id": "q_frontmatter_1a",
+              "q": "A /scaffold skill runs many exploratory file reads and Bash commands to understand existing patterns before generating output, producing hundreds of lines of intermediate output. Teammates complain this pollutes their main conversation context. Which frontmatter setting resolves this?",
+              "options": [
+                "Set allowed-tools: [] in the skill's frontmatter, which prevents the skill from calling any tool during execution.",
+                "Move the skill file from .claude/skills/ to .claude/commands/ so it runs as a command instead of a skill.",
+                "Add argument-hint: \"service-name\" so the skill receives a clean input without inheriting the main session's context.",
+                "Set context: fork in the skill's frontmatter, running it in an isolated sub-agent context that doesn't touch the main session."
+              ],
+              "correct": 3,
+              "explain": "context: fork is the setting that runs a skill's execution in an isolated sub-agent context, so every exploratory read and Bash call it makes stays out of the main conversation entirely. Setting allowed-tools: [] would stop the skill from doing its exploratory work at all rather than isolating it, moving the file to .claude/commands/ doesn't change where its context lands, and argument-hint only shapes what parameters the caller is prompted for, not where execution happens."
+            },
+            {
+              "id": "q_frontmatter_1b",
+              "q": "How does allowed-tools in a skill's frontmatter relate to whether that skill's execution is isolated from the main session?",
+              "options": [
+                "allowed-tools restricts which tools a skill may call; it has no effect on whether the skill's execution is isolated from the main session.",
+                "allowed-tools and context: fork are two different names for configuring the exact same behavior in a skill's frontmatter.",
+                "allowed-tools isolates a skill's execution into its own sub-agent context, the same effect context: fork produces on its own.",
+                "allowed-tools only takes effect once context: fork is also set; on its own it has no effect on the skill at all."
+              ],
+              "correct": 0,
+              "explain": "allowed-tools controls which tools a skill is permitted to call — a capability restriction — and is independent of whether the skill's execution runs isolated from the main session, which is specifically what context: fork controls. They aren't two names for the same setting, allowed-tools doesn't isolate context on its own, and allowed-tools works regardless of whether context: fork is also set."
+            }
+          ]
+        },
+        {
+          "id": "kp_frontmatter_2",
+          "name": "The trap: isolation is context: fork, and nothing else",
+          "keyPrerequisites": ["mt_rule_placement"],
+          "teach": "<p class='kp-key'>When a skill's exploratory output is the complaint, the fix is always context: fork — allowed-tools and argument-hint are common wrong answers to the same question.</p><p>Both are real, useful settings, but neither touches where a skill's execution happens. A skill restricted with <code>allowed-tools</code> can still fill the main session with the reasoning and results from every call it's still permitted to make. A skill with a well-written <code>argument-hint</code> still runs its exploration inline in the main conversation unless <code>context: fork</code> is also set. The question \"which setting keeps this skill's noise out of the main session\" has exactly one answer.</p>",
+          "questions": [
+            {
+              "id": "q_frontmatter_2a",
+              "q": "A skill's allowed-tools is already narrowed to just Read and Grep, but teammates still complain its exploratory output fills the main session's context. What actually fixes this?",
+              "options": [
+                "Narrow allowed-tools further, down to a single tool, since fewer permitted tools means less output accumulating in context.",
+                "Add context: fork, since allowed-tools restricts capability but does nothing about where the skill's execution runs.",
+                "Remove argument-hint entirely, since a skill without a defined argument hint runs its exploration in an isolated context by default.",
+                "Rename the skill's folder, since Claude Code isolates any skill whose name matches a reserved isolation-related keyword."
+              ],
+              "correct": 1,
+              "explain": "allowed-tools only restricts which tools a skill may call — it doesn't touch where the skill's execution and reasoning land, so even a tightly restricted skill still runs inline in the main session unless context: fork is set. Narrowing allowed-tools further doesn't change that, removing argument-hint has no effect on isolation, and there's no naming convention that triggers automatic isolation."
+            },
+            {
+              "id": "q_frontmatter_2b",
+              "q": "A developer adds argument-hint: \"service-name\" to a skill hoping it will stop the skill's exploration from polluting the main session. Does this fix the problem?",
+              "options": [
+                "It should now succeed, since argument-hint's purpose is specifically to isolate a skill's exploratory reasoning from the main session.",
+                "It depends on which tools are listed in allowed-tools alongside the new argument-hint setting.",
+                "It should still fail, since argument-hint only documents the parameters a caller should provide and doesn't isolate execution.",
+                "It should succeed only the first time the skill runs after argument-hint is added, then revert to polluting context again."
+              ],
+              "correct": 2,
+              "explain": "argument-hint's job is prompting the caller for the parameters a skill expects — it says nothing about where the skill's own tool calls and reasoning happen, so adding it doesn't touch the pollution problem at all; only context: fork does. The outcome doesn't depend on which tools allowed-tools happens to list, and there's no first-run exception where isolation briefly works before reverting."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_frontmatter_1",
+          "q": "A skill folder contains SKILL.md plus a reference.md and an executable validate.sh script. How does Claude typically make use of the latter two, compared to SKILL.md itself?",
+          "options": [
+            "Both reference.md and validate.sh load into context immediately whenever the skill is invoked, exactly like SKILL.md does.",
+            "reference.md is executed as a script, while validate.sh is only read into context when its detail is actually needed.",
+            "Neither file is ever used automatically; both require the caller to reference them explicitly in the prompt each time.",
+            "reference.md is read into context only when its detail is actually needed, while validate.sh is run rather than read."
+          ],
+          "correct": 3,
+          "explain": "A reference.md is meant for detail that's only read into context when it's actually needed, while an executable script like validate.sh is run by Claude rather than loaded as text — keeping both out of context by default is what makes a skill folder able to hold more than just SKILL.md without bloating every invocation. Loading everything immediately defeats that purpose, the roles in the second option are swapped, and both files are available for Claude to use automatically without the caller having to reference them by name."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_verification_skill",
+      "knowledgePoints": [
+        {
+          "id": "kp_verifyskill_1",
+          "name": "The highest-leverage skill to build first",
+          "keyPrerequisites": ["mt_skill_frontmatter"],
+          "teach": "<p class='kp-key'>A verification skill — run the tests, read the diff, check tests weren't weakened, report evidence — is the highest-leverage skill to build first.</p><p>Manual checking depends on remembering to ask for it every single time; a skill triggered automatically once its description matches the situation removes that dependency entirely. \"Done\" means gates ran and their results are stated explicitly — not \"the code looks right\" from a diff read alone, which is a judgment call, not evidence.</p>",
+          "questions": [
+            {
+              "id": "q_verifyskill_1a",
+              "q": "Why does a verification skill outrank other automation candidates for being the first skill a project builds?",
+              "options": [
+                "Because it replaces a check that otherwise depends on someone remembering to ask for it by hand, every single time.",
+                "Because it's the only kind of skill whose frontmatter is permitted to include the context: fork setting.",
+                "Because verification skills run faster than any other type of skill, regardless of what task they're built for.",
+                "Because it's a required skill; a project without one is blocked from running any other skill at all."
+              ],
+              "correct": 0,
+              "explain": "The reason a verification skill earns first priority is that it replaces something that otherwise depends entirely on a human remembering to ask for it every time — automating that removes the weakest link in the loop. context: fork isn't restricted to verification skills specifically, there's no inherent speed advantage tied to what a skill verifies, and no skill is a hard prerequisite for others to run."
+            },
+            {
+              "id": "q_verifyskill_1b",
+              "q": "A session reads its own diff and reports 'the code looks right' before finishing. Does that count as verification in the sense a verification skill is meant to provide?",
+              "options": [
+                "Yes — 'done' is reached once a diff read shows no obviously wrong-looking lines, since that's the fastest check available.",
+                "Yes — 'done' is whatever the implementing session itself reports, since it has the fullest context on what changed and why.",
+                "No — 'done' means the relevant gates actually ran and their results are stated explicitly, not inferred from how the code looks.",
+                "No — 'done' is reached the moment a pull request is opened, since opening it implies the author already checked their own work."
+              ],
+              "correct": 2,
+              "explain": "The bar is gates run and observed with results stated explicitly — 'the code looks right' from reading the diff is a judgment call, not evidence that anything was actually verified. A clean-looking diff isn't the same as a passing test suite, trusting the implementing session's own report is exactly the same-session bias a fresh review exists to avoid, and opening a PR says nothing about whether checks were run at all."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_verifyskill_1",
+          "q": "A team already has a habit of manually running tests and reading the diff before every commit, and someone questions whether building a dedicated verification skill adds anything beyond what the team already does by hand. What's the actual gain?",
+          "options": [
+            "None — a skill can only perform checks a human is already capable of running manually, so it adds no new capability.",
+            "A skill runs the checks measurably faster than a human would, which is the entire justification for building one.",
+            "The skill removes the dependency on someone remembering to run the check every time, and reports evidence explicitly instead of a glance.",
+            "The skill's main advantage is that it can approve and merge the pull request automatically once its own checks pass."
+          ],
+          "correct": 2,
+          "explain": "The gain isn't new capability the skill alone can perform — it's removing the dependency on a human remembering to run the same check every single time, plus reporting explicit pass/fail evidence instead of relying on a glance at the diff. Raw speed isn't the stated justification, and a verification skill reporting evidence is a different thing from it having authority to approve or merge anything."
+        }
+      ]
+    }
+  ]
+}

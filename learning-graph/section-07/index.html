@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script>(function(){try{var t=localStorage.getItem('ccaf-theme');if(!t){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
-  <title>Section 8 Learning Graph — The Claude Agent SDK</title>
+  <title>Section 7 Learning Graph — Claude Code in Action</title>
   <style>
     :root {
       --ink: #242321;
@@ -236,15 +236,15 @@
 <body>
   <main>
     <div class="masthead">
-      <a href="../index.html">CCA-F · Study system</a>
+      <a href="../../index.html">CCA-F · Study system</a>
       <span>Learning graph</span>
-      <a href="../lessons/0010-claude-agent-sdk-orchestration.html">📖 Lessons</a>
-      <a href="../quizzes/08-claude-agent-sdk/index.html">✎ Quiz</a>
+      <a href="../../lessons/0009-claude-code-in-action.html">📖 Lessons</a>
+      <a href="../../quizzes/07-claude-code-in-action/index.html">✎ Quiz</a>
       <button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button>
     </div>
 
-    <h1>Section 8, as a graph</h1>
-    <p class="dek">The Claude Agent SDK broken into 44 micro-topics wired by prerequisite, taught one knowledge point at a time, and kept alive by spaced review that pays credit down the graph. Built the Math Academy way.</p>
+    <h1>Section 7, as a graph</h1>
+    <p class="dek">Claude Code in Action broken into 41 micro-topics wired by prerequisite, taught one knowledge point at a time, and kept alive by spaced review that pays credit down the graph. Built the Math Academy way.</p>
 
     <div class="tabs" role="tablist">
       <button role="tab" id="tab-today" aria-controls="panel-today" aria-selected="true">Today</button>
@@ -267,7 +267,7 @@
       <p>This page is a small implementation of the system described in <em>The Math Academy Way</em>, applied to one exam section instead of to mathematics. Six ideas do all the work.</p>
 
       <h2>1 · The knowledge graph</h2>
-      <p>Section 8 is cut into 44 <strong>micro-topics</strong>, each small enough to teach and assess on its own, and wired together by <strong>prerequisite edges</strong>. A <em>hard</em> edge gates: you do not see a topic until everything behind it is mastered. A <em>soft</em> edge only orders the queue. The graph — not the reading order of the notes — is the source of truth about what comes next.</p>
+      <p>Section 7 is cut into 41 <strong>micro-topics</strong>, each small enough to teach and assess on its own, and wired together by <strong>prerequisite edges</strong>. A <em>hard</em> edge gates: you do not see a topic until everything behind it is mastered. A <em>soft</em> edge only orders the queue. The graph — not the reading order of the notes — is the source of truth about what comes next. Everything descends from a single entry point, the agentic loop as Claude Code runs it, through eight layers to permission modes, hooks, MCP, automation, and verification at the far end.</p>
 
       <h2>2 · The knowledge frontier</h2>
       <p>The boundary between what you know and what you are ready to learn. Every new lesson you are served sits exactly on it. The <a href="#" data-goto="graph">Graph tab</a> draws it: filled nodes are mastered, outlined nodes are ready, faded nodes are still locked behind something.</p>
@@ -279,15 +279,15 @@
       <p>Fail the <em>same</em> knowledge point twice and the lesson stops. Rather than lowering the bar, the system queues a <strong>remedial review</strong> on that knowledge point's key prerequisites — the specific earlier topics it leans on — so you clear the bar fully on the next attempt.</p>
 
       <h2>5 · Encompassings and fractional implicit repetition</h2>
-      <p>Advanced topics implicitly practise simpler ones. Reasoning about <em>what comes back out of a subagent</em> exercises <em>context isolation</em> whether you meant to or not. Those relationships are recorded as <strong>encompassing edges</strong> with a coverage weight, and reviewing an advanced topic pays discounted repetition credit down to everything it encompasses. Credit that arrives too early counts for less. When credit reaches a full repetition, the simpler topic's review schedule moves on without you ever seeing it in the queue.</p>
+      <p>Advanced topics implicitly practise simpler ones. Reasoning about <em>the seven-step verification checklist</em> exercises <em>the Stop-hook gate</em> and <em>a cold second opinion</em> whether you meant to or not, and every hook question rehearses the same exit-code contract. Those relationships are recorded as <strong>encompassing edges</strong> with a coverage weight, and reviewing an advanced topic pays discounted repetition credit down to everything it encompasses. Credit that arrives too early counts for less. When credit reaches a full repetition, the simpler topic's review schedule moves on without you ever seeing it in the queue.</p>
       <p>The same edges drive <strong>review compression</strong>: when several due topics are covered by one advanced topic, you are served the advanced one and the rest are paid implicitly. That is why the review queue stays short as the graph fills up.</p>
 
       <h2>6 · Spaced repetition and XP</h2>
       <p>A cleared topic comes back after 1 day, then 3, 7, 16, 35, 75, 160 — each successful repetition pushing the next one further out. XP rewards both quantity and quality: full credit for clearing something first try, partial credit after a stumble, a bonus for mastering a topic outright.</p>
 
       <h2>Sources</h2>
-      <p>Content is drawn from <code>08-claude-agent-sdk/notes.md</code> in this repo, which is built from the official Agent SDK references cross-checked against the CCA-F Exam Guide v1.0. Method from <a href="https://www.mathacademy.com/">Math Academy</a>'s <em>The Math Academy Way</em> (Justin Skycak). Data format modelled on <a href="https://github.com/withmarbleapp/os-taxonomy">withmarbleapp/os-taxonomy</a> — topics as nodes, dependencies as edges with a strength and a reason, plus an encompassings file this graph adds.</p>
-      <p class="small muted">The taxonomy lives in <code>learning-graph/data/*.json</code> and is validated with <code>node learning-graph/scripts/validate.mjs</code>. Your progress is stored in this browser, separately from the other section graphs, and can be synced across devices — see the sync panel below. There are <a href="section-03/index.html">Section 3</a> and <a href="section-07/index.html">Section 7</a> graphs too, running on the same scheduler.</p>
+      <p>Content is drawn from <code>07-claude-code-in-action/notes.md</code> in this repo, built from the official Anthropic Academy course <em>Claude Code in Action</em> with Claude Code 101 background folded in, and grounded against a community CCA-F practice exam (<a href="https://github.com/OlivierAlter/Claude-Certified-Architect-Foundations-Certification-Exam">OlivierAlter/Claude-Certified-Architect-Foundations-Certification-Exam</a>) to fill in the exam-tested surface — <code>.claude/rules/</code> path scoping, skill frontmatter, the interview pattern, and headless CI flags — that the course notes alone only touch lightly. Cross-checked against the CCA-F Exam Guide v1.0. Method from <a href="https://www.mathacademy.com/">Math Academy</a>'s <em>The Math Academy Way</em> (Justin Skycak). Data format modelled on <a href="https://github.com/withmarbleapp/os-taxonomy">withmarbleapp/os-taxonomy</a> — topics as nodes, dependencies as edges with a strength and a reason, plus an encompassings file this graph adds.</p>
+      <p class="small muted">The taxonomy lives in <code>learning-graph/section-07/data/*.json</code> and is validated with <code>node learning-graph/scripts/validate.mjs section-07</code>. Your progress is stored in this browser, separately from the other section graphs, and can be synced across devices — see the sync panel below. There are <a href="../index.html">Section 8</a> and <a href="../section-03/index.html">Section 3</a> graphs too.</p>
     </section>
 
     <div class="card" id="syncPanel"></div>
@@ -311,9 +311,9 @@
       if (btn) btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
     })();
   </script>
-  <script src="../assets/js/gist-sync.js"></script>
+  <script src="../../assets/js/gist-sync.js"></script>
   <script src="graph-data.js"></script>
-  <script src="app.js"></script>
-  <script src="../assets/js/header-scroll.js"></script>
+  <script src="../app.js"></script>
+  <script src="../../assets/js/header-scroll.js"></script>
 </body>
 </html>

@@ -1,0 +1,293 @@
+{
+  "$comment": "Knowledge points for cl_claudemd.",
+  "cluster": "cl_claudemd",
+  "topics": [
+    {
+      "topicId": "mt_claudemd_basic",
+      "knowledgePoints": [
+        {
+          "id": "kp_cmdbasic_1",
+          "name": "What breaks without it, and how to start",
+          "keyPrerequisites": ["mt_agentic_loop_cc"],
+          "teach": "<p class='kp-key'>CLAUDE.md is read automatically every session and appended to the prompt — without it, Claude re-explores and re-derives assumptions from scratch each time.</p><p><code>/init</code> generates a starting file. The recommended habit is to start lean — empty or minimal — and add a rule only once you've actually had to correct Claude on that point, rather than guessing everything a project might need up front.</p>",
+          "questions": [
+            {
+              "id": "q_cmdbasic_1a",
+              "q": "A developer asks why a project bothers maintaining CLAUDE.md instead of just re-explaining conventions inside each individual prompt. What actually breaks without it?",
+              "options": [
+                "Nothing is persisted between sessions, so Claude re-explores the codebase and re-derives its assumptions about conventions from scratch each time.",
+                "Claude retains a compressed memory of the previous session automatically, so the absence of CLAUDE.md only shows up after weeks of drift.",
+                "Only the CLI's shell history is lost between sessions, while Claude's understanding of the codebase's conventions carries over normally.",
+                "Nothing changes for a single-developer project, since re-deriving conventions matters only once a second developer joins the repo."
+              ],
+              "correct": 0,
+              "explain": "Without CLAUDE.md, nothing about a project's conventions persists between sessions, so Claude re-explores the codebase and re-derives assumptions fresh every time — CLAUDE.md closes that gap by being read automatically and appended to the prompt. Claude does not carry a compressed memory across sessions on its own, the loss affects far more than shell history, and the problem exists for a solo developer just as much as for a team."
+            },
+            {
+              "id": "q_cmdbasic_1b",
+              "q": "Before starting a new project, one engineer wants to write an exhaustive CLAUDE.md covering every convention imaginable; another argues for starting with none, or a minimal file from /init. Which approach is recommended, and why?",
+              "options": [
+                "Write the exhaustive CLAUDE.md up front, since Claude only reads the file once at the very start of the project.",
+                "Start with no CLAUDE.md (or a minimal one from /init), adding a rule only once Claude has actually needed correcting on it.",
+                "Skip CLAUDE.md entirely and rely on inline code comments throughout the codebase to communicate every convention.",
+                "Write the exhaustive file up front, then delete it once the team has been correcting Claude for a few weeks."
+              ],
+              "correct": 1,
+              "explain": "Starting lean and adding a rule only once Claude has actually needed correcting on it keeps the file compact and tied to real friction rather than guesswork; /init generates a starting point for exactly this. CLAUDE.md is read every session, not just once, so front-loading isn't about read frequency; skipping it for inline comments abandons the mechanism that gets appended to every prompt automatically; and writing exhaustively before deleting later just does the expensive mistake in reverse."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_cmdbasic_1",
+          "q": "A new engineer asks why the team bothers maintaining a CLAUDE.md file instead of just re-explaining conventions in each prompt. What's the most accurate answer?",
+          "options": [
+            "CLAUDE.md exists mainly to reduce the number of tokens billed per request, since prompt text and file text are priced differently.",
+            "CLAUDE.md matters only for very large codebases; on a small project, re-explaining conventions each prompt costs about the same.",
+            "CLAUDE.md is read automatically every session and appended to the prompt, so conventions persist without being retyped each time.",
+            "CLAUDE.md is required by Claude Code before any session can start, similar to how a missing package.json blocks an npm install."
+          ],
+          "correct": 2,
+          "explain": "CLAUDE.md is loaded automatically at the start of every session and appended to the prompt, so conventions the team has already written down don't need to be retyped each time. It isn't a billing optimization — prompt text and file text aren't priced differently — its value doesn't disappear on a small codebase, and no CLAUDE.md file is actually required for a session to start."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_claudemd_hierarchy",
+      "knowledgePoints": [
+        {
+          "id": "kp_hierarchy_1",
+          "name": "Four locations, stacked",
+          "keyPrerequisites": ["mt_claudemd_basic"],
+          "teach": "<p class='kp-key'>Four CLAUDE.md locations load together and stack at launch — none overrides the others, they all just add up.</p><ul><li><strong>Managed policy</strong> — org-level, controlled by the platform team, cannot be excluded.</li><li><strong>User</strong> — personal, in <code>~/.claude/CLAUDE.md</code>, follows you across every project, never committed.</li><li><strong>Project</strong> — shared with the team, checked into the repo.</li><li><strong>Local</strong> — git-ignored, personal notes for this one repo only.</li></ul><p><code>/memory</code> shows exactly which files loaded for the current session — useful when something isn't behaving as expected.</p>",
+          "questions": [
+            {
+              "id": "q_hierarchy_1a",
+              "q": "Of the four CLAUDE.md locations, which pair is shared with the team through version control, and which pair stays personal to each developer?",
+              "options": [
+                "Managed policy and Local are both shared with the team, while User and Project stay personal to each developer.",
+                "All four locations are personal to each developer; none of them is ever checked into version control.",
+                "User and Local are both shared with the team on clone, while Managed policy and Project stay personal to each developer.",
+                "Project is shared with the team via version control, while User and Local are personal and never committed."
+              ],
+              "correct": 3,
+              "explain": "Project-level CLAUDE.md is checked into the repository and shared with the team on clone, while User (personal, follows you across projects) and Local (git-ignored, notes for this one repo) both stay on the individual developer's machine. Managed policy is shared too, but at the org level rather than through the project's own version control, which the other pairings get backwards."
+            },
+            {
+              "id": "q_hierarchy_1b",
+              "q": "A senior engineer adds detailed coding standards to their ~/.claude/CLAUDE.md file. A new teammate clones the repo and Claude Code doesn't follow those standards for them. What's the most likely cause?",
+              "options": [
+                "The standards live in the user-level file, which is personal and never committed, so a teammate cloning the repo never receives them.",
+                "Claude Code caches CLAUDE.md the first time it's read and needs the cache manually cleared before any teammate sees new rules.",
+                "The new teammate's Claude Code version is older and doesn't yet support reading a CLAUDE.md file placed anywhere but the root.",
+                "The standards were written in a format Claude only parses when placed inside a .claude/rules/ directory instead of CLAUDE.md."
+              ],
+              "correct": 0,
+              "explain": "~/.claude/CLAUDE.md is the user-level location — personal to that one developer's machine and never checked into version control — so cloning the repository can't hand a teammate rules written only there; moving them into the project-level file is what actually shares them. There's no CLAUDE.md cache to clear, version support for file location isn't the issue, and plain prose rules don't need to live inside .claude/rules/ to be read at all."
+            }
+          ]
+        },
+        {
+          "id": "kp_hierarchy_2",
+          "name": "Stacking, not overriding",
+          "keyPrerequisites": ["mt_claudemd_basic"],
+          "teach": "<p class='kp-key'>The four locations don't override each other — they stack. A rule in the wrong one doesn't get replaced by a better rule elsewhere; both are simply present at once.</p><p>Because everything loaded is just appended together, a rule placed in the local, git-ignored file is invisible outside that one repo — and a user-level rule is invisible to teammates no matter how the project file is written. Run <code>/memory</code> when a session's behavior doesn't match expectations, to see exactly which files actually loaded.</p>",
+          "questions": [
+            {
+              "id": "q_hierarchy_2a",
+              "q": "A developer wants to check exactly which CLAUDE.md and memory files loaded for a confusing session, before assuming a typo in the project file. What command shows this?",
+              "options": [
+                "/rules, which lists every .claude/rules/ file currently active for the files touched so far in the session.",
+                "/memory, which shows exactly which CLAUDE.md and memory files actually loaded for the current session.",
+                "/context, which breaks down token usage by source but does not name which configuration files were read.",
+                "/init, which regenerates a fresh CLAUDE.md and reports which of the previous file's rules were kept."
+              ],
+              "correct": 1,
+              "explain": "/memory is the command that shows exactly which CLAUDE.md and memory files actually loaded for the session, which is the direct way to confirm whether a suspected typo or missing file is the real cause. /rules isn't a way to audit loaded memory files, /context reports token consumption rather than which files were read, and /init generates a new file rather than reporting on what already loaded."
+            },
+            {
+              "id": "q_hierarchy_2b",
+              "q": "A developer writes a rule only in a repo's git-ignored local CLAUDE.md — never committed — and expects it to also silently apply to every other project they work on, the way a user-level rule would. Is that correct?",
+              "options": [
+                "Yes — any git-ignored CLAUDE.md file, regardless of which location it lives in, behaves the same as a user-level file.",
+                "Yes — 'local' and 'user' are two names Claude Code uses interchangeably for the exact same configuration location.",
+                "No — the local file is scoped to that one repository, unlike the user location, which is the one that follows you everywhere.",
+                "No — a local CLAUDE.md file is disabled by default and must be explicitly enabled once per repository before it's read."
+              ],
+              "correct": 2,
+              "explain": "The local file is scoped to just that one repository — git-ignored personal notes for that repo specifically — while the user-level file is the one that follows a developer across every project; being git-ignored isn't what makes something 'user-level.' Local and user are two distinct locations rather than interchangeable names, and there's no separate enable step a local CLAUDE.md file needs before it's read."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_hierarchy_1",
+          "q": "Which of the four CLAUDE.md locations is controlled by the platform/org team and cannot be excluded from a session, regardless of project or personal settings?",
+          "options": [
+            "Project — because it's checked into the repository, every developer effectively has to accept whatever rules it contains.",
+            "Local — because it's git-ignored, it silently persists across every clone even after the repo is deleted and re-cloned.",
+            "User — because it lives in the developer's own config folder, no project can prevent it from being loaded at launch.",
+            "Managed policy — org-level, controlled by the platform team, and cannot be excluded from any session."
+          ],
+          "correct": 3,
+          "explain": "Managed policy is the org-level location controlled by the platform team, and it's specifically the one that cannot be excluded from a session no matter what the project or personal settings say. Project rules can technically still be worked around by a developer's own choices, Local is scoped to one repo and doesn't survive a fresh clone the way the claim describes, and User is personal preference rather than an org-enforced floor."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_claudemd_imports",
+      "knowledgePoints": [
+        {
+          "id": "kp_imports_1",
+          "name": "Organization, not a smaller context",
+          "keyPrerequisites": ["mt_claudemd_hierarchy"],
+          "teach": "<p class='kp-key'>@import expands inline at launch — it buys organization, not a smaller context.</p><p><code>@.claude/conventions/code-style.md</code> pulls another file's content into CLAUDE.md at the point of the import. Claude Code expands every import before the session starts, so whatever lands in context is identical in size to having pasted the imported file's contents directly into the root file — imports only change how the source is organized on disk.</p><p>The pattern that scales across a monorepo: give each package its own CLAUDE.md for what's specific to it, and have the root file <code>@import</code> the conventions every package shares.</p>",
+          "questions": [
+            {
+              "id": "q_imports_1a",
+              "q": "A monorepo has five packages, each with its own linting and testing conventions, plus conventions all five share. What's the most maintainable CLAUDE.md layout?",
+              "options": [
+                "Give each of the five packages its own CLAUDE.md for what's specific to it, and have the root CLAUDE.md @import the conventions all five share.",
+                "Keep a single root CLAUDE.md and use @import to pull in nothing, relying on Claude to infer which section applies to which package.",
+                "Delete the root CLAUDE.md file entirely and duplicate the shared conventions manually into each of the five package-level files.",
+                "Move every convention, shared and package-specific alike, into one .claude/rules/ file scoped with a paths pattern per package."
+              ],
+              "correct": 0,
+              "explain": "This layout keeps each package's own conventions local to that package while letting the root file @import the standards genuinely shared across all five — the maintainable middle ground between one giant file and total duplication. Relying on Claude to infer which section applies is the exact failure mode a growing single file runs into, deleting the root file forces manual duplication of shared rules, and folding everything into one .claude/rules/ file abandons the per-package CLAUDE.md split."
+            },
+            {
+              "id": "q_imports_1b",
+              "q": "Does splitting a large CLAUDE.md into several files pulled in with @import reduce how much of it lands in a session's context, compared to one unsplit file?",
+              "options": [
+                "Yes — Claude Code only loads an imported file's content on demand, the first time a rule from it is actually needed.",
+                "No — imports are expanded inline at launch, so what lands in context is the same size as if the text had been pasted directly in.",
+                "Yes — an imported file counts toward a separate, smaller context budget than text written directly in the root CLAUDE.md.",
+                "No — imports are blocked by default and only expand into context once a developer manually approves each one, once."
+              ],
+              "correct": 1,
+              "explain": "Imports are expanded inline at launch, so whatever an @import pulls in lands in context exactly as if it had been pasted directly into the root file — the benefit is purely organizational, not a smaller context footprint. There's no on-demand loading of imported files, no separate smaller budget they count against, and no manual per-import approval step."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_imports_1",
+          "q": "A developer splits a 500-line CLAUDE.md into six topic files using @import and expects the session's context usage to drop noticeably as a result. What should actually happen?",
+          "options": [
+            "Context usage drops by roughly the fraction the developer split off into imports, since each import loads lazily.",
+            "Context usage becomes unpredictable, since imports load in a randomized order chosen fresh for every session.",
+            "Context usage stays about the same, since every import is expanded inline at launch just like the original single file.",
+            "Context usage increases, since each imported file adds its own filename and a header on top of the original content."
+          ],
+          "correct": 2,
+          "explain": "Because every @import is expanded inline before the session starts, the total content landing in context is the same either way — splitting the file changes how it's organized on disk, not how much of it Claude actually reads. There's no lazy loading to produce a proportional drop, no randomized import order, and no meaningful per-file overhead that would make the split cost more."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_claude_rules",
+      "knowledgePoints": [
+        {
+          "id": "kp_rules_1",
+          "name": "Path-scoped conventions",
+          "keyPrerequisites": ["mt_claudemd_hierarchy"],
+          "teach": "<p class='kp-key'>.claude/rules/ splits conventions into topic files, each scoped by YAML frontmatter naming glob patterns for when it should load.</p><pre class='kp-code'>---\npaths: [\"infra/**/*\"]\n---\nUse modules from the shared registry; every resource needs a Name tag.</pre><p>A file like this only enters context in a session that's touching a matching path — a Terraform rule stays out of a session working on the Python backend entirely, instead of sitting in every session the way one long root CLAUDE.md would.</p><p>The glob applies wherever a matching file lives, so <code>paths: [\"**/*.test.tsx\"]</code> catches a test file regardless of which directory it's in — no need for a rule per directory.</p>",
+          "questions": [
+            {
+              "id": "q_rules_1a",
+              "q": "A 400-line root CLAUDE.md mixes Python, TypeScript, infrastructure, and testing rules, and Claude keeps applying the wrong ones to the wrong files. What reorganizes this so each rule set only loads for its own files?",
+              "options": [
+                "Add inline section headers to the single file and use /memory to tell Claude which section to prioritize for the current task.",
+                "Create a separate CLAUDE.md in each top-level package directory and delete the root file entirely.",
+                "Break the file into topic files and use @import directives in the root file to pull all of them in unconditionally.",
+                "Split the content into .claude/rules/ files, each scoped with YAML frontmatter path patterns so it only loads for matching files."
+              ],
+              "correct": 3,
+              "explain": ".claude/rules/ is built for exactly this: topic-focused files with YAML frontmatter path scoping so each rule set activates only when editing files it actually applies to, cutting both the wrong-convention problem and the cost of loading everything every time. Section headers plus /memory still leaves every section loaded in every session, deleting the root file loses genuinely shared conventions, and @import still pulls every file in unconditionally regardless of what's being edited."
+            },
+            {
+              "id": "q_rules_1b",
+              "q": "A team uses Terraform only in the infra/ directory and wants those conventions to load only in sessions touching .tf files, without appearing in Python or TypeScript sessions. What achieves that?",
+              "options": [
+                "A .claude/rules/terraform.md file with frontmatter paths: [\"infra/**/*\"], listing the Terraform conventions.",
+                "A CLAUDE.md file placed directly inside the infra/ directory, containing the Terraform-specific conventions.",
+                "The Terraform rules added to the root CLAUDE.md under a clearly marked heading, with a system-prompt instruction to scope them.",
+                "A skill at .claude/skills/terraform.md with allowed-tools restricted to file operations under the infra/ directory."
+              ],
+              "correct": 0,
+              "explain": ".claude/rules/ with a paths glob is the mechanism designed to conditionally load conventions by file path, so a terraform.md rule scoped to infra/**/* loads only in sessions touching that directory tree and stays out of everything else. A directory-level CLAUDE.md isn't part of the location hierarchy, a heading in the root file plus a system-prompt instruction still loads in every session, and restricting a skill's allowed-tools controls what it may call, not when its content loads."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_rules_1",
+          "q": "A glob pattern in a .claude/rules/ file's frontmatter reads paths: [\"**/*.test.tsx\"]. What determines whether that rule loads for a given file?",
+          "options": [
+            "Whether the file sits inside a directory literally named test, regardless of the file's own extension.",
+            "Whether the file's path matches the pattern anywhere in the tree, regardless of which directory it happens to live in.",
+            "Whether the file was the most recently modified .tsx file in the repository at the time the session started.",
+            "Whether the file is explicitly listed by name in a manifest alongside the .claude/rules/ file itself."
+          ],
+          "correct": 1,
+          "explain": "A glob pattern like **/*.test.tsx matches any file with that name shape anywhere in the tree, regardless of which directory it's actually in — that's the point of path-scoped rules over one CLAUDE.md per directory. It doesn't require a literal test directory, it isn't based on recency of modification, and there's no separate manifest listing files by name."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_claudemd_phrasing",
+      "knowledgePoints": [
+        {
+          "id": "kp_phrasing_1",
+          "name": "Specific, checkable, and a budget for emphasis",
+          "keyPrerequisites": ["mt_claudemd_basic"],
+          "teach": "<p class='kp-key'>CLAUDE.md is guidance competing for attention, not enforced configuration — every added line makes every other line's compliance a little less reliable.</p><p>Effective phrasing is specific and checkable, and names the replacement rather than only banning something: <code>\"Use named exports\"</code> does more work than <code>\"Don't use default exports\"</code>, because it tells Claude what to do instead of only what not to do.</p><p>Emphasis words like <strong>IMPORTANT</strong> and <strong>YOU MUST</strong> are a budget, not decoration — spend them on the two or three rules that actually matter, or none of them will stand out anymore. Treat the file as living code: a wrong Claude action is a bug report against CLAUDE.md, and the fix is editing the file, not repeating the instruction louder.</p>",
+          "questions": [
+            {
+              "id": "q_phrasing_1a",
+              "q": "Why does a CLAUDE.md file that keeps growing tend to have lower per-rule compliance, rather than staying just as reliable with more rules added?",
+              "options": [
+                "A longer file takes measurably longer to load at session start, so Claude has less time left to act on any single rule.",
+                "A longer file is more likely to contain a rule that directly contradicts another rule already written earlier in the file.",
+                "Every line in CLAUDE.md competes with every other line for attention, so adding more lines lowers each one's reliability.",
+                "A longer file exceeds a fixed line-count limit past which Claude Code silently stops reading the rest of the file."
+              ],
+              "correct": 2,
+              "explain": "CLAUDE.md is guidance rather than enforced configuration, and every line added competes with every other line for the model's attention — so a longer file spreads that attention thinner and each rule becomes a little less reliably followed. It isn't a load-time issue, a longer file isn't inherently more self-contradictory, and there's no fixed line-count cutoff past which the file stops being read."
+            },
+            {
+              "id": "q_phrasing_1b",
+              "q": "Which rewrite of a CLAUDE.md rule best follows the 'name the replacement, don't just ban' phrasing habit?",
+              "options": [
+                "\"IMPORTANT: never write bad code\" — marking a rule IMPORTANT is what makes an instruction specific and checkable.",
+                "\"Don't use console.log\" — a ban is inherently more checkable than a positive instruction, since it's easy to search for.",
+                "\"Write clean, idiomatic code that a senior engineer would approve of\" — it states the general standard being asked for.",
+                "\"Use the project's logger module instead of console.log\" — it names the replacement, not just the thing being banned."
+              ],
+              "correct": 3,
+              "explain": "Naming the replacement — use logger instead of console.log — gives Claude something specific and checkable to do, not just something to avoid, which is the phrasing habit that sticks. Marking a vague rule IMPORTANT doesn't make it specific, a ban alone still leaves Claude without a positive instruction, and 'clean, idiomatic code a senior engineer would approve of' is a standard with no checkable content."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_phrasing_1",
+          "q": "A CLAUDE.md file has grown to include fifteen separate rules each prefixed with 'YOU MUST.' A teammate proposes trimming that to two or three genuinely critical rules marked that way, with the rest phrased normally. What's the reasoning?",
+          "options": [
+            "Emphasis words are a budget — spreading them across fifteen rules means none of them stand out anymore.",
+            "Claude Code enforces a hard limit on how many 'YOU MUST' rules a single CLAUDE.md file is allowed to contain.",
+            "Rules marked 'YOU MUST' are checked against a separate hook before every session, so excess ones slow down startup.",
+            "Only the first three 'YOU MUST' rules in the file are ever actually read; the rest are silently truncated."
+          ],
+          "correct": 0,
+          "explain": "Treating emphasis as a limited budget is the actual reasoning: spending it on fifteen rules dilutes all of them, while reserving it for the two or three that truly matter keeps them standing out. There's no enforced count limit on 'YOU MUST' rules, no separate hook checking them at startup, and no truncation past a fixed number — the file is guidance the model reads and weighs like anything else in it."
+        }
+      ]
+    }
+  ]
+}

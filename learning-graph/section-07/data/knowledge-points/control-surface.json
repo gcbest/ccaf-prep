@@ -1,0 +1,317 @@
+{
+  "$comment": "Knowledge points for cl_control_surface.",
+  "cluster": "cl_control_surface",
+  "topics": [
+    {
+      "topicId": "mt_permission_modes_six",
+      "knowledgePoints": [
+        {
+          "id": "kp_permission_modes_six_1",
+          "name": "Six modes, one risk spectrum",
+          "keyPrerequisites": [
+            "mt_agentic_loop_cc"
+          ],
+          "teach": "<p class='kp-key'>Manual, Accept edits, Plan, Auto, Don't ask, Bypass \u2014 ordered from most to least supervised.</p><ul><li><strong>Manual</strong> \u2014 reads only without prompting; everything else asks first.</li><li><strong>Accept edits</strong> \u2014 reads, file edits, and common filesystem bash commands run without asking; good for iterating on code you review after the fact.</li><li><strong>Plan</strong> \u2014 read-only; researches and proposes without editing.</li><li><strong>Auto</strong> \u2014 accepts everything, but a separate classifier model reviews each action's intent before it runs.</li><li><strong>Don't ask</strong> \u2014 only pre-approved tools run; everything else is auto-denied with no prompt. Built for unattended pipelines like CI or scheduled jobs.</li><li><strong>Bypass</strong> \u2014 skips all checks (<code>--dangerously-skip-permissions</code>). Only ever run inside an isolated container or VM.</li></ul><p>Shift+Tab cycles the four everyday ones: Manual, Accept edits, Plan, Auto.</p>",
+          "questions": [
+            {
+              "id": "q_permission_modes_six_1a",
+              "q": "A developer wants a mode where Claude can read and edit files and run everyday filesystem commands without asking each time, but the developer plans to review every change afterward before committing anything. Which mode fits?",
+              "options": [
+                "Don't ask, since it lets a fixed allowlist of pre-approved tools run without prompting for approval on each one",
+                "Accept edits, since reads, file edits, and common filesystem commands run without asking while the developer reviews afterward",
+                "Auto, since it accepts everything but a classifier still checks each action's intent first",
+                "Plan, since it lets Claude propose changes that get applied automatically the moment a human approves the proposed plan"
+              ],
+              "correct": 1,
+              "explain": "Accept edits is exactly this: reads, file edits, and common filesystem commands proceed without asking, suited to a developer who reviews after the fact. Don't ask is for unattended pipelines with a pre-approved allowlist, Auto still runs a classifier on every action, and Plan is read-only and never applies changes itself."
+            },
+            {
+              "id": "q_permission_modes_six_1b",
+              "q": "A CI pipeline needs to run Claude Code completely unattended, and only a small set of pre-approved tools should ever execute \u2014 anything else should be silently denied rather than prompting, since nobody is present to answer a prompt. Which mode is built for exactly this?",
+              "options": [
+                "Manual, since it defaults to asking before every action other than reads, which still requires someone present to answer",
+                "Accept edits, since edits run automatically without needing a person present",
+                "Don't ask, since only pre-approved tools run and everything else is auto-denied with no prompt",
+                "Bypass, since it skips every permission check entirely, unattended or not"
+              ],
+              "correct": 2,
+              "explain": "Don't ask is built for unattended pipelines: only pre-approved tools run, and anything outside that allowlist is auto-denied instead of prompting. Manual still prompts for non-reads, Accept edits still allows anything beyond its default scope to prompt, and Bypass removes the allowlist protection entirely rather than enforcing it."
+            }
+          ]
+        },
+        {
+          "id": "kp_permission_modes_six_2",
+          "name": "Bypass is a container decision, not a convenience one",
+          "keyPrerequisites": [
+            "mt_agentic_loop_cc"
+          ],
+          "teach": "<p class='kp-key'><code>--dangerously-skip-permissions</code> (Bypass) skips every check \u2014 which is exactly why it belongs only inside an isolated container or VM, never on a machine holding anything you'd mind losing.</p><p>Bypass and Don't ask look similar from the outside \u2014 both let a session run unattended \u2014 but they solve different problems. Don't ask still enforces an allowlist: only pre-approved tools run, everything else is silently denied. Bypass enforces nothing at all. Reaching for Bypass because a CI job is 'annoying to keep approving' is a category error \u2014 the fix for that friction is Don't ask with the right tools pre-approved, or Auto with its classifier still watching intent. Bypass is for a disposable, isolated environment where nothing sensitive is reachable even if every check is off.</p>",
+          "questions": [
+            {
+              "id": "q_permission_modes_six_2a",
+              "q": "A developer is frustrated that their CI pipeline keeps needing new tools pre-approved every time the job changes, and considers switching the pipeline to Bypass mode to stop the friction. What's the problem with that fix?",
+              "options": [
+                "Bypass mode is functionally identical to Don't ask, so it wouldn't actually change anything about the friction the developer is experiencing",
+                "Bypass skips every permission check entirely, and is only appropriate inside an isolated container or VM \u2014 not as a fix for allowlist friction on a shared or sensitive machine",
+                "Bypass mode requires an interactive terminal session to acknowledge its warning banner, so it can't realistically be used inside an unattended CI pipeline in the first place",
+                "Bypass mode disables the Auto-mode classifier specifically, while leaving every other permission check in the six-mode spectrum still fully active"
+              ],
+              "correct": 1,
+              "explain": "Bypass removes every permission check, so it's appropriate only inside an isolated container or VM \u2014 not as a general fix for allowlist friction on a machine that holds anything sensitive. It is not identical to Don't ask (which still enforces an allowlist), it doesn't require an interactive terminal, and it doesn't leave other checks active \u2014 it removes all of them."
+            },
+            {
+              "id": "q_permission_modes_six_2b",
+              "q": "What distinguishes Don't ask from Bypass, given that both are meant to run without a person present to approve actions?",
+              "options": [
+                "Don't ask still enforces an allowlist of pre-approved tools and denies everything else; Bypass skips every check with nothing left enforced",
+                "Don't ask is for CI pipelines specifically, while Bypass is for interactive sessions run by a single trusted developer",
+                "Don't ask requires a dedicated container or VM to run safely, while Bypass can run on any machine at all since it skips every check instantly",
+                "Don't ask only applies to file edits, while Bypass extends that same allowlist logic to cover Bash commands and MCP tool calls as well"
+              ],
+              "correct": 0,
+              "explain": "Don't ask still enforces an allowlist \u2014 pre-approved tools run, everything else is denied \u2014 while Bypass enforces nothing at all. The container/VM requirement belongs to Bypass, not Don't ask; both modes can apply beyond just CI or just file edits, so those distinctions are backwards or incomplete."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_permission_modes_six_1",
+          "q": "Which mode is read-only and produces a proposal rather than any file changes?",
+          "options": [
+            "Manual, which asks before every action beyond a read but does not stay confined to proposing without editing",
+            "Plan, which researches and proposes without editing",
+            "Accept edits, which applies file edits automatically instead of stopping at a proposal",
+            "Auto, which accepts every action once a classifier has checked its intent"
+          ],
+          "correct": 1,
+          "explain": "Plan is the read-only mode: it researches the codebase and proposes an approach without editing anything. Manual still allows edits after asking, Accept edits applies edits automatically, and Auto accepts everything subject to a classifier check."
+        },
+        {
+          "id": "r_permission_modes_six_2",
+          "q": "Why is Bypass mode specifically recommended for use only inside a container or VM?",
+          "options": [
+            "Because containers run Claude Code with a smaller default context window, reducing the blast radius of a mistake",
+            "Because Bypass mode is only technically compatible with containerized installations of Claude Code, and fails to start anywhere else",
+            "Because a container automatically reverts any file changes Claude Code makes once the session ends",
+            "Because it skips all permission checks, so any damage it could cause should be contained to a disposable environment"
+          ],
+          "correct": 3,
+          "explain": "Bypass skips every permission check, so confining it to a disposable, isolated environment limits what any resulting mistake can actually reach. It isn't about a smaller context window, technical compatibility, or automatic reverting on session end \u2014 none of those are how the isolation actually protects anything."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_auto_classifier",
+      "knowledgePoints": [
+        {
+          "id": "kp_auto_classifier_1",
+          "name": "Checks intent, not correctness",
+          "keyPrerequisites": [
+            "mt_permission_modes_six"
+          ],
+          "teach": "<p class='kp-key'>Auto's classifier checks whether an action matches your intent \u2014 not whether the resulting code is correct.</p><p>In Auto mode, every action still passes through a separate classifier model before it runs, watching for things like a production deploy, a force-push, piping downloaded code into a shell, sending sensitive data externally, or destroying session files. That's real protection against a certain class of mistake. But the classifier has no opinion on whether the code it approved actually works \u2014 broken-but-safe code sails straight through. Pairing Auto with a <strong>Stop hook that runs the tests</strong> is what covers the correctness gap the classifier was never designed to check.</p>",
+          "questions": [
+            {
+              "id": "q_auto_classifier_1a",
+              "q": "In Auto mode, what does the classifier model actually check before letting an action proceed?",
+              "options": [
+                "It verifies the code that was written is correct before allowing the action, in addition to checking intent",
+                "It only activates for Bash commands, leaving file edits and other tool calls to run through without any classifier review at all",
+                "It checks whether the action matches your intent \u2014 like blocking a force-push or a production deploy \u2014 but doesn't verify the code produced is actually correct",
+                "It replaces the need for a Stop hook entirely, since it already covers both the intent of an action and the correctness of the code it produces"
+              ],
+              "correct": 2,
+              "explain": "The classifier checks whether an action matches your intent \u2014 catching things like a force-push or a production deploy \u2014 without verifying that the underlying code is correct. It doesn't additionally check correctness, it isn't limited to Bash commands, and it doesn't make a Stop hook redundant since correctness is exactly what it leaves uncovered."
+            },
+            {
+              "id": "q_auto_classifier_1b",
+              "q": "A teammate says Auto mode is safe to leave running overnight because 'the classifier catches anything dangerous.' What does that claim miss?",
+              "options": [
+                "That the classifier only runs during business hours in its default configuration, so overnight actions bypass it entirely",
+                "That the classifier requires a human in the loop to confirm its judgment before any action proceeds",
+                "That the classifier's checks apply only to MCP tool calls, not to Claude Code's built-in tools",
+                "That the classifier checks intent, not correctness, so broken-but-safe code can still pass through unnoticed"
+              ],
+              "correct": 3,
+              "explain": "The claim misses that the classifier checks intent, not correctness \u2014 code that's safe but simply wrong still passes through undetected. The classifier isn't restricted to business hours, doesn't require a human confirmation on each action, and isn't limited to MCP tool calls."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_auto_classifier_1",
+          "q": "What mechanism is recommended alongside Auto mode specifically to catch broken-but-safe code the classifier lets through?",
+          "options": [
+            "A Stop hook that runs the test suite and can refuse to let the turn end on failure",
+            "A stricter CLAUDE.md instruction telling Claude to double-check its own work before finishing",
+            "Switching briefly to Manual mode at the end of each task to review the diff by eye",
+            "A PostToolUse hook that re-runs the classifier a second time after each action completes"
+          ],
+          "correct": 0,
+          "explain": "A Stop hook that runs the tests and can refuse to end the turn on failure is what covers the correctness gap the classifier leaves. A stronger CLAUDE.md instruction is still just guidance, manually switching to Manual mode isn't a deterministic check, and re-running the same intent classifier wouldn't add a correctness check it was never designed to perform."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_plan_vs_direct",
+      "knowledgePoints": [
+        {
+          "id": "kp_plan_vs_direct_1",
+          "name": "Architectural decisions versus a clear, scoped fix",
+          "keyPrerequisites": [
+            "mt_permission_modes_six"
+          ],
+          "teach": "<p class='kp-key'>Plan mode earns its cost on large-scale, unfamiliar, or genuinely multi-approach work; direct execution suits a change that's already well-scoped.</p><p>Restructuring a monolith into microservices \u2014 dozens of files, real decisions about service boundaries \u2014 is exactly what plan mode is for: explore, understand the dependencies, and design an approach before touching anything. Adding a single null-check to one function whose signature and fix are already clear doesn't need that step; direct execution goes straight to the well-understood change. The question to ask isn't 'could this change have side effects' \u2014 almost any change could \u2014 it's whether the task involves genuine architectural decisions or multiple valid approaches worth comparing first.</p>",
+          "questions": [
+            {
+              "id": "q_plan_vs_direct_1a",
+              "q": "A developer is asked to restructure a monolithic application into microservices, a change spanning dozens of files with real decisions about service boundaries and dependencies. Which approach fits, and why?",
+              "options": [
+                "Direct execution, because incremental changes will reveal the natural service boundaries as implementation proceeds",
+                "Plan mode, because the task involves large-scale changes and architectural decisions that are worth exploring and comparing before anything is written",
+                "Direct execution, but only if paired with comprehensive upfront instructions specifying exactly how each individual service should be structured",
+                "Plan mode, but only after starting in direct execution and running into unexpected complexity partway through the refactor"
+              ],
+              "correct": 1,
+              "explain": "This is large-scale, architecturally significant work with multiple valid approaches, which is exactly what plan mode is designed to explore before any code is written. Letting boundaries emerge incrementally, or writing comprehensive instructions for direct execution, skips the exploration step; and waiting to switch to plan mode only after hitting complexity gives up the chance to catch a wrong approach early."
+            },
+            {
+              "id": "q_plan_vs_direct_1b",
+              "q": "A developer asks Claude Code to add a single null-check to one function whose signature, expected behavior, and fix are all already clear. Should this start in plan mode or direct execution?",
+              "options": [
+                "Plan mode, because any code change could have unexpected side effects that need exploring first, regardless of how small the change looks",
+                "Plan mode, because exploring the codebase first prevents Claude from making assumptions about dependencies",
+                "Direct execution, because the task is well-scoped with a clear fix that doesn't need architectural decisions or multi-file analysis",
+                "Direct execution first, followed by a quick plan-mode scan afterward to catch any side effects before committing"
+              ],
+              "correct": 2,
+              "explain": "A well-scoped, single-location change with a clear fix doesn't involve architectural decisions or multi-file analysis, so direct execution is appropriate. 'Could have side effects' is true of almost any change and isn't the actual criterion; exploring dependencies first adds a step nothing here needs; and bolting a plan-mode scan on afterward isn't how the distinction is meant to be applied."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_plan_vs_direct_1",
+          "q": "What's the actual criterion for choosing plan mode over direct execution, according to the workflow's own reasoning?",
+          "options": [
+            "Whether the change could theoretically have any side effects at all, since that alone justifies exploring first",
+            "Whether the developer personally feels uncertain about the codebase in question, regardless of what the change's actual scope turns out to be",
+            "Whether the change touches more than one file, regardless of how well-understood each individual file's change already is",
+            "Whether the task involves genuine architectural decisions or multiple valid approaches worth comparing before writing code"
+          ],
+          "correct": 3,
+          "explain": "The criterion is whether the task involves real architectural decisions or multiple valid approaches worth comparing \u2014 not whether a change could theoretically have side effects, how confident the developer personally feels, or a simple file count. Almost any change clears that first bar, which is exactly why it isn't the actual test."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_interview_pattern",
+      "knowledgePoints": [
+        {
+          "id": "kp_interview_pattern_1",
+          "name": "Questions surface what a spec can't",
+          "keyPrerequisites": [
+            "mt_plan_vs_direct"
+          ],
+          "teach": "<p class='kp-key'>The interview pattern has Claude question you about requirements, constraints, and assumptions before proposing any design \u2014 for exactly the considerations you didn't think to specify.</p><p>A detailed spec only covers what you already know to write down; it can't surface a tradeoff you never thought of. The interview pattern flips the direction: instead of Claude waiting for a complete brief, Claude asks the questions, drawing out edge cases, security considerations, and constraints the developer may not have anticipated before any implementation begins. It's most valuable exactly where the stakes of missing something are highest \u2014 a new authentication module, an unfamiliar service whose original authors are long gone \u2014 not for routine, well-understood changes.</p>",
+          "questions": [
+            {
+              "id": "q_interview_pattern_1a",
+              "q": "Before implementing a new authentication module, a team lead wants Claude to surface security considerations and edge cases the team hasn't thought to ask about. Why would writing a more detailed specification first not solve the same problem?",
+              "options": [
+                "A spec only documents what the team already knows to write down; it can't surface a consideration nobody on the team has thought of yet",
+                "A spec takes longer to write than running the interview pattern would, so it's a worse use of the team's time regardless of what it covers",
+                "A spec is only usable for direct execution tasks, and authentication work always requires plan mode instead",
+                "A spec would need to be reviewed by Claude before implementation anyway, adding an identical step to the interview pattern"
+              ],
+              "correct": 0,
+              "explain": "A spec can only capture what the team already knows to write down, so it can't surface a consideration nobody has thought of \u2014 which is exactly the gap the interview pattern is designed to close by having Claude ask the questions instead. The time-cost comparison, the direct-execution restriction, and the claim that reviewing a spec is identical to the interview pattern are all beside the actual point."
+            },
+            {
+              "id": "q_interview_pattern_1b",
+              "q": "A developer is adding a caching layer to a service written by engineers no longer on the team, whose lifecycle and dependency-injection patterns are unfamiliar. Which technique surfaces the design considerations the developer doesn't know to ask about, before any code is written?",
+              "options": [
+                "Implementing a generic caching layer using standard framework patterns, then reviewing the output for compatibility issues",
+                "The interview pattern: asking Claude to question the developer about the service's architecture and constraints before proposing a design",
+                "Providing the entry-point files and asking Claude to generate a design document unprompted for the developer to review afterward",
+                "Starting with a minimal proof-of-concept for one endpoint and iterating based on whatever failures show up during testing"
+              ],
+              "correct": 1,
+              "explain": "The interview pattern is designed for exactly this: Claude questions the developer about the service's architecture and constraints before any design is proposed, surfacing what the developer doesn't know to specify. Implementing generically and reviewing afterward, having Claude generate a design document unprompted, and iterating from a proof-of-concept all still depend on considerations the developer would have to have already thought to ask about."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_interview_pattern_1",
+          "q": "The interview pattern is described as most valuable in high-stakes or unfamiliar situations. Why isn't it the default technique for every task, including routine ones?",
+          "options": [
+            "It only functions correctly when paired with Plan mode, and most routine tasks run in direct execution instead",
+            "It requires a dedicated skill to be installed and configured first, unlike plan mode, which is available by default in every session",
+            "Routine, well-understood changes don't have hidden considerations worth surfacing, so the extra question-asking step adds cost without benefit",
+            "It can only be invoked through the /agents interface, which routine single-file changes don't typically need to go through at all"
+          ],
+          "correct": 2,
+          "explain": "Routine, well-understood changes generally don't carry hidden considerations worth surfacing, so the interview pattern's extra step adds cost without much benefit there. It isn't dependent on plan mode, doesn't require a separate skill install, and isn't restricted to the /agents interface."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_explore_subagent_cc",
+      "knowledgePoints": [
+        {
+          "id": "kp_explore_subagent_cc_1",
+          "name": "Discovery in isolation, a summary back",
+          "keyPrerequisites": [
+            "mt_plan_vs_direct"
+          ],
+          "teach": "<p class='kp-key'>The Explore subagent runs plan-mode discovery in its own context window and hands back a structured summary \u2014 the raw file reads and search output never touch the main session.</p><p>Verbose discovery \u2014 full file reads, search results, dependency traces \u2014 can fill a main session's context before a plan is even finished. Running <code>/compact</code> mid-exploration only delays the same problem, since the raw output already landed in context before it gets summarized. Explore sidesteps that: it performs the discovery in isolation and returns only what the main session actually needs, keeping the exploration trail out of the budget the rest of the task has to work with.</p>",
+          "questions": [
+            {
+              "id": "q_explore_subagent_cc_1a",
+              "q": "Plan-mode exploration of a large, unfamiliar codebase is filling the main session's context with file reads and search output before the plan is even finished. What technique isolates that discovery, and what crosses back into the main session?",
+              "options": [
+                "Running /compact partway through exploration, which discards the raw output already accumulated in context",
+                "Restricting Claude to reading only entry-point files, which limits how much the exploration can turn up",
+                "Switching to direct execution partway through, which reduces how many tool calls the exploration uses but abandons the discovery goal entirely",
+                "The Explore subagent, which performs the discovery in an isolated context window and returns a structured summary rather than the raw output"
+              ],
+              "correct": 3,
+              "explain": "The Explore subagent performs the discovery inside its own isolated context window and hands the main session only a structured summary, keeping raw file reads and search results out of it entirely. Compacting mid-exploration acts on output that's already landed in context, restricting files to entry points just limits what exploration can find, and switching to direct execution abandons the exploration goal rather than isolating it."
+            },
+            {
+              "id": "q_explore_subagent_cc_1b",
+              "q": "Why doesn't running /compact mid-exploration solve the same problem the Explore subagent solves?",
+              "options": [
+                "The raw discovery output already landed in the main session's context before /compact runs, so /compact only delays the problem rather than preventing it",
+                "/compact is disabled by default during plan mode sessions, so it isn't actually available as an option to run mid-exploration",
+                "/compact only summarizes conversation turns, not tool call results, so it wouldn't touch the discovery output at all",
+                "/compact requires explicit steering text to work well, and mid-exploration there usually isn't a natural direction yet to actually give it"
+              ],
+              "correct": 0,
+              "explain": "By the time /compact runs, the raw discovery output has already entered the main session's context \u2014 compacting summarizes it after the fact rather than preventing it from accumulating there in the first place. /compact isn't disabled during plan mode, it does cover tool results as part of the conversation, and steering text isn't a hard requirement for it to run."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_explore_subagent_cc_1",
+          "q": "What does the main session actually receive back from an Explore subagent's investigation?",
+          "options": [
+            "The complete transcript of every file read and search performed during the exploration, appended directly into the main session",
+            "A structured summary, with the raw tool results and reasoning trail kept out of the main session's context entirely",
+            "A list of file paths only, leaving the main session to re-read each one to see what changed",
+            "Nothing automatically \u2014 the developer must manually request the findings after the subagent completes"
+          ],
+          "correct": 1,
+          "explain": "The main session receives a structured summary; the raw tool results and reasoning trail stay isolated in the subagent's own context. It doesn't hand back the full transcript, a bare list of file paths requiring re-reads, or nothing at all \u2014 the summary is returned automatically as part of the delegation."
+        }
+      ]
+    }
+  ]
+}

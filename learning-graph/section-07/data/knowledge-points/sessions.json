@@ -1,0 +1,261 @@
+{
+  "$comment": "Knowledge points for cl_sessions.",
+  "cluster": "cl_sessions",
+  "topics": [
+    {
+      "topicId": "mt_compact_direction",
+      "knowledgePoints": [
+        {
+          "id": "kp_compact_1",
+          "name": "Steering the summary with a direction",
+          "keyPrerequisites": ["mt_agentic_loop_cc"],
+          "teach": "<p class='kp-key'>The text after <code>/compact</code> is not a comment — it steers what the summary keeps.</p><p><code>/compact</code> on its own summarizes the whole conversation and hopes the result still has what later turns will need. <code>/compact Focus on the --version flag implementation</code> tells the summarizer which thread of the conversation matters, so unrelated exploration gets compressed harder while the thing you're about to keep working on survives intact.</p><p>Compacting with no direction is not neutral — it's a bet that the automatic summary happens to keep the right details. Steering removes the bet.</p>",
+          "questions": [
+            {
+              "id": "q_compact_1a",
+              "q": "A session has spent an hour debugging three unrelated flaky tests and is now about to run out of context, but only the fix for the --version flag test still matters for the rest of the work. What should you run to keep that fix's details out of the summarizer's blind spot?",
+              "options": [
+                "/context, to inspect what is consuming the window before deciding whether to summarize at all.",
+                "/goal Fix the --version flag test, so Claude keeps working across turns until that is resolved.",
+                "/clear, so the session starts over with no memory of any of the three tests that were debugged.",
+                "/compact Focus on the --version flag implementation, so the summary keeps that thread intact."
+              ],
+              "correct": 3,
+              "explain": "Text after /compact steers what the summary keeps, so naming the --version flag thread specifically is what prevents the summarizer from compressing away the one detail that still matters. /context only inspects usage without freeing any of it, /clear discards everything including the useful fix, and /goal sets a completion condition rather than shaping a summary."
+            },
+            {
+              "id": "q_compact_1b",
+              "q": "A teammate runs /compact with no instructions at all midway through a multi-part feature, assuming the summary will naturally preserve whatever still matters. What is the actual risk of compacting without any direction?",
+              "options": [
+                "None — /compact without instructions produces the identical summary as /compact with a direction attached.",
+                "The command silently fails and the conversation continues unsummarized until direction is supplied.",
+                "The summary can drop details that later turns still need, since nothing told it what to prioritize.",
+                "Context usage increases instead of decreasing, since the summarizer itself consumes additional tokens."
+              ],
+              "correct": 2,
+              "explain": "Without steering, the summarizer has no signal for which thread of the conversation still matters, so it can compress away details a later turn needed. Direction changes what survives, so the two invocations don't produce the same result, /compact doesn't simply fail without arguments, and the point of compaction is still to shrink the context, not to grow it."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_compact_1",
+          "q": "A session has been working across several files on a single feature and needs to keep going well past the point where the raw conversation would exceed the context window. Which habit keeps the summary useful rather than just shorter?",
+          "options": [
+            "Running /clear partway through so the summarizer starts from a smaller conversation each time.",
+            "Switching to a smaller model mid-session, since smaller models summarize conversations more efficiently.",
+            "Waiting until the window is completely full before summarizing, to minimize how often it happens.",
+            "Running /compact with a direction naming the thread of work that still needs to survive the summary."
+          ],
+          "correct": 3,
+          "explain": "Naming the thread that still matters is what makes a /compact summary useful rather than just shorter — the steering text is what the summarizer prioritizes. /clear discards the conversation instead of summarizing it, waiting until the window is full just delays the same unsteered risk, and model size isn't the lever that determines what a summary keeps."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_context_clear",
+      "knowledgePoints": [
+        {
+          "id": "kp_context_1",
+          "name": "/clear's clean slate versus /compact's summary, and /context's breakdown",
+          "keyPrerequisites": ["mt_compact_direction"],
+          "teach": "<p><code>/clear</code> and <code>/compact</code> solve different problems. <code>/compact</code> keeps a summarized memory of the conversation so far — right for continuing the same feature. <code>/clear</code> wipes it entirely — right for starting a new one, so old-conversation bias (assumptions, half-abandoned approaches, unrelated context) doesn't bleed into work that has nothing to do with it.</p><p><code>/context</code> shows a breakdown of what's actually consuming the window right now, which is the diagnostic step before deciding whether either command is even needed.</p><p class='kp-key'>Being specific in a prompt saves context, counterintuitively — a vague prompt forces more exploration and reasoning to fill in what you left out, and that costs more than the detail would have.</p>",
+          "questions": [
+            {
+              "id": "q_context_1a",
+              "q": "A session that has spent the last hour deep in unrelated debugging is about to start a brand-new feature with no connection to that work. Should it /compact or /clear, and why would carrying the debugging summary forward be worse than starting over?",
+              "options": [
+                "/compact, since a summary of the debugging at least keeps some record of what was tried, in case it's relevant later.",
+                "/compact with a direction naming the new feature, so the debugging summary gets steered toward the new work instead.",
+                "Neither — running /context first is sufficient on its own to prevent old-conversation bias from affecting new work.",
+                "/clear, since a new feature has nothing to gain from the debugging thread and old-conversation bias would only get in the way."
+              ],
+              "correct": 3,
+              "explain": "Since the new feature shares nothing with the debugging session, a clean slate avoids carrying forward assumptions and half-abandoned approaches that have no bearing on the new work — that's exactly what /clear is for. A summary, even a well-directed one, still carries forward some trace of the unrelated debugging, and /context only inspects usage, it doesn't reset anything."
+            },
+            {
+              "id": "q_context_1b",
+              "q": "A developer writes a deliberately vague prompt, reasoning that a shorter prompt will leave more of the context window free for Claude's actual work. What actually happens to context usage as a result?",
+              "options": [
+                "Usage drops as expected, since a shorter prompt is a smaller addition to the conversation than a detailed one.",
+                "Usage stays essentially flat, since prompt length is a small fraction of what a typical session consumes overall.",
+                "Usage rises, since the vague prompt forces more exploration and reasoning to fill in what was left unspecified.",
+                "Usage becomes unpredictable, since vague prompts route to a different, more exploratory reasoning mode entirely."
+              ],
+              "correct": 2,
+              "explain": "A vague prompt leaves Claude to fill in the gaps through extra exploration and reasoning, and that extra work costs more context than the missing detail would have taken to state up front — being specific saves context rather than costing it. The prompt's own length isn't the variable driving usage here, and there's no separate reasoning mode that vague prompts trigger."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_context_1",
+          "q": "You want to know exactly what is consuming a session's context window before deciding whether to /compact, /clear, or just keep going. Which command gives you that breakdown?",
+          "options": [
+            "/context, which shows a breakdown of what is currently consuming the context window.",
+            "/compact, run without a direction, which reports usage before producing its summary.",
+            "/goal, which reports remaining context budget alongside the completion condition it tracks.",
+            "/loop, which polls context usage on an interval and reports any significant change."
+          ],
+          "correct": 0,
+          "explain": "/context is the command that shows the breakdown of what's consuming the window, which is the diagnostic step before choosing between /compact and /clear. /compact's job is to summarize, not report usage as its primary function, and neither /goal nor /loop are about inspecting context consumption at all."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_rewind_menu",
+      "knowledgePoints": [
+        {
+          "id": "kp_rewind_1",
+          "name": "Five ways to undo, split by code and conversation",
+          "keyPrerequisites": ["mt_agentic_loop_cc"],
+          "teach": "<p>Double-tap Escape on an empty prompt to open the rewind menu. Every user prompt you sent created a checkpoint, so the menu is really a list of \"go back to right before this message.\"</p><p>The five options split code and conversation independently, which is the part worth remembering exactly:</p><ul><li><strong>Restore code and conversation</strong> — full rewind, both together.</li><li><strong>Restore conversation only</strong> — undo what was said, keep the files as they are now.</li><li><strong>Restore code only</strong> — revert the files to the checkpoint's state, keep the conversation that followed.</li><li><strong>Summarize from here</strong> — compress everything after the checkpoint.</li><li><strong>Summarize up to here</strong> — compress everything before the checkpoint, keeping the recent implementation intact.</li></ul>",
+          "questions": [
+            {
+              "id": "q_rewind_1a",
+              "q": "An exploratory edit a few messages back turned out to be a dead end and should be undone, but the conversation that led up to and past it is still useful context worth keeping. Which rewind option undoes just the code?",
+              "options": [
+                "Restore conversation only, since discarding the conversation while keeping the dead-end edit isn't what's needed here.",
+                "Summarize up to here, which compresses the earlier conversation but leaves the current code exactly as it is.",
+                "Restore code only, which reverts the files to that earlier checkpoint's state while leaving the conversation untouched.",
+                "Restore code and conversation, which is the safest choice whenever you're unsure exactly what changed."
+              ],
+              "correct": 2,
+              "explain": "Restore code only is the option built for exactly this split: it reverts the files to the checkpoint's state while leaving the conversation that followed completely intact. Restoring the conversation instead would discard the useful discussion rather than the bad edit, summarizing up to here doesn't touch the code at all, and restoring both would throw away the conversation right along with the dead-end edit."
+            },
+            {
+              "id": "q_rewind_1b",
+              "q": "A developer wants to open the rewind menu to see the checkpoints available in the current session, but isn't sure what actually creates a checkpoint in the first place or how to bring the menu up. What are the two facts they need?",
+              "options": [
+                "Every user prompt creates a checkpoint, and double-tapping Escape on an empty prompt opens the menu.",
+                "Only a successful /compact creates a checkpoint, and the menu opens automatically right after it runs.",
+                "Every tool call creates a checkpoint, and a single Escape press on an empty prompt opens the menu.",
+                "Only an explicit /checkpoint command creates one, and double-tapping Escape then opens the menu."
+              ],
+              "correct": 0,
+              "explain": "Every user prompt you send creates a checkpoint automatically, and double-tapping Escape on an empty prompt is what opens the rewind menu to browse them. Neither compaction nor an explicit checkpoint command is what creates them, and a single Escape press isn't the gesture that opens the menu."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_rewind_1",
+          "q": "You want to keep the code exactly as it stands right now, but discard the last several messages of conversation because they've gone down an unproductive tangent. Which rewind option fits?",
+          "options": [
+            "Restore code only, which would also revert the current, useful code back to an earlier checkpoint.",
+            "Restore conversation only, which reverts the conversation to a checkpoint while leaving the current code untouched.",
+            "Summarize from here, which compresses everything going forward rather than discarding what already happened.",
+            "Restore code and conversation, which would discard the current code along with the unproductive messages."
+          ],
+          "correct": 1,
+          "explain": "Restore conversation only reverts just the conversation to an earlier checkpoint while leaving the current code exactly as it is — the split that's needed here. Restoring code only would touch the wrong half, restoring both would take the useful code down with the tangent, and summarizing from here compresses future turns rather than removing past ones."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_goal_loop",
+      "knowledgePoints": [
+        {
+          "id": "kp_goal_1",
+          "name": "/goal's transcript-only evaluator, and /loop for polling",
+          "keyPrerequisites": ["mt_compact_direction"],
+          "teach": "<p><code>/goal</code> sets a completion condition and Claude keeps working across turns until a fast evaluator confirms it's met. <code>/goal clear</code> cancels it.</p><p class='kp-key'>The evaluator only reads the transcript — so the condition has to be something visible in Claude's own output, like test results appearing in the conversation, never state that lives outside it.</p><p><code>/loop</code> is the other half of the pair: it runs a prompt on an interval between turns, which fits polling external state — a CI run, a deploy — and acting once it changes. Stop it with Escape.</p><p>Rule of thumb: if the condition is 'is this true in what I can already see,' reach for <code>/goal</code>. If it's 'check back until something out there changes,' reach for <code>/loop</code>.</p>",
+          "questions": [
+            {
+              "id": "q_goal_1a",
+              "q": "A developer sets /goal Wait until the production deploy finishes, expecting Claude to keep working across turns until that becomes true. Why doesn't this work the way /goal is designed to?",
+              "options": [
+                "It does work as intended — /goal's evaluator can poll any external system, including a deploy's status, directly.",
+                "The deploy condition is fine, but /goal caps how many turns it will run before giving up regardless of outcome.",
+                "/goal only accepts conditions phrased as a question, not an instruction like 'wait until' something happens.",
+                "The evaluator only reads the transcript, and a deploy finishing isn't something visible in Claude's own output."
+              ],
+              "correct": 3,
+              "explain": "The fast evaluator behind /goal only reads the transcript, so it can confirm something visible in Claude's own output — like test results appearing in the conversation — but has no way to observe a deploy's status happening outside it. /goal's evaluator can't poll external systems directly, the phrasing of the condition isn't the issue, and there's no turn cap that explains the mismatch here."
+            },
+            {
+              "id": "q_goal_1b",
+              "q": "A team wants Claude to check on a CI run at intervals and act as soon as it finishes, rather than working toward a single condition checkable purely from the conversation itself. Which command fits that job better than the other?",
+              "options": [
+                "/goal, since a CI run finishing is exactly the kind of condition its transcript-reading evaluator is built to confirm.",
+                "/loop, since it runs a prompt on an interval and fits polling external state and acting once it changes.",
+                "/compact, since summarizing the conversation periodically is the mechanism that checks on external state.",
+                "/context, since inspecting the context window on an interval is how external state gets tracked over time."
+              ],
+              "correct": 1,
+              "explain": "/loop running a prompt on an interval is exactly built for polling something external like a CI run and acting once it changes state. /goal's evaluator can't see a CI run's status since it only reads the transcript, and neither /compact nor /context has anything to do with checking on external systems."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_goal_1",
+          "q": "A condition needs to be checkable purely from what already appears in the conversation, such as a specific test suite reporting all green in the transcript. Which command is designed for working toward that kind of condition across turns?",
+          "options": [
+            "/loop, since it repeats a prompt on an interval rather than tracking a single completion condition.",
+            "/goal, since its evaluator reads the transcript and can confirm a condition visible there, like test output.",
+            "/compact, since it summarizes the conversation but does not evaluate whether any condition has been met.",
+            "/clear, since starting fresh has no way to track progress toward a condition across multiple turns."
+          ],
+          "correct": 1,
+          "explain": "/goal is built for exactly this: a completion condition its transcript-reading evaluator can confirm from Claude's own output, like test results appearing in the conversation. /loop repeats on an interval rather than tracking one condition, and neither /compact nor /clear evaluates anything at all."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_worktrees",
+      "knowledgePoints": [
+        {
+          "id": "kp_worktrees_1",
+          "name": "Isolating parallel sessions' file trees",
+          "keyPrerequisites": ["mt_agentic_loop_cc"],
+          "teach": "<p>Two Claude Code sessions working the same repository at the same time will edit the same files unless something separates them — that's what a <strong>worktree</strong> does: each parallel session gets its own independent file tree, so simultaneous changes don't clobber each other.</p><p>Worktrees are auto-removed when their session exits, so they don't accumulate as clutter. Because they're separate checkouts, git-ignored files like environment variables and local config wouldn't normally be there — <code>.worktreeinclude</code> lists the ones that should still be copied into every new worktree.</p>",
+          "questions": [
+            {
+              "id": "q_worktrees_1a",
+              "q": "Two Claude Code sessions are working on unrelated features in the same repository at the same time, and the team wants to avoid one session's file edits colliding with the other's. What isolates their changes, and what happens to that isolation once a session ends?",
+              "options": [
+                "A worktree per session isolates the file trees, and each is auto-removed when its session exits.",
+                "A worktree per session isolates the file trees, and they persist indefinitely until manually deleted.",
+                "Running one session in Manual mode and the other in Auto mode keeps their edits from colliding.",
+                "Nothing needs to isolate them, since Claude Code serializes concurrent sessions on the same repo automatically."
+              ],
+              "correct": 0,
+              "explain": "A separate worktree per session gives each one its own independent file tree so simultaneous edits don't collide, and worktrees are auto-removed once their session exits rather than accumulating. Permission mode has nothing to do with file-tree isolation, and Claude Code does not automatically serialize concurrent sessions on its own."
+            },
+            {
+              "id": "q_worktrees_1b",
+              "q": "A new worktree is created for a parallel session, but the local .env file and other git-ignored local config the project relies on aren't present in it by default, since worktrees are separate checkouts. What solves this?",
+              "options": [
+                ".worktreeinclude, which lists git-ignored files like env vars and local config to copy into every new worktree.",
+                "A CLAUDE.md rule instructing Claude to manually recreate the missing .env file inside each new worktree.",
+                "Committing the .env file to version control so every worktree checkout includes it automatically.",
+                "Nothing — git-ignored files are unavailable in a worktree by design, with no supported way to include them."
+              ],
+              "correct": 0,
+              "explain": ".worktreeinclude exists specifically to list git-ignored files like environment variables and local config that should still be copied into every new worktree despite not being tracked. Instructing Claude to recreate them manually isn't the supported mechanism, committing a .env file defeats the reason it was git-ignored in the first place, and there is in fact a supported way to include them."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_worktrees_1",
+          "q": "A project's .worktreeinclude file lists a handful of paths including a local .env file. What is the purpose of listing them there specifically?",
+          "options": [
+            "It tells git which paths to ignore when computing diffs shown to a reviewer during a pull request.",
+            "It lists git-ignored files that should still be copied into every new worktree despite not being tracked.",
+            "It restricts which files a Claude Code session running inside any worktree is permitted to read.",
+            "It marks those paths as read-only inside every worktree so a session can't accidentally modify them."
+          ],
+          "correct": 1,
+          "explain": ".worktreeinclude's job is to name git-ignored files — like environment variables and local config — that should still get copied into every new worktree, even though they aren't tracked by git. It isn't about diff visibility in a PR, read permissions, or marking files read-only."
+        }
+      ]
+    }
+  ]
+}

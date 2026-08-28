@@ -1,0 +1,305 @@
+{
+  "$comment": "Knowledge points for cl_automation.",
+  "cluster": "cl_automation",
+  "topics": [
+    {
+      "topicId": "mt_automation_spectrum",
+      "knowledgePoints": [
+        {
+          "id": "kp_autospectrum_1",
+          "name": "Three ways to skip the watching",
+          "keyPrerequisites": [
+            "mt_agentic_loop_cc"
+          ],
+          "teach": "<p class='kp-key'>Routines, headless mode, and the Agent SDK are the same agentic loop run without someone watching each turn — they differ in how much infrastructure that costs you.</p><p><strong>Routines</strong> sit on Anthropic's managed cloud infrastructure: a saved prompt plus a repo and optional connectors, with no server or workflow file of your own to run or maintain. <strong>Headless mode</strong> (<code>-p</code>) runs one-shot and pipeable, but the pipeline around it — scripting, scheduling, result-handling — is yours to build. The <strong>Agent SDK</strong> is a library that embeds Claude Code inside your own application, so you own the loop directly rather than invoking a CLI.</p><p>The three form a spectrum of ownership: Routines default for plain repeat work with zero infrastructure, Headless fits when the job needs to live inside a pipeline or script you already control, and the Agent SDK fits when the work belongs inside your own product rather than alongside it.</p>",
+          "questions": [
+            {
+              "id": "q_autospectrum_1a",
+              "q": "A team wants to run the same review prompt against every new pull request, with no server, workflow file, or scheduling infrastructure of their own to build or maintain. Which point on the automation spectrum is designed for exactly that, and what would push the team toward one of the other two instead?",
+              "options": [
+                "Headless mode by default; they'd move to a Routine only once the pipeline needed custom scripting beyond what -p alone provides on its own.",
+                "The Agent SDK by default, since it's the most capable option; they'd move to a Routine only once the SDK's setup cost became too high to justify maintaining themselves.",
+                "A Routine by default, but only after first building a minimal Agent SDK integration to confirm the review logic works correctly beforehand.",
+                "A Routine by default, since it needs no server of their own; they'd move to headless mode once the job needed to live inside their own pipeline."
+              ],
+              "correct": 3,
+              "explain": "A Routine is exactly the 'zero infrastructure of your own' point on the spectrum, and the reason to move off it is needing the job to live inside your own pipeline or scripting — which is what pushes toward headless mode instead. Starting from headless or the Agent SDK reverses the actual default-first ordering, and validating logic through an SDK integration first isn't a step this spectrum calls for."
+            },
+            {
+              "id": "q_autospectrum_1b",
+              "q": "A product team wants Claude Code's agentic loop running as a first-class feature inside their own application, not alongside it as a separate scheduled job or CLI invocation. Which point on the spectrum fits, and why don't the other two?",
+              "options": [
+                "Headless mode, because -p is designed to be embedded directly inside another application's own runtime rather than invoked as a standalone CLI process.",
+                "A Routine, because Routines can be configured to run inside any application's own infrastructure rather than Anthropic's managed cloud.",
+                "The Agent SDK, because it's a library that embeds the loop inside your own application, while a Routine and headless mode both run the loop from outside it.",
+                "Either a Routine or headless mode work equally well here, since both can be triggered directly from inside application code with identical results."
+              ],
+              "correct": 2,
+              "explain": "Owning the loop from inside your own product is specifically what the Agent SDK is for — it's a library, not a scheduled job or a CLI invocation from outside. Headless mode is a one-shot CLI call, not something meant to be embedded as a runtime component; Routines run on Anthropic's managed infrastructure rather than inside your own application; and treating a Routine or headless invocation as equivalent to embedding misses that both still run as something separate from the application itself."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_autospectrum_1",
+          "q": "Ordering Routines, headless mode, and the Agent SDK by how much of the surrounding infrastructure you're responsible for, from least to most, which ordering is correct?",
+          "options": [
+            "Routines (managed infrastructure) → headless mode (your own pipeline) → Agent SDK (your own application owning the loop).",
+            "The Agent SDK (managed infrastructure) → Routines (your own pipeline) → headless mode (your own application owning the loop).",
+            "Headless mode (managed infrastructure) → Agent SDK (your own pipeline) → Routines (your own application owning the loop).",
+            "All three carry an identical amount of infrastructure responsibility; the difference between them is purely about triggering mechanism, not ownership."
+          ],
+          "correct": 0,
+          "explain": "Routines run on Anthropic's managed infrastructure with nothing of your own to maintain, headless mode's pipeline is yours to build around a one-shot CLI call, and the Agent SDK goes furthest by embedding the loop directly inside an application you own — that ordering, least to most infrastructure responsibility, is exactly right. The other two reorderings assign 'managed infrastructure' to the wrong end of the spectrum, and the three are not equivalent in ownership."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_routines",
+      "knowledgePoints": [
+        {
+          "id": "kp_routines_1",
+          "name": "Managed, but not unconstrained",
+          "keyPrerequisites": [
+            "mt_automation_spectrum"
+          ],
+          "teach": "<p class='kp-key'>A Routine is a saved prompt plus a repo and optional connectors, created via claude.ai/code/routines or /schedule &lt;description&gt;, and triggered by a cron schedule, an HTTP POST, or a GitHub event.</p><p>As a research preview, Routines carry real limits worth knowing precisely: a recurring schedule runs <strong>at most hourly</strong> — no sub-hourly polling — each run starts from a <strong>fresh clone of the default branch</strong> rather than a persistent long-lived workspace, and by default a Routine can only push to <strong>claude/-prefixed branches</strong>, not directly to whatever branch you point it at.</p><p>These constraints shape what a Routine is good for: repeat work that tolerates an hourly cadence and doesn't need to accumulate state across runs, with any code changes landing on a clearly-labeled branch rather than silently touching something like main.</p>",
+          "questions": [
+            {
+              "id": "q_routines_1a",
+              "q": "A developer configures a Routine's recurring schedule to fire every 15 minutes, expecting near-real-time polling of an external system. What actually happens, given the constraint on how often a recurring Routine schedule can fire?",
+              "options": [
+                "The Routine runs exactly as configured every 15 minutes, since the hourly limit only applies to Routines triggered by an HTTP POST, not a cron schedule.",
+                "The Routine is capped at running at most hourly, so a 15-minute schedule does not fire at the requested cadence.",
+                "The configuration is rejected outright at creation time, and the developer must choose a daily or weekly cadence instead of anything sub-hourly.",
+                "The Routine runs every 15 minutes for the first hour only, then automatically falls back to an hourly cadence for all runs after that."
+              ],
+              "correct": 1,
+              "explain": "A recurring schedule is capped at running at most hourly, full stop — a 15-minute cadence simply doesn't fire at the requested rate, regardless of trigger type. The hourly cap isn't scoped only to HTTP-triggered Routines, the configuration isn't rejected outright at creation (it's the runtime cadence that's capped), and there's no described 'first hour at full speed, then throttle' behavior."
+            },
+            {
+              "id": "q_routines_1b",
+              "q": "A Routine runs nightly and is expected to push a small automated fix directly to main once it completes. What actually happens by default, and which two facts about how a Routine executes explain it?",
+              "options": [
+                "It pushes to main as expected, because Routines inherit whatever branch permissions the connected repo grants to the triggering account.",
+                "It fails outright, because Routines cannot push any commits under any circumstances — they are strictly read-only against the connected repo.",
+                "It cannot push to main by default; each run starts fresh from the default branch and can only push to claude/-prefixed branches.",
+                "It pushes to main only on the first run of the day, since Routines default to write access on the initial invocation and read-only afterward."
+              ],
+              "correct": 2,
+              "explain": "Two constraints explain this together: each run starts fresh from the default branch rather than carrying state forward, and by default a Routine can only push to claude/-prefixed branches, not main. Routine permissions aren't simply inherited from the triggering account's own repo access, Routines aren't strictly read-only (they can push, just not to arbitrary branches by default), and there's no 'write on the first run only' behavior."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_routines_1",
+          "q": "A Routine has been running daily for two weeks, and a developer assumes each run continues from where the previous run's workspace left off — including any uncommitted local state. Is that assumption correct?",
+          "options": [
+            "Yes — Routines preserve the full workspace between runs by default, including any uncommitted changes from the prior run.",
+            "No — each run starts from a fresh clone of the default branch, so nothing from the prior run's workspace carries forward.",
+            "Only partially — committed changes carry forward automatically, but uncommitted local state is discarded between runs.",
+            "It depends entirely on the trigger type — cron-triggered runs preserve workspace state, while HTTP- and GitHub-event-triggered runs never do."
+          ],
+          "correct": 1,
+          "explain": "Each run genuinely starts from a fresh clone of the default branch, so the assumption is wrong regardless of what the prior run left behind — nothing from a previous workspace, committed or not, carries forward automatically. The 'committed changes persist, uncommitted don't' framing overstates what actually carries forward, and this behavior doesn't vary by trigger type."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_headless_flags",
+      "knowledgePoints": [
+        {
+          "id": "kp_headless_1",
+          "name": "-p trades discovery for speed",
+          "keyPrerequisites": [
+            "mt_automation_spectrum"
+          ],
+          "teach": "<p class='kp-key'>-p / --print runs Claude Code one-shot with no interactive UI — but it also skips auto-discovery of hooks, skills, plugins, MCP servers, and CLAUDE.md, leaving only explicitly allowed tools available.</p><p>That's a genuine tradeoff, not an oversight: skipping discovery is exactly what makes headless startup fast. It means a headless invocation has to name what it needs rather than relying on whatever the project would normally auto-load in an interactive session — a hook that would normally block a risky command, or a CLAUDE.md rule that would normally shape behavior, simply isn't in play unless the invocation supplies an equivalent explicitly.</p><pre class='kp-code'>claude -p \"Analyze this pull request for security issues\"</pre><p>Without <code>-p</code>, that same invocation in a pipeline hangs waiting for interactive input it will never receive — the flag is what tells Claude Code not to expect a human at the keyboard.</p>",
+          "questions": [
+            {
+              "id": "q_headless_1a",
+              "q": "A CI script runs claude \"Analyze this pull request for security issues\" without any additional flags, and the job hangs indefinitely with logs showing Claude Code waiting for interactive input. What's the correct fix?",
+              "options": [
+                "Set an environment variable like CLAUDE_HEADLESS=true before the command, since Claude Code checks for this variable to decide whether to expect a terminal.",
+                "Redirect stdin from /dev/null with claude \"...\" < /dev/null, which signals to Claude Code that no interactive input will ever arrive.",
+                "Add a --batch flag to the invocation, which switches Claude Code into the same non-interactive pipeline mode -p provides.",
+                "Add the -p (or --print) flag, which runs Claude Code non-interactively so it processes the prompt and exits instead of waiting for input."
+              ],
+              "correct": 3,
+              "explain": "-p / --print is the documented, correct way to run Claude Code non-interactively — it processes the prompt and exits rather than waiting on a terminal. There is no CLAUDE_HEADLESS environment variable Claude Code checks, redirecting stdin from /dev/null doesn't address how Claude Code decides to run interactively, and --batch isn't a real flag."
+            },
+            {
+              "id": "q_headless_1b",
+              "q": "A team switches a script from an interactive session to claude -p for CI and is surprised when a PreToolUse hook that normally blocks a risky command no longer fires. What explains this, and what does the team need to do differently in the headless invocation?",
+              "options": [
+                "Headless mode skips auto-discovery of hooks, skills, plugins, MCP servers, and CLAUDE.md, so the invocation must supply an equivalent safeguard explicitly.",
+                "PreToolUse hooks are disabled specifically during headless runs as a deliberate safety measure, and there is no documented way to restore equivalent enforcement in -p mode.",
+                "The hook still fires normally in headless mode; the team's script must have a bug elsewhere unrelated to the switch from interactive to -p.",
+                "Headless mode runs hooks but silently downgrades every blocking exit code to non-blocking, so the hook fires but no longer prevents the action."
+              ],
+              "correct": 0,
+              "explain": "Headless mode's real tradeoff is skipping auto-discovery entirely — hooks, skills, plugins, MCP servers, and CLAUDE.md — for faster startup, so a hook that would normally auto-load interactively simply isn't in play unless the invocation names an equivalent explicitly. It's not that hooks are specifically disabled as a safety measure with no workaround, the observed behavior is a direct and predictable consequence of the switch rather than an unrelated bug, and headless mode doesn't selectively downgrade exit-code semantics."
+            }
+          ]
+        },
+        {
+          "id": "kp_headless_2",
+          "name": "Making the output something else can trust",
+          "keyPrerequisites": [
+            "mt_automation_spectrum"
+          ],
+          "teach": "<p class='kp-key'>--output-format json plus --json-schema turns Claude Code's answer into something machine-parseable by construction, instead of unstructured text a downstream script has to scrape.</p><p><code>--output-format json --json-schema '&lt;schema&gt;'</code> puts the result in <code>.structured_output</code>, ready to pipe through <code>jq</code> rather than parsed with a regex that breaks the moment Claude's phrasing drifts between runs. For multi-step work, capture the run's <code>session_id</code> and resume later with:</p><pre class='kp-code'>claude --resume \"$(jq -r .session_id result.json)\"</pre><p><code>--bare</code> is the deterministic-output mode for CI — the same input should produce comparably structured output run to run, which matters when a pipeline depends on the result being repeatable rather than just plausible.</p>",
+          "questions": [
+            {
+              "id": "q_headless_2a",
+              "q": "A CI pipeline currently parses Claude Code's plain-text output with a regex to extract a file path, a line number, and a comment, and the regex breaks every time Claude's phrasing drifts slightly between runs. What's the most robust fix?",
+              "options": [
+                "Add stricter formatting instructions to the prompt describing the exact text layout expected, and reject any response that doesn't match that layout precisely.",
+                "Use --output-format json with --json-schema defining file, line, and comment fields, making each finding machine-parseable by construction.",
+                "Add a second Claude call that reformats the first response into a consistent structure before the regex parser runs against it.",
+                "Switch to a single summary comment instead of per-line findings, which removes the need for line-level parsing entirely."
+              ],
+              "correct": 1,
+              "explain": "--output-format json with --json-schema eliminates the format-drift problem at the source, by construction, rather than hoping stricter prose instructions hold or patching drift after the fact. A second normalization call still depends on that call's own output being consistent, and dropping to a single summary comment sidesteps the requirement (per-line, machine-parseable findings) instead of meeting it."
+            },
+            {
+              "id": "q_headless_2b",
+              "q": "A multi-step headless workflow needs to resume the same Claude Code session across several separate invocations, and a separate CI job needs Claude Code's output to be identical in structure run over run given the same input. Which two mechanisms address these two needs respectively?",
+              "options": [
+                "Capturing session_id and resuming with --resume for the multi-step workflow; --bare for deterministic, repeatable output in the CI job.",
+                "--bare for the multi-step workflow, since it deterministically restores prior context; --resume for the CI job, since it guarantees identical output.",
+                "--output-format json for both needs, since structured output alone is sufficient to both resume a session and guarantee repeatable results.",
+                "Capturing session_id for the CI job's determinism; --bare for resuming the multi-step workflow across invocations."
+              ],
+              "correct": 0,
+              "explain": "session_id plus --resume is specifically the multi-step resume mechanism, and --bare is specifically the deterministic-output mode for CI — matching each need to its own dedicated flag. The other options either swap the two mechanisms' actual purposes or claim --output-format json alone covers both needs, when it addresses structure, not session continuity or run-to-run determinism."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_headless_1",
+          "q": "A CI job needs Claude Code's output to be both machine-parseable and repeatable run to run given the same input, but the pipeline only adds --output-format json and stops there. What's still missing?",
+          "options": [
+            "Nothing — --output-format json alone guarantees both structure and run-to-run repeatability, so the pipeline is already complete.",
+            "--json-schema, since without a schema --output-format json produces no output at all rather than unstructured JSON.",
+            "--bare, since --output-format json addresses structure but determinism/repeatability is specifically what --bare is for.",
+            "--resume, since without it every headless run is treated as a continuation of the previous one instead of a fresh invocation."
+          ],
+          "correct": 2,
+          "explain": "--output-format json handles machine-parseable structure, but repeatability run to run is specifically what --bare addresses — the pipeline needs both flags for both properties. --json-schema refines the structure further but its absence doesn't mean no output at all, and --resume is about continuing a specific prior session, not about determinism or a default assumption of continuation."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_github_review_action",
+      "knowledgePoints": [
+        {
+          "id": "kp_ghreview_1",
+          "name": "Comments versus doing something about it",
+          "keyPrerequisites": [
+            "mt_headless_flags"
+          ],
+          "teach": "<p class='kp-key'>Managed Code Review comments on a PR; the GitHub Action can act in CI. Picking between them comes down to whether the job needs to do something beyond leaving a finding.</p><p><strong>Managed Code Review</strong> is Anthropic-hosted via the Claude GitHub app: inline PR comments tagged by severity plus a summary, analyzed against the full codebase, triggered on PR open, on every push, or only on an <code>@claude review</code> comment. It <strong>never approves or blocks a PR</strong> — that judgment stays human — and it has <strong>no managed autofix</strong>; findings only, with <code>/code-review --fix</code> available locally if you want to apply them yourself.</p><p>The <strong>GitHub Action</strong> (<code>anthropics/claude-code-action@v1</code>) is do-it-yourself, for anything beyond leaving a comment. Setup runs through <code>/install-github-app</code> (needs repo admin), and key inputs are <code>trigger_phrase</code> (default <code>@claude</code>), <code>prompt</code>, and <code>claude_args</code> — raw CLI args passed straight through, e.g. <code>--max-turns 5</code>.</p>",
+          "questions": [
+            {
+              "id": "q_ghreview_1a",
+              "q": "A pipeline needs to automatically apply a small lint fix Claude identifies, not merely leave a comment describing it. Does managed Code Review or the GitHub Action fit this job, and why can't the other one do it?",
+              "options": [
+                "The GitHub Action, since it can act in CI beyond commenting; managed Code Review has no managed autofix and only ever leaves findings.",
+                "Managed Code Review, since its severity-tagged comments already include an auto-apply option a maintainer can toggle on per repository.",
+                "Either works identically here, since both are backed by the same underlying model and differ only in which UI surfaces the result.",
+                "The GitHub Action, but only for security findings specifically; lint fixes still require managed Code Review's comment-only workflow."
+              ],
+              "correct": 0,
+              "explain": "The GitHub Action is the do-it-yourself surface for anything that needs to act in CI, while managed Code Review is comment-only with no managed autofix at all — so applying a fix requires the Action (or a local /code-review --fix), not Code Review. There's no toggle that adds auto-apply to managed Code Review, the two aren't interchangeable despite sharing an underlying model, and the Action isn't restricted to security findings only."
+            },
+            {
+              "id": "q_ghreview_1b",
+              "q": "A repository wants a PR review that runs automatically on every push and can never itself approve or block the PR, keeping that judgment with a human reviewer. Which mechanism matches this out of the box, and what would change if the team instead wanted the automation to be able to act rather than just comment?",
+              "options": [
+                "Managed Code Review, which never approves or blocks a PR by design; acting instead of commenting would mean moving to the GitHub Action.",
+                "The GitHub Action, which is comment-only by default; acting instead of commenting would require managed Code Review's autofix setting.",
+                "Managed Code Review, which can be configured via claude_args to start blocking PRs once the team is ready for that behavior.",
+                "Neither — only a custom hook configured through .claude/settings.json can leave PR comments without being able to block a PR."
+              ],
+              "correct": 0,
+              "explain": "Managed Code Review already matches 'reviews automatically, never approves or blocks' as its default behavior, and moving to something that can act rather than comment is exactly what pushes a team toward the GitHub Action instead. The GitHub Action isn't comment-only by default (it's built for CI actions beyond commenting), managed Code Review has no configurable blocking behavior via claude_args (that input belongs to the Action), and this isn't a job for a custom hook."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_ghreview_1",
+          "q": "Setting up the GitHub Action requires running /install-github-app, which needs repo admin permissions. What are trigger_phrase and claude_args each used for once it's installed?",
+          "options": [
+            "trigger_phrase is the comment string (default @claude) that invokes the Action; claude_args passes raw CLI arguments through, e.g. --max-turns 5.",
+            "trigger_phrase sets the branch the Action watches for pushes; claude_args is a list of file globs the Action is restricted to reading only.",
+            "trigger_phrase and claude_args both configure the same setting — which comment string invokes the Action — with claude_args as a legacy alias for it.",
+            "trigger_phrase is the model identifier the Action runs with; claude_args configures which severity levels get surfaced as PR comments."
+          ],
+          "correct": 0,
+          "explain": "trigger_phrase is the comment phrase (default @claude) that invokes the Action, and claude_args passes raw CLI arguments through to the underlying invocation, such as --max-turns 5 — two distinct, specific inputs. The Action isn't configured by watching a branch via trigger_phrase or restricted to file globs via claude_args, the two inputs aren't aliases of each other, and neither controls model selection or severity filtering."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_plugins",
+      "knowledgePoints": [
+        {
+          "id": "kp_plugins_1",
+          "name": "Bundled, stacked, and only as trusted as their source",
+          "keyPrerequisites": [
+            "mt_rule_placement"
+          ],
+          "teach": "<p class='kp-key'>A plugin bundles skills, subagents, hooks, and MCP server configs into one installable unit — and reviewed is not the same as trusted, because its hooks fire on every matching tool call whether or not you've read them.</p><p>Install with <code>/plugin install org-name@plugin-name</code> then <code>/reload-plugins</code>; a team centralizes discovery with <code>/plugin marketplace add your-org/claude-plugins</code>. A plugin's components run <strong>alongside</strong> yours, not in place of them: its hooks <em>stack</em> with your own local hooks rather than overriding them, and its skills, agents, and commands are namespaced under the plugin's name so they don't collide with yours. A plugin's own <code>settings.json</code> only honors two keys — the one that can promote a subagent to the main thread, and the subagent status-line key.</p><p>Automated 'reviewed' status (a community review pass) is not the same claim as 'trusted' — a plugin runs code on your machine with your privileges the moment it's installed, review or no review.</p>",
+          "questions": [
+            {
+              "id": "q_plugins_1a",
+              "q": "A developer is about to install a community plugin that's labeled as automated-community-reviewed and reasons this makes it safe to install without further scrutiny. What does that label actually verify, and what does installing the plugin hand it regardless?",
+              "options": [
+                "The label verifies the plugin passed a security scan blocking any dangerous hook, so installing it carries no meaningful risk beyond a normal skill.",
+                "The label reflects an automated review pass, not a trust guarantee; installing it still runs its hooks with your privileges either way.",
+                "The label means the plugin's hooks are sandboxed separately from your own local hooks, so they can't affect files outside the plugin's own directory.",
+                "The label is purely cosmetic marketing text with no defined meaning within the plugin marketplace's own review and approval process."
+              ],
+              "correct": 1,
+              "explain": "Automated community review is a real but limited signal — it is explicitly not the same claim as 'trusted,' and installing the plugin still hands its hooks the ability to fire on your machine with your privileges regardless of whether you've personally read them. There's no described security scan that blocks dangerous hooks outright, plugin hooks aren't sandboxed away from affecting anything outside the plugin's own directory, and the label isn't meaningless — it just means less than full trust."
+            },
+            {
+              "id": "q_plugins_1b",
+              "q": "A project already has a local PreToolUse hook enforcing a rule, and the team installs a plugin that also bundles a PreToolUse hook. What happens to the two hooks, and how are the plugin's skills and commands named to avoid colliding with the project's own?",
+              "options": [
+                "The plugin's hook silently replaces the local one entirely, and its skills/commands take on the exact same names as any matching local ones.",
+                "Both hooks stack and both run; the plugin's skills, agents, and commands are namespaced under the plugin's name rather than colliding with local ones.",
+                "Only the local hook runs, since a project's own settings.json always takes precedence over any hook bundled inside an installed plugin.",
+                "The two hooks run in a randomly chosen order determined at each session start, and naming collisions between plugin and local skills throw an error."
+              ],
+              "correct": 1,
+              "explain": "Plugin components run alongside yours rather than replacing them — hooks stack, and skills/agents/commands are namespaced under the plugin's own name specifically so they don't collide with local ones. The local hook doesn't unconditionally win over the plugin's, hook execution order isn't randomized per session, and namespacing is what prevents collisions rather than the collision throwing an error."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_plugins_1",
+          "q": "A plugin's own settings.json includes several keys a developer expects to control things like default permission mode and hook timeout. How many of those keys does Claude Code actually honor from a plugin's settings.json, and which ones?",
+          "options": [
+            "All of them — a plugin's settings.json is treated identically to a project's own settings.json, with every key fully honored.",
+            "None — plugin settings.json files are parsed for documentation purposes only and have no effect on runtime behavior whatsoever.",
+            "Only two — the key that can promote a subagent to the main thread, and the subagent status-line key; everything else is ignored.",
+            "Exactly one — the default permission mode key; every other key, including hook timeout, is silently ignored."
+          ],
+          "correct": 2,
+          "explain": "A plugin's settings.json only honors two specific keys — the agent-promotion key and the subagent status-line key — everything else in that file is ignored regardless of what a developer expects it to control. It isn't treated identically to a project's own settings.json, it isn't purely inert documentation, and the two honored keys aren't 'permission mode' or 'hook timeout' as guessed in the other options."
+        }
+      ]
+    }
+  ]
+}

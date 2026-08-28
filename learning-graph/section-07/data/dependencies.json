@@ -1,0 +1,275 @@
+{
+  "$comment": "Prerequisite edges. mt_agentic_loop_cc is the single entry point (no hard prerequisites).",
+  "dependencies": [
+    {
+      "topicId": "mt_epcc_workflow",
+      "prerequisiteId": "mt_agentic_loop_cc",
+      "strength": "hard",
+      "reason": "EPCC is how the loop's plan/act/verify phases get named and separated into a recommended workflow"
+    },
+    {
+      "topicId": "mt_commit_review",
+      "prerequisiteId": "mt_epcc_workflow",
+      "strength": "hard",
+      "reason": "Commit is the last EPCC phase; the pre-commit review habit only makes sense once code exists to review"
+    },
+    {
+      "topicId": "mt_permission_modes_six",
+      "prerequisiteId": "mt_agentic_loop_cc",
+      "strength": "hard",
+      "reason": "Permission modes govern how far each loop iteration's action can go before it needs to ask"
+    },
+    {
+      "topicId": "mt_auto_classifier",
+      "prerequisiteId": "mt_permission_modes_six",
+      "strength": "hard",
+      "reason": "Auto is one of the six modes; its classifier behavior only makes sense against the full spectrum"
+    },
+    {
+      "topicId": "mt_plan_vs_direct",
+      "prerequisiteId": "mt_permission_modes_six",
+      "strength": "hard",
+      "reason": "Plan mode is itself one of the six permission modes, so choosing it requires knowing the spectrum it sits in"
+    },
+    {
+      "topicId": "mt_interview_pattern",
+      "prerequisiteId": "mt_plan_vs_direct",
+      "strength": "hard",
+      "reason": "The interview pattern is a plan-mode-adjacent technique for surfacing considerations before implementation begins"
+    },
+    {
+      "topicId": "mt_explore_subagent_cc",
+      "prerequisiteId": "mt_plan_vs_direct",
+      "strength": "hard",
+      "reason": "The Explore subagent exists specifically to keep plan mode's discovery phase from filling main context"
+    },
+    {
+      "topicId": "mt_claudemd_basic",
+      "prerequisiteId": "mt_agentic_loop_cc",
+      "strength": "hard",
+      "reason": "CLAUDE.md is read every session and appended to the same prompt the loop starts from"
+    },
+    {
+      "topicId": "mt_claudemd_hierarchy",
+      "prerequisiteId": "mt_claudemd_basic",
+      "strength": "hard",
+      "reason": "The four-location stack only matters once you know a single file is auto-loaded"
+    },
+    {
+      "topicId": "mt_claudemd_imports",
+      "prerequisiteId": "mt_claudemd_hierarchy",
+      "strength": "hard",
+      "reason": "@import composes conventions across the same locations the hierarchy defines"
+    },
+    {
+      "topicId": "mt_claude_rules",
+      "prerequisiteId": "mt_claudemd_hierarchy",
+      "strength": "hard",
+      "reason": ".claude/rules/ is an alternative to a single growing project-level file within that same hierarchy"
+    },
+    {
+      "topicId": "mt_claudemd_phrasing",
+      "prerequisiteId": "mt_claudemd_basic",
+      "strength": "hard",
+      "reason": "Phrasing advice applies once you're actually writing rules into a CLAUDE.md file"
+    },
+    {
+      "topicId": "mt_rule_placement",
+      "prerequisiteId": "mt_claudemd_phrasing",
+      "strength": "hard",
+      "reason": "Deciding where a rule belongs presupposes knowing what CLAUDE.md is and how much weight its phrasing carries"
+    },
+    {
+      "topicId": "mt_slash_commands",
+      "prerequisiteId": "mt_claudemd_hierarchy",
+      "strength": "hard",
+      "reason": "Commands share the same project-vs-personal location split CLAUDE.md's hierarchy already established"
+    },
+    {
+      "topicId": "mt_skill_frontmatter",
+      "prerequisiteId": "mt_rule_placement",
+      "strength": "hard",
+      "reason": "Skills are one of the three mechanisms rule_placement distinguishes, so their config presupposes that distinction"
+    },
+    {
+      "topicId": "mt_verification_skill",
+      "prerequisiteId": "mt_skill_frontmatter",
+      "strength": "hard",
+      "reason": "A verification skill is a skill; authoring one presupposes knowing skill frontmatter"
+    },
+    {
+      "topicId": "mt_compact_direction",
+      "prerequisiteId": "mt_agentic_loop_cc",
+      "strength": "hard",
+      "reason": "Compaction operates on the same context the loop accumulates turn by turn"
+    },
+    {
+      "topicId": "mt_context_clear",
+      "prerequisiteId": "mt_compact_direction",
+      "strength": "hard",
+      "reason": "/clear and /context are the other two levers in the same session-steering toolkit as /compact"
+    },
+    {
+      "topicId": "mt_rewind_menu",
+      "prerequisiteId": "mt_agentic_loop_cc",
+      "strength": "hard",
+      "reason": "Rewind operates on the same per-prompt checkpoints the loop creates"
+    },
+    {
+      "topicId": "mt_goal_loop",
+      "prerequisiteId": "mt_compact_direction",
+      "strength": "hard",
+      "reason": "/goal and /loop are session-steering commands introduced alongside /compact"
+    },
+    {
+      "topicId": "mt_worktrees",
+      "prerequisiteId": "mt_agentic_loop_cc",
+      "strength": "hard",
+      "reason": "A worktree isolates the file tree a given loop instance acts on"
+    },
+    {
+      "topicId": "mt_hook_events_cc",
+      "prerequisiteId": "mt_rule_placement",
+      "strength": "hard",
+      "reason": "Hooks are the mechanism rule_placement identifies for rules that must never be skippable"
+    },
+    {
+      "topicId": "mt_hook_exit_codes",
+      "prerequisiteId": "mt_hook_events_cc",
+      "strength": "hard",
+      "reason": "Exit codes are how a hook communicates its decision back for a given event"
+    },
+    {
+      "topicId": "mt_pretooluse_decision",
+      "prerequisiteId": "mt_hook_exit_codes",
+      "strength": "hard",
+      "reason": "permissionDecision is the PreToolUse-specific payload layered on top of the general exit-code contract"
+    },
+    {
+      "topicId": "mt_updated_input",
+      "prerequisiteId": "mt_pretooluse_decision",
+      "strength": "hard",
+      "reason": "updatedInput is a value the PreToolUse decision response can carry alongside permissionDecision"
+    },
+    {
+      "topicId": "mt_sessionstart_compact",
+      "prerequisiteId": "mt_hook_events_cc",
+      "strength": "hard",
+      "reason": "The compact matcher is a SessionStart-specific trigger, so it presupposes knowing the event lifecycle"
+    },
+    {
+      "topicId": "mt_sessionstart_compact",
+      "prerequisiteId": "mt_compact_direction",
+      "strength": "hard",
+      "reason": "The compact matcher only makes sense against knowing what /compact actually does to a session"
+    },
+    {
+      "topicId": "mt_mcp_scoping_cc",
+      "prerequisiteId": "mt_agentic_loop_cc",
+      "strength": "hard",
+      "reason": "MCP servers are configured before the loop starts, and their tools become available to every iteration"
+    },
+    {
+      "topicId": "mt_mcp_context_cost",
+      "prerequisiteId": "mt_mcp_scoping_cc",
+      "strength": "hard",
+      "reason": "The context tax is a direct consequence of how many servers scoping wires in"
+    },
+    {
+      "topicId": "mt_tool_design_principle",
+      "prerequisiteId": "mt_mcp_context_cost",
+      "strength": "hard",
+      "reason": "Preferring abstract, general tools is one response to the same context-budget pressure MCP servers create"
+    },
+    {
+      "topicId": "mt_subagent_isolation_cc",
+      "prerequisiteId": "mt_agentic_loop_cc",
+      "strength": "hard",
+      "reason": "A subagent runs its own instance of the same loop inside an isolated context window"
+    },
+    {
+      "topicId": "mt_subagent_skill_preload",
+      "prerequisiteId": "mt_subagent_isolation_cc",
+      "strength": "hard",
+      "reason": "Preloading applies to a subagent's context, so it presupposes knowing how a subagent's context is isolated"
+    },
+    {
+      "topicId": "mt_subagent_skill_preload",
+      "prerequisiteId": "mt_skill_frontmatter",
+      "strength": "hard",
+      "reason": "Preloading a skill into a subagent combines subagent isolation with how a skill's content loads in the first place"
+    },
+    {
+      "topicId": "mt_automation_spectrum",
+      "prerequisiteId": "mt_agentic_loop_cc",
+      "strength": "hard",
+      "reason": "All three automation modes are ways of running the same loop without a human watching each turn"
+    },
+    {
+      "topicId": "mt_routines",
+      "prerequisiteId": "mt_automation_spectrum",
+      "strength": "hard",
+      "reason": "Routines are one point on the spectrum this topic maps"
+    },
+    {
+      "topicId": "mt_headless_flags",
+      "prerequisiteId": "mt_automation_spectrum",
+      "strength": "hard",
+      "reason": "Headless mode is the second point on the same spectrum"
+    },
+    {
+      "topicId": "mt_github_review_action",
+      "prerequisiteId": "mt_headless_flags",
+      "strength": "hard",
+      "reason": "The GitHub Action is effectively a headless-mode deployment target inside CI"
+    },
+    {
+      "topicId": "mt_plugins",
+      "prerequisiteId": "mt_rule_placement",
+      "strength": "hard",
+      "reason": "A plugin bundles the same skill/hook/MCP mechanisms rule_placement distinguishes into one installable unit"
+    },
+    {
+      "topicId": "mt_verify_proportional",
+      "prerequisiteId": "mt_automation_spectrum",
+      "strength": "hard",
+      "reason": "How much verification a run needs scales with how far it sits from interactive supervision on that spectrum"
+    },
+    {
+      "topicId": "mt_stop_hook_gate",
+      "prerequisiteId": "mt_hook_exit_codes",
+      "strength": "hard",
+      "reason": "A Stop hook gate is the hook mechanism applied specifically to enforce the verification a run needs"
+    },
+    {
+      "topicId": "mt_stop_hook_gate",
+      "prerequisiteId": "mt_verify_proportional",
+      "strength": "hard",
+      "reason": "Gating with a hook is the concrete answer to how much verification an unsupervised run needs"
+    },
+    {
+      "topicId": "mt_cold_second_opinion",
+      "prerequisiteId": "mt_commit_review",
+      "strength": "hard",
+      "reason": "Cold review before commit is the single-session version of what a cold second opinion generalizes further"
+    },
+    {
+      "topicId": "mt_verification_checklist",
+      "prerequisiteId": "mt_stop_hook_gate",
+      "strength": "hard",
+      "reason": "The checklist synthesizes gated verification into its 'run the checks' step"
+    },
+    {
+      "topicId": "mt_verification_checklist",
+      "prerequisiteId": "mt_cold_second_opinion",
+      "strength": "hard",
+      "reason": "The checklist's last step is exactly when to bring in a cold second opinion"
+    },
+    {
+      "topicId": "mt_verification_checklist",
+      "prerequisiteId": "mt_rule_placement",
+      "strength": "hard",
+      "reason": "The checklist's 'least privilege' step presupposes knowing which mechanism should be enforcing what"
+    }
+  ]
+}

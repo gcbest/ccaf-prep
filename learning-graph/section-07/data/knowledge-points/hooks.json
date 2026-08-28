@@ -1,0 +1,325 @@
+{
+  "$comment": "Knowledge points for cl_hooks.",
+  "cluster": "cl_hooks",
+  "topics": [
+    {
+      "topicId": "mt_hook_events_cc",
+      "knowledgePoints": [
+        {
+          "id": "kp_events_1",
+          "name": "PreToolUse guards outgoing calls; PostToolUse reacts after",
+          "keyPrerequisites": ["mt_rule_placement"],
+          "teach": "<p class='kp-key'>Direction is the first thing to check about any hook event: does it fire before the tool call, or after it?</p><p><strong>PreToolUse</strong> fires before a call — it can still block it. <strong>PostToolUse</strong> fires after a call has already succeeded — useful for reacting to the result (auto-formatting a file that was just written), but too late to prevent the call itself.</p><p>Project-level hooks are configured in <code>.claude/settings.json</code>, checked into the repo so the whole team gets the same enforcement automatically.</p>",
+          "questions": [
+            {
+              "id": "q_events_1a",
+              "q": "A team wants a hook that can refuse to let a Bash command run at all when it matches a dangerous pattern, versus a separate hook that reformats a file right after Claude finishes writing it. Which events fire early enough to block, and which reacts only after the fact?",
+              "options": [
+                "PostToolUse can still block the Bash call; PreToolUse only reacts to the file after it's written.",
+                "Both events can block equally well, since blocking depends on the hook's exit code, not which event fired.",
+                "PreToolUse can block the Bash call before it runs; PostToolUse only reacts after the file is already written.",
+                "Neither event can block anything directly; blocking always requires a separate permission-mode setting instead."
+              ],
+              "correct": 2,
+              "explain": "PreToolUse fires before the tool call runs, so it's the one positioned to block the dangerous Bash command outright, while PostToolUse only fires once the write has already succeeded, which is why it's suited to reacting — like reformatting — rather than preventing. The two events aren't interchangeable through exit code alone, and blocking doesn't require a separate permission-mode setting to work."
+            },
+            {
+              "id": "q_events_1b",
+              "q": "A team wants their PreToolUse and PostToolUse hooks checked into version control so every developer's clone enforces the exact same rules automatically. Where should project-level hooks be configured to achieve that?",
+              "options": [
+                "In ~/.claude/settings.json, since user-level configuration is what gets shared across a team by default.",
+                "Nowhere in the repo — hooks must be configured interactively by each developer after cloning the project.",
+                "In a CLAUDE.md file at the project root, since hook configuration and project guidance share one file.",
+                "In .claude/settings.json, checked into the repository so every clone gets the identical configuration."
+              ],
+              "correct": 3,
+              "explain": "Project-level hooks belong in .claude/settings.json, checked into the repo, so every developer's clone enforces the identical rules without any manual setup. The user-level file is personal and not shared, CLAUDE.md carries guidance rather than hook configuration, and there's no requirement to configure hooks by hand after cloning."
+            }
+          ]
+        },
+        {
+          "id": "kp_events_2",
+          "name": "Stop, SubagentStop, and the wider event lifecycle",
+          "keyPrerequisites": ["mt_rule_placement"],
+          "teach": "<p>Beyond the tool-call pair, roughly 30 hook events fire across a session, most of them turn- or session-level rather than per-call. <strong>Stop</strong> fires when Claude wants to end its turn — and, notably, it can refuse, holding the turn open until some condition is met. Its counterpart for delegated work is <strong>SubagentStop</strong>, which fires when a subagent wants to end its own turn.</p><p><strong>PreCompact</strong> and <strong>PostCompact</strong> fire around compaction. <strong>SessionStart</strong> primes the environment at launch.</p><p>The pattern worth internalizing: per-call events (PreToolUse/PostToolUse) can gate a single action; per-turn events (Stop/SubagentStop) can gate whether a turn is allowed to end at all.</p>",
+          "questions": [
+            {
+              "id": "q_events_2a",
+              "q": "A compliance rule requires that the agent has cited at least one source before it's allowed to finish responding to the user, and the check needs to run every single time the agent attempts to end its turn. Which hook event should this check subscribe to?",
+              "options": [
+                "PreCompact, since it fires early enough in the session lifecycle to check for a citation before anything else happens.",
+                "PostToolUse, since it fires immediately after each individual tool result is returned to the model.",
+                "Stop, since it fires when the agent attempts to end its turn and can refuse to let that happen without a citation.",
+                "SessionStart, since it primes the environment and can hold the session open until a citation exists."
+              ],
+              "correct": 2,
+              "explain": "Stop fires exactly when the agent attempts to end its turn, and it can refuse — which is what lets it require a citation before that's allowed to happen. PreCompact and SessionStart fire at points unrelated to turn completion, and PostToolUse fires per tool call rather than per turn."
+            },
+            {
+              "id": "q_events_2b",
+              "q": "The same 'must cite a source before finishing' rule needs to apply not just to the main agent's turns but to a subagent's turns as well, whenever one is delegated a research task. Which event is the subagent-scoped counterpart to Stop?",
+              "options": [
+                "SubagentStop, which fires when a subagent wants to end its own turn, mirroring what Stop does for the main agent.",
+                "PostToolUse, since a subagent's final action is itself a tool call the hook can intercept afterward.",
+                "PreCompact, since a subagent's context is compacted separately from the main agent's before it returns.",
+                "Notification, since subagent completion is surfaced to the main session as a notification event."
+              ],
+              "correct": 0,
+              "explain": "SubagentStop is the direct counterpart to Stop for delegated work — it fires when a subagent wants to end its own turn, so the same citation requirement can be enforced there. PostToolUse concerns individual tool calls rather than turn completion, and neither PreCompact nor Notification is the event tied to a subagent finishing its work."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_events_1",
+          "q": "A new team member is deciding, as a general rule rather than case by case, whether a given requirement belongs on PreToolUse or PostToolUse. Which rule correctly captures the distinction?",
+          "options": [
+            "PreToolUse guards what goes out before a call runs; PostToolUse handles what comes back after it succeeds.",
+            "PreToolUse is for cheap, fast checks only; PostToolUse is reserved for checks that are expensive to compute.",
+            "PreToolUse applies only to Bash calls; PostToolUse applies only to file-editing tools like Write and Edit.",
+            "PreToolUse can only allow or deny; PostToolUse is the only event that can rewrite a call's arguments."
+          ],
+          "correct": 0,
+          "explain": "The direction — before the call runs versus after it comes back — is the real distinction, not cost or which specific tool is involved. PreToolUse isn't restricted to Bash, PostToolUse isn't restricted to file edits, and it's PreToolUse, not PostToolUse, that can rewrite a call's arguments via updatedInput."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_hook_exit_codes",
+      "knowledgePoints": [
+        {
+          "id": "kp_exitcodes_1",
+          "name": "0, 2, and everything else",
+          "keyPrerequisites": ["mt_hook_events_cc"],
+          "teach": "<p>A hook communicates its decision through its exit code:</p><ul><li><code>0</code> — success, proceed.</li><li><code>2</code> — a blocking error; stderr is fed back to Claude as context. This works almost everywhere, including blocking a Stop event from ending the turn.</li></ul><p>Because <strong>PostToolUse</strong> fires after the tool has already run, no exit code returned there can prevent that call — the moment for blocking has already passed. <strong>Notification</strong> and <strong>SessionStart</strong> ignore blocking entirely, no matter what exit code they return.</p>",
+          "questions": [
+            {
+              "id": "q_exitcodes_1a",
+              "q": "A PreToolUse hook detects a problem with an outgoing call and wants both to stop the call from running and to have its explanation reach Claude so it can adjust its next attempt. What should the hook's exit code be?",
+              "options": [
+                "Exit code 1, since any nonzero code is treated identically as a blocking signal by the framework.",
+                "Exit code 0, paired with a detailed message printed to stdout instead of stderr for visibility.",
+                "Exit code 2, which blocks the call and feeds the hook's stderr back to Claude as context.",
+                "No exit code convention applies here — blocking is controlled entirely by a separate settings.json flag."
+              ],
+              "correct": 2,
+              "explain": "Exit code 2 is specifically the blocking signal, and it's what feeds the hook's stderr back to Claude as context so the model can adjust its next attempt. Nonzero codes aren't treated identically, exit 0 signals success rather than a block, and there's no separate settings.json flag standing in for the exit code itself."
+            },
+            {
+              "id": "q_exitcodes_1b",
+              "q": "A PostToolUse hook inspects a file that was just written and wants to prevent Claude from ever seeing the result if it looks wrong, returning exit code 2 to try to block it. Why doesn't this stop the result from reaching Claude?",
+              "options": [
+                "Exit code 2 only blocks Bash calls specifically; file-write tools are exempt from PostToolUse blocking.",
+                "PostToolUse hooks can block results, but only when the matcher targets exactly one specific tool name.",
+                "The hook needed to return exit code 3 instead, which is the code reserved specifically for PostToolUse.",
+                "PostToolUse fires after the tool already ran, so no exit code there can prevent that call from having happened."
+              ],
+              "correct": 3,
+              "explain": "By the time PostToolUse fires, the tool call has already completed successfully, so no exit code returned there — including 2 — can undo or prevent something that already happened. There's no tool-type exemption, no separate exit code 3 reserved for this event, and matcher scope doesn't change the fundamental timing problem."
+            }
+          ]
+        },
+        {
+          "id": "kp_exitcodes_2",
+          "name": "The exit-1 trap",
+          "keyPrerequisites": ["mt_hook_events_cc"],
+          "teach": "<p class='kp-key'>Exit code 1 does not block. This is the single most common mistake in hook scripts.</p><p>Only exit code <code>2</code> blocks. Any other nonzero code — including the very natural-feeling <code>1</code> that most shell scripts use for 'something went wrong' — is treated as non-blocking. The action proceeds anyway, silently, which is worse than an obvious failure: the script author believes the guardrail is in place.</p><p>And two events opt out of the whole mechanism regardless of exit code: <strong>Notification</strong> and <strong>SessionStart</strong> ignore blocking entirely.</p>",
+          "questions": [
+            {
+              "id": "q_exitcodes_2a",
+              "q": "A hook script exits with status 1 whenever it detects a problem, following the common shell convention that nonzero means failure, expecting Claude Code to block the action as a result. In production, the action goes through anyway. What exit code should the script have used instead, and why did 1 fail silently rather than erroring loudly?",
+              "options": [
+                "It should have used exit code 2 — only that specific code blocks, and any other nonzero code, including 1, is non-blocking.",
+                "It should have used exit code 0 — a successful exit is what actually signals the framework to block the call.",
+                "The script was correct — exit code 1 does block, so something else must explain the action going through anyway.",
+                "It should have printed to stderr instead of returning a nonzero code, since stderr content alone determines blocking."
+              ],
+              "correct": 0,
+              "explain": "Only exit code 2 blocks; exit 1 — despite feeling like the natural 'something failed' signal in shell scripting — is treated as non-blocking along with every other nonzero code except 2, which is exactly why the action went through silently. Exit 0 signals success rather than a block, exit 1 genuinely does not block despite the intuition, and stderr content alone doesn't determine whether a call is blocked without the right exit code alongside it."
+            },
+            {
+              "id": "q_exitcodes_2b",
+              "q": "A hook registered on Notification returns exit code 2, expecting that to block whatever follows, the same way it would on a PreToolUse or Stop hook. What actually happens?",
+              "options": [
+                "Nothing is blocked — Notification ignores blocking entirely, regardless of what exit code the hook returns.",
+                "The block succeeds exactly as it would on PreToolUse, since exit code 2 blocks uniformly across every event.",
+                "The block succeeds, but only the current turn is affected rather than the specific notification itself.",
+                "The framework raises a configuration error, since Notification hooks are not permitted to return exit code 2 at all."
+              ],
+              "correct": 0,
+              "explain": "Notification is one of the events that ignores blocking entirely, no matter what exit code its hook returns, unlike PreToolUse or Stop where exit code 2 is meaningful. Exit code 2 doesn't block uniformly across every event, and returning it from a Notification hook doesn't raise a configuration error — it's simply not honored for blocking there."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_exitcodes_1",
+          "q": "A hook author wants a mental model simple enough to never mix up again: which exit codes actually block an action, across the events where blocking is honored at all?",
+          "options": [
+            "Exit code 2 blocks; every other code, including 0 and 1, is treated as non-blocking.",
+            "Exit codes 1 and 2 both block; only exit code 0 is treated as non-blocking.",
+            "Any nonzero exit code blocks; only exit code 0 is treated as a success that proceeds.",
+            "Exit code 0 blocks by signaling the hook succeeded; nonzero codes all proceed without incident."
+          ],
+          "correct": 0,
+          "explain": "Only exit code 2 blocks; every other code, including the intuitive-feeling 1, is non-blocking — that specificity is exactly what makes exit 1 such a common trap. Treating any nonzero code as blocking, or treating 0 as the blocking code, both get the actual contract backwards."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_pretooluse_decision",
+      "knowledgePoints": [
+        {
+          "id": "kp_pretooluse_1",
+          "name": "allow / deny / ask, and defer for -p only",
+          "keyPrerequisites": ["mt_hook_exit_codes"],
+          "teach": "<p>A PreToolUse hook's JSON response carries a <code>permissionDecision</code> field, layered on top of the general exit-code contract as a finer-grained way to communicate a decision than simple block-or-not.</p><p>Three values apply in an interactive session: <code>allow</code>, <code>deny</code>, <code>ask</code>. A fourth, <code>defer</code>, exists but <strong>only applies to non-interactive <code>-p</code> runs</strong> — there's no one present in an interactive session for a deferred decision to wait on, so it's meaningless there.</p>",
+          "questions": [
+            {
+              "id": "q_pretooluse_1a",
+              "q": "A PreToolUse hook needs to communicate a finer-grained decision than a plain block-or-proceed, in an ordinary interactive Claude Code session. Which field does its JSON response use, and which three values are actually usable there?",
+              "options": [
+                "The decision field, using block, allow, and defer as the three values usable in an interactive session.",
+                "The permissionDecision field, using allow, deny, and ask as the three values usable in an interactive session.",
+                "The permissionDecisionReason field, using allow, deny, and defer as the three values usable interactively.",
+                "The exitCode field, using 0, 2, and defer as the three values usable in an interactive session."
+              ],
+              "correct": 1,
+              "explain": "permissionDecision is the field, and allow, deny, and ask are the three values that apply in an ordinary interactive session. decision and exitCode name different mechanisms entirely, and permissionDecisionReason carries explanatory text rather than the decision itself."
+            },
+            {
+              "id": "q_pretooluse_1b",
+              "q": "A hook author sets permissionDecision to defer inside an interactive Claude Code session, expecting the call to pause until something resolves it. Why is this value meaningless in that context?",
+              "options": [
+                "defer is a typo for ask, and Claude Code silently treats it as ask regardless of which session type is running.",
+                "defer only applies to non-interactive -p runs, and an interactive session has no one to wait for it to resolve.",
+                "defer requires a paired PostToolUse hook to be registered, or the PreToolUse decision is discarded outright.",
+                "defer is deprecated in the current version and has already been fully replaced by the ask value everywhere."
+              ],
+              "correct": 1,
+              "explain": "defer is specifically scoped to non-interactive -p runs; an interactive session has no external process waiting to resolve a deferred decision, which is exactly why it's meaningless there. It isn't silently aliased to ask, it doesn't require a paired PostToolUse hook, and it isn't a deprecated value being phased out."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_pretooluse_1",
+          "q": "Which permissionDecision value hands the decision back to the normal interactive permission prompt, for a PreToolUse hook that has no strong opinion of its own on a given call?",
+          "options": [
+            "allow, since it lets the call proceed immediately without engaging the normal permission flow at all.",
+            "deny, since refusing outright is the safest default when a hook has no opinion on a call.",
+            "ask, since it explicitly falls through to the normal interactive permission prompt instead of deciding.",
+            "defer, since parking the call for later resolution is equivalent to having no opinion on it."
+          ],
+          "correct": 2,
+          "explain": "ask is exactly the value that hands the decision back to the normal permission prompt rather than the hook deciding on its own. allow and deny both make an active decision instead of deferring to the prompt, and defer's meaning is scoped to non-interactive -p runs, not to expressing indecision inside an interactive one."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_updated_input",
+      "knowledgePoints": [
+        {
+          "id": "kp_updatedinput_1",
+          "name": "Redact instead of block, and echo back every field",
+          "keyPrerequisites": ["mt_pretooluse_decision"],
+          "teach": "<p>A PreToolUse hook can return <code>updatedInput</code> to rewrite the tool call instead of blocking it outright. Canonical case: a Bash guardrail detects a live secret pattern like <code>sk_live_</code> and swaps it for a placeholder — the command still runs, but the secret never makes it through.</p><p class='kp-key'><code>updatedInput</code> replaces the whole input object.</p><p>That means a hook that only wants to change one field has to echo back every other field unchanged, or those other fields are silently lost — the tool call runs with only the field the hook bothered to set, and everything else vanishes rather than raising an error.</p>",
+          "questions": [
+            {
+              "id": "q_updatedinput_1a",
+              "q": "A PreToolUse Bash guardrail detects a live secret pattern like sk_live_ inside an otherwise legitimate command and wants the command to still run, just with the secret swapped for a placeholder. Which field does it return to accomplish this, rather than denying the call outright?",
+              "options": [
+                "permissionDecisionReason, since supplying an explanatory reason string is what triggers the redaction to occur.",
+                "A deny decision combined with a retry hint, so Claude regenerates the command without the secret itself.",
+                "additionalContext, since injecting a note about the redaction is sufficient to remove it from the command.",
+                "updatedInput, which rewrites the tool call — swapping the secret for a placeholder while letting it still run."
+              ],
+              "correct": 3,
+              "explain": "updatedInput is exactly the mechanism for rewriting a tool call — swapping the live secret for a placeholder so the command still runs without the secret ever making it through. permissionDecisionReason only explains a decision, additionalContext doesn't remove anything from the outgoing call, and denying the call would stop it from running at all rather than letting a redacted version through."
+            },
+            {
+              "id": "q_updatedinput_1b",
+              "q": "A hook only wants to change one field of an outgoing tool call's arguments and returns updatedInput containing just that single field, assuming the rest of the arguments stay as they were. What actually happens to the other fields?",
+              "options": [
+                "They stay unchanged automatically, since updatedInput only overrides the fields it explicitly names.",
+                "They're silently lost — updatedInput replaces the whole input object, so unset fields don't survive.",
+                "The tool call is rejected outright, since updatedInput requires every original field to be present.",
+                "They're merged with a warning logged, alerting the hook author that fields were left out this time."
+              ],
+              "correct": 1,
+              "explain": "updatedInput replaces the entire input object rather than patching it, so any field the hook didn't explicitly echo back is silently lost, not merged, warned about, or preserved automatically. A hook that wants to change one field still has to include every other field unchanged in the same response."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_updatedinput_1",
+          "q": "A hook rewrites an outgoing tool call by returning updatedInput with only the one field it cares about changing, omitting the rest of the original arguments. What mistake does this make?",
+          "options": [
+            "None — updatedInput always preserves every field the hook didn't explicitly mention in its response.",
+            "It forgets that updatedInput replaces the whole input object, so the omitted fields are silently lost.",
+            "It should have used additionalContext instead, since that field is the one meant for partial rewrites.",
+            "It should have returned exit code 2 alongside updatedInput, or the rewrite is ignored entirely."
+          ],
+          "correct": 1,
+          "explain": "updatedInput replaces the whole input object rather than patching individual fields, so leaving out the rest of the original arguments silently loses them — this is the exact mistake to avoid. There's no automatic preservation of omitted fields, additionalContext solves a different problem, and no paired exit code is required to make the rewrite take effect."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_sessionstart_compact",
+      "knowledgePoints": [
+        {
+          "id": "kp_sessionstart_1",
+          "name": "SessionStart's compact matcher versus PostCompact's silence",
+          "keyPrerequisites": ["mt_hook_events_cc", "mt_compact_direction"],
+          "teach": "<p><strong>SessionStart</strong> primes the environment when a session launches. Its <code>compact</code> matcher is the specific trigger for re-injecting concise context right after a compaction finishes — and its output <em>does</em> feed back into the conversation.</p><p class='kp-key'><code>PostCompact</code> looks like the obvious choice for the same job and isn't.</p><p>PostCompact fires around the same moment as a compaction, but it does not feed its output back into the conversation — so anything it returns has nowhere to go. Re-priming context after a <code>/compact</code> has to go through SessionStart's <code>compact</code> matcher, never PostCompact.</p>",
+          "questions": [
+            {
+              "id": "q_sessionstart_1a",
+              "q": "A team wants to re-inject a short reminder of project context immediately after every /compact, so the summarized conversation doesn't lose track of a few essential facts. Which hook — and matcher — actually accomplishes this?",
+              "options": [
+                "PostCompact, since it fires at the precise moment compaction finishes, right when the reminder should appear.",
+                "PreCompact, configured with extra instructions that get carried forward into the post-compaction conversation.",
+                "A PostToolUse hook matched against the /compact command itself, treating compaction like any other tool call.",
+                "SessionStart, using its compact matcher, since its output is what actually feeds back into the conversation."
+              ],
+              "correct": 3,
+              "explain": "SessionStart's compact matcher is specifically built for this — it fires right after a compaction, and unlike PostCompact, its output does feed back into the conversation, which is what makes the reminder actually appear. PostCompact fires around the same moment but its output goes nowhere, PreCompact runs before compaction rather than after, and /compact isn't a tool call that PostToolUse would match against."
+            },
+            {
+              "id": "q_sessionstart_1b",
+              "q": "A hook author configures a PostCompact hook to return a short context reminder, reasoning that since it fires right after compaction, its output will naturally appear in the conversation that follows. What actually happens?",
+              "options": [
+                "The reminder appears exactly as intended, since PostCompact is designed to feed its output back to Claude.",
+                "The reminder is delayed until the next tool call, appearing then rather than immediately after compaction.",
+                "The reminder is silently redirected to SessionStart's compact matcher, which surfaces it automatically instead.",
+                "PostCompact does not feed its output back into the conversation, so the reminder has nowhere to go."
+              ],
+              "correct": 3,
+              "explain": "PostCompact fires around the same moment as SessionStart's compact matcher, but it does not feed its output back into the conversation, so a reminder returned there simply has nowhere to go. It isn't delayed until the next tool call, and there's no automatic redirection to SessionStart on the hook's behalf — that requires actually configuring the compact matcher there instead."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_sessionstart_1",
+          "q": "Two hooks both fire around the moment a compaction finishes: SessionStart configured with its compact matcher, and PostCompact. What is the key functional difference between them?",
+          "options": [
+            "There is no real difference — either one reliably re-injects context back into the conversation after a compact.",
+            "PostCompact fires only for automatic compactions, while SessionStart's compact matcher fires only for manual ones.",
+            "SessionStart's compact matcher feeds its output back into the conversation; PostCompact's output does not.",
+            "SessionStart's compact matcher can block the compaction from completing; PostCompact cannot block anything."
+          ],
+          "correct": 2,
+          "explain": "The functional difference is exactly that SessionStart's compact matcher feeds its output back into the conversation while PostCompact's does not, which is why only the former can actually re-inject a reminder. They aren't split by manual versus automatic compaction, and neither one is about blocking the compaction itself from completing."
+        }
+      ]
+    }
+  ]
+}

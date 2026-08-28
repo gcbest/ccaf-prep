@@ -1,0 +1,29 @@
+{
+  "$comment": "Working on topicId implicitly practises encompassedId. Powers fractional implicit repetition and review compression.",
+  "encompassings": [
+    { "topicId": "mt_verification_checklist", "encompassedId": "mt_stop_hook_gate", "coverage": 0.6, "reason": "The checklist's build/test/lint step is the Stop-hook gate written out as a manual sequence" },
+    { "topicId": "mt_verification_checklist", "encompassedId": "mt_verify_proportional", "coverage": 0.5, "reason": "Deciding when to add a cold second opinion is the checklist's version of scaling effort to supervision" },
+    { "topicId": "mt_verification_checklist", "encompassedId": "mt_cold_second_opinion", "coverage": 0.5, "reason": "The checklist names the cold second opinion as one of its own steps" },
+    { "topicId": "mt_verification_checklist", "encompassedId": "mt_rule_placement", "coverage": 0.4, "reason": "Applying least privilege in the checklist means having already sorted which mechanism enforces what" },
+    { "topicId": "mt_plugins", "encompassedId": "mt_mcp_scoping_cc", "coverage": 0.4, "reason": "A plugin's .mcp.json is the same scoping mechanism, just packaged for distribution" },
+    { "topicId": "mt_plugins", "encompassedId": "mt_hook_events_cc", "coverage": 0.3, "reason": "A plugin's bundled hooks fire through the same event lifecycle as any local hook" },
+    { "topicId": "mt_plugins", "encompassedId": "mt_skill_frontmatter", "coverage": 0.4, "reason": "A plugin's bundled skills use the same SKILL.md frontmatter as a locally-authored one" },
+    { "topicId": "mt_updated_input", "encompassedId": "mt_pretooluse_decision", "coverage": 0.8, "reason": "updatedInput is carried inside the same PreToolUse response permissionDecision belongs to" },
+    { "topicId": "mt_pretooluse_decision", "encompassedId": "mt_hook_exit_codes", "coverage": 0.7, "reason": "permissionDecision is a refinement layered on the same exit-code contract" },
+    { "topicId": "mt_sessionstart_compact", "encompassedId": "mt_compact_direction", "coverage": 0.5, "reason": "Re-priming after a compact only makes sense against knowing what /compact just did" },
+    { "topicId": "mt_sessionstart_compact", "encompassedId": "mt_hook_events_cc", "coverage": 0.6, "reason": "Naming SessionStart's compact matcher exercises the broader event lifecycle it belongs to" },
+    { "topicId": "mt_headless_flags", "encompassedId": "mt_automation_spectrum", "coverage": 0.5, "reason": "Choosing the right headless flag presupposes placing headless mode correctly on the spectrum" },
+    { "topicId": "mt_routines", "encompassedId": "mt_automation_spectrum", "coverage": 0.5, "reason": "Routine constraints only make sense in contrast to the other two points on the spectrum" },
+    { "topicId": "mt_github_review_action", "encompassedId": "mt_headless_flags", "coverage": 0.4, "reason": "The GitHub Action's claude_args pass-through exercises the same headless-flag knowledge" },
+    { "topicId": "mt_subagent_skill_preload", "encompassedId": "mt_subagent_isolation_cc", "coverage": 0.7, "reason": "Preloading is a detail of the same isolated-context mechanism subagent isolation establishes" },
+    { "topicId": "mt_subagent_skill_preload", "encompassedId": "mt_skill_frontmatter", "coverage": 0.4, "reason": "The skill key is a frontmatter-adjacent detail of how a skill's content actually loads" },
+    { "topicId": "mt_commit_review", "encompassedId": "mt_epcc_workflow", "coverage": 0.5, "reason": "Review-before-commit is the Commit phase of EPCC, worked in detail" },
+    { "topicId": "mt_cold_second_opinion", "encompassedId": "mt_commit_review", "coverage": 0.6, "reason": "A cold second opinion is the pre-commit review habit generalized past the moment of commit" },
+    { "topicId": "mt_rule_placement", "encompassedId": "mt_claudemd_phrasing", "coverage": 0.5, "reason": "Recognizing CLAUDE.md's guidance-not-enforcement nature is half of what motivates rule placement" },
+    { "topicId": "mt_auto_classifier", "encompassedId": "mt_permission_modes_six", "coverage": 0.7, "reason": "Explaining Auto in depth exercises its place in the six-mode spectrum" },
+    { "topicId": "mt_explore_subagent_cc", "encompassedId": "mt_plan_vs_direct", "coverage": 0.5, "reason": "Explore is a technique that only matters inside a plan-mode discovery phase" },
+    { "topicId": "mt_verification_skill", "encompassedId": "mt_skill_frontmatter", "coverage": 0.6, "reason": "Building a verification skill exercises the same frontmatter knowledge that defines any skill" },
+    { "topicId": "mt_claude_rules", "encompassedId": "mt_claudemd_hierarchy", "coverage": 0.4, "reason": ".claude/rules/ is positioned as an alternative inside the same location hierarchy" },
+    { "topicId": "mt_stop_hook_gate", "encompassedId": "mt_hook_exit_codes", "coverage": 0.5, "reason": "A Stop hook gate is exit-code mechanics applied to one specific event" }
+  ]
+}

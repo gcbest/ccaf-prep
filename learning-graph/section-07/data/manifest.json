@@ -1,0 +1,31 @@
+{
+  "builtAt": "2026-08-28",
+  "stats": {
+    "topics": 41,
+    "clusters": 9,
+    "dependencies": 45,
+    "hardDependencies": 45,
+    "encompassings": 24,
+    "knowledgePoints": 48,
+    "questions": 140,
+    "layers": 8,
+    "coreTopics": 27,
+    "estimatedMinutes": 231
+  },
+  "checksums": {
+    "topics.json": "sha256:490abead4d406b85",
+    "dependencies.json": "sha256:487c77cb64cf3db2",
+    "encompassings.json": "sha256:8809761e29b0e7a5",
+    "clusters.json": "sha256:21c770252dbc488c",
+    "curriculum-standards.json": "sha256:6b4b48a4b4094325",
+    "knowledge-points/automation.json": "sha256:1a7a464058474f8f",
+    "knowledge-points/claudemd.json": "sha256:e8880a3a8abed1b0",
+    "knowledge-points/control-surface.json": "sha256:0a5e1e3da802652c",
+    "knowledge-points/foundations.json": "sha256:e78ccbbfe38f8bcf",
+    "knowledge-points/hooks.json": "sha256:bdcd98a61eff2bfa",
+    "knowledge-points/mcp-tools.json": "sha256:a9608f052c062f2d",
+    "knowledge-points/mechanism.json": "sha256:5a752a82305e64d9",
+    "knowledge-points/sessions.json": "sha256:bd9787a30c98a1ef",
+    "knowledge-points/verification.json": "sha256:2c33310d2ec07c97"
+  }
+}

@@ -9,9 +9,10 @@ with one file added that os-taxonomy does not have.
 |---|---|---|---|
 | **8** · The Claude Agent SDK | [`index.html`](index.html) | `data/` | `ccaf_learning_graph_v1` |
 | **3** · Building with the Claude API | [`section-03/index.html`](section-03/index.html) | `section-03/data/` | `ccaf_learning_graph_03_v1` |
+| **7** · Claude Code in Action | [`section-07/index.html`](section-07/index.html) | `section-07/data/` | `ccaf_learning_graph_07_v1` |
 
-Section 8 lives at the root because its URL predates the second graph. One `app.js` and one
-`scripts/` directory serve both; everything section-specific — topics, names, storage key —
+Section 8 lives at the root because its URL predates the other graphs. One `app.js` and one
+`scripts/` directory serve all three; everything section-specific — topics, names, storage key —
 arrives in that section's `graph-data.js`, built from its own `data/section.json`.
 
 Progress is tracked separately per section, so working through one never marks anything
@@ -42,7 +43,12 @@ learning-graph/
 │   ├── knowledge-points/*.json    teaching content, one file per cluster
 │   └── manifest.json              GENERATED — stats + checksums
 │
-└── section-03/                    Section 3, same layout
+├── section-03/                    Section 3, same layout
+│   ├── index.html
+│   ├── graph-data.js
+│   └── data/…
+│
+└── section-07/                    Section 7, same layout
     ├── index.html
     ├── graph-data.js
     └── data/…
@@ -50,16 +56,16 @@ learning-graph/
 
 At the time of writing:
 
-| | Section 8 | Section 3 |
-|---|---|---|
-| topics | 44 | 68 |
-| clusters | 5 | 11 |
-| prerequisite edges | 64 (49 hard) | 99 (79 hard) |
-| encompassings | 48 | 77 |
-| knowledge points | 60 | 83 |
-| questions | 164 | 254 |
-| layers deep | 8 | 9 |
-| entry topics | 1 | 1 |
+| | Section 8 | Section 3 | Section 7 |
+|---|---|---|---|
+| topics | 44 | 68 | 41 |
+| clusters | 5 | 11 | 9 |
+| prerequisite edges | 64 (49 hard) | 99 (79 hard) | 45 (45 hard) |
+| encompassings | 48 | 77 | 24 |
+| knowledge points | 60 | 83 | 48 |
+| questions | 164 | 254 | 140 |
+| layers deep | 8 | 9 | 8 |
+| entry topics | 1 | 1 | 1 |
 
 ## The data model
 
@@ -179,10 +185,12 @@ Both scripts take a section argument. With none, they act on Section 8 at the ro
 ```bash
 node learning-graph/scripts/validate.mjs                    # Section 8
 node learning-graph/scripts/validate.mjs section-03         # Section 3
+node learning-graph/scripts/validate.mjs section-07         # Section 7
 node learning-graph/scripts/validate.mjs all                # every section
 
 node learning-graph/scripts/build-web-data.mjs              # Section 8
 node learning-graph/scripts/build-web-data.mjs section-03   # Section 3
+node learning-graph/scripts/build-web-data.mjs section-07   # Section 7
 ```
 
 **Edit the JSON, never `graph-data.js`.** The build inlines the data into a `<script>` tag
@@ -232,3 +240,18 @@ background folded in, and cross-checked against the same exam guide. It is the w
 on the list — it feeds four of the five exam domains — which is why it earned a graph of its own:
 read in lesson order it is three long lessons, but the dependency structure underneath is nine
 layers deep from a single entry point (`messages.create`).
+
+**Section 7** comes from [`07-claude-code-in-action/notes.md`](../07-claude-code-in-action/notes.md),
+built from the Anthropic Academy course *Claude Code in Action* with Claude Code 101 background
+folded in. It exists to close a gap: Sections 3 and 8 already cover most of the exam's five
+domains, but the "Claude Code Configuration & Workflows" domain (20% of the exam) is mostly the
+CLI-native surface neither of them teaches — `CLAUDE.md`'s location hierarchy, `.claude/rules/`
+path scoping, skill frontmatter, permission modes, hooks' exit-code contract, and headless CI
+flags. The course notes cover the mechanism (hooks, MCP, sessions, automation) but stay thin on
+some of the exam-tested specifics, so this graph is additionally grounded against a community
+CCA-F practice exam — [OlivierAlter/Claude-Certified-Architect-Foundations-Certification-Exam](https://github.com/OlivierAlter/Claude-Certified-Architect-Foundations-Certification-Exam)
+— whose worked explanations filled in `.claude/rules/` frontmatter, `.claude/commands/` scoping,
+`SKILL.md`'s `context: fork`/`allowed-tools`/`argument-hint`, and the interview pattern. Cross-checked
+against the same CCA-F Exam Guide v1.0 and the domain-3 glossary terms (`t28`–`t43`) in
+[`study-reference/ccaf_study_reference.md`](../study-reference/ccaf_study_reference.md) that neither
+other graph had picked up.

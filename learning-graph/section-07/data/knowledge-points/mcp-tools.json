@@ -1,0 +1,272 @@
+{
+  "$comment": "Knowledge points for cl_mcp_tools.",
+  "cluster": "cl_mcp_tools",
+  "topics": [
+    {
+      "topicId": "mt_mcp_scoping_cc",
+      "knowledgePoints": [
+        {
+          "id": "kp_mcpscope_1",
+          "name": "Three scopes, one config file",
+          "keyPrerequisites": [
+            "mt_agentic_loop_cc"
+          ],
+          "teach": "<p class='kp-key'>Where an MCP server is configured decides who gets it: Local (you, this project), User (you, every project), or Project (the whole team, via .mcp.json).</p><p><code>claude mcp add</code> wires up a server over one of two transports — <strong>HTTP</strong> for something remote or hosted, <strong>Stdio</strong> for a local process — and <code>/mcp</code> manages what's connected from inside a session.</p><p>Project scope writes to <code>.mcp.json</code> at the repo root and gets committed, so every developer who clones the repo gets the identical server automatically — no one has to run <code>claude mcp add</code> themselves. A personal API token has no business living in a committed file, so <code>.mcp.json</code> expands environment variables instead of storing secrets literally:</p><pre class='kp-code'>{\n  \"mcpServers\": {\n    \"github\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"@modelcontextprotocol/server-github\"],\n      \"env\": { \"GITHUB_TOKEN\": \"${GITHUB_TOKEN}\" }\n    }\n  }\n}</pre><p>Each developer's own <code>GITHUB_TOKEN</code> gets substituted in from their local environment at launch — the file itself never carries a real credential.</p>",
+          "questions": [
+            {
+              "id": "q_mcpscope_1a",
+              "q": "A team wants every developer to get an internal GitHub MCP server automatically the moment they clone the repo, without any of them committing a personal access token to version control. Which combination delivers both requirements at once?",
+              "options": [
+                "User scope, so each developer configures the server once in their own home directory and it silently follows them into every other project too.",
+                "Local scope, with each developer pasting their own token directly into their private, uncommitted copy of the server configuration.",
+                "Project scope via .mcp.json, with the token hardcoded directly into the committed file so the server works identically for absolutely everyone the moment they clone it.",
+                "Project scope via .mcp.json committed to the repo, with the token referenced as an environment variable expansion like ${GITHUB_TOKEN} rather than a literal value."
+              ],
+              "correct": 3,
+              "explain": "Project scope's .mcp.json is the mechanism that reaches every developer automatically on clone, and expanding ${GITHUB_TOKEN} from each developer's own environment is what keeps a real credential out of the committed file. User scope follows one person across unrelated projects rather than reaching the whole team on this one, Local scope has to be set up by hand per developer rather than arriving automatically, and hardcoding a literal token into a committed file is exactly the leak the team is trying to avoid."
+            },
+            {
+              "id": "q_mcpscope_1b",
+              "q": "A developer wants to experiment with an MCP server on their current branch only, without it appearing in any teammate's session or in any other project they personally work on. Which scope fits, and what happens to the configuration if they later run claude mcp add for a different, unrelated project?",
+              "options": [
+                "User scope, since 'this project only' is enforced by Claude Code checking the current working directory against a per-project allowlist you maintain.",
+                "Project scope, since .mcp.json is the only file Claude Code reads for any MCP configuration regardless of who set it up or why.",
+                "Local scope, but the server then follows that developer into every other project automatically until they explicitly disable it via /mcp.",
+                "Local scope, tied to just this one project on this one machine; setting it up again for a different project creates a separate, independent entry."
+              ],
+              "correct": 3,
+              "explain": "Local scope is exactly the 'just me, just this project' tier, and it doesn't generalize across projects — configuring a server for one project under Local scope leaves an unrelated project untouched, requiring its own separate setup. User scope is the one that follows a developer across every project, which is the opposite of what's wanted here; Project scope is for the whole team via a committed file, not a personal experiment; and Local scope doesn't leak into other projects the way the last option describes."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_mcpscope_1",
+          "q": "An MCP server calls out to a hosted API over the network rather than running as a process on the developer's own machine. Which transport does claude mcp add wire it up with, and which transport would a local script-based server use instead?",
+          "options": [
+            "HTTP for the hosted/remote server; Stdio for a server that runs as a local process on the developer's machine.",
+            "Stdio for the hosted/remote server, since Stdio is the default transport claude mcp add falls back to when none is specified.",
+            "Both transports work identically for either case, and the choice only affects which port the server listens on locally.",
+            "HTTP for both cases, since Stdio was deprecated in favor of HTTP for all MCP servers regardless of where they run."
+          ],
+          "correct": 0,
+          "explain": "HTTP is the transport for something remote or hosted, and Stdio is for a local process — that's the whole basis for the split, so a hosted API server uses HTTP and a local script-based server uses Stdio. The transports aren't interchangeable defaults, and Stdio was not deprecated; both remain live options depending on where the server actually runs."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_mcp_context_cost",
+      "knowledgePoints": [
+        {
+          "id": "kp_mcpcost_1",
+          "name": "Paying for tools you never call",
+          "keyPrerequisites": [
+            "mt_mcp_scoping_cc"
+          ],
+          "teach": "<p class='kp-key'>Every configured MCP server's tool definitions load into context whether that session ever calls them or not — connected is a cost, used is not required.</p><p>This is a straightforward tax: six servers connected means six servers' worth of tool descriptions sitting in context from the first turn, even if a given session only ever touches two of them. Disabling a server you're not using in this session (via <code>/mcp</code>) removes that tax immediately, even though the tools were never called.</p><p>Once MCP tool definitions cross roughly <strong>10% of the context window</strong>, Claude Code auto-switches to <strong>tool search mode</strong> — instead of holding every tool definition loaded, it discovers tools on demand as they become relevant. That trades some reliability (a tool found by search is a little less certain to be the right one than a full definition sitting in context) for a lot of context space back.</p><p>Two mitigations beyond disabling unused servers: prefer a CLI equivalent (<code>gh</code>, <code>aws</code>) when one already exists, since it carries no persistent tool-definition cost at all; or reach for a Skill instead of an MCP server, since a Skill's content only loads in full once it's actually relevant.</p>",
+          "questions": [
+            {
+              "id": "q_mcpcost_1a",
+              "q": "A project has six MCP servers connected, but a particular debugging session only ever calls tools from two of them. What is the context cost of the other four servers during that session, and what's the most direct fix?",
+              "options": [
+                "Zero cost, since Claude Code only loads a server's tool definitions into context the first time one of its tools is actually called.",
+                "A small one-time cost paid once at session start, after which the unused servers' tool definitions are automatically evicted from context entirely.",
+                "No cost to context, but each unused server still consumes a background API quota that counts against the project's usage limits.",
+                "Their tool definitions are already loaded into context regardless of use; disabling the four unused servers for the session removes that cost."
+              ],
+              "correct": 3,
+              "explain": "Configured servers load their tool definitions into context whether or not their tools get called, so all four unused servers are already costing context space for the entire session — disabling them is what actually removes that cost. Definitions aren't loaded lazily on first call, they aren't auto-evicted after some initial window, and the cost in question is context space, not a separate API quota."
+            },
+            {
+              "id": "q_mcpcost_1b",
+              "q": "As a project accumulates more and more connected MCP servers, at what point does Claude Code change how it handles tool discovery, and what does that change actually trade away?",
+              "options": [
+                "Once server count exceeds ten, it stops accepting new MCP connections entirely until an existing one is removed via /mcp.",
+                "There's no such threshold at all — Claude Code always holds every connected server's full tool definitions in context no matter how many are ever configured.",
+                "Once MCP tool definitions exceed roughly 10% of the context window, it switches to discovering tools on demand, trading some reliability for context space.",
+                "Once total token usage for the session crosses 50%, it pauses tool calls entirely until the developer manually runs /compact."
+              ],
+              "correct": 2,
+              "explain": "The switch is triggered by MCP tool definitions crossing roughly 10% of the context window, and what changes is discovery becoming on-demand ('tool search mode') instead of everything staying fully loaded — a real but modest reliability cost in exchange for real context space back. There's no hard connection-count cap, no unconditional 'always fully loaded' behavior regardless of scale, and no session-wide pause tied to overall token usage."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_mcpcost_1",
+          "q": "A project relies on the gh CLI being available in every session's environment, and a teammate proposes also connecting a GitHub MCP server so 'the agent has a proper tool interface' for the same operations gh already covers. What's the most direct objection to adding it?",
+          "options": [
+            "MCP servers can't actually be scoped to a project the way .mcp.json claims, so the new server would silently become available in every unrelated project too.",
+            "It would duplicate functionality gh already provides while adding a persistent tool-definition cost to context that the CLI equivalent doesn't carry.",
+            "GitHub specifically blocks MCP servers from being connected alongside CLI tools that hit the same API, so the connection would simply fail.",
+            "MCP servers can only be added at User scope, so the new server would be tied to one developer's account instead of the whole team."
+          ],
+          "correct": 1,
+          "explain": "Preferring a CLI equivalent when one already exists is exactly the point — gh already does the job without paying a persistent tool-definition tax, so adding a redundant MCP server is pure cost for no new capability. Project scoping does work as described elsewhere in this section, GitHub imposes no such technical block, and MCP servers aren't restricted to User scope only."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_tool_design_principle",
+      "knowledgePoints": [
+        {
+          "id": "kp_tooldesign_1",
+          "name": "Fewer, more general tools",
+          "keyPrerequisites": [
+            "mt_mcp_context_cost"
+          ],
+          "teach": "<p class='kp-key'>Claude Code's own toolset stays generic on purpose, so a handful of primitives can be combined creatively instead of needing a purpose-built tool for every task in advance.</p><p><code>bash</code>, <code>read</code>, <code>write</code>, <code>edit</code>, <code>glob</code>, and <code>grep</code> are not specialized to any one workflow — <code>bash</code> alone can do almost anything a narrow, task-specific tool could do, just composed rather than pre-packaged. That generality is what lets Claude handle a request nobody designed a tool for ahead of time.</p><p>The same instinct explains preferring a CLI equivalent (<code>gh</code>, <code>aws</code>) over a dedicated MCP server when one already exists: it's not really about avoiding MCP, it's the same bet on a small set of general tools over an ever-growing set of narrow ones, each with its own definition sitting in context.</p>",
+          "questions": [
+            {
+              "id": "q_tooldesign_1a",
+              "q": "A team is designing custom tools for a coding agent and is debating between one broad bash tool versus a large library of narrow, purpose-built tools (create_branch, run_linter, search_imports, and so on) covering the same ground. What's the strongest argument for the broad, generic approach, in the spirit of how Claude Code's own toolset is built?",
+              "options": [
+                "Narrow tools always execute faster than an equivalent bash invocation, since they skip the shell's parsing and process-spawn overhead entirely.",
+                "Broad tools require no tool description at all whatsoever, since the model can always infer their full behavior directly from the tool's name without any further explanation.",
+                "Narrow tools cannot be listed in allowedTools alongside a bash tool, so a team is forced to pick one approach or the other for the whole agent.",
+                "A small set of generic, combinable primitives lets the agent handle tasks nobody anticipated in advance, instead of being limited to whatever narrow tools were pre-built."
+              ],
+              "correct": 3,
+              "explain": "The core argument for generic, combinable primitives is flexibility for the unanticipated case — a library of narrow tools only covers what someone thought to pre-build, while bash and friends can be composed for whatever comes up. Execution speed isn't the reasoning behind this design choice, every tool still needs a description regardless of how broad or narrow it is, and narrow and generic tools can coexist in the same allowedTools list."
+            },
+            {
+              "id": "q_tooldesign_1b",
+              "q": "A team already has the aws CLI available and reliable in their environment, and someone proposes connecting a dedicated AWS MCP server 'to give the agent first-class AWS tools.' Applying the same tool-design instinct Claude Code's own toolset follows, what's the most likely recommendation?",
+              "options": [
+                "Connect the MCP server anyway, since MCP tools are always inherently more reliable for the model to call correctly than an equivalent CLI command run through bash.",
+                "Skip the MCP server; the CLI equivalent already does the job without adding a persistent tool-definition cost to context for capability that already exists.",
+                "Connect the MCP server, but only at Local scope, since AWS-specific tools should never be shared with the rest of the team via .mcp.json.",
+                "Do neither — remove aws CLI access entirely and require every AWS operation to go through a narrow, purpose-built tool created for it."
+              ],
+              "correct": 1,
+              "explain": "This is the CLI-equivalent case directly: when a reliable CLI already covers the need, adding a dedicated MCP server duplicates that capability while adding a real, persistent context cost the CLI doesn't carry. MCP tools aren't inherently more reliable to call than an equivalent bash command, scoping AWS tools to Local specifically isn't the actual objection here, and the recommendation is to avoid redundant tooling, not to remove the CLI access that already works."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_tooldesign_1",
+          "q": "Why does bash, on its own, cover so much of what a purpose-built tool library would otherwise need dozens of narrow tools to do?",
+          "options": [
+            "Because Claude Code silently expands every bash call into the equivalent of several narrow tools behind the scenes before executing it.",
+            "Because bash calls skip the permission system entirely, so it can perform operations narrow tools are specifically blocked from doing.",
+            "Because bash is the only tool Claude Code ships with by default, so every other capability always has to be reachable through it in one way or another.",
+            "Because bash is a generic primitive that can be composed in whatever shape a given task requires, rather than being scoped to one predefined operation."
+          ],
+          "correct": 3,
+          "explain": "bash's coverage comes from being a general, composable primitive rather than being pre-scoped to one operation the way a narrow tool is — that's the whole point of preferring generic tools. Claude Code does not secretly expand bash calls into narrow-tool equivalents, bash is still subject to the same permission system as any other tool, and it ships alongside several other default tools (read, write, edit, glob, grep), not as the sole one."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_subagent_isolation_cc",
+      "knowledgePoints": [
+        {
+          "id": "kp_subagentiso_1",
+          "name": "Delegate the search, keep the answer",
+          "keyPrerequisites": [
+            "mt_agentic_loop_cc"
+          ],
+          "teach": "<p class='kp-key'>A subagent runs in its own isolated context window in parallel with the main session and hands back only a summary — the exploration trail never lands in the main conversation.</p><p>If a question only needs an answer — 'where is retry logic implemented' — and not the process that found it, delegating the search to a subagent keeps every file read and every grep result out of the main session entirely. The main session gets the summary; the search trail stays isolated and gets discarded with the subagent.</p><p>Create one via <code>/agents</code> → 'Create new agent.' Claude auto-generates the name, description, and prompt from what you describe — and that generated <strong>description does double duty</strong>: it documents the subagent for a human reading the config, and it's also what Claude checks against a future prompt to decide whether to invoke that subagent automatically, without being asked to by name.</p>",
+          "questions": [
+            {
+              "id": "q_subagentiso_1a",
+              "q": "You need to know which file in a large codebase implements retry logic, but you don't need or want to see every grep result and file read that goes into finding it. Why does delegating this to a subagent keep the main session cleaner than running the same searches directly in it?",
+              "options": [
+                "Because a subagent automatically deletes its own tool-call history from disk once it finishes, whereas the main session's full history is kept permanently.",
+                "Because subagents are billed separately from the main session, so running the search there avoids charging the exploration against your usage.",
+                "Because a subagent can only return a single line of output, forcing it to compress the answer down regardless of how it was found.",
+                "Because the subagent runs its exploration in an isolated context window and returns only a summary, so the search trail never enters the main conversation."
+              ],
+              "correct": 3,
+              "explain": "The isolation is the mechanism: everything the subagent does — reads, greps, dead ends — stays inside its own context window, and only the summary crosses back to the main session. It's not about deleting history from disk, billing differences, or an output-length limit forcing brevity; the main session simply never sees the trail in the first place."
+            },
+            {
+              "id": "q_subagentiso_1b",
+              "q": "After creating a subagent through /agents → 'Create new agent,' Claude auto-generates its name, description, and prompt from what you described. What role does that generated description play beyond documenting the subagent for a human reading the config later?",
+              "options": [
+                "It sets the subagent's maximum context window size, scaling proportionally with how long the generated description text is.",
+                "It has no functional role at all — it exists purely for the config file's own readability and plays no part in how or when the subagent gets invoked.",
+                "It determines whether the subagent is automatically invoked for a future prompt, since Claude checks new prompts against it without being asked by name.",
+                "It controls which permission mode the subagent inherits, mapping longer, more detailed descriptions to more permissive modes automatically."
+              ],
+              "correct": 2,
+              "explain": "The description does double duty: besides documenting the subagent, it's exactly what Claude checks a later prompt against to decide whether to invoke that subagent automatically. It does not size the context window, it is not purely cosmetic, and it has no bearing on which permission mode the subagent runs under."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_subagentiso_1",
+          "q": "Two teammates disagree about what crosses back into the main session after a subagent finishes a delegated research task. One says 'everything it read, so I can double-check its reasoning'; the other says 'just the summary it decided to report.' Which is correct?",
+          "options": [
+            "Neither — subagents cannot return anything to the main session at all; their output is only visible in a separate, dedicated log file.",
+            "Just the summary; the full exploration trail (files read, searches run) stays inside the subagent's isolated context and is not carried back.",
+            "Everything it read; the isolated context window only limits what the subagent itself can see, not what it ultimately hands back to the main session.",
+            "It depends on the permission mode the main session is running under, with Manual mode being the only one that returns the full trail."
+          ],
+          "correct": 1,
+          "explain": "The summary is what crosses back — that's the entire point of isolating the subagent's context in the first place, keeping the exploration trail out of the main conversation. Subagents do return something to the main session (a summary, not nothing), the full trail specifically does not carry back regardless of how thorough the exploration was, and this isn't something permission mode changes."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_subagent_skill_preload",
+      "knowledgePoints": [
+        {
+          "id": "kp_skillpreload_1",
+          "name": "Preloaded means immediate, not progressive",
+          "keyPrerequisites": [
+            "mt_subagent_isolation_cc",
+            "mt_skill_frontmatter"
+          ],
+          "teach": "<p class='kp-key'>In the main conversation, a skill loads progressively — name and description first, full content only once it's relevant. Preloading one into a subagent via the skill key skips that: the entire skill loads immediately.</p><p>This difference is specifically about the loading path, not about whether the skill's content is available at all — both paths eventually give access to the full skill. In the main session, progressive loading avoids spending context on skills that never end up mattering for the conversation. A subagent configured with a specific skill preloaded doesn't need that caution: the subagent already exists to do that one job, so loading the whole skill upfront isn't wasted the way it would be for a general-purpose main session juggling many possible skills.</p>",
+          "questions": [
+            {
+              "id": "q_skillpreload_1a",
+              "q": "A skill is preloaded into a subagent via the skill key, versus that same skill being available to the main conversation the ordinary way. How does the skill's content actually enter each context differently?",
+              "options": [
+                "Identically in both cases — the skill key only changes which subagent is allowed to call the skill, not when its content loads.",
+                "In the main conversation, only a shortened summary of the skill ever loads; a subagent's skill key is what loads the true full content.",
+                "In the subagent, the full skill content loads immediately and completely; in the main conversation, only the name and description load until the skill becomes relevant.",
+                "In the subagent, only the skill's name loads at first; the main conversation is actually the one that always loads its own full content immediately on every single turn."
+              ],
+              "correct": 2,
+              "explain": "Preloading via the skill key loads the entire skill into the subagent right away, while the main conversation's ordinary path is progressive — name and description first, full content only once it's actually relevant. The two paths aren't identical, the main conversation doesn't receive a permanently shortened version, and the order in the fourth option has the two paths reversed."
+            },
+            {
+              "id": "q_skillpreload_1b",
+              "q": "Why is loading an entire skill's content immediately reasonable for a subagent configured with that skill preloaded, when the same immediate full-load approach would be wasteful as the default for the main conversation?",
+              "options": [
+                "Because a subagent's context window is inherently much larger than the main session's own, so the same amount of upfront skill content costs proportionally less to load there.",
+                "Because subagent context, unlike main-session context, is never counted against any context-window budget at all.",
+                "Because a preloaded subagent already exists to do that one job, so there's no uncertainty about relevance the way there is across a main session juggling many possible skills.",
+                "Because skill content preloaded into a subagent is automatically compressed to a fraction of its original size before loading."
+              ],
+              "correct": 2,
+              "explain": "The subagent was configured specifically to do one job, so there's no uncertainty about whether the preloaded skill will end up relevant — unlike the main session, where progressive loading exists precisely because many skills might never end up mattering to a given conversation. Subagent context windows aren't inherently larger, subagent context still counts against a budget just like any other context, and preloaded content isn't automatically compressed."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_skillpreload_1",
+          "q": "A subagent is created with a skill preloaded via the skill key specifically for a repeated code-scaffolding task. A teammate assumes this must mean the subagent's context window skips the progressive name-and-description stage the main conversation uses for skills. Is that assumption correct?",
+          "options": [
+            "Yes — preloading via the skill key is exactly what skips the progressive stage, loading the skill's full content immediately instead.",
+            "No — every skill, preloaded or not, always starts with only its name and description loaded, regardless of where it's used.",
+            "No — preloading only affects which tools the skill is allowed to call, not how much of its content is loaded at any point.",
+            "Yes, but only for subagents created through /agents; a subagent created any other way still loads progressively like the main session."
+          ],
+          "correct": 0,
+          "explain": "The assumption is correct: preloading a skill into a subagent via the skill key is exactly what bypasses the main conversation's progressive name-and-description stage, loading the full skill content immediately instead. It's not true that every skill always starts progressively regardless of context, preloading is about content loading rather than tool permissions, and this isn't limited to subagents created through one particular path."
+        }
+      ]
+    }
+  ]
+}
