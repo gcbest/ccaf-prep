@@ -1,0 +1,1283 @@
+{
+  "$comment": "Micro-topics for the community study guide (paullarionov/claude-certified-architect, guide_en.md). One topic per guide subsection, merged where two adjacent subsections form one teachable idea.",
+  "subject": "Community Guide: Claude Certified Architect",
+  "sourceSection": "paullarionov/claude-certified-architect guide_en.md",
+  "topics": [
+    {
+      "id": "mt_api_request_structure",
+      "type": "FACTUAL",
+      "cluster": "cl_api_fundamentals",
+      "name": "The Messages API request shape",
+      "description": "The fields every Claude Messages API call sends together — model, max_tokens, system, messages, tools, tool_choice — and why the full message history rides along on every single call.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "List the top-level fields a Messages API request carries and what each one controls.",
+        "Explain why a request must carry the full conversation history rather than just the newest turn."
+      ],
+      "assessmentPrompt": "A teammate's client only sends the newest user message on each call to save bandwidth. What breaks, and which field's job was that?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Guide §1.1 The Messages API request shape",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L120-L146"
+        }
+      ],
+      "centrality": 1,
+      "layer": 0
+    },
+    {
+      "id": "mt_message_roles",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_api_fundamentals",
+      "name": "Roles: user, assistant, and system-as-a-role",
+      "description": "Why there are only two conversational roles plus one instructional role, why tool results travel inside a user-role message rather than a dedicated 'tool' role, and the placement rules that govern a mid-conversation system message.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "State which role a tool_result content block is sent under, and why there is no separate tool role.",
+        "Give the placement rule that keeps a mid-conversation system message from splitting a tool_use/tool_result pair."
+      ],
+      "assessmentPrompt": "A tool result gets sent back as `{\"role\": \"tool\", ...}` and the API rejects it. What role should it have used instead, and where does the tool_result block live inside that message?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Guide §1.2 Roles: user, assistant, and system-as-a-role",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L147-L176"
+        }
+      ],
+      "centrality": 0.92,
+      "layer": 1
+    },
+    {
+      "id": "mt_stop_reason",
+      "type": "FACTUAL",
+      "cluster": "cl_api_fundamentals",
+      "name": "Reading stop_reason correctly",
+      "description": "The four stop_reason values a Messages API response can carry, what each one means for your code, and why tool_use and end_turn are the two that actually drive an agentic loop.",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "Match each stop_reason value to the action a caller should take.",
+        "Explain why max_tokens and stop_sequence do not belong in a loop's completion check."
+      ],
+      "assessmentPrompt": "A response comes back with stop_reason 'max_tokens' and your code treats it the same as 'end_turn', showing the (truncated) text to the user. What should have happened instead?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Guide §1.3 Reading stop_reason correctly",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L177-L189"
+        }
+      ],
+      "centrality": 0.68,
+      "layer": 2
+    },
+    {
+      "id": "mt_context_window_problems",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_api_fundamentals",
+      "name": "Three ways the context window fails you",
+      "description": "The lost-in-the-middle effect, tool-result accumulation from over-wide tool outputs, and the way progressive summarization quietly turns exact numbers into vague qualifiers like 'about' or 'a few'.",
+      "core": true,
+      "estMinutes": 10,
+      "evidence": [
+        "Name which of the three context-window problems a given symptom matches.",
+        "Explain why a 40-field tool response is a context problem even when every field is technically accurate."
+      ],
+      "assessmentPrompt": "After a long session gets compacted, a report that used to say '42% growth' now says 'growth of roughly forty percent, though this should be verified.' Which context-window problem produced that, and why?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Guide §1.5 Three ways the context window fails you",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L200-L217"
+        }
+      ],
+      "centrality": 0.12,
+      "layer": 2
+    },
+    {
+      "id": "mt_tool_use_basics",
+      "type": "FACTUAL",
+      "cluster": "cl_tool_use_guide",
+      "name": "What tool_use actually is",
+      "description": "tool_use is Claude emitting a structured request for your code to run — the model never executes anything itself; it names a tool and supplies arguments, and your application decides whether and how to run it.",
+      "core": true,
+      "estMinutes": 6,
+      "evidence": [
+        "State what the model does and does not do when it 'calls a tool.'",
+        "Identify who is responsible for actually executing a tool_use request."
+      ],
+      "assessmentPrompt": "A candidate answer claims 'the model runs the tool code sandboxed inside the API.' What is actually true, and who runs the tool?",
+      "standards": [
+        "ccaf:d2"
+      ],
+      "sources": [
+        {
+          "label": "Guide §2.1 What tool_use actually is",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L222-L225"
+        }
+      ],
+      "centrality": 0.4,
+      "layer": 3
+    },
+    {
+      "id": "mt_tool_description_selection",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_tool_use_guide",
+      "name": "The description is the selection mechanism",
+      "description": "Claude picks which tool to call based on its description, not its name — so two tools with overlapping descriptions get confused for each other, and a minimal description like 'retrieves customer information' invites exactly that.",
+      "core": false,
+      "estMinutes": 10,
+      "evidence": [
+        "Explain why two tools with near-identical descriptions get misrouted even when their names differ.",
+        "List what a strong tool description should include beyond a one-line summary."
+      ],
+      "assessmentPrompt": "Production logs show requests meant for a document-analysis tool routing to a web-search tool 45% of the time. Both tools' descriptions say roughly 'analyzes content and extracts key information.' What is the root cause, and what fixes it?",
+      "standards": [
+        "ccaf:d2"
+      ],
+      "sources": [
+        {
+          "label": "Guide §2.2 The description is the selection mechanism",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L226-L258"
+        }
+      ],
+      "centrality": 0,
+      "layer": 4
+    },
+    {
+      "id": "mt_tool_choice_modes",
+      "type": "FACTUAL",
+      "cluster": "cl_tool_use_guide",
+      "name": "auto, any, and forced tool_choice",
+      "description": "The three tool_choice values — auto (model decides), any (must call some tool), and a named tool (must call that specific one) — and which scenario each is built for.",
+      "core": false,
+      "estMinutes": 8,
+      "evidence": [
+        "Match 'auto', 'any', and a forced tool name to the scenario each is designed to guarantee.",
+        "Explain why tool_choice: any still guarantees structured output even though it doesn't pick which tool."
+      ],
+      "assessmentPrompt": "A pipeline needs `extract_metadata` to run before any other step, every time, with no exceptions. Which tool_choice setting guarantees that, and why would 'auto' not be reliable enough?",
+      "standards": [
+        "ccaf:d2"
+      ],
+      "sources": [
+        {
+          "label": "Guide §2.3 auto, any, and forced tool_choice",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L259-L272"
+        }
+      ],
+      "centrality": 0,
+      "layer": 4
+    },
+    {
+      "id": "mt_schema_design_errors",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_tool_use_guide",
+      "name": "Schema design, and what schemas can't fix",
+      "description": "Nullable fields instead of forced fabrication, 'other'/'unclear' enum escapes so data isn't lost or forced into the wrong bucket, required-vs-optional discipline, and the hard line between syntax errors (a schema eliminates) and semantic errors (a schema cannot catch).",
+      "core": true,
+      "estMinutes": 12,
+      "evidence": [
+        "Explain why marking a field required when its data is sometimes absent causes fabrication.",
+        "Give an example of a semantic error that a valid JSON schema response can still contain."
+      ],
+      "assessmentPrompt": "An extraction schema marks `discount_percentage` as required, and on documents with no discount the model starts inventing a value like 0 or a plausible-looking guess. What schema change fixes this, and why doesn't tightening the field's type help?",
+      "standards": [
+        "ccaf:d2",
+        "ccaf:d3"
+      ],
+      "sources": [
+        {
+          "label": "Guide §2.4-2.5 Schema design, and what schemas can't fix",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L273-L326"
+        }
+      ],
+      "centrality": 0.14,
+      "layer": 4
+    },
+    {
+      "id": "mt_agentic_loop_guide",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_agent_sdk_guide",
+      "name": "The agentic loop's only real branch",
+      "description": "Send, receive, check stop_reason, act — and the three tempting-but-wrong completion signals (parsing assistant text for 'done,' an iteration cap, or checking for textual output) that all fail where stop_reason == end_turn does not.",
+      "core": true,
+      "estMinutes": 10,
+      "evidence": [
+        "Trace the four steps of the agentic loop and where stop_reason is checked.",
+        "Explain why an iteration-limit stop condition is an anti-pattern rather than a safety net."
+      ],
+      "assessmentPrompt": "An agent implementation stops looping once the assistant's response contains the string 'Task completed.' Why is this unreliable, and what should it check instead?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Guide §3.1 The agentic loop's only real branch",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L331-L352"
+        }
+      ],
+      "centrality": 0.24,
+      "layer": 3
+    },
+    {
+      "id": "mt_agent_definition",
+      "type": "FACTUAL",
+      "cluster": "cl_agent_sdk_guide",
+      "name": "AgentDefinition's four load-bearing fields",
+      "description": "name and description identify an agent, system_prompt gives it instructions, and allowed_tools enforces least privilege — the same object shapes both a coordinator (allowed_tools includes Task) and a subagent (it doesn't).",
+      "core": false,
+      "estMinutes": 8,
+      "evidence": [
+        "Name the AgentDefinition field that enforces least privilege and explain how.",
+        "Explain what distinguishes a coordinator's AgentDefinition from a subagent's."
+      ],
+      "assessmentPrompt": "Two AgentDefinitions look almost identical, but only one has \"Task\" in allowed_tools. What role does that one play, and why can't the other one spawn subagents?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Guide §3.2 AgentDefinition's four load-bearing fields",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L353-L372"
+        }
+      ],
+      "centrality": 0.04,
+      "layer": 4
+    },
+    {
+      "id": "mt_hub_and_spoke_guide",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_agent_sdk_guide",
+      "name": "Hub-and-spoke and isolated context",
+      "description": "A coordinator decomposes, delegates, aggregates, and handles errors; subagents do not automatically inherit its conversation history, do not share memory with each other, and route every result back through the hub rather than to one another directly.",
+      "core": true,
+      "estMinutes": 10,
+      "evidence": [
+        "List the five responsibilities that belong to the coordinator, not the subagents.",
+        "Explain why a subagent that 'seems to know' something from an earlier call is a sign of a bug, not a feature."
+      ],
+      "assessmentPrompt": "A colleague proposes letting the document-analysis subagent send its results straight to the synthesis subagent, skipping the coordinator, to save a round trip. What does the hub-and-spoke topology lose if you do that?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Guide §3.3 Hub-and-spoke and isolated context",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L373-L397"
+        }
+      ],
+      "centrality": 0.02,
+      "layer": 5
+    },
+    {
+      "id": "mt_task_tool_context",
+      "type": "PROCEDURAL",
+      "cluster": "cl_agent_sdk_guide",
+      "name": "Spawning with the Task tool: explicit context, parallel calls",
+      "description": "A Task prompt must carry every piece of context the subagent needs — it inherits nothing — and a coordinator can issue several Task calls in one response to run subagents concurrently rather than one at a time.",
+      "core": false,
+      "estMinutes": 10,
+      "evidence": [
+        "Explain why 'Analyze the document' is an incomplete Task prompt even though it's a valid instruction.",
+        "Describe how a coordinator runs three subagents in parallel rather than sequentially."
+      ],
+      "assessmentPrompt": "A Task prompt reads only \"Summarize the findings.\" The subagent has no document, no prior search results, and no output format. What specifically is missing, and what principle does it violate?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Guide §3.4 Spawning with the Task tool: explicit context, parallel calls",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L398-L431"
+        }
+      ],
+      "centrality": 0,
+      "layer": 6
+    },
+    {
+      "id": "mt_hooks_vs_prompts_guide",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_agent_sdk_guide",
+      "name": "Hooks are code that runs; prompts are requests",
+      "description": "A hook (PostToolUse to normalize data, PreToolUse to block a policy violation) guarantees its behavior on every single occurrence; a system-prompt instruction is honored at high but non-zero probability — the deciding question is whether a failure has financial, legal, or safety consequences.",
+      "core": true,
+      "estMinutes": 10,
+      "evidence": [
+        "State the one-sentence test for choosing a hook over a prompt instruction.",
+        "Give an example of a rule that belongs in a hook and one that belongs in a prompt, and say why."
+      ],
+      "assessmentPrompt": "A refund-limit rule ('never approve a refund over $500 without approval') currently lives only in the system prompt, and it's occasionally skipped in production. Why would moving it to a PreToolUse hook actually close the gap, where a stronger prompt wouldn't?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Guide §3.5 Hooks are code that runs; prompts are requests",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L432-L466"
+        }
+      ],
+      "centrality": 0.08,
+      "layer": 4
+    },
+    {
+      "id": "mt_mcp_overview",
+      "type": "FACTUAL",
+      "cluster": "cl_mcp_guide",
+      "name": "MCP's three primitives",
+      "description": "Tools (actions the agent can take), resources (data the agent can read for context), and prompts (predefined templates) are the three things a Model Context Protocol server can expose, and connecting to a server makes all of them available at once.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Name MCP's three primitive types and what each is for.",
+        "State what happens automatically when you connect to a new MCP server."
+      ],
+      "assessmentPrompt": "A team wants an agent to read a database schema for context without taking any action on it. Which MCP primitive is that, and how is it different from a tool?",
+      "standards": [
+        "ccaf:d2"
+      ],
+      "sources": [
+        {
+          "label": "Guide §4.1 MCP's three primitives",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L471-L478"
+        }
+      ],
+      "centrality": 0.18,
+      "layer": 4
+    },
+    {
+      "id": "mt_mcp_server_config",
+      "type": "PROCEDURAL",
+      "cluster": "cl_mcp_guide",
+      "name": "Project vs. user MCP configuration",
+      "description": "`.mcp.json` at the project root is version-controlled and shared with every contributor, using `${VAR}` expansion so secrets never get committed; `~/.claude.json` is personal, unshared, and meant for experimentation.",
+      "core": false,
+      "estMinutes": 8,
+      "evidence": [
+        "State which of the two configuration files is checked into version control and which is not.",
+        "Explain how `.mcp.json` supplies secrets without committing them."
+      ],
+      "assessmentPrompt": "A new team member clones the repo and an MCP server that everyone else has doesn't show up for them. Given that `.mcp.json` is present in the repo, what's the most likely reason, and where would you look?",
+      "standards": [
+        "ccaf:d2"
+      ],
+      "sources": [
+        {
+          "label": "Guide §4.3 Project vs. user MCP configuration",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L486-L524"
+        }
+      ],
+      "centrality": 0,
+      "layer": 5
+    },
+    {
+      "id": "mt_mcp_iserror",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_mcp_guide",
+      "name": "isError: structured vs. generic MCP failures",
+      "description": "A structured `isError: true` response carries an error category, a retryable flag, the attempted input, and any partial results; a generic `{\"isError\": true, \"content\": \"Operation failed\"}` gives the agent nothing to decide with.",
+      "core": false,
+      "estMinutes": 8,
+      "evidence": [
+        "List the fields a structured MCP error response should carry beyond isError itself.",
+        "Explain what decision a generic error message leaves an agent unable to make."
+      ],
+      "assessmentPrompt": "An MCP tool fails and returns `{\"isError\": true, \"content\": \"Operation failed\"}`. What can't the calling agent decide because of this shape, and what would fix it?",
+      "standards": [
+        "ccaf:d2"
+      ],
+      "sources": [
+        {
+          "label": "Guide §4.4 isError: structured vs. generic MCP failures",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L525-L554"
+        }
+      ],
+      "centrality": 0.12,
+      "layer": 5
+    },
+    {
+      "id": "mt_mcp_resources",
+      "type": "FACTUAL",
+      "cluster": "cl_mcp_guide",
+      "name": "Resources as a map, not a search",
+      "description": "An MCP resource — a content catalog, a database schema, a documentation set — hands the agent an immediate picture of what data exists, so it doesn't have to spend exploratory tool calls discovering the same thing.",
+      "core": false,
+      "estMinutes": 6,
+      "evidence": [
+        "Explain what an agent has to do instead when a resource isn't available for a given dataset.",
+        "Give an example of data suited to a resource rather than a tool."
+      ],
+      "assessmentPrompt": "Without a resource exposing the database schema, how does an agent typically end up discovering table and column names, and what does that cost compared to just reading the resource?",
+      "standards": [
+        "ccaf:d2"
+      ],
+      "sources": [
+        {
+          "label": "Guide §4.5 Resources as a map, not a search",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L555-L567"
+        }
+      ],
+      "centrality": 0,
+      "layer": 5
+    },
+    {
+      "id": "mt_claudemd_hierarchy_guide",
+      "type": "FACTUAL",
+      "cluster": "cl_claude_code_guide",
+      "name": "CLAUDE.md's three levels",
+      "description": "User-level (`~/.claude/CLAUDE.md`, personal, not shared), project-level (`.claude/CLAUDE.md` or a root CLAUDE.md, version-controlled, applies to every contributor), and directory-level (scoped to that subtree) — and the classic mistake of putting shared standards at the wrong level.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Match each CLAUDE.md level to whether it's shared via version control.",
+        "Diagnose why a new teammate isn't receiving project conventions that live in someone else's ~/.claude/CLAUDE.md."
+      ],
+      "assessmentPrompt": "A new hire says they aren't seeing the team's coding standards even though a senior engineer swears they wrote them into CLAUDE.md. What level did the senior engineer most likely use by mistake?",
+      "standards": [
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Guide §5.1 CLAUDE.md's three levels",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L572-L593"
+        }
+      ],
+      "centrality": 0.06,
+      "layer": 2
+    },
+    {
+      "id": "mt_path_imports",
+      "type": "PROCEDURAL",
+      "cluster": "cl_claude_code_guide",
+      "name": "@path imports and their limits",
+      "description": "`@path` pulls another file's content into CLAUDE.md at that point, resolved relative to the file containing the import (not the working directory), with a maximum nesting depth of five — the mechanism that keeps standards from being duplicated across every package's CLAUDE.md.",
+      "core": false,
+      "estMinutes": 6,
+      "evidence": [
+        "State what an @path is resolved relative to.",
+        "State the maximum import nesting depth."
+      ],
+      "assessmentPrompt": "A CLAUDE.md at `packages/api/CLAUDE.md` writes `@./standards/testing.md`. Relative to which directory does Claude Code resolve that path?",
+      "standards": [
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Guide §5.2 @path imports and their limits",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L594-L613"
+        }
+      ],
+      "centrality": 0,
+      "layer": 3
+    },
+    {
+      "id": "mt_claude_rules_guide",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_claude_code_guide",
+      "name": ".claude/rules/ and path-scoped loading",
+      "description": "A rule file's YAML frontmatter `paths` glob determines when it loads — only when Claude Code touches a matching file — which saves context on irrelevant rules and lets one rule apply across scattered files (like every `*.test.ts`) regardless of directory, unlike a directory-scoped CLAUDE.md.",
+      "core": false,
+      "estMinutes": 10,
+      "evidence": [
+        "Explain what triggers a `.claude/rules/` file to load, versus a directory-level CLAUDE.md.",
+        "Choose between `.claude/rules/` with a `paths` glob and directory-level CLAUDE.md for a convention that applies to test files scattered across many directories."
+      ],
+      "assessmentPrompt": "Test conventions need to apply to every `*.test.tsx` file no matter which directory it lives in. Why does a `.claude/rules/testing.md` with a `paths` glob fit better here than a directory-level CLAUDE.md, and what would the directory-level version fail to cover?",
+      "standards": [
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Guide §5.3 .claude/rules/ and path-scoped loading",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L614-L655"
+        }
+      ],
+      "centrality": 0,
+      "layer": 3
+    },
+    {
+      "id": "mt_commands_skills_guide",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_claude_code_guide",
+      "name": "Commands, skills, and always-on vs. on-demand",
+      "description": "Slash commands (`.claude/commands/`) and skills (`.claude/skills/`, configured via SKILL.md frontmatter) both create `/name` invocations for on-demand tasks; CLAUDE.md stays always-loaded for standards that apply on every turn — the choice between them is invocation frequency, not capability.",
+      "core": false,
+      "estMinutes": 10,
+      "evidence": [
+        "State the difference in when a skill's instructions load versus CLAUDE.md's.",
+        "Decide whether a one-off 'generate a test file' workflow belongs in CLAUDE.md or a skill, and why."
+      ],
+      "assessmentPrompt": "A team keeps adding 'when generating tests, do X' instructions into their root CLAUDE.md, and the file is getting long and diluting the rules that matter every turn. What's the better home for that instruction, and why?",
+      "standards": [
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Guide §5.4-5.5 Commands, skills, and always-on vs. on-demand",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L656-L715"
+        }
+      ],
+      "centrality": 0,
+      "layer": 3
+    },
+    {
+      "id": "mt_planning_mode_guide",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_claude_code_guide",
+      "name": "Planning mode vs. direct execution",
+      "description": "Planning mode investigates with read-only tools and produces an approved plan before any change is made — suited to large, ambiguous, or architecturally significant changes — while direct execution suits a single-file fix with a clear cause; the Explore subagent keeps the investigation's verbose output out of the main context either way.",
+      "core": true,
+      "estMinutes": 10,
+      "evidence": [
+        "List two situations where planning mode is warranted and one where direct execution is enough.",
+        "Explain what the Explore subagent protects the main session from during a planning-mode investigation."
+      ],
+      "assessmentPrompt": "A request will touch roughly 45 files as part of migrating away from a deprecated library. Should this run under planning mode or direct execution, and what's the argument for that choice specifically at this scale?",
+      "standards": [
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Guide §5.6 Planning mode vs. direct execution",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L716-L745"
+        }
+      ],
+      "centrality": 0.06,
+      "layer": 4
+    },
+    {
+      "id": "mt_compact_memory",
+      "type": "FACTUAL",
+      "cluster": "cl_claude_code_guide",
+      "name": "/compact and /memory",
+      "description": "`/compact` summarizes prior history to reclaim context window space, at the risk of losing exact numbers and dates in the process; `/memory` opens CLAUDE.md itself for editing so notes and preferences persist automatically into future sessions.",
+      "core": false,
+      "estMinutes": 6,
+      "evidence": [
+        "State what /compact risks losing when it summarizes history.",
+        "Explain what /memory actually edits and why that makes it persist across sessions."
+      ],
+      "assessmentPrompt": "After a long investigation session runs /compact to free up context, a fact that was previously '42% of requests' now reads as 'a large share of requests.' What happened, and which command caused it?",
+      "standards": [
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Guide §5.7-5.8 /compact and /memory",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L746-L760"
+        }
+      ],
+      "centrality": 0,
+      "layer": 3
+    },
+    {
+      "id": "mt_cli_ci_sessions",
+      "type": "PROCEDURAL",
+      "cluster": "cl_claude_code_guide",
+      "name": "Headless CI usage and session forking",
+      "description": "`-p`/`--print` runs Claude Code non-interactively for CI, `--output-format json` plus `--json-schema` makes the result machine-parseable for automated PR comments, `--resume` continues a named session (risking stale tool results if files changed since), and `fork_session` branches a shared investigation into independently diverging approaches.",
+      "core": false,
+      "estMinutes": 12,
+      "evidence": [
+        "Explain why `-p` is the only correct way to run Claude Code inside a CI pipeline.",
+        "Distinguish when to use --resume versus when to start a fresh session with a short summary instead."
+      ],
+      "assessmentPrompt": "A CI pipeline needs a PR reviewed and the result posted as inline comments automatically, with no human present to respond to prompts. Which flags make this possible, and what does each one contribute?",
+      "standards": [
+        "ccaf:d4"
+      ],
+      "sources": [
+        {
+          "label": "Guide §5.9-5.10 Headless CI usage and session forking",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L761-L821"
+        }
+      ],
+      "centrality": 0,
+      "layer": 5
+    },
+    {
+      "id": "mt_few_shot_patterns",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_prompt_eng_advanced",
+      "name": "Few-shot examples over vague descriptions",
+      "description": "Two to four input/output examples remove the ambiguity a phrase like 'be more precise' leaves open — especially for informal measurements, mixed citation formats, and acceptable-vs-flagged code — and normalization rules in the prompt (dates to ISO 8601, currency to amount+code) prevent the JSON from being syntactically valid but semantically inconsistent.",
+      "core": false,
+      "estMinutes": 12,
+      "evidence": [
+        "Explain why an example resolves ambiguity that a text instruction leaves open.",
+        "Give an example of a normalization rule that prevents a semantic (not syntax) error."
+      ],
+      "assessmentPrompt": "An extraction prompt keeps returning dates in whatever format the source text used ('next Tuesday,' 'March 5th,' '03/05'). What kind of prompt addition fixes this, and why is a stronger instruction alone less reliable than showing worked examples?",
+      "standards": [
+        "ccaf:d3"
+      ],
+      "sources": [
+        {
+          "label": "Guide §6.1 Few-shot examples over vague descriptions",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L827-L907"
+        }
+      ],
+      "centrality": 0.1,
+      "layer": 5
+    },
+    {
+      "id": "mt_explicit_criteria",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_prompt_eng_advanced",
+      "name": "Explicit criteria replace vague instructions",
+      "description": "'Be conservative, report only high-confidence findings' is not a criterion; a numbered list of exactly what qualifies (and an explicit not-this list) is — the same discipline extends to severity levels, where each tier gets a concrete example rather than a one-word label.",
+      "core": true,
+      "estMinutes": 10,
+      "evidence": [
+        "Rewrite a vague review instruction as a numbered, falsifiable criterion.",
+        "Explain why pairing each severity tier with a concrete example reduces disagreement between runs."
+      ],
+      "assessmentPrompt": "A code-review prompt says 'flag comments that seem outdated.' Two runs on the same file disagree about which comments qualify. What's missing from the instruction, and what would an explicit-criteria version look like?",
+      "standards": [
+        "ccaf:d3"
+      ],
+      "sources": [
+        {
+          "label": "Guide §6.2 Explicit criteria replace vague instructions",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L908-L946"
+        }
+      ],
+      "centrality": 0.08,
+      "layer": 6
+    },
+    {
+      "id": "mt_prompt_chaining_vs_dynamic",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_prompt_eng_advanced",
+      "name": "Prompt chaining vs. dynamic decomposition",
+      "description": "Chaining runs a fixed sequence of focused steps (one file at a time, then an integration pass) to avoid attention dilution on predictable, repeatable tasks; dynamic decomposition generates its next subtask from the current one's results, for open-ended investigations where the scope isn't known up front.",
+      "core": false,
+      "estMinutes": 10,
+      "evidence": [
+        "Explain what attention dilution is and why splitting a task into a chain avoids it.",
+        "Decide between chaining and dynamic decomposition for a task whose subtasks only become clear mid-investigation."
+      ],
+      "assessmentPrompt": "A 14-file pull request gets reviewed in a single prompt, and the review comments a clear issue in one file while missing an equally clear one in another. What phenomenon is this, and which strategy — chaining or dynamic decomposition — is the fix, and why that one specifically?",
+      "standards": [
+        "ccaf:d3"
+      ],
+      "sources": [
+        {
+          "label": "Guide §6.3 Prompt chaining vs. dynamic decomposition",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L947-L970"
+        }
+      ],
+      "centrality": 0.04,
+      "layer": 7
+    },
+    {
+      "id": "mt_interview_pattern_guide",
+      "type": "PROCEDURAL",
+      "cluster": "cl_prompt_eng_advanced",
+      "name": "The interview pattern",
+      "description": "Before implementing, Claude asks clarifying questions when the domain is unfamiliar, the implications are non-obvious (cache invalidation strategy, failure-mode tolerance), or multiple viable approaches exist and the right one depends on context it doesn't have yet.",
+      "core": false,
+      "estMinutes": 8,
+      "evidence": [
+        "List two conditions under which asking clarifying questions before implementing is warranted.",
+        "Explain why the interview pattern is inappropriate for a well-understood, single-approach task."
+      ],
+      "assessmentPrompt": "A request to 'add caching to the API' arrives with no detail on invalidation strategy, staleness tolerance, or scope (per-user vs. global). Why does the interview pattern fit here, and what would asking nothing upfront risk?",
+      "standards": [
+        "ccaf:d3"
+      ],
+      "sources": [
+        {
+          "label": "Guide §6.4 The interview pattern",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L971-L987"
+        }
+      ],
+      "centrality": 0,
+      "layer": 7
+    },
+    {
+      "id": "mt_validation_retry_selfcorrect",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_prompt_eng_advanced",
+      "name": "Validate, retry with feedback, self-correct",
+      "description": "A retry that includes the original document, the prior (wrong) extraction, and the specific error ('total=150 but line items sum to 145') fixes format and structural errors and arithmetic slips; it cannot fix data that's genuinely absent from the source or context that lives in a document never provided — and a self-correction pattern that asks the model to compute and compare both a stated and calculated value catches the same class of error before you even retry.",
+      "core": false,
+      "estMinutes": 12,
+      "evidence": [
+        "List what a retry-with-feedback prompt must include beyond just 'try again.'",
+        "Give an example of a validation failure that retrying will not fix, and explain why."
+      ],
+      "assessmentPrompt": "Extraction validation fails because a total doesn't match the sum of line items. A retry prompt is built that just says 'the previous answer was wrong, try again.' What's missing from it, and why would that omission make the retry no more likely to succeed than the first attempt?",
+      "standards": [
+        "ccaf:d3"
+      ],
+      "sources": [
+        {
+          "label": "Guide §6.5-6.6 Validate, retry with feedback, self-correct",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L988-L1036"
+        }
+      ],
+      "centrality": 0,
+      "layer": 5
+    },
+    {
+      "id": "mt_batches_overview",
+      "type": "FACTUAL",
+      "cluster": "cl_batches",
+      "name": "The Batches API's trade-offs",
+      "description": "A 50% cost saving against a processing window of up to 24 hours with no latency SLA, no multi-turn tool calling (one request in, one response out), correlated to your own data via `custom_id` — and choosing it comes down to whether anyone is waiting on the result right now.",
+      "core": false,
+      "estMinutes": 8,
+      "evidence": [
+        "State the batch API's cost saving and its processing-time ceiling.",
+        "Decide between the Batch API and the synchronous API for a task where a developer is waiting on the result."
+      ],
+      "assessmentPrompt": "A weekly security audit and a pre-merge PR check both need Claude's help. Which one uses the Batch API, and what property of the other one rules batching out?",
+      "standards": [
+        "ccaf:d3"
+      ],
+      "sources": [
+        {
+          "label": "Guide §7.1-7.2 The Batches API's trade-offs",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L1041-L1061"
+        }
+      ],
+      "centrality": 0.04,
+      "layer": 1
+    },
+    {
+      "id": "mt_batches_custom_id_failures",
+      "type": "PROCEDURAL",
+      "cluster": "cl_batches",
+      "name": "custom_id and partial batch failure",
+      "description": "Every batch request carries a `custom_id` linking it back to your source document; when some requests in a batch fail (say, from exceeding the context limit), you identify them by that id, adjust your approach for just those, and resubmit only the failures rather than the whole batch.",
+      "core": false,
+      "estMinutes": 8,
+      "evidence": [
+        "Explain what custom_id lets you avoid doing after a partial batch failure.",
+        "Describe the recovery sequence for 5 failed documents out of a batch of 100."
+      ],
+      "assessmentPrompt": "95 of 100 batched documents succeed; 5 fail on context-limit errors. What does custom_id let you avoid re-doing, and what's the right next step for just the 5?",
+      "standards": [
+        "ccaf:d3"
+      ],
+      "sources": [
+        {
+          "label": "Guide §7.3-7.4 custom_id and partial batch failure",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L1062-L1087"
+        }
+      ],
+      "centrality": 0.02,
+      "layer": 2
+    },
+    {
+      "id": "mt_batches_sla",
+      "type": "PROCEDURAL",
+      "cluster": "cl_batches",
+      "name": "Planning a batch submission window against a deadline",
+      "description": "Given a deadline and the batch API's up-to-24-hour window with no SLA guarantee, the latest safe submission time is deadline minus 24 hours — and a recurring deadline needs a matching recurring submission cadence carved out of that same margin.",
+      "core": false,
+      "estMinutes": 8,
+      "evidence": [
+        "Compute the latest safe submission time for a given deadline and the batch API's window.",
+        "Explain why the batch API's lack of an SLA guarantee changes how that margin should be planned."
+      ],
+      "assessmentPrompt": "A result is needed within 30 hours of a nightly trigger. Given the batch API's up-to-24-hour window, what is the latest point in that 30-hour window the batch can still be submitted?",
+      "standards": [
+        "ccaf:d3"
+      ],
+      "sources": [
+        {
+          "label": "Guide §7.5 Planning a batch submission window against a deadline",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L1088-L1096"
+        }
+      ],
+      "centrality": 0,
+      "layer": 3
+    },
+    {
+      "id": "mt_decomposition_strategies",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_decomposition",
+      "name": "Fixed pipelines vs. dynamic adaptive decomposition",
+      "description": "A fixed pipeline defines every step up front for predictable, template-shaped work and buys stability and reproducibility; dynamic decomposition generates the next subtask from what the current one just found, for open-ended work whose full scope isn't known at the start.",
+      "core": false,
+      "estMinutes": 10,
+      "evidence": [
+        "Decide between a fixed pipeline and dynamic decomposition for a task whose steps are all known in advance.",
+        "Trace an example where a discovery mid-task (an unexpected external dependency) forces the plan to adapt."
+      ],
+      "assessmentPrompt": "'Add tests for a legacy codebase' turns up an undocumented dependency on an external API partway through. Was this ever a candidate for a fixed pipeline, and what does the mid-task discovery tell you about which strategy actually fits?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Guide §8.1-8.2 Fixed pipelines vs. dynamic adaptive decomposition",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L1099-L1129"
+        }
+      ],
+      "centrality": 0.02,
+      "layer": 8
+    },
+    {
+      "id": "mt_multipass_review",
+      "type": "PROCEDURAL",
+      "cluster": "cl_decomposition",
+      "name": "Multi-pass review for large pull requests",
+      "description": "A per-file first pass (one file per prompt) followed by a separate integration pass for cross-file issues avoids the attention dilution, inconsistent flagging, and missed bugs that come from reviewing 10+ files in a single pass.",
+      "core": false,
+      "estMinutes": 8,
+      "evidence": [
+        "List the two passes a multi-pass review splits into and what each one catches.",
+        "Explain why reviewing 14 files in one prompt produces inconsistent flagging across files."
+      ],
+      "assessmentPrompt": "A single-prompt review of a 14-file PR flags a pattern in one file but approves the same pattern in another. What review structure would have caught this, and which of its two passes is responsible for catching it?",
+      "standards": [
+        "ccaf:d1"
+      ],
+      "sources": [
+        {
+          "label": "Guide §8.3 Multi-pass review for large pull requests",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L1130-L1149"
+        }
+      ],
+      "centrality": 0,
+      "layer": 9
+    },
+    {
+      "id": "mt_escalation_triggers",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_escalation",
+      "name": "Reliable escalation triggers vs. unreliable ones",
+      "description": "An explicit request for a human, a policy gap, stalled progress, and a financial threshold (ideally hook-enforced) are clear triggers; sentiment analysis, self-rated model confidence, and a bolted-on classifier are not, because none of them reliably correlates with whether the case actually needs a human.",
+      "core": true,
+      "estMinutes": 12,
+      "evidence": [
+        "List two reliable escalation triggers and two unreliable ones.",
+        "Explain specifically why model self-rated confidence fails as an escalation signal."
+      ],
+      "assessmentPrompt": "A team proposes escalating whenever the model rates its own confidence below 7/10. Why does the guide call this an unreliable trigger, and what would be a more reliable signal for the same underlying concern?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Guide §9.1 Reliable escalation triggers vs. unreliable ones",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L1152-L1171"
+        }
+      ],
+      "centrality": 0.06,
+      "layer": 5
+    },
+    {
+      "id": "mt_escalation_patterns",
+      "type": "PROCEDURAL",
+      "cluster": "cl_escalation",
+      "name": "Immediate, attempted, and nuanced escalation",
+      "description": "An explicit request for a manager escalates immediately with no attempt to resolve first; a solvable complaint gets an attempt (and escalates only if that fails); a frustrated-but-not-yet-explicit customer gets acknowledgment and a proposed resolution first, escalating only if they reiterate the request for a human afterward.",
+      "core": false,
+      "estMinutes": 10,
+      "evidence": [
+        "Distinguish which of the three escalation patterns fits a customer who has not yet asked for a human.",
+        "Explain why acknowledging frustration before proposing a resolution is not the same as ignoring an escalation request."
+      ],
+      "assessmentPrompt": "A customer writes 'This is outrageous, I'm very unhappy with the quality!' without asking for a manager. Which escalation pattern applies, and what should happen before any decision to escalate?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Guide §9.2 Immediate, attempted, and nuanced escalation",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L1172-L1209"
+        }
+      ],
+      "centrality": 0.02,
+      "layer": 6
+    },
+    {
+      "id": "mt_structured_handoff",
+      "type": "PROCEDURAL",
+      "cluster": "cl_escalation",
+      "name": "A self-contained structured handoff",
+      "description": "A human operator handling an escalation typically never sees the full transcript — only the structured summary the agent hands off — so it must independently carry the customer, the issue, what was already tried, and a recommended action.",
+      "core": false,
+      "estMinutes": 8,
+      "evidence": [
+        "List what a structured handoff must include, given that the human won't see the transcript.",
+        "Explain why 'actions_taken' matters even though the human wasn't there for them."
+      ],
+      "assessmentPrompt": "A handoff to a human operator contains only `{\"escalation_reason\": \"customer requested manager\"}`. Given the human has no transcript access, what critical information is missing, and why does that matter?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Guide §9.3 A self-contained structured handoff",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L1210-L1233"
+        }
+      ],
+      "centrality": 0,
+      "layer": 7
+    },
+    {
+      "id": "mt_confidence_calibration",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_escalation",
+      "name": "Confidence-based routing and stratified auditing",
+      "description": "Field-level confidence scores, calibrated against a labeled validation set rather than trusted raw, route high-confidence extractions to automation and the rest to human review — and even high-confidence output needs a stratified random audit by document type and field, because a 97% aggregate accuracy can hide a document type sitting at 40%.",
+      "core": false,
+      "estMinutes": 10,
+      "evidence": [
+        "Explain what calibration against a labeled set adds that a raw confidence score alone does not.",
+        "Explain why an aggregate accuracy figure can hide a much worse per-segment accuracy."
+      ],
+      "assessmentPrompt": "A pipeline reports 97% aggregate extraction accuracy and nobody audits further. What could that number be hiding, and what auditing approach surfaces it?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Guide §9.4 Confidence-based routing and stratified auditing",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L1234-L1250"
+        }
+      ],
+      "centrality": 0,
+      "layer": 6
+    },
+    {
+      "id": "mt_error_categories",
+      "type": "FACTUAL",
+      "cluster": "cl_error_handling_guide",
+      "name": "Transient, validation, business, and permission errors",
+      "description": "A transient error (timeout, 503) is retryable with backoff; a validation error needs the request fixed, not retried as-is; a business error (policy violation) needs explanation and an alternative offered to the user; a permission error needs escalation — conflating any two changes what the agent should do next.",
+      "core": true,
+      "estMinutes": 8,
+      "evidence": [
+        "Match each error category to whether it's retryable and to the correct next action.",
+        "Explain why treating a validation error like a transient one (retrying unchanged) wastes calls without fixing anything."
+      ],
+      "assessmentPrompt": "An MCP tool call fails with 'missing required field: customer_id.' Which error category is this, is it retryable as-is, and what should the agent do instead of retrying the identical call?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Guide §10.1 Transient, validation, business, and permission errors",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L1253-L1261"
+        }
+      ],
+      "centrality": 0.1,
+      "layer": 6
+    },
+    {
+      "id": "mt_error_antipatterns",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_error_handling_guide",
+      "name": "Four error-handling anti-patterns",
+      "description": "A generic 'search unavailable' status, silent suppression (an empty result reported as success), aborting an entire workflow on one subagent's failure, and infinite in-subagent retries all deny the coordinator the information or the partial progress it needs to recover well.",
+      "core": false,
+      "estMinutes": 10,
+      "evidence": [
+        "Name the anti-pattern where an empty result set gets reported the same way as a genuine zero-match success.",
+        "Explain what a coordinator loses when a workflow aborts entirely on one subagent's failure."
+      ],
+      "assessmentPrompt": "A search subagent times out and returns an empty results array with no failure flag, so the coordinator logs it as '0 relevant results found.' Which anti-pattern is this, and what should the response have signaled instead?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Guide §10.2 Four error-handling anti-patterns",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L1262-L1270"
+        }
+      ],
+      "centrality": 0.08,
+      "layer": 7
+    },
+    {
+      "id": "mt_structured_error_coverage",
+      "type": "PROCEDURAL",
+      "cluster": "cl_error_handling_guide",
+      "name": "Structured errors and coverage annotations",
+      "description": "A subagent error should carry status, failure type, the attempted input, any partial results, and alternative approaches, so the coordinator can decide to retry, use what's there, or route elsewhere — and the final synthesis should mark each section FULL COVERAGE or PARTIAL COVERAGE (with the reason) rather than presenting gapped research as uniformly complete.",
+      "core": false,
+      "estMinutes": 10,
+      "evidence": [
+        "List the fields a structured subagent error needs beyond a bare failure status.",
+        "Explain what a coverage annotation communicates that a silently-merged final report would hide."
+      ],
+      "assessmentPrompt": "A synthesis report on 'AI in creative industries' covers visual art in depth but is thin on music because a search agent timed out there. What should the final report's structure do to represent that honestly?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Guide §10.3-10.4 Structured errors and coverage annotations",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L1271-L1312"
+        }
+      ],
+      "centrality": 0.06,
+      "layer": 8
+    },
+    {
+      "id": "mt_fact_extraction_block",
+      "type": "PROCEDURAL",
+      "cluster": "cl_context_mgmt_guide",
+      "name": "A dedicated, continuously updated facts block",
+      "description": "Instead of trusting a long-running conversation's history (which degrades under summarization), key facts get pulled into a structured block — customer ID, order ID, amount, status — that's included verbatim in every prompt regardless of how much of the rest gets compacted.",
+      "core": false,
+      "estMinutes": 8,
+      "evidence": [
+        "Explain why a facts block survives summarization when relying on conversation history does not.",
+        "List the kind of information that belongs in a facts block versus what can stay in free-form history."
+      ],
+      "assessmentPrompt": "After several rounds of /compact, a support agent starts asking the customer to re-confirm their order number, which was established six turns ago. What pattern would have prevented this, and how does it differ from just relying on history?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Guide §11.1 A dedicated, continuously updated facts block",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L1315-L1332"
+        }
+      ],
+      "centrality": 0.08,
+      "layer": 3
+    },
+    {
+      "id": "mt_trim_tool_results",
+      "type": "PROCEDURAL",
+      "cluster": "cl_context_mgmt_guide",
+      "name": "Trimming tool results with a PostToolUse hook",
+      "description": "When a tool returns 40+ fields but a task only needs 5, a PostToolUse hook that keeps only the relevant fields before the result reaches the model conserves context and cuts the noise the model has to read past.",
+      "core": false,
+      "estMinutes": 8,
+      "evidence": [
+        "Explain which hook event is the right place to trim an oversized tool result.",
+        "State the trade-off a trimming hook is making, and why it's usually worth it."
+      ],
+      "assessmentPrompt": "`lookup_order` returns 40+ fields, but the current task only needs 5 of them. Where should the trimming logic live, and what does leaving it untrimmed cost?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Guide §11.2 Trimming tool results with a PostToolUse hook",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L1333-L1351"
+        }
+      ],
+      "centrality": 0.06,
+      "layer": 4
+    },
+    {
+      "id": "mt_position_aware_input",
+      "type": "PROCEDURAL",
+      "cluster": "cl_context_mgmt_guide",
+      "name": "Placing content with lost-in-the-middle in mind",
+      "description": "Key findings belong at the top, action items at the end, and the bulk of detailed (lower-priority-to-recall) content in the middle — the layout is a direct countermeasure for the effect where models process the start and end of a long input more reliably than its middle.",
+      "core": false,
+      "estMinutes": 8,
+      "evidence": [
+        "Explain why a summary placed at the very top of a long report is more reliably read than one buried mid-document.",
+        "Describe where action items should sit in a long report, and why."
+      ],
+      "assessmentPrompt": "A long vulnerability report buries its 'fix before merge' priority note in the middle, after pages of per-file detail. Given the lost-in-the-middle effect, what's wrong with that layout, and where should the priority note move?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Guide §11.3 Placing content with lost-in-the-middle in mind",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L1352-L1369"
+        }
+      ],
+      "centrality": 0.04,
+      "layer": 5
+    },
+    {
+      "id": "mt_scratchpad_delegation",
+      "type": "PROCEDURAL",
+      "cluster": "cl_context_mgmt_guide",
+      "name": "Scratchpad files and delegating discovery to protect context",
+      "description": "A scratchpad file records key findings so a degraded or new session can consult it instead of re-running discovery, and delegating a 15-file investigation to an Explore subagent means the main agent keeps one summary line instead of 15 files' worth of raw content in its own window.",
+      "core": false,
+      "estMinutes": 10,
+      "evidence": [
+        "Explain what a scratchpad file lets a new session skip re-doing.",
+        "Explain how delegating a file-heavy investigation to a subagent protects the coordinator's context budget."
+      ],
+      "assessmentPrompt": "A long investigation into `PaymentProcessor`'s dependents is about to be resumed in a new session because context has degraded. What artifact would let the new session skip re-discovering what the old one already found, and what belongs in it?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Guide §11.4-11.5 Scratchpad files and delegating discovery to protect context",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L1370-L1402"
+        }
+      ],
+      "centrality": 0.02,
+      "layer": 6
+    },
+    {
+      "id": "mt_state_persistence",
+      "type": "PROCEDURAL",
+      "cluster": "cl_context_mgmt_guide",
+      "name": "Structured state persistence for crash recovery",
+      "description": "Each agent exports its own status/progress/findings to a known location, and a coordinator-level manifest tracks which agents are completed, in progress, or not started — so a crash mid-run can resume from where each agent actually was instead of restarting the whole system.",
+      "core": false,
+      "estMinutes": 8,
+      "evidence": [
+        "Explain what a per-agent state file and a coordinator manifest each track.",
+        "Describe what a coordinator does with the manifest on resume after a crash."
+      ],
+      "assessmentPrompt": "A three-agent research pipeline crashes after the web-search agent finishes but before synthesis starts. What would let the coordinator resume without re-running the search, and what file tells it which agents to skip?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Guide §11.6 Structured state persistence for crash recovery",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L1403-L1431"
+        }
+      ],
+      "centrality": 0,
+      "layer": 7
+    },
+    {
+      "id": "mt_attribution_loss",
+      "type": "CONCEPTUAL",
+      "cluster": "cl_provenance",
+      "name": "The attribution loss problem",
+      "description": "A summarized claim like 'the market is $3.2B' with no source, name, date, or confidence has lost everything a reader would need to judge it — provenance means keeping the claim bound to its source_url, source_name, publication_date, and a confidence score all the way through synthesis.",
+      "core": false,
+      "estMinutes": 8,
+      "evidence": [
+        "List the fields a claim needs to preserve its provenance through a multi-agent pipeline.",
+        "Explain what's lost when a claim is stated as a bare fact with no attribution."
+      ],
+      "assessmentPrompt": "A synthesis report states 'The AI music market is estimated at $3.2B' with nothing else attached. What specifically has been lost in getting to that sentence, and what fields would restore it?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Guide §12.1 The attribution loss problem",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L1434-L1450"
+        }
+      ],
+      "centrality": 0.04,
+      "layer": 9
+    },
+    {
+      "id": "mt_conflicting_data",
+      "type": "PROCEDURAL",
+      "cluster": "cl_provenance",
+      "name": "Preserving conflicting values instead of picking one",
+      "description": "When two sources disagree, the right move is to keep both values with their sources, dates, and methodology attached and flag `conflict_detected`, letting the coordinator reconcile — not to silently choose the more 'credible-looking' number and footnote the discrepancy.",
+      "core": false,
+      "estMinutes": 10,
+      "evidence": [
+        "Explain why silently picking one of two conflicting values and footnoting it is worse than preserving both.",
+        "List what should accompany each of two conflicting values so the coordinator can actually reconcile them."
+      ],
+      "assessmentPrompt": "Two sources give different market-share figures. An analysis agent picks the one from the source it judges more credible and adds a footnote about the other. What does the guide say to do instead, and why does that serve the coordinator better?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Guide §12.2 Preserving conflicting values instead of picking one",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L1451-L1478"
+        }
+      ],
+      "centrality": 0.02,
+      "layer": 10
+    },
+    {
+      "id": "mt_dates_render_content",
+      "type": "FACTUAL",
+      "cluster": "cl_provenance",
+      "name": "Dates resolve conflicts; format follows content",
+      "description": "Two figures that look contradictory are often just measured a year apart — attaching dates can turn 'contradiction' into 'plausible growth trend' — and the final rendering should match content type: tables for financial data, prose for analysis, structured lists for technical findings, chronological order for time series.",
+      "core": false,
+      "estMinutes": 8,
+      "evidence": [
+        "Explain how attaching a date to each of two conflicting figures can resolve the apparent contradiction.",
+        "Match a content type (financial data, time series, technical findings) to the rendering format that suits it."
+      ],
+      "assessmentPrompt": "Source A (dated 2023) says 10% and source B (dated 2024) says 15%, and a draft report calls this a contradiction. What does adding the dates change about that framing?",
+      "standards": [
+        "ccaf:d5"
+      ],
+      "sources": [
+        {
+          "label": "Guide §12.3-12.4 Dates resolve conflicts; format follows content",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L1479-L1497"
+        }
+      ],
+      "centrality": 0,
+      "layer": 11
+    },
+    {
+      "id": "mt_tool_selection_investigation",
+      "type": "PROCEDURAL",
+      "cluster": "cl_builtin_tools_guide",
+      "name": "Choosing the right built-in tool, incrementally",
+      "description": "Glob finds files by pattern, Grep searches within them, Read loads one fully, Write creates new files, Edit changes an existing one precisely, and Bash runs shell commands — and a good investigation alternates Grep (find entry points, then usages) with Read rather than reading everything up front.",
+      "core": false,
+      "estMinutes": 10,
+      "evidence": [
+        "Match a task (find files by pattern, search within files, run tests) to the built-in tool that handles it.",
+        "Describe the Grep-then-Read cycle an incremental investigation follows."
+      ],
+      "assessmentPrompt": "An investigation needs to find every place a function is called before reading those call sites. Which tool finds the call sites, which tool reads them, and in what order should they run?",
+      "standards": [
+        "ccaf:d2"
+      ],
+      "sources": [
+        {
+          "label": "Guide §13.1-13.2 Choosing the right built-in tool, incrementally",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L1500-L1522"
+        }
+      ],
+      "centrality": 0.02,
+      "layer": 5
+    },
+    {
+      "id": "mt_edit_fallback_pattern",
+      "type": "PROCEDURAL",
+      "cluster": "cl_builtin_tools_guide",
+      "name": "Read + Write as Edit's fallback",
+      "description": "When Edit fails because its target text isn't unique in the file, the fallback is to Read the full file, modify the content programmatically, and Write the whole updated version back — trading precision for reliability when a unique match can't be found.",
+      "core": false,
+      "estMinutes": 6,
+      "evidence": [
+        "State the three-step fallback used when Edit fails on a non-unique match.",
+        "Explain what this fallback trades away compared to a successful Edit."
+      ],
+      "assessmentPrompt": "An Edit call fails because its target snippet appears four times in the file. What's the fallback sequence, and what does it give up compared to Edit succeeding on the first try?",
+      "standards": [
+        "ccaf:d2"
+      ],
+      "sources": [
+        {
+          "label": "Guide §13.3 Read + Write as Edit's fallback",
+          "href": "https://github.com/paullarionov/claude-certified-architect/blob/main/guide_en.md#L1523-L1530"
+        }
+      ],
+      "centrality": 0,
+      "layer": 6
+    }
+  ]
+}

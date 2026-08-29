@@ -1,0 +1,271 @@
+{
+  "$comment": "Knowledge points for cl_context_mgmt_guide.",
+  "cluster": "cl_context_mgmt_guide",
+  "topics": [
+    {
+      "topicId": "mt_fact_extraction_block",
+      "knowledgePoints": [
+        {
+          "id": "kp_fact_extraction_1",
+          "name": "A block that survives compaction because it's separate from history",
+          "keyPrerequisites": [
+            "mt_context_window_problems"
+          ],
+          "teach": "<p class='kp-key'>Key facts (customer ID, order ID, amount, status) get pulled into a structured block that's included verbatim in every prompt, updated whenever a new fact appears — regardless of how much of the surrounding history gets compacted away.</p><p>It works because it isn't part of the history being summarized; it's a standing block re-included fresh on every turn, so it never degrades the way a fact buried in turn 6 of a compacted transcript can.</p>",
+          "questions": [
+            {
+              "id": "q_fact_extraction_1a",
+              "q": "After several rounds of /compact, a support agent asks the customer to re-confirm their order number, which was established six turns ago. What pattern would have prevented this?",
+              "options": [
+                "Running /compact less frequently, so the order number would have had more turns to remain in uncompacted history.",
+                "Increasing max_tokens on each request, so the model has more room to reference details from further back in history.",
+                "Switching from /compact to /memory, since /memory is the command meant to preserve conversation-specific details.",
+                "A dedicated, continuously updated facts block included in every prompt, separate from the summarized conversation history."
+              ],
+              "correct": 3,
+              "explain": "A facts block sidesteps the problem entirely by not depending on history survival at all — it's re-included fresh on every turn regardless of what compaction does elsewhere. Running /compact less often only delays the same risk, more max_tokens doesn't prevent a summarization step from dropping a detail, and /memory persists notes into CLAUDE.md across sessions rather than tracking a single case's live facts."
+            },
+            {
+              "id": "q_fact_extraction_1b",
+              "q": "Which kind of information most belongs in a dedicated facts block, versus being left in free-form conversation history?",
+              "options": [
+                "Concrete, load-bearing values like customer ID, order ID, amount, and current case status.",
+                "The customer's exact wording and tone throughout the conversation, to preserve emotional context for later reference.",
+                "General small talk exchanged early in the conversation before the actual issue was raised.",
+                "The agent's own internal reasoning about which tool to call next at each step of the conversation."
+              ],
+              "correct": 0,
+              "explain": "The guide's own example block is exactly this: identifiers and status values that the rest of the conversation depends on and that must not degrade. Tone, small talk, and step-by-step internal reasoning are the kind of content that can reasonably live in ordinary history rather than a dedicated, always-included block."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_fact_extraction_1",
+          "q": "Why is a facts block included in every prompt 'regardless of how history is summarized,' rather than being summarized along with everything else?",
+          "options": [
+            "Because summarization only ever affects text longer than a few sentences, and facts blocks are deliberately kept short.",
+            "Because it's treated as separate, always-included content rather than part of the history a compaction step is allowed to compress.",
+            "Because /compact is specifically configured to skip any text that appears inside HTML-style tags or delimiters.",
+            "It isn't actually separate at all — a facts block, in practice, is just as likely to be summarized away as any other ordinary part of the conversation history."
+          ],
+          "correct": 1,
+          "explain": "The whole design is that the facts block sits outside what compaction operates on — it's re-supplied fresh every turn rather than being part of the history that gets compressed, which is exactly why it survives. It isn't a length-based exemption, it isn't about tag-based parsing tricks, and it is meaningfully protected, not equally at risk."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_trim_tool_results",
+      "knowledgePoints": [
+        {
+          "id": "kp_trim_tool_results_1",
+          "name": "A PostToolUse hook keeps only what's load-bearing",
+          "keyPrerequisites": [
+            "mt_fact_extraction_block"
+          ],
+          "teach": "<p class='kp-key'>When <code>lookup_order</code> returns 40+ fields but a task needs 5, a PostToolUse hook filters the result down to just those before it reaches the model — conserving context and cutting the noise the model has to read past on every turn that result is referenced.</p>",
+          "questions": [
+            {
+              "id": "q_trim_tool_results_1a",
+              "q": "lookup_order returns 40+ fields, but the current task only needs 5 of them. Where should the trimming logic live, and what does leaving it untrimmed cost?",
+              "options": [
+                "In a PreToolUse hook, since trimming should happen before the tool call is made rather than after its result returns.",
+                "In the system prompt itself, by instructing the model to simply ignore the extra 35 fields whenever it happens to encounter them in a tool result.",
+                "In a PostToolUse hook filtering the result down to the 5 needed fields; leaving it untrimmed wastes context on every referencing turn.",
+                "Nowhere specific — tool result size has no measurable effect on context as long as max_tokens is set generously."
+              ],
+              "correct": 2,
+              "explain": "PostToolUse is the event that fires after the tool result comes back, which is exactly where filtering it down to the needed 5 fields belongs; skipping this wastes context budget every time that bloated result is referenced. A PreToolUse hook runs before the call, so it can't filter a result that hasn't returned yet, telling the model to 'ignore' extra fields in the prompt doesn't reclaim the context they consume, and result size does affect the budget regardless of the token ceiling."
+            },
+            {
+              "id": "q_trim_tool_results_1b",
+              "q": "What is the direct benefit of trimming an oversized tool result before it reaches the model?",
+              "options": [
+                "It guarantees the model's downstream extraction will be more accurate, independent of how noisy the untrimmed data was.",
+                "It prevents the tool call from failing outright, since oversized results otherwise cause the call itself to error.",
+                "It removes the need for a facts block, since a trimmed tool result already carries everything a facts block would.",
+                "It conserves context and reduces the noise the model has to process alongside the fields that actually matter."
+              ],
+              "correct": 3,
+              "explain": "The stated benefit is conserving context and reducing noise — a more focused result is easier for the model to work with. It doesn't guarantee improved accuracy by itself, an oversized result doesn't inherently make the call fail, and it isn't a substitute for a facts block, which tracks case-level state rather than a single tool response's fields."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_trim_tool_results_1",
+          "q": "Trimming a tool result and building a dedicated facts block are both examples of what general discipline?",
+          "options": [
+            "Keeping only what's load-bearing in context, applied first to derived facts, then to raw tool output.",
+            "Reducing the number of distinct tools available to an agent, to simplify its overall decision-making.",
+            "Replacing structured JSON output with plain prose wherever context conservation is a concern.",
+            "Delaying tool calls until as late as possible in a conversation to minimize their footprint on context."
+          ],
+          "correct": 0,
+          "explain": "Both are instances of the same underlying discipline — keep only what actually matters in context, whether that's a curated set of facts or a filtered tool response. Neither is about reducing the number of available tools, replacing structured output with prose, or delaying when calls happen."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_position_aware_input",
+      "knowledgePoints": [
+        {
+          "id": "kp_position_aware_1",
+          "name": "Findings at the top, actions at the end",
+          "keyPrerequisites": [
+            "mt_trim_tool_results"
+          ],
+          "teach": "<p class='kp-key'>Given the lost-in-the-middle effect, place key findings at the top of a long report, detailed results in the middle, and action items at the end — the two positions models read most reliably carry the content that matters most.</p>",
+          "questions": [
+            {
+              "id": "q_position_aware_1a",
+              "q": "A long vulnerability report buries its 'fix before merge' priority note in the middle, after pages of per-file detail. What's wrong with that layout?",
+              "options": [
+                "Nothing structural is wrong; priority notes are read just as reliably regardless of where they sit in a long document.",
+                "The priority note sits in exactly the position a model reads least reliably; it should move to the top (or the end).",
+                "The problem is the report's total length, not the note's position — shortening the report is the only real fix.",
+                "The note should move to the very middle intentionally, since that's where the most careful, focused reading happens."
+              ],
+              "correct": 1,
+              "explain": "Mid-document placement is precisely the position the lost-in-the-middle effect makes least reliable — moving the priority note to the start (or repeating it at the end) puts it where it's actually likely to be read and acted on. Position matters independent of overall length, and the middle is the least, not most, reliably read position."
+            },
+            {
+              "id": "q_position_aware_1b",
+              "q": "Where should action items go in a long, position-aware research report, and why?",
+              "options": [
+                "In the middle, interleaved with the detailed findings that support each specific action item.",
+                "Distributed evenly throughout the report so no single position carries disproportionate weight.",
+                "At the end, since that's one of the two positions a model processes most reliably in a long input.",
+                "Action items shouldn't appear in the report body at all; they belong only in a separate follow-up document."
+              ],
+              "correct": 2,
+              "explain": "The end of the document is one of the two reliably-read positions (alongside the start), which is exactly why action items belong there. Interleaving them into the middle or spreading them evenly places at least some of them in the least reliable zone, and there's no reason from this pattern to exclude them from the report itself."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_position_aware_1",
+          "q": "Why does position-aware layout count as a direct countermeasure for lost-in-the-middle, rather than a separate, unrelated best practice?",
+          "options": [
+            "It doesn't counter the effect at all; it's a purely stylistic convention for making long reports easier to skim visually.",
+            "Because it eliminates the lost-in-the-middle effect entirely, so content placed anywhere in the document is read equally well.",
+            "Because it only applies to reports containing tables, and has no relevance to prose-heavy or narrative-style reports.",
+            "Because it deliberately places the highest-priority content at the two positions the effect itself identifies as most reliably read."
+          ],
+          "correct": 3,
+          "explain": "The layout choice is a direct response to the effect's own shape — it puts the content you most need read at exactly the two positions the effect says are read most reliably. It isn't merely stylistic, it doesn't eliminate the underlying effect (content in the middle is still read less reliably), and it applies to prose reports just as much as tabular ones."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_scratchpad_delegation",
+      "knowledgePoints": [
+        {
+          "id": "kp_scratchpad_delegation_1",
+          "name": "Write it down, or hand it off — either way, keep it out of the main window",
+          "keyPrerequisites": [
+            "mt_position_aware_input"
+          ],
+          "teach": "<p class='kp-key'>A scratchpad file records key findings during a long investigation, so a degraded or brand-new session can consult it instead of re-running discovery from scratch. Delegating a file-heavy investigation to an Explore subagent achieves the same protection a different way: the subagent reads 15 files and returns one summary line, so the main agent's context holds one line instead of 15 files.</p><p>The coordinator acts as a separate context layer in a multi-agent system — aggregating outputs, holding global state, allocating context — which is what prevents 'context leakage' where one agent's irrelevant detail crowds another's window.</p>",
+          "questions": [
+            {
+              "id": "q_scratchpad_delegation_1a",
+              "q": "A long investigation into PaymentProcessor's dependents needs to resume in a new session because context has degraded. What artifact lets the new session skip re-discovering what the old one already found?",
+              "options": [
+                "A scratchpad file recording the key findings from the original investigation, which the new session can read instead of re-discovering them.",
+                "Nothing is needed — a new session automatically inherits everything the prior session's context window contained.",
+                "Re-running /compact inside the brand-new session, which supposedly reconstructs the old session's findings purely from its own freshly summarized history.",
+                "The new session should simply re-run the entire original investigation from scratch to guarantee accuracy."
+              ],
+              "correct": 0,
+              "explain": "A scratchpad file is exactly the artifact meant for this — key findings written to disk so a new or degraded session can consult them directly instead of re-running discovery. A new session inherits nothing automatically, /compact operates within a session's own history rather than reconstructing a different session's, and re-running the whole investigation is the expensive outcome the scratchpad is meant to avoid."
+            },
+            {
+              "id": "q_scratchpad_delegation_1b",
+              "q": "A main agent delegates a 15-file dependency investigation to an Explore subagent, which returns a one-line summary. How does the main agent's context compare to reading all 15 files directly?",
+              "options": [
+                "It's identical either way, since the subagent's context and the main agent's context are effectively merged into one shared window.",
+                "It holds one summary line instead of 15 files' worth of content, protecting the main agent's own context budget.",
+                "It's worse, since delegating adds the overhead of a subagent call on top of whatever the main agent would have read directly.",
+                "It depends entirely on which built-in tool the subagent uses internally, not on the fact that delegation happened at all."
+              ],
+              "correct": 1,
+              "explain": "This is the whole point of delegating: the subagent absorbs the verbose 15-file investigation into its own isolated context, and the main agent's window only holds the compact summary that comes back. The two contexts are isolated, not merged; the summary is a net context savings despite the call overhead; and the benefit comes from the delegation pattern itself, not from which specific tool the subagent happens to use."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_scratchpad_delegation_1",
+          "q": "What does the guide mean by the coordinator acting as a 'separate context layer' that prevents context leakage between subagents?",
+          "options": [
+            "It means every subagent automatically shares one single merged context window between them, which the coordinator then simply displays back to the user.",
+            "It means the coordinator deletes a subagent's context entirely the moment that subagent's task is marked complete.",
+            "It means the coordinator aggregates outputs and allocates context to each subagent, so one agent's irrelevant detail doesn't crowd another's window.",
+            "It means only the coordinator is allowed to call tools; subagents exist purely to receive and forward its instructions."
+          ],
+          "correct": 2,
+          "explain": "The coordinator's role as a separate layer is specifically to aggregate results and decide what each subagent receives, which keeps one agent's irrelevant detail from leaking into and crowding another's isolated window. Subagents don't share one merged window, the coordinator doesn't need to delete anything to achieve this, and subagents themselves do call tools — they aren't reduced to pure forwarding."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_state_persistence",
+      "knowledgePoints": [
+        {
+          "id": "kp_state_persistence_1",
+          "name": "Per-agent state plus a coordinator manifest",
+          "keyPrerequisites": [
+            "mt_scratchpad_delegation"
+          ],
+          "teach": "<p class='kp-key'>Each agent exports its own status, progress, and findings to a known location (<code>agent-state/web-search-agent.json</code>). A coordinator-level manifest (<code>agent-state/manifest.json</code>) tracks which agents are completed, in progress, or not started — so a crash mid-run resumes from where each agent actually was, instead of restarting the whole system.</p>",
+          "questions": [
+            {
+              "id": "q_state_persistence_1a",
+              "q": "A three-agent research pipeline crashes after the web-search agent finishes but before synthesis starts. What lets the coordinator resume without re-running the completed search?",
+              "options": [
+                "Nothing specific is needed at all — the coordinator is assumed to automatically remember what already completed before a crash, with no persisted state required.",
+                "The synthesis agent's own state file, since it's the one that needs to start next after the crash occurs.",
+                "A scratchpad file is sufficient on its own; a coordinator-level manifest adds no additional information in this scenario.",
+                "A per-agent state file for the web-search agent plus a manifest marking it \"completed\", telling the coordinator to skip re-running it."
+              ],
+              "correct": 3,
+              "explain": "The web-search agent's own persisted state plus a manifest entry marking it completed is exactly what lets the coordinator know, after a crash, that this step doesn't need to be redone. Nothing is remembered automatically without persisted state, the synthesis agent's own file (which hasn't started) doesn't help resume the search step, and a manifest specifically adds the cross-agent 'who's done' view a single scratchpad doesn't provide."
+            },
+            {
+              "id": "q_state_persistence_1b",
+              "q": "What specifically does the manifest.json file track, as distinct from what an individual agent's own state file tracks?",
+              "options": [
+                "Which agents are completed, in progress, or not started — a cross-agent status view the coordinator reads on resume.",
+                "The detailed findings and raw output produced by each individual agent during its own execution.",
+                "The exact prompts each agent was given, for auditing and reproducibility purposes after a crash.",
+                "The billing cost attributed to each individual agent's own execution, aggregated together across the whole multi-agent pipeline run."
+              ],
+              "correct": 0,
+              "explain": "The manifest's specific job is a status roster across agents — completed, in progress, not started — which is what the coordinator reads to decide what to skip on resume. Detailed findings live in each agent's own state file, not the manifest, and neither prompt auditing nor cost tracking is what this file is described as doing."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_state_persistence_1",
+          "q": "Why does structured state persistence require both a per-agent state file and a separate coordinator-level manifest, rather than just one or the other?",
+          "options": [
+            "It doesn't — either one alone provides everything needed to resume a crashed multi-agent pipeline correctly.",
+            "Because the per-agent file holds that agent's own detailed progress, while the manifest holds the cross-agent status view the coordinator needs to decide what to resume.",
+            "Because manifest.json is only used for billing purposes and has no functional role in resuming a crashed pipeline.",
+            "Because per-agent state files are considered deprecated in favor of the coordinator's manifest, which is intended to fully replace them over time as the system matures."
+          ],
+          "correct": 1,
+          "explain": "The two serve different, complementary purposes: an agent's own file carries its detailed progress and findings, while the manifest gives the coordinator the cross-agent overview of who's done, who's mid-run, and who hasn't started — resuming correctly needs both. Neither one alone covers what the other provides, the manifest isn't a billing artifact, and there's no indication per-agent files are being phased out."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "$comment": "Knowledge points for cl_builtin_tools_guide.",
+  "cluster": "cl_builtin_tools_guide",
+  "topics": [
+    {
+      "topicId": "mt_tool_selection_investigation",
+      "knowledgePoints": [
+        {
+          "id": "kp_tool_selection_1",
+          "name": "Glob finds, Grep searches, Read loads, and the Grep-then-Read cycle",
+          "keyPrerequisites": [
+            "mt_planning_mode_guide"
+          ],
+          "teach": "<p class='kp-key'>Glob finds files by name/pattern (<code>**/*.test.tsx</code>). Grep searches within files (a function name, an error message, an import). Read loads one file in full. Write creates a new file; Edit changes an existing one precisely; Bash runs shell commands (git, npm, tests, builds).</p><p>An incremental investigation alternates them rather than reading everything up front: Grep for entry points, Read the files found, Grep for usages, Read the consumers, repeat until the picture is complete.</p>",
+          "questions": [
+            {
+              "id": "q_tool_selection_1a",
+              "q": "An investigation needs to find every place a function is called before reading those call sites in full. Which tool finds the call sites, which reads them, and in what order should they run?",
+              "options": [
+                "Grep first to locate the call sites by searching for the function's usage, then Read each of those files afterward.",
+                "Read first to load the whole codebase, then Grep within the loaded content to locate the specific call sites afterward.",
+                "Glob first to find every file in the project by pattern, then Bash to grep through them via a shell command instead.",
+                "Edit first to mark the call sites for review, then Read only the files that were successfully marked by that step."
+              ],
+              "correct": 0,
+              "explain": "This is exactly the incremental pattern: Grep first to search within files for where the function is actually called, then Read those specific files once they're identified — searching before loading avoids reading the whole codebase up front. Loading everything with Read before searching defeats the purpose of incremental investigation, routing through Bash for grepping bypasses the tool built for it, and Edit is for making changes, not for locating anything."
+            },
+            {
+              "id": "q_tool_selection_1b",
+              "q": "Which built-in tool is the right choice for running the project's test suite as part of an investigation?",
+              "options": [
+                "Grep, since running tests is fundamentally a search operation across the codebase's test files.",
+                "Bash, since running a shell command like the test runner is exactly what it's for.",
+                "Glob, since finding the test files by pattern is equivalent to actually executing them.",
+                "Write, since running the test suite typically requires generating a new output file first."
+              ],
+              "correct": 1,
+              "explain": "Bash is explicitly the tool for running shell commands — git, npm, builds, and test runs all fall under that category. Grep and Glob are search and file-discovery tools, not execution tools, and Write creates file content rather than running anything."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_tool_selection_1",
+          "q": "Why does the guide recommend an incremental Grep-then-Read cycle over reading every potentially relevant file up front?",
+          "options": [
+            "Because Read is technically incapable of loading more than one file within a single investigation session.",
+            "Because Grep is faster than Read in absolute terms, making the ordering purely a matter of execution speed.",
+            "Because reading everything up front wastes context on files that later turn out to be irrelevant to the actual investigation.",
+            "There's no real reason given for the ordering; it's presented as a stylistic preference with no meaningful bearing on context usage or outcome quality."
+          ],
+          "correct": 2,
+          "explain": "Reading broadly before knowing what's actually relevant risks filling context with files that turn out not to matter — searching first narrows down to what's worth reading, which is the whole rationale for going incrementally. Read can load multiple files across an investigation, the reasoning isn't about raw execution speed, and the ordering is presented as a real strategy, not an arbitrary stylistic choice."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_edit_fallback_pattern",
+      "knowledgePoints": [
+        {
+          "id": "kp_edit_fallback_1",
+          "name": "Read, modify, Write — when Edit can't find a unique match",
+          "keyPrerequisites": [
+            "mt_tool_selection_investigation"
+          ],
+          "teach": "<p class='kp-key'>Edit fails when its target text isn't unique in the file. The fallback: Read the full file content, modify it programmatically, and Write the entire updated version back — trading Edit's surgical precision for a reliable path forward when a unique match can't be found.</p>",
+          "questions": [
+            {
+              "id": "q_edit_fallback_1a",
+              "q": "An Edit call fails because its target snippet appears four times in the file. What's the fallback sequence, and what does it give up compared to Edit succeeding on the first try?",
+              "options": [
+                "Retry the same Edit call repeatedly until one of the four matches happens to be selected at random by the tool.",
+                "Switch to Bash and use a shell command like sed to perform the replacement, bypassing Read and Write entirely.",
+                "Delete the file entirely with a Bash shell command and recreate it from scratch using Write, discarding everything in it that isn't directly part of the intended change.",
+                "Read the full file, modify the content programmatically to target the correct occurrence, then Write the whole file back — trading precision for reliability."
+              ],
+              "correct": 3,
+              "explain": "The guide's fallback is specifically Read the full file, make the change in the loaded content, then Write the whole file back — a broader, less surgical operation than a successful Edit, but one that doesn't depend on a unique text match. Retrying the identical Edit call doesn't change the underlying non-uniqueness problem, routing through a shell command bypasses the pattern the guide actually describes, and recreating the file from scratch risks losing unrelated content Edit would have left untouched."
+            },
+            {
+              "id": "q_edit_fallback_1b",
+              "q": "Why does Edit specifically fail when its target text isn't unique within the file, rather than just picking the first occurrence?",
+              "options": [
+                "Because Edit is designed to make a precise, unambiguous change, and a non-unique match means it can't be sure which occurrence was intended.",
+                "Edit doesn't actually fail in that case; it always applies the change to the first matching occurrence by default.",
+                "Because Edit only supports files under a certain length limit, and non-unique matches of this kind typically only ever occur in longer files.",
+                "Because Edit requires the target text to be specified as a line number rather than as a text snippet in every case."
+              ],
+              "correct": 0,
+              "explain": "Edit's whole value is precise, unambiguous replacement — when the target text matches more than one location, it has no reliable way to know which one was actually intended, so it fails rather than silently guessing. It doesn't default to the first match, its failure mode has nothing to do with file length, and it isn't restricted to line-number-based targeting."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_edit_fallback_1",
+          "q": "What does the Read-then-Write fallback trade away compared to a successful Edit call?",
+          "options": [
+            "It trades away nothing; the fallback is strictly equivalent in every respect to a successful Edit call on the same file.",
+            "It trades away Edit's surgical precision — a full file rewrite is a broader operation than an in-place, uniquely targeted change.",
+            "It trades away the ability to make any further changes to that same file for the remainder of the session.",
+            "It trades away the file's version-control history entirely, since Write is treated by the underlying system as creating a brand-new, untracked file."
+          ],
+          "correct": 1,
+          "explain": "Rewriting the whole file via Read-then-Write is a broader operation than Edit's precise, uniquely targeted change — that's the real trade-off the fallback makes to get around a non-unique match. It isn't equivalent to a successful Edit, it doesn't block further edits to the file afterward, and it doesn't affect version-control history any differently than Edit would."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,305 @@
+{
+  "$comment": "Prerequisite edges. hard gates the knowledge frontier; this graph currently uses hard edges only, one per topic, forming a single chain from the one entry point (mt_api_request_structure), matching the style of learning-graph/section-07.",
+  "dependencies": [
+    {
+      "topicId": "mt_message_roles",
+      "prerequisiteId": "mt_api_request_structure",
+      "strength": "hard",
+      "reason": "The roles are what populate the messages array this topic's request shape defines."
+    },
+    {
+      "topicId": "mt_stop_reason",
+      "prerequisiteId": "mt_message_roles",
+      "strength": "hard",
+      "reason": "stop_reason describes how an assistant turn ends, so reading it presupposes knowing which role produces that turn."
+    },
+    {
+      "topicId": "mt_context_window_problems",
+      "prerequisiteId": "mt_message_roles",
+      "strength": "hard",
+      "reason": "The context window is built from the same messages array; its failure modes only make sense once you know what's accumulating inside it."
+    },
+    {
+      "topicId": "mt_tool_use_basics",
+      "prerequisiteId": "mt_stop_reason",
+      "strength": "hard",
+      "reason": "tool_use is one of the four stop_reason values \u2014 the mechanism can't be explained without the signal that announces it."
+    },
+    {
+      "topicId": "mt_tool_description_selection",
+      "prerequisiteId": "mt_tool_use_basics",
+      "strength": "hard",
+      "reason": "Description-driven selection only matters once a tool call is understood as a structured request the model chooses to emit."
+    },
+    {
+      "topicId": "mt_tool_choice_modes",
+      "prerequisiteId": "mt_tool_use_basics",
+      "strength": "hard",
+      "reason": "tool_choice controls whether and which tool_use happens, so it presupposes what tool_use is."
+    },
+    {
+      "topicId": "mt_schema_design_errors",
+      "prerequisiteId": "mt_tool_use_basics",
+      "strength": "hard",
+      "reason": "Schema design shapes a tool_use call's input_schema, and syntax/semantic errors are properties of that same call."
+    },
+    {
+      "topicId": "mt_agentic_loop_guide",
+      "prerequisiteId": "mt_stop_reason",
+      "strength": "hard",
+      "reason": "The loop's only branch point is checking stop_reason for tool_use versus end_turn."
+    },
+    {
+      "topicId": "mt_agent_definition",
+      "prerequisiteId": "mt_agentic_loop_guide",
+      "strength": "hard",
+      "reason": "AgentDefinition configures which loop an agent runs \u2014 system_prompt and allowed_tools only matter against that loop."
+    },
+    {
+      "topicId": "mt_hub_and_spoke_guide",
+      "prerequisiteId": "mt_agent_definition",
+      "strength": "hard",
+      "reason": "A coordinator and its subagents are each just an AgentDefinition with a different allowed_tools list."
+    },
+    {
+      "topicId": "mt_task_tool_context",
+      "prerequisiteId": "mt_hub_and_spoke_guide",
+      "strength": "hard",
+      "reason": "The Task tool is how the hub actually spawns a spoke \u2014 it only makes sense against that topology."
+    },
+    {
+      "topicId": "mt_hooks_vs_prompts_guide",
+      "prerequisiteId": "mt_agentic_loop_guide",
+      "strength": "hard",
+      "reason": "Hooks intercept specific points in the same loop \u2014 PreToolUse and PostToolUse are loop steps."
+    },
+    {
+      "topicId": "mt_mcp_overview",
+      "prerequisiteId": "mt_tool_use_basics",
+      "strength": "hard",
+      "reason": "MCP tools reach the model through the same tool_use mechanism; MCP is a way of supplying more of them."
+    },
+    {
+      "topicId": "mt_mcp_server_config",
+      "prerequisiteId": "mt_mcp_overview",
+      "strength": "hard",
+      "reason": "Configuring a server presupposes knowing what a server provides."
+    },
+    {
+      "topicId": "mt_mcp_iserror",
+      "prerequisiteId": "mt_mcp_overview",
+      "strength": "hard",
+      "reason": "isError is a field on a specific MCP tool's response, so the tool/resource/server model comes first."
+    },
+    {
+      "topicId": "mt_mcp_resources",
+      "prerequisiteId": "mt_mcp_overview",
+      "strength": "hard",
+      "reason": "Resources are one of the three primitives the MCP overview introduces."
+    },
+    {
+      "topicId": "mt_claudemd_hierarchy_guide",
+      "prerequisiteId": "mt_message_roles",
+      "strength": "hard",
+      "reason": "CLAUDE.md behaves like a persistent, layered system prompt \u2014 the system role has to be understood first."
+    },
+    {
+      "topicId": "mt_path_imports",
+      "prerequisiteId": "mt_claudemd_hierarchy_guide",
+      "strength": "hard",
+      "reason": "@path exists only to keep the CLAUDE.md hierarchy from duplicating content across its levels."
+    },
+    {
+      "topicId": "mt_claude_rules_guide",
+      "prerequisiteId": "mt_claudemd_hierarchy_guide",
+      "strength": "hard",
+      "reason": ".claude/rules/ is presented as an alternative organization to the same hierarchy."
+    },
+    {
+      "topicId": "mt_commands_skills_guide",
+      "prerequisiteId": "mt_claudemd_hierarchy_guide",
+      "strength": "hard",
+      "reason": "Commands and skills are contrasted against CLAUDE.md's always-loaded model \u2014 on-demand versus always-on is the point."
+    },
+    {
+      "topicId": "mt_planning_mode_guide",
+      "prerequisiteId": "mt_agentic_loop_guide",
+      "strength": "hard",
+      "reason": "Planning mode changes what the agentic loop is allowed to do \u2014 investigate only, or investigate and act."
+    },
+    {
+      "topicId": "mt_compact_memory",
+      "prerequisiteId": "mt_context_window_problems",
+      "strength": "hard",
+      "reason": "/compact is the built-in mitigation for the exact summarization-loss problem that topic describes."
+    },
+    {
+      "topicId": "mt_cli_ci_sessions",
+      "prerequisiteId": "mt_planning_mode_guide",
+      "strength": "hard",
+      "reason": "Headless CI execution is direct execution taken to its extreme \u2014 no human ever sees a plan to approve."
+    },
+    {
+      "topicId": "mt_few_shot_patterns",
+      "prerequisiteId": "mt_schema_design_errors",
+      "strength": "hard",
+      "reason": "The format-normalization rules here are the free-text extension of the same nullable/enum discipline schema design teaches."
+    },
+    {
+      "topicId": "mt_explicit_criteria",
+      "prerequisiteId": "mt_few_shot_patterns",
+      "strength": "hard",
+      "reason": "Explicit criteria make explicit the rule an example was only demonstrating implicitly."
+    },
+    {
+      "topicId": "mt_prompt_chaining_vs_dynamic",
+      "prerequisiteId": "mt_explicit_criteria",
+      "strength": "hard",
+      "reason": "Each link in a chain is only reliable if it's given the same explicit, non-vague criteria this topic argues for."
+    },
+    {
+      "topicId": "mt_interview_pattern_guide",
+      "prerequisiteId": "mt_explicit_criteria",
+      "strength": "hard",
+      "reason": "Asking clarifying questions is how you obtain explicit criteria when the requester hasn't supplied them yet."
+    },
+    {
+      "topicId": "mt_validation_retry_selfcorrect",
+      "prerequisiteId": "mt_schema_design_errors",
+      "strength": "hard",
+      "reason": "Retry-with-feedback is the runtime backstop for exactly the semantic errors schema design cannot prevent."
+    },
+    {
+      "topicId": "mt_batches_overview",
+      "prerequisiteId": "mt_api_request_structure",
+      "strength": "hard",
+      "reason": "A batch request is a list of the same params object Chapter 1 defines, submitted asynchronously instead of one at a time."
+    },
+    {
+      "topicId": "mt_batches_custom_id_failures",
+      "prerequisiteId": "mt_batches_overview",
+      "strength": "hard",
+      "reason": "custom_id and failure handling are mechanics of the same batch object the overview introduces."
+    },
+    {
+      "topicId": "mt_batches_sla",
+      "prerequisiteId": "mt_batches_custom_id_failures",
+      "strength": "hard",
+      "reason": "Planning a submission window presupposes knowing how failures get identified and resubmitted within it."
+    },
+    {
+      "topicId": "mt_decomposition_strategies",
+      "prerequisiteId": "mt_prompt_chaining_vs_dynamic",
+      "strength": "hard",
+      "reason": "Fixed pipelines and dynamic decomposition are the same fixed-vs-adaptive split, generalized from a prompt chain to a whole task plan."
+    },
+    {
+      "topicId": "mt_multipass_review",
+      "prerequisiteId": "mt_decomposition_strategies",
+      "strength": "hard",
+      "reason": "Multi-pass review is a fixed pipeline \u2014 per-file passes then an integration pass \u2014 worked through as a concrete example."
+    },
+    {
+      "topicId": "mt_escalation_triggers",
+      "prerequisiteId": "mt_hooks_vs_prompts_guide",
+      "strength": "hard",
+      "reason": "Reliable triggers are the deterministic-rule side of the hooks-vs-prompts split, applied to when a human takes over."
+    },
+    {
+      "topicId": "mt_escalation_patterns",
+      "prerequisiteId": "mt_escalation_triggers",
+      "strength": "hard",
+      "reason": "Deciding when and how to escalate only makes sense once what counts as a trigger is settled."
+    },
+    {
+      "topicId": "mt_structured_handoff",
+      "prerequisiteId": "mt_escalation_patterns",
+      "strength": "hard",
+      "reason": "The handoff protocol is what the agent hands the human once one of these escalation patterns has fired."
+    },
+    {
+      "topicId": "mt_confidence_calibration",
+      "prerequisiteId": "mt_escalation_triggers",
+      "strength": "hard",
+      "reason": "Confidence-based routing is the alternative the triggers topic offers in place of the unreliable self-rated-confidence trigger it rules out."
+    },
+    {
+      "topicId": "mt_error_categories",
+      "prerequisiteId": "mt_mcp_iserror",
+      "strength": "hard",
+      "reason": "The error taxonomy generalizes the single isError flag into the transient/validation/business/permission split multi-agent systems need."
+    },
+    {
+      "topicId": "mt_error_antipatterns",
+      "prerequisiteId": "mt_error_categories",
+      "strength": "hard",
+      "reason": "Each anti-pattern is a specific mishandling of one of the categories just defined."
+    },
+    {
+      "topicId": "mt_structured_error_coverage",
+      "prerequisiteId": "mt_error_antipatterns",
+      "strength": "hard",
+      "reason": "The structured-error shape is what the anti-patterns topic argues you replace a generic status with."
+    },
+    {
+      "topicId": "mt_fact_extraction_block",
+      "prerequisiteId": "mt_context_window_problems",
+      "strength": "hard",
+      "reason": "A dedicated facts block is a direct countermeasure for the progressive-summarization data loss this topic describes."
+    },
+    {
+      "topicId": "mt_trim_tool_results",
+      "prerequisiteId": "mt_fact_extraction_block",
+      "strength": "hard",
+      "reason": "Both apply the same discipline \u2014 keep only what's load-bearing in context \u2014 first to derived facts, then to raw tool output."
+    },
+    {
+      "topicId": "mt_position_aware_input",
+      "prerequisiteId": "mt_trim_tool_results",
+      "strength": "hard",
+      "reason": "Once results are trimmed to what matters, where that surviving content sits in the prompt is the next lever."
+    },
+    {
+      "topicId": "mt_scratchpad_delegation",
+      "prerequisiteId": "mt_position_aware_input",
+      "strength": "hard",
+      "reason": "A scratchpad is where position-aware, load-bearing findings get written down so they survive outside the prompt entirely."
+    },
+    {
+      "topicId": "mt_state_persistence",
+      "prerequisiteId": "mt_scratchpad_delegation",
+      "strength": "hard",
+      "reason": "Structured state files generalize a single scratchpad into a manifest coordinating several agents' saved progress."
+    },
+    {
+      "topicId": "mt_attribution_loss",
+      "prerequisiteId": "mt_structured_error_coverage",
+      "strength": "hard",
+      "reason": "Coverage annotations already track which parts of a synthesis are trustworthy; provenance tracks where each individual claim inside it came from."
+    },
+    {
+      "topicId": "mt_conflicting_data",
+      "prerequisiteId": "mt_attribution_loss",
+      "strength": "hard",
+      "reason": "You can only detect a conflict between two sources if each value already carries the attribution the previous topic argues for."
+    },
+    {
+      "topicId": "mt_dates_render_content",
+      "prerequisiteId": "mt_conflicting_data",
+      "strength": "hard",
+      "reason": "A date is often the fact that resolves an apparent conflict into an explainable trend instead of a contradiction."
+    },
+    {
+      "topicId": "mt_tool_selection_investigation",
+      "prerequisiteId": "mt_planning_mode_guide",
+      "strength": "hard",
+      "reason": "Incremental Grep-then-Read investigation is what planning mode's read-only phase actually does, tool by tool."
+    },
+    {
+      "topicId": "mt_edit_fallback_pattern",
+      "prerequisiteId": "mt_tool_selection_investigation",
+      "strength": "hard",
+      "reason": "The fallback only comes up once Edit has been chosen and attempted as part of that same investigation-driven workflow."
+    }
+  ]
+}

@@ -1,0 +1,216 @@
+{
+  "$comment": "Knowledge points for cl_api_fundamentals.",
+  "cluster": "cl_api_fundamentals",
+  "topics": [
+    {
+      "topicId": "mt_api_request_structure",
+      "knowledgePoints": [
+        {
+          "id": "kp_api_request_1",
+          "name": "A request is stateless, so it repeats itself",
+          "keyPrerequisites": [],
+          "teach": "<p class='kp-key'>Every Messages API call is independent — the model retains nothing between requests, so <code>messages</code> must carry the entire conversation so far, not just the newest turn.</p><p>A request bundles <code>model</code>, <code>max_tokens</code>, <code>system</code>, <code>messages</code>, <code>tools</code>, and <code>tool_choice</code> together. <code>system</code> sits outside <code>messages</code> because it's a standing instruction rather than part of the back-and-forth; <code>tools</code> and <code>tool_choice</code> exist only to let the model ask your code to do something instead of answering directly.</p><p>Drop the history and the model isn't being forgetful — it's being handed a different, shorter conversation than the one the user thinks they're in.</p>",
+          "questions": [
+            {
+              "id": "q_api_request_1a",
+              "q": "A client is rewritten to send only the user's newest message on each API call, to cut request size. On turn 4, the assistant responds as if turns 1–3 never happened. What is the most accurate diagnosis?",
+              "options": [
+                "max_tokens was set too low on turn 4, truncating the response before the model could reference earlier turns.",
+                "The API silently caches prior turns server-side, and the cache expired sooner than the client assumed it would.",
+                "The system prompt was not resent on turn 4, so the model lost the persona and constraints defined earlier.",
+                "Each request is independent and stateless, so omitting turns 1–3 from messages means the model never received them."
+              ],
+              "correct": 3,
+              "explain": "The API holds no state between calls — every prior turn the model is supposed to know about has to be re-sent inside messages on every single request. Turn 4 not referencing turns 1–3 is exactly what omitting them from messages produces, not a caching expiry, a truncated response, or a missing system prompt (which would drop persona/constraints, not turn-by-turn content)."
+            },
+            {
+              "id": "q_api_request_1b",
+              "q": "Which pairing of a request field to its purpose is correct?",
+              "options": [
+                "max_tokens sets the maximum number of tokens the response may contain, and can cause a truncated reply if too low.",
+                "tool_choice selects which model variant (Opus, Sonnet, Haiku) handles the request based on task complexity.",
+                "tools specifies the maximum context window size available for the current conversation's messages array.",
+                "system defines the conversational back-and-forth history that must be resent on every call to the API."
+              ],
+              "correct": 0,
+              "explain": "max_tokens caps how long the response can be, and setting it too low truncates the reply — that's the correct pairing. tool_choice controls tool-selection behavior, not model routing; system is the standing instruction outside the conversational history, not the history itself; and tools defines available functions, not a context-window limit."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_api_request_1",
+          "q": "A teammate argues that since the system prompt 'is loaded once,' it doesn't need to be included in every individual API call, only messages does. Is this accurate?",
+          "options": [
+            "Yes — system is cached server-side after the first call and persists automatically for the rest of the session.",
+            "No — the API is stateless per call, so system must be passed in every request alongside messages, just like the history.",
+            "Yes — only the first request in a session needs the system field; later calls only need to grow the messages array.",
+            "No — system only needs to be resent every fifth call to refresh the model's persona without wasting tokens each turn."
+          ],
+          "correct": 1,
+          "explain": "There's no cross-call memory: the API doesn't persist system, messages, or anything else between requests. system has to ride along on every call exactly like the message history does, not once, not periodically — every time."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_message_roles",
+      "knowledgePoints": [
+        {
+          "id": "kp_message_roles_1",
+          "name": "Tool results live inside a user turn",
+          "keyPrerequisites": [
+            "mt_api_request_structure"
+          ],
+          "teach": "<p class='kp-key'>There is no <code>\"role\": \"tool\"</code>. A tool's result is sent back as a <code>tool_result</code> content block inside a <code>user</code>-role message.</p><p><code>user</code> and <code>assistant</code> are the two conversational roles; <code>system</code> can also appear as a role directly inside <code>messages</code> (not just the top-level field), letting you inject an instruction mid-conversation without invalidating the cached prefix from the top-level <code>system</code> field — but it has placement rules: it must immediately follow a <code>user</code> turn or an <code>assistant</code> turn ending in server tool use, must precede an <code>assistant</code> turn or end the array, and can never sit between a <code>tool_use</code> block and its matching <code>tool_result</code> — that returns a 400 error.</p>",
+          "questions": [
+            {
+              "id": "q_message_roles_1a",
+              "q": "Where does a tool's output belong in the next request sent back to the API?",
+              "options": [
+                "As a top-level `tool_output` field alongside `system` and `messages`, separate from the conversation array.",
+                "As a message with `\"role\": \"tool\"`, appended immediately after the assistant's `tool_use` message.",
+                "As a `tool_result` content block inside a message with `\"role\": \"user\"` — there is no dedicated tool role.",
+                "As a `tool_result` content block inside the same assistant message that originally issued the `tool_use` call."
+              ],
+              "correct": 2,
+              "explain": "Tool results travel inside a user-role message as a tool_result content block — the API has no separate tool role. A top-level tool_output field doesn't exist, a literal role: \"tool\" message is rejected, and the result can't live in the same assistant message that made the call, since that message is what the result is a response to."
+            },
+            {
+              "id": "q_message_roles_1b",
+              "q": "An engineer wants to inject a mid-conversation instruction as an inline `system` role message, placed directly between an `assistant` message's `tool_use` block and the `user` message carrying its `tool_result`. What happens?",
+              "options": [
+                "It succeeds silently, and the inline system message simply takes precedence over the top-level system field going forward.",
+                "It succeeds, but only for the remainder of that single turn — later turns revert to the top-level system field.",
+                "The API ignores the inline system message entirely and processes the surrounding tool_use/tool_result pair normally.",
+                "The API returns a 400 error, because a system message cannot sit between a tool_use block and its tool_result."
+              ],
+              "correct": 3,
+              "explain": "One of the explicit placement rules for an inline system-role message is that it cannot separate a tool_use block from its tool_result — the API returns a 400 error rather than silently accepting, partially honoring, or ignoring the insertion."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_message_roles_1",
+          "q": "Which statement about the messages array's roles is correct?",
+          "options": [
+            "user and assistant are the two conversational roles, and system can also appear inline in messages under its own placement rules.",
+            "There are three conversational roles — user, assistant, and a dedicated tool role — each one carrying its own distinct kind of content block.",
+            "Only user and assistant may appear in messages; system may only ever be set via the top-level system field.",
+            "assistant is the only role that can carry a tool_result block, since it represents the model's own tool activity."
+          ],
+          "correct": 0,
+          "explain": "user and assistant are the two conversational roles, and system can additionally appear inline within messages (subject to its placement rules), not just at the top level. There is no third 'tool' role, and tool_result blocks are carried by user-role messages, not assistant-role ones."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_stop_reason",
+      "knowledgePoints": [
+        {
+          "id": "kp_stop_reason_1",
+          "name": "Two of four values actually drive the loop",
+          "keyPrerequisites": [
+            "mt_message_roles"
+          ],
+          "teach": "<p class='kp-key'><code>stop_reason</code> has four values — <code>end_turn</code>, <code>tool_use</code>, <code>max_tokens</code>, <code>stop_sequence</code> — but an agentic loop only branches on the first two.</p><table><tr><th>Value</th><th>Action</th></tr><tr><td><code>end_turn</code></td><td>Show the result to the user</td></tr><tr><td><code>tool_use</code></td><td>Execute the tool, append the result, loop again</td></tr><tr><td><code>max_tokens</code></td><td>Response is truncated — you may need a higher limit</td></tr><tr><td><code>stop_sequence</code></td><td>Handle per your application's own logic</td></tr></table><p>Treating <code>max_tokens</code> like <code>end_turn</code> means silently shipping a cut-off response as if it were complete.</p>",
+          "questions": [
+            {
+              "id": "q_stop_reason_1a",
+              "q": "A response comes back with stop_reason \"max_tokens\", and the calling code displays the (truncated) text to the user exactly as it would for \"end_turn\". What's wrong with that, and what should happen instead?",
+              "options": [
+                "Nothing is wrong — max_tokens and end_turn both signal the model is finished, so identical handling is correct either way.",
+                "The response is incomplete because it hit the token ceiling; the caller should recognize this and likely raise max_tokens and retry.",
+                "The response should be discarded entirely and re-sent with tool_choice set to \"any\" to force a shorter, complete answer.",
+                "The truncation only ever matters for tool_use responses specifically, so treating a max_tokens response the same as end_turn is actually correct behavior here."
+              ],
+              "correct": 1,
+              "explain": "max_tokens means the model was cut off mid-generation, not that it finished — treating it like end_turn ships a truncated response as if it were complete. The fix is recognizing the truncation and likely increasing the token limit and retrying, not discarding-and-forcing a tool call (unrelated to the token ceiling) or assuming it's harmless."
+            },
+            {
+              "id": "q_stop_reason_1b",
+              "q": "For an agentic loop deciding whether to keep calling tools or hand a final answer to the user, which two stop_reason values actually need a branch in the loop's control flow?",
+              "options": [
+                "max_tokens and stop_sequence, since both represent a form of the model stopping generation early.",
+                "end_turn and stop_sequence, since both indicate the model chose to stop rather than being cut off.",
+                "tool_use and end_turn, since together they cover every outcome the loop needs to act differently on.",
+                "tool_use and max_tokens, since both indicate the response requires some form of follow-up action."
+              ],
+              "correct": 2,
+              "explain": "tool_use tells the loop to execute a tool and continue; end_turn tells it the task is done and the result can be shown. Those are the two branches an agentic loop's control flow actually needs — max_tokens and stop_sequence are edge cases handled separately, not the loop's core branching logic."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_stop_reason_1",
+          "q": "Why are max_tokens and stop_sequence considered unreliable as the primary signal for ending an agentic loop's iteration, compared to end_turn and tool_use?",
+          "options": [
+            "They aren't unreliable — all four values are equally valid primary signals for ending a loop's iteration.",
+            "They fire far more often than end_turn or tool_use in practice, making them statistically the dominant signal.",
+            "They only ever appear in Message Batches API responses, and never in the synchronous Messages API, so they're irrelevant to a synchronous agentic loop's control flow.",
+            "They represent the response being cut off or bounded by a fixed pattern, not the model's own decision that it's done or needs a tool."
+          ],
+          "correct": 3,
+          "explain": "max_tokens and stop_sequence reflect an external limit being hit, not the model concluding it's finished or that it needs a tool — which is exactly why they don't belong in the loop's core branch. They aren't equally valid signals, they aren't the dominant case in practice, and they aren't specific to the batch API."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_context_window_problems",
+      "knowledgePoints": [
+        {
+          "id": "kp_context_window_1",
+          "name": "Three distinct failure modes, not one",
+          "keyPrerequisites": [
+            "mt_message_roles"
+          ],
+          "teach": "<p class='kp-key'>The context window fails in three specific ways, and naming which one you're looking at determines the fix.</p><ul><li><strong>Lost-in-the-middle</strong> — models read the start and end of a long input more reliably than its middle; put key information at one of the edges.</li><li><strong>Tool-result accumulation</strong> — a tool returning 40+ fields when only 5 matter fills the window with noise on every single call.</li><li><strong>Progressive summarization</strong> — compressing history loses exact numbers, percentages, and dates first, replacing them with vague qualifiers like 'about' or 'a few'.</li></ul><p>All three shrink how much of the window is actually useful, but a fix for one (trimming a tool response) does nothing for another (a number going vague after a summary).</p>",
+          "questions": [
+            {
+              "id": "q_context_window_1a",
+              "q": "After a session runs a history-compressing summarization step, a report that previously read \"revenue grew 42% year over year\" now reads \"revenue grew by a notable amount, though the exact figure should be re-verified.\" Which context-window problem does this illustrate?",
+              "options": [
+                "Progressive summarization — compressing history dropped the exact numeric value and replaced it with a vague qualifier.",
+                "Lost-in-the-middle — the 42% figure was originally placed in the middle of a long document and got skipped over.",
+                "Tool-result accumulation — an earlier tool call returned too many fields, crowding out the original percentage figure.",
+                "None of the three — this is expected behavior any time a session's context is compressed to save space."
+              ],
+              "correct": 0,
+              "explain": "This is the textbook progressive-summarization failure: an exact number ('42%') degraded into a vague phrase ('a notable amount') specifically because of a compression step, not because of where it sat in the input or a verbose tool response. It's a named, avoidable failure mode, not something to shrug off as expected."
+            },
+            {
+              "id": "q_context_window_1b",
+              "q": "A tool call returns a 40-field customer record when the current task only needs 5 of those fields. On its own, which context-window problem does this most directly cause?",
+              "options": [
+                "Progressive summarization — the extra fields will eventually be compressed away and lose their precision when that happens.",
+                "Tool-result accumulation — the unused 35 fields still occupy context on every subsequent turn that includes this tool result.",
+                "Lost-in-the-middle — the 5 relevant fields are statistically likely to land in the middle of the 40-field response.",
+                "None — a single oversized tool response has no measurable effect on the context window unless it repeats many times."
+              ],
+              "correct": 1,
+              "explain": "This is tool-result accumulation by definition: an oversized single response, most of it unused, sitting in context and consuming budget on every turn it's referenced. It isn't a summarization problem (nothing has been compressed yet), isn't specifically about middle-of-input placement, and isn't negligible even on a single occurrence, since that one response already carries the excess."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_context_window_1",
+          "q": "A long vulnerability report places its single most important finding in paragraph 30 of 60, with introductory material before it and a conclusion after. Which context-window problem does this risk, and why?",
+          "options": [
+            "Progressive summarization — a finding placed mid-document is statistically more likely to be compressed away than one at the edges.",
+            "Tool-result accumulation — a 60-paragraph report is inherently too long regardless of where its key finding sits within it.",
+            "Lost-in-the-middle — content placed near the middle of a long input is read less reliably than content near the start or end.",
+            "None — placement within a document has no bearing on how reliably a model processes information it contains."
+          ],
+          "correct": 2,
+          "explain": "This is the lost-in-the-middle effect: models process the start and end of a long input more reliably than the middle, so a critical finding buried at paragraph 30 of 60 is at real risk of being missed or under-weighted. It isn't a summarization or tool-output problem, and placement within an input does measurably affect how reliably it's processed."
+        }
+      ]
+    }
+  ]
+}

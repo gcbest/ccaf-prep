@@ -1,0 +1,227 @@
+{
+  "$comment": "Working the advanced topic implicitly practises the simpler one. coverage is the fraction of the simpler topic actually exercised.",
+  "encompassings": [
+    {
+      "topicId": "mt_message_roles",
+      "encompassedId": "mt_api_request_structure",
+      "coverage": 0.5,
+      "reason": "Constructing a roled message presupposes the request envelope it sits inside."
+    },
+    {
+      "topicId": "mt_stop_reason",
+      "encompassedId": "mt_message_roles",
+      "coverage": 0.35,
+      "reason": "Reading a response's stop_reason means reading which role produced the turn it's attached to."
+    },
+    {
+      "topicId": "mt_tool_use_basics",
+      "encompassedId": "mt_stop_reason",
+      "coverage": 0.7,
+      "reason": "Every tool_use exercise re-triggers reading the stop_reason value that announces it."
+    },
+    {
+      "topicId": "mt_tool_choice_modes",
+      "encompassedId": "mt_tool_use_basics",
+      "coverage": 0.55,
+      "reason": "Choosing among tool_choice values requires re-exercising what a tool_use call is."
+    },
+    {
+      "topicId": "mt_schema_design_errors",
+      "encompassedId": "mt_tool_use_basics",
+      "coverage": 0.45,
+      "reason": "Designing a schema is designing the input_schema of a tool_use call."
+    },
+    {
+      "topicId": "mt_agentic_loop_guide",
+      "encompassedId": "mt_stop_reason",
+      "coverage": 0.75,
+      "reason": "The loop's single branch point is the stop_reason check, practiced every time the loop is traced."
+    },
+    {
+      "topicId": "mt_agent_definition",
+      "encompassedId": "mt_agentic_loop_guide",
+      "coverage": 0.4,
+      "reason": "Configuring an agent means configuring which loop it runs."
+    },
+    {
+      "topicId": "mt_hub_and_spoke_guide",
+      "encompassedId": "mt_agent_definition",
+      "coverage": 0.5,
+      "reason": "A coordinator and a subagent are both AgentDefinitions, re-exercising the same fields."
+    },
+    {
+      "topicId": "mt_task_tool_context",
+      "encompassedId": "mt_hub_and_spoke_guide",
+      "coverage": 0.65,
+      "reason": "Spawning a subagent via Task is the hub-and-spoke topology in action."
+    },
+    {
+      "topicId": "mt_hooks_vs_prompts_guide",
+      "encompassedId": "mt_agentic_loop_guide",
+      "coverage": 0.4,
+      "reason": "A hook intercepts a specific step of the same loop this topic re-exercises."
+    },
+    {
+      "topicId": "mt_mcp_server_config",
+      "encompassedId": "mt_mcp_overview",
+      "coverage": 0.5,
+      "reason": "Configuring a server re-exercises what tools/resources/prompts a server provides."
+    },
+    {
+      "topicId": "mt_mcp_iserror",
+      "encompassedId": "mt_mcp_overview",
+      "coverage": 0.4,
+      "reason": "isError is read on the same tool-call shape the overview introduces."
+    },
+    {
+      "topicId": "mt_mcp_resources",
+      "encompassedId": "mt_mcp_overview",
+      "coverage": 0.35,
+      "reason": "Resources are one of the three primitives being re-exercised."
+    },
+    {
+      "topicId": "mt_path_imports",
+      "encompassedId": "mt_claudemd_hierarchy_guide",
+      "coverage": 0.5,
+      "reason": "Using @path means placing content correctly within the same three-level hierarchy."
+    },
+    {
+      "topicId": "mt_claude_rules_guide",
+      "encompassedId": "mt_claudemd_hierarchy_guide",
+      "coverage": 0.6,
+      "reason": "Choosing .claude/rules/ over a hierarchy level requires knowing the hierarchy it's an alternative to."
+    },
+    {
+      "topicId": "mt_commands_skills_guide",
+      "encompassedId": "mt_claudemd_hierarchy_guide",
+      "coverage": 0.35,
+      "reason": "The always-on/on-demand contrast re-exercises what CLAUDE.md's always-loaded model actually is."
+    },
+    {
+      "topicId": "mt_planning_mode_guide",
+      "encompassedId": "mt_agentic_loop_guide",
+      "coverage": 0.35,
+      "reason": "Deciding what the loop may do re-exercises the loop's own step structure."
+    },
+    {
+      "topicId": "mt_cli_ci_sessions",
+      "encompassedId": "mt_planning_mode_guide",
+      "coverage": 0.5,
+      "reason": "Running headless is a specific point on the same direct-execution-vs-planning spectrum."
+    },
+    {
+      "topicId": "mt_explicit_criteria",
+      "encompassedId": "mt_few_shot_patterns",
+      "coverage": 0.45,
+      "reason": "An explicit criterion is what a well-chosen example was already implicitly demonstrating."
+    },
+    {
+      "topicId": "mt_prompt_chaining_vs_dynamic",
+      "encompassedId": "mt_explicit_criteria",
+      "coverage": 0.35,
+      "reason": "Each chained step still needs the same explicit, falsifiable criteria."
+    },
+    {
+      "topicId": "mt_validation_retry_selfcorrect",
+      "encompassedId": "mt_schema_design_errors",
+      "coverage": 0.5,
+      "reason": "A retry loop is exercised against the same nullable/required schema discipline."
+    },
+    {
+      "topicId": "mt_batches_custom_id_failures",
+      "encompassedId": "mt_batches_overview",
+      "coverage": 0.6,
+      "reason": "custom_id and failure handling are mechanics of the same batch shape the overview introduces."
+    },
+    {
+      "topicId": "mt_batches_sla",
+      "encompassedId": "mt_batches_custom_id_failures",
+      "coverage": 0.45,
+      "reason": "Planning a window re-exercises how failures are identified and resubmitted within it."
+    },
+    {
+      "topicId": "mt_decomposition_strategies",
+      "encompassedId": "mt_prompt_chaining_vs_dynamic",
+      "coverage": 0.55,
+      "reason": "Fixed-vs-adaptive is the same distinction, generalized from a prompt chain to a task plan."
+    },
+    {
+      "topicId": "mt_multipass_review",
+      "encompassedId": "mt_decomposition_strategies",
+      "coverage": 0.6,
+      "reason": "Multi-pass review is a worked instance of the fixed-pipeline half of that distinction."
+    },
+    {
+      "topicId": "mt_escalation_patterns",
+      "encompassedId": "mt_escalation_triggers",
+      "coverage": 0.6,
+      "reason": "Applying an escalation pattern re-exercises which trigger fired."
+    },
+    {
+      "topicId": "mt_structured_handoff",
+      "encompassedId": "mt_escalation_patterns",
+      "coverage": 0.4,
+      "reason": "Building a handoff re-exercises which escalation pattern produced it."
+    },
+    {
+      "topicId": "mt_confidence_calibration",
+      "encompassedId": "mt_escalation_triggers",
+      "coverage": 0.4,
+      "reason": "Confidence routing re-exercises why self-rated confidence was ruled out as a trigger."
+    },
+    {
+      "topicId": "mt_error_antipatterns",
+      "encompassedId": "mt_error_categories",
+      "coverage": 0.5,
+      "reason": "Spotting an anti-pattern requires re-classifying which error category is being mishandled."
+    },
+    {
+      "topicId": "mt_structured_error_coverage",
+      "encompassedId": "mt_error_antipatterns",
+      "coverage": 0.55,
+      "reason": "Building a structured error re-exercises exactly what the anti-patterns were missing."
+    },
+    {
+      "topicId": "mt_trim_tool_results",
+      "encompassedId": "mt_fact_extraction_block",
+      "coverage": 0.3,
+      "reason": "Both re-exercise the same keep-only-what's-load-bearing discipline."
+    },
+    {
+      "topicId": "mt_position_aware_input",
+      "encompassedId": "mt_trim_tool_results",
+      "coverage": 0.3,
+      "reason": "Positioning trimmed content still assumes the trimming step already happened."
+    },
+    {
+      "topicId": "mt_scratchpad_delegation",
+      "encompassedId": "mt_position_aware_input",
+      "coverage": 0.35,
+      "reason": "Writing a scratchpad re-exercises which findings are worth surfacing prominently."
+    },
+    {
+      "topicId": "mt_state_persistence",
+      "encompassedId": "mt_scratchpad_delegation",
+      "coverage": 0.5,
+      "reason": "A state manifest is a scratchpad's structure applied across several agents."
+    },
+    {
+      "topicId": "mt_conflicting_data",
+      "encompassedId": "mt_attribution_loss",
+      "coverage": 0.6,
+      "reason": "Detecting a conflict re-exercises the same source/date/confidence attribution fields."
+    },
+    {
+      "topicId": "mt_dates_render_content",
+      "encompassedId": "mt_conflicting_data",
+      "coverage": 0.45,
+      "reason": "Resolving a conflict with a date re-exercises how conflicting values are represented."
+    },
+    {
+      "topicId": "mt_edit_fallback_pattern",
+      "encompassedId": "mt_tool_selection_investigation",
+      "coverage": 0.5,
+      "reason": "The fallback is reached only after the same Grep/Read investigation this topic covers has been run."
+    }
+  ]
+}

@@ -1,0 +1,165 @@
+{
+  "$comment": "Knowledge points for cl_error_handling_guide.",
+  "cluster": "cl_error_handling_guide",
+  "topics": [
+    {
+      "topicId": "mt_error_categories",
+      "knowledgePoints": [
+        {
+          "id": "kp_error_categories_1",
+          "name": "Four categories, four different next actions",
+          "keyPrerequisites": [
+            "mt_mcp_iserror"
+          ],
+          "teach": "<p class='kp-key'>Transient (timeout, 503) is retryable with exponential backoff. Validation (missing field, wrong format) is not retryable as-is — fix the request first. Business (policy violation, threshold exceeded) is not retryable — explain to the user and propose an alternative. Permission (access denied) is not retryable — escalate. Conflating any two means retrying something that will never succeed, or escalating something a retry would have fixed.</p>",
+          "questions": [
+            {
+              "id": "q_error_categories_1a",
+              "q": "An MCP tool call fails with 'missing required field: customer_id.' Which category is this, and what should the agent do instead of retrying the identical call?",
+              "options": [
+                "Validation — fix the request by supplying customer_id, since retrying the exact same malformed call will fail again identically.",
+                "Transient — retry the identical call with exponential backoff, since the field may populate itself on a later attempt.",
+                "Business — explain the missing-field situation to the user as a policy limitation and offer an alternative.",
+                "Permission — escalate to a human immediately, since a missing required field like this one indicates the agent lacks authorization for the call."
+              ],
+              "correct": 0,
+              "explain": "A missing required field is a validation error — the request itself is malformed, so retrying it unchanged will fail identically every time; the fix is supplying the missing field before calling again. It isn't transient (nothing external is flaking), it isn't a policy/business issue, and it has nothing to do with permission."
+            },
+            {
+              "id": "q_error_categories_1b",
+              "q": "A tool call fails with a 503 Service Unavailable response. Which category does this fall under, and is it retryable as-is?",
+              "options": [
+                "Validation — not retryable as-is; the request's structure needs to be corrected before trying again.",
+                "Transient — retryable, ideally with exponential backoff, since the failure is likely to resolve on its own shortly.",
+                "Permission — not retryable; this specific failure requires escalation rather than any form of retry.",
+                "Business — not retryable at all; a 503 response typically indicates some kind of policy constraint actively being enforced by the service."
+              ],
+              "correct": 1,
+              "explain": "503 Service Unavailable is a canonical transient failure — the service itself is temporarily down, and retrying (ideally with backoff) is the appropriate response since nothing about the request itself is wrong. It's not a structural request problem (validation), not an authorization problem (permission), and not a policy decision (business)."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_error_categories_1",
+          "q": "Why does treating a validation error the same way as a transient one (retrying it unchanged) fail to actually resolve anything?",
+          "options": [
+            "It doesn't fail — validation errors resolve on retry roughly as often as transient ones do, given enough attempts.",
+            "Because validation errors are always permanent regardless of what changes are made, so no retry strategy of any kind helps.",
+            "Because a validation error stems from something wrong in the request itself, which retrying without changing anything can't fix.",
+            "Because exponential backoff specifically triggers a hidden fix for malformed requests that immediate retries do not."
+          ],
+          "correct": 2,
+          "explain": "A validation error is a problem with the request's own content or structure — retrying the identical, still-malformed request wastes an attempt without addressing the actual cause. It won't resolve given more attempts if nothing changes, it isn't unfixable in general (correcting the request does fix it), and backoff timing has no bearing on a structural request problem."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_error_antipatterns",
+      "knowledgePoints": [
+        {
+          "id": "kp_error_antipatterns_1",
+          "name": "Four ways a response can starve the coordinator",
+          "keyPrerequisites": [
+            "mt_error_categories"
+          ],
+          "teach": "<p class='kp-key'>A generic 'search unavailable' status gives the coordinator nothing to decide with. Silent suppression — an empty result reported as success — makes 'no matches' indistinguishable from 'the search failed.' Aborting a whole workflow on one subagent's failure throws away every partial result. Infinite in-subagent retries burn latency and resources instead of surfacing the problem. Each one either hides information the coordinator needs, or denies it partial progress it could have used.</p>",
+          "questions": [
+            {
+              "id": "q_error_antipatterns_1a",
+              "q": "A search subagent times out and returns an empty results array with no failure flag, so the coordinator logs it as '0 relevant results found.' Which anti-pattern is this?",
+              "options": [
+                "Infinite retries — the subagent should have kept retrying internally rather than giving up and returning an empty array.",
+                "Aborting the whole workflow — the coordinator should have stopped the entire pipeline the moment this subagent returned.",
+                "A generic error status — the response should have said 'search unavailable' instead of returning an empty array.",
+                "Silent suppression — a failure is being reported identically to a genuine zero-match success, hiding that anything went wrong."
+              ],
+              "correct": 3,
+              "explain": "This is silent suppression exactly as the guide describes it: a real failure (a timeout) gets reported in the same shape as a legitimate zero-match success, so the coordinator can't tell the two apart. Nothing here involves excessive internal retries, aborting the whole workflow isn't what happened, and a generic status string isn't the specific problem — the missing failure signal is."
+            },
+            {
+              "id": "q_error_antipatterns_1b",
+              "q": "A coordinator aborts an entire three-subagent research workflow the moment one of the three subagents fails, discarding the other two subagents' completed results. What does this cost?",
+              "options": [
+                "It loses every bit of value the two successful subagents already produced, when a partial result with an annotated gap would have preserved it.",
+                "Nothing significant is lost — restarting the entire workflow from scratch is generally considered cheaper than trying to salvage any partial results.",
+                "It only matters if the failed subagent was the first one to run; failures late in the workflow carry no such cost.",
+                "It's the correct behavior specifically to guarantee consistency across the final report's sections."
+              ],
+              "correct": 0,
+              "explain": "Discarding two subagents' completed work over one unrelated failure throws away real, usable output — the guide's fix is continuing with partial results and annotating the gap, not aborting everything. Restarting from scratch isn't generally cheaper than salvaging what already succeeded, the cost doesn't depend on which subagent happened to fail first, and this abort-on-failure behavior is exactly the anti-pattern being described, not a best practice."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_error_antipatterns_1",
+          "q": "Why is unlimited retrying inside a single subagent, with no cap, listed as an anti-pattern rather than a safety measure?",
+          "options": [
+            "Because retries of any number are always ineffective, so even a single retry attempt should be avoided entirely.",
+            "Because it wastes latency and resources without ever escalating to the coordinator, which could have decided on a better recovery path.",
+            "Because retrying is only actually an anti-pattern when the underlying error turns out to be a validation error rather than a transient one.",
+            "It isn't actually an anti-pattern; unlimited retries inside a subagent are the guide's recommended default behavior."
+          ],
+          "correct": 1,
+          "explain": "The problem with unbounded internal retries is that they burn time and resources while never surfacing the issue to the coordinator, which might have a better recovery option (a different approach, partial results, escalation). The guide doesn't say retries are always ineffective — a bounded local retry (1–2 attempts) is fine — and the concern isn't specific to one error category; it's the unboundedness itself."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_structured_error_coverage",
+      "knowledgePoints": [
+        {
+          "id": "kp_structured_error_coverage_1",
+          "name": "Enough for the coordinator to actually decide",
+          "keyPrerequisites": [
+            "mt_error_antipatterns"
+          ],
+          "teach": "<p class='kp-key'>A useful subagent error carries status, failure_type, the attempted input, any partial_results, and alternative_approaches — giving the coordinator what it needs to retry differently, use what's there, or route elsewhere. The same honesty extends to the final synthesis: mark each section FULL COVERAGE or PARTIAL COVERAGE with the reason, rather than presenting gapped research as uniformly complete.</p>",
+          "questions": [
+            {
+              "id": "q_structured_error_coverage_1a",
+              "q": "A synthesis report on 'AI in creative industries' covers visual art in depth but is thin on music because a search agent timed out there. What should the final report's structure do to represent that honestly?",
+              "options": [
+                "Present all three sections in identical formatting with no indication that the music section is based on less data.",
+                "Omit the music section entirely from the report, since incomplete coverage shouldn't be presented to the reader at all.",
+                "Mark the music section PARTIAL COVERAGE with the reason (the search agent's timeout), while marking visual art FULL COVERAGE.",
+                "Merge the thin music findings into the visual art section, since visual art has the depth to compensate for the gap."
+              ],
+              "correct": 2,
+              "explain": "This is exactly what coverage annotation is for — labeling the music section as PARTIAL COVERAGE with the specific reason lets a reader correctly weigh it against the FULL COVERAGE visual art section, rather than reading both as equally reliable. Presenting them identically hides the gap, omitting the section discards real (if partial) research, and merging it into an unrelated section obscures rather than clarifies the gap."
+            },
+            {
+              "id": "q_structured_error_coverage_1b",
+              "q": "Which field in a structured subagent error most directly helps the coordinator recover with a modified approach, rather than simply retrying unchanged?",
+              "options": [
+                "status alone, since knowing that something failed is sufficient information to construct a better retry.",
+                "failure_type alone, without any of the other fields, since categorizing the failure is the whole of what's needed.",
+                "None of the individual fields matter on their own; only the presence of isError:true is relevant to recovery.",
+                "alternative_approaches, since it suggests concrete different strategies the coordinator could try next."
+              ],
+              "correct": 3,
+              "explain": "alternative_approaches specifically proposes concrete different strategies (a narrower query, a different data source) — that's what turns a failure report into an actionable recovery path rather than just a status update. status or failure_type alone tell the coordinator something failed and how, but not what to try differently, and a bare isError flag carries even less."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_structured_error_coverage_1",
+          "q": "Why does a structured subagent error include partial_results even when the overall call is reported as a failure?",
+          "options": [
+            "So the coordinator can choose to use what was actually produced instead of treating the entire call as a total loss.",
+            "It's purely for logging purposes and has no bearing on what the coordinator does with the failed call's outcome.",
+            "Because partial_results is required by the JSON schema regardless of whether it's actually useful in a given failure.",
+            "Only to support the eventual coverage annotation in the final report, with no other use during the workflow itself."
+          ],
+          "correct": 0,
+          "explain": "Preserving whatever was actually produced before the failure gives the coordinator a real option — using that partial output rather than discarding everything — which is the whole point of including it alongside the failure status. It's meant to inform an active decision, not just sit as a log entry, isn't an arbitrary schema requirement, and its usefulness isn't limited to feeding the later coverage annotation."
+        }
+      ]
+    }
+  ]
+}

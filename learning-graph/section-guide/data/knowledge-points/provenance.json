@@ -1,0 +1,165 @@
+{
+  "$comment": "Knowledge points for cl_provenance.",
+  "cluster": "cl_provenance",
+  "topics": [
+    {
+      "topicId": "mt_attribution_loss",
+      "knowledgePoints": [
+        {
+          "id": "kp_attribution_loss_1",
+          "name": "A claim needs its source, date, and confidence attached",
+          "keyPrerequisites": [
+            "mt_structured_error_coverage"
+          ],
+          "teach": "<p class='kp-key'>'The market is estimated at $3.2B' with nothing else attached has lost everything a reader needs to judge it. Provenance means keeping <code>source_url</code>, <code>source_name</code>, <code>publication_date</code>, and a <code>confidence</code> score bound to the claim all the way through synthesis — not just in the first agent that found it.</p>",
+          "questions": [
+            {
+              "id": "q_attribution_loss_1a",
+              "q": "A synthesis report states 'The AI music market is estimated at $3.2B' with nothing else attached. What has been lost in getting to that sentence?",
+              "options": [
+                "The source, date, and confidence that would let a reader judge how much to trust the figure and how current it is.",
+                "Nothing important — a market-size figure is self-evidently reliable regardless of whether a source is cited alongside it.",
+                "Only the exact currency conversion used, since $3.2B could theoretically refer to a non-USD figure without clarification.",
+                "The claim itself is likely fabricated whenever attribution is missing, so the number should be assumed to be invented."
+              ],
+              "correct": 0,
+              "explain": "Provenance is exactly source_url, source_name, publication_date, and confidence — without them, a reader has no way to judge how trustworthy or current the figure actually is, even if the number itself is accurate. It isn't self-evidently reliable without that context, the currency framing isn't the guide's concern here, and missing attribution doesn't mean the claim is necessarily fabricated — it means it's unverifiable as stated."
+            },
+            {
+              "id": "q_attribution_loss_1b",
+              "q": "Which set of fields does the guide give as what a well-attributed claim should carry through a synthesis pipeline?",
+              "options": [
+                "claim and confidence only — source information is optional as long as a confidence score is present.",
+                "claim, source_url, source_name, publication_date, and confidence.",
+                "claim, author's personal opinion, and a general topic tag describing what the claim relates to.",
+                "claim and a boolean flag indicating simply whether any source exists at all, with no further detail."
+              ],
+              "correct": 1,
+              "explain": "The guide's own worked example pairs the claim with source_url, source_name, publication_date, and confidence — that specific set of fields is what preserves provenance through synthesis. A bare confidence score without an actual source, a subjective opinion field, or a plain existence flag all fall well short of that."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_attribution_loss_1",
+          "q": "Why does the guide treat attribution loss as a distinct problem from a claim simply being factually wrong?",
+          "options": [
+            "It doesn't, really — attribution loss and factual inaccuracy are essentially the same underlying problem, just described using two different names for it.",
+            "Because attribution loss only happens when a claim is already known to be false at the time it's synthesized.",
+            "Because a claim can be perfectly accurate and still be unattributed, leaving a reader unable to verify or contextualize it regardless of its truth.",
+            "Because attribution only matters for numeric claims; qualitative claims don't suffer from the same kind of loss."
+          ],
+          "correct": 2,
+          "explain": "A claim's truth and its attribution are independent — a correct figure with no source or date is exactly as unverifiable to the reader as an incorrect one presented the same way, which is why the guide treats attribution as its own concern. It isn't the same problem restated, it isn't tied to a claim already being known false, and it isn't limited to numeric claims."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_conflicting_data",
+      "knowledgePoints": [
+        {
+          "id": "kp_conflicting_data_1",
+          "name": "Preserve both values; don't pick a winner silently",
+          "keyPrerequisites": [
+            "mt_attribution_loss"
+          ],
+          "teach": "<p class='kp-key'>When two sources disagree, the right move is keeping both values with their source, date, and methodology attached, flagging <code>conflict_detected</code>, and letting the coordinator reconcile — not silently choosing the 'more credible-looking' number and footnoting the other.</p>",
+          "questions": [
+            {
+              "id": "q_conflicting_data_1a",
+              "q": "Two sources give different market-share figures for the same metric. An analysis agent picks the one it judges more credible and adds a footnote about the other. What does the guide say to do instead?",
+              "options": [
+                "Average the two figures numerically and report the average as the single value, without noting a conflict occurred.",
+                "Discard both values entirely and report that the metric is unknown, since two disagreeing sources cancel each other out.",
+                "Keep only the more recently published of the two figures, treating recency as the deciding factor without further annotation.",
+                "Preserve both values with their sources, dates, and methodology, flag conflict_detected, and let the coordinator reconcile them."
+              ],
+              "correct": 3,
+              "explain": "The guide is explicit that both values should be preserved with their full context and flagged as conflicting, with reconciliation left to the coordinator, which has broader context than the analysis agent does. Averaging invents a number neither source actually reported, discarding both throws away real information, and picking purely by recency is still a silent, single-agent judgment call the guide argues against."
+            },
+            {
+              "id": "q_conflicting_data_1b",
+              "q": "Why does silently picking one of two conflicting values and footnoting the other serve the coordinator worse than preserving both explicitly?",
+              "options": [
+                "Because the coordinator, with broader context, may be better positioned to reconcile the conflict than the analysis agent was.",
+                "It doesn't serve worse — footnoting a discrepancy is functionally identical to flagging conflict_detected on both values.",
+                "Because footnotes are technically unsupported in most structured JSON output formats used by extraction pipelines.",
+                "Because silently picking a value is only a problem when the two figures differ by more than 50 percent."
+              ],
+              "correct": 0,
+              "explain": "The coordinator sits above individual analysis agents with more context to weigh which source is more likely right — pre-emptively picking one value at the analysis stage takes that decision out of the hands of whoever is best positioned to make it. A footnote buried under a chosen value is not equivalent to an explicit conflict flag on both, this isn't a JSON formatting limitation, and the guide draws no percentage threshold for when preservation matters."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_conflicting_data_1",
+          "q": "What information should accompany each of two conflicting values so a coordinator can actually attempt reconciliation, rather than just seeing that a conflict exists?",
+          "options": [
+            "Nothing beyond the conflict_detected flag itself; the two raw numbers alone are sufficient for reconciliation.",
+            "Each value's source, publication date, and methodology, so differences in those can explain the discrepancy.",
+            "Only the more recent of the two values needs any additional detail attached; the older one can stand alone.",
+            "The personal opinion of whichever agent first discovered each of the two conflicting values."
+          ],
+          "correct": 1,
+          "explain": "Source, date, and methodology are exactly what let a reconciler figure out whether the discrepancy comes from measuring different time periods, different definitions, or different data collection approaches — a bare conflict flag with no supporting detail gives no way to actually resolve anything. Attaching detail to only one of the two values leaves the comparison lopsided, and an agent's personal opinion isn't the kind of evidence reconciliation depends on."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_dates_render_content",
+      "knowledgePoints": [
+        {
+          "id": "kp_dates_render_1",
+          "name": "A date can turn a contradiction into a trend",
+          "keyPrerequisites": [
+            "mt_conflicting_data"
+          ],
+          "teach": "<p class='kp-key'>'Source A says 10%, source B says 15%. Contradiction' becomes 'Source A (2023) says 10%, source B (2024) says 15%. Likely +5% growth over a year' once dates are attached — the same numbers, radically different interpretation.</p><p>Rendering should also match content type: tables for financial data, prose for analysis, structured lists for technical findings, chronological order for time series — forcing everything into one format loses the structure that made the content legible in the first place.</p>",
+          "questions": [
+            {
+              "id": "q_dates_render_1a",
+              "q": "Source A (dated 2023) says 10% and source B (dated 2024) says 15%, and a draft report calls this a contradiction. What does adding the dates change about that framing?",
+              "options": [
+                "Nothing changes — a numeric disagreement between two sources is a contradiction regardless of when each was published.",
+                "It proves source B is more accurate than source A, since more recent data is always the more reliable of the two.",
+                "It reframes the disagreement as a plausible year-over-year growth trend rather than two sources disputing the same fact.",
+                "It means one of the two figures must be an error, and the dates only help identify which one to discard."
+              ],
+              "correct": 2,
+              "explain": "With the dates attached, 10% in 2023 and 15% in 2024 reads as a plausible growth trend across a year rather than two sources disagreeing about the same point in time — that's the reframing the guide's example is built around. It doesn't automatically make the newer source more accurate in general, and it doesn't mean one figure is simply wrong — both can be correct for their own respective dates."
+            },
+            {
+              "id": "q_dates_render_1b",
+              "q": "A final report presents financial figures, a time series, and technical findings all as the same block of continuous prose. What does the guide say this loses?",
+              "options": [
+                "Nothing is lost; prose is treated as the universally preferred format for every kind of content in a synthesis report.",
+                "Only the time series loses meaningful structure; financial and technical content read equally well as prose.",
+                "The loss only really matters for reports intended for a non-technical audience; expert readers are assumed to be unaffected by whatever format is chosen.",
+                "The structure suited to each content type — tables for financial data, chronological order for time series, lists for technical findings."
+              ],
+              "correct": 3,
+              "explain": "The guide's rule is to render by content type — tables, chronological ordering, and structured lists each fit a different kind of content, and flattening everything into prose sacrifices exactly that fit. It isn't lossless, the loss isn't limited to just the time series, and it isn't an audience-specific concern — the mismatch between content and format applies regardless of who's reading."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_dates_render_1",
+          "q": "Why does the guide pair 'include dates' with 'render by content type' as related ideas rather than two unrelated tips?",
+          "options": [
+            "Both are about presenting synthesized information in a way that preserves the structure needed to interpret it correctly.",
+            "They aren't actually related; they happen to appear in the same chapter purely by coincidence of the guide's organization.",
+            "Both apply exclusively to time-series data and have no bearing on any other kind of content in a report.",
+            "Both are really about attribution specifically, with content-type rendering being a restatement of source-tracking."
+          ],
+          "correct": 0,
+          "explain": "Both ideas are about preserving the structure a reader needs to interpret content correctly — a date resolves an apparent numeric contradiction, and a fitting format (table, list, chronological order) preserves the shape financial, technical, or time-series content actually has. They aren't a coincidental pairing, they aren't limited to time-series data alone, and content-type rendering is a distinct idea from source attribution, not a restatement of it."
+        }
+      ]
+    }
+  ]
+}

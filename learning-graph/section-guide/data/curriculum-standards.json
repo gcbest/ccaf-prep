@@ -1,0 +1,10 @@
+{
+  "$comment": "Source standards this graph is aligned to: the CCA-F exam-guide domains (ccaf:*), same ids/names/weights as the other three graphs' curriculum-standards.json. Note: the community guide this section is built from numbers its own Part II domains differently — its Domain 3 is 'Claude Code Configuration and Workflows' and its Domain 4 is 'Prompt Engineering and Structured Output', the reverse of the official CCA-F Exam Guide v1.0 numbering used here and elsewhere in this repo. Topics reference the ids below by content, not by the guide's own numbering.",
+  "standards": [
+    { "id": "ccaf:d1", "family": "ccaf", "code": "Domain 1", "name": "Agentic Architecture & Orchestration", "weight": 0.27, "source": "CCA-F Exam Guide v1.0 (effective July 2026)" },
+    { "id": "ccaf:d2", "family": "ccaf", "code": "Domain 2", "name": "Tool Design & MCP Integration", "weight": 0.18, "source": "CCA-F Exam Guide v1.0 (effective July 2026)" },
+    { "id": "ccaf:d3", "family": "ccaf", "code": "Domain 3", "name": "Prompt Engineering & Structured Output", "weight": 0.20, "source": "CCA-F Exam Guide v1.0 (effective July 2026)" },
+    { "id": "ccaf:d4", "family": "ccaf", "code": "Domain 4", "name": "Claude Code Configuration & Workflows", "weight": 0.20, "source": "CCA-F Exam Guide v1.0 (effective July 2026)" },
+    { "id": "ccaf:d5", "family": "ccaf", "code": "Domain 5", "name": "Context Management & Reliability", "weight": 0.15, "source": "CCA-F Exam Guide v1.0 (effective July 2026)" }
+  ]
+}

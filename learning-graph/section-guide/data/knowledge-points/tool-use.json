@@ -1,0 +1,252 @@
+{
+  "$comment": "Knowledge points for cl_tool_use_guide.",
+  "cluster": "cl_tool_use_guide",
+  "topics": [
+    {
+      "topicId": "mt_tool_use_basics",
+      "knowledgePoints": [
+        {
+          "id": "kp_tool_use_basics_1",
+          "name": "A structured request, not a remote execution",
+          "keyPrerequisites": [
+            "mt_stop_reason"
+          ],
+          "teach": "<p class='kp-key'>The model never runs code. It emits a <code>tool_use</code> block naming a tool and its arguments; your application decides whether, and how, to actually execute it.</p><p>That separation is what makes the pattern safe to build on — the model proposes, your code disposes, and nothing happens that your application didn't choose to run.</p>",
+          "questions": [
+            {
+              "id": "q_tool_use_basics_1a",
+              "q": "A junior engineer describes tool_use as 'Claude running the requested function inside a secure sandbox on Anthropic's servers.' What's the accurate correction?",
+              "options": [
+                "Claude does run the function, but only for read-only tools — write operations are the only ones requiring the caller to execute them.",
+                "Claude only emits a structured request naming a tool and its arguments; the calling application decides whether and how to execute it.",
+                "The description is accurate for the Agent SDK specifically, though the plain Messages API does require the caller to execute tools.",
+                "Claude runs the function in a sandbox only when tool_choice is set to \"any\"; under \"auto\" the caller must execute it manually."
+              ],
+              "correct": 1,
+              "explain": "In every case, the model only produces a tool_use request — it never executes anything itself, sandboxed or otherwise. That's true across the plain Messages API and the Agent SDK, for read-only and write tools alike, and regardless of the tool_choice setting; execution is always the calling application's job."
+            },
+            {
+              "id": "q_tool_use_basics_1b",
+              "q": "After the model emits a tool_use block, what is the calling application's role in the exchange?",
+              "options": [
+                "To forward the tool_use block unchanged to the user's browser, which executes the tool client-side via JavaScript.",
+                "To validate the tool_use block's JSON syntax only — actual execution happens automatically on Anthropic's infrastructure.",
+                "To decide whether to execute the named tool with the given arguments, then return the result for the model to continue from.",
+                "Nothing — tool_use blocks are informational logging only and do not require any response from the calling application."
+              ],
+              "correct": 2,
+              "explain": "The calling application is where execution actually happens: it chooses whether to run the named tool with the supplied arguments and then feeds the result back so the loop can continue. Nothing about tool_use forwards execution to a browser, happens automatically server-side, or can be safely ignored as mere logging."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_tool_use_basics_1",
+          "q": "Why does the model-proposes, application-disposes split matter for building agentic systems safely?",
+          "options": [
+            "It ensures the model's tool calls are always syntactically correct, which is actually guaranteed by the schema, not this split.",
+            "It doesn't matter much in practice, since most applications execute every tool_use request the model emits without review.",
+            "It only really matters for tools that modify data; read-only tools are assumed to bypass the application and execute directly from the model's own request.",
+            "It guarantees nothing unsafe happens unless the application itself chooses to run it — the model can request but never act unilaterally."
+          ],
+          "correct": 3,
+          "explain": "The split means the model can only ever propose an action — the application retains full control over whether that action actually happens, which is what makes it safe to add gating, validation, or permission checks. It isn't about schema-guaranteed syntax, isn't something applications are free to ignore, and applies to read-only tools exactly as much as to ones that modify data."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_tool_description_selection",
+      "knowledgePoints": [
+        {
+          "id": "kp_tool_description_1",
+          "name": "Description, not name, drives selection",
+          "keyPrerequisites": [
+            "mt_tool_use_basics"
+          ],
+          "teach": "<p class='kp-key'>Claude chooses a tool by reading its description, not by its function name. Two tools with near-identical descriptions get confused for each other regardless of how different their names are.</p><p>A strong description states what the tool does and returns, its input formats with example values, its edge cases, and — critically — when to use it instead of a similar alternative. 'Retrieves customer information' invites exactly the ambiguity a longer, differentiated description would avoid.</p>",
+          "questions": [
+            {
+              "id": "q_tool_description_1a",
+              "q": "Production logs show requests meant for a document-analysis tool routing to a web-search tool 45% of the time. Both tools' descriptions read roughly 'analyzes content and extracts key information.' What is the root cause?",
+              "options": [
+                "The two tools' descriptions overlap almost completely, so the model has no textual basis for telling them apart.",
+                "The tools' names are too similar, and the model is matching on name similarity rather than reading either description.",
+                "The coordinator's system prompt lacks a routing table, which is the only mechanism that can disambiguate similar tools.",
+                "The document-analysis tool's input_schema is missing required fields, causing the model to fall back to the other tool."
+              ],
+              "correct": 0,
+              "explain": "Selection is driven by description text, and two descriptions that both say roughly 'analyzes content and extracts key information' give the model nothing to distinguish between — that overlap, not tool naming, a missing routing table, or a schema defect, is the root cause the guide points to."
+            },
+            {
+              "id": "q_tool_description_1b",
+              "q": "Which addition to a tool's description most directly helps the model choose correctly between it and a similar alternative?",
+              "options": [
+                "A shorter description, since brevity reduces the chance the model over-analyzes minor wording differences between tools.",
+                "An explicit statement of when to use this tool versus the similar alternative, alongside its purpose and input formats.",
+                "Renaming the tool to something more distinctive, since the model primarily disambiguates tools by their function names.",
+                "Moving the description into the system prompt instead of the tool definition, since system-level text carries more weight."
+              ],
+              "correct": 1,
+              "explain": "Explicitly stating when to use this tool over a similar one gives the model the exact distinguishing signal it needs, on top of what the tool does and its input formats. A shorter description removes detail rather than adding disambiguation, renaming doesn't address the selection mechanism the guide identifies, and relocating text to the system prompt isn't how tool selection works."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_tool_description_1",
+          "q": "A team notices their custom MCP tool is rarely chosen even though it offers functionality no built-in tool has. What does the guide suggest as the likely fix?",
+          "options": [
+            "Nothing to fix — agents inherently prefer built-in tools over MCP tools regardless of description quality, by design.",
+            "Disable the competing built-in tools entirely, since the model can't be taught to prefer an MCP tool through description alone.",
+            "Strengthen the MCP tool's description to highlight its concrete, unique advantages that built-in tools can't provide.",
+            "Switch the MCP tool's name to exactly match a built-in tool's name, so the model treats them as interchangeable options."
+          ],
+          "correct": 2,
+          "explain": "Agents can default to a built-in tool over a similar MCP one, and the countermeasure is strengthening the MCP tool's description to spell out concrete advantages or unique data the built-in tool can't match — description quality is the lever, not disabling built-ins or aliasing names, and it isn't an unfixable default."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_tool_choice_modes",
+      "knowledgePoints": [
+        {
+          "id": "kp_tool_choice_1",
+          "name": "auto, any, or a named tool",
+          "keyPrerequisites": [
+            "mt_tool_use_basics"
+          ],
+          "teach": "<p class='kp-key'>Three tool_choice values, three guarantees:</p><ul><li><code>{\"type\": \"auto\"}</code> — the model decides whether to call a tool at all. Default for most cases.</li><li><code>{\"type\": \"any\"}</code> — the model must call some tool, but picks which one. Use when you need guaranteed structured output but any of several extraction tools would do.</li><li><code>{\"type\": \"tool\", \"name\": \"X\"}</code> — the model must call exactly tool X. Use when a specific first step is mandatory, like running extraction before enrichment.</li></ul>",
+          "questions": [
+            {
+              "id": "q_tool_choice_1a",
+              "q": "A pipeline must run extract_metadata as its first step on every single request, with no exceptions and no possibility the model answers in plain text instead. Which tool_choice setting guarantees this?",
+              "options": [
+                "{\"type\": \"any\"}, since it forces some tool call, and extract_metadata is the only one likely to be chosen first.",
+                "{\"type\": \"auto\"}, combined with a strongly worded system-prompt instruction telling the model to call it first.",
+                "{\"type\": \"any\"}, paired with removing every other tool definition so extract_metadata is the only one the model can pick.",
+                "{\"type\": \"tool\", \"name\": \"extract_metadata\"}, since it forces exactly that tool to be called, with no other option available."
+              ],
+              "correct": 3,
+              "explain": "Only the named-tool form — {\"type\": \"tool\", \"name\": \"extract_metadata\"} — forces exactly that specific tool with no alternative. \"any\" guarantees some tool call but not which one, \"auto\" plus a prompt instruction is still probabilistic, and removing every other tool is a workaround rather than the mechanism the API actually provides for this guarantee."
+            },
+            {
+              "id": "q_tool_choice_1b",
+              "q": "A task has three interchangeable extraction tools, and any one of them would produce acceptable structured output. Which tool_choice setting fits, and why?",
+              "options": [
+                "{\"type\": \"any\"}, since it guarantees some tool is called while still letting the model pick the best-fitting one of the three.",
+                "{\"type\": \"tool\", \"name\": ...} on whichever tool is defined first, since forcing one avoids ambiguity in the model's choice.",
+                "{\"type\": \"auto\"}, since it's the lowest-friction default and works whenever more than one valid tool exists.",
+                "None of the three — with multiple interchangeable tools, tool_choice must be omitted entirely to avoid over-constraining the call."
+              ],
+              "correct": 0,
+              "explain": "\"any\" is built for exactly this case: it guarantees structured output by forcing a tool call, while leaving the choice of which of several acceptable tools to the model. Forcing one specific tool removes the model's ability to pick the best fit, \"auto\" doesn't guarantee a tool gets called at all, and omitting tool_choice entirely just falls back to auto's same uncertainty."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_tool_choice_1",
+          "q": "Why does {\"type\": \"any\"} still count as guaranteeing structured output, even though it doesn't pin down which tool gets called?",
+          "options": [
+            "It doesn't guarantee structured output — only a named-tool tool_choice actually guarantees the response is structured.",
+            "Because it forces a tool_use response rather than free text, and every tool's output is structured by its input_schema.",
+            "It guarantees structured output only when exactly one tool is defined, which makes the 'any' choice effectively forced anyway.",
+            "Because the API automatically converts any free-text response into JSON matching the first tool's schema when 'any' is set."
+          ],
+          "correct": 1,
+          "explain": "\"any\" forces the model to emit some tool_use call rather than plain text, and because every tool's arguments are shaped by its own input_schema, whichever tool gets picked still produces structured output — that's the guarantee, independent of which specific tool is chosen. It isn't limited to the single-tool case, and the API doesn't silently convert free text into JSON."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_schema_design_errors",
+      "knowledgePoints": [
+        {
+          "id": "kp_schema_design_1",
+          "name": "Nullable, not required, when data can be absent",
+          "keyPrerequisites": [
+            "mt_tool_use_basics"
+          ],
+          "teach": "<p class='kp-key'>Marking a field required when its data is sometimes missing pushes the model to fabricate a value rather than admit the information isn't there.</p><p><code>\"type\": [\"string\", \"null\"]</code> lets the model return <code>null</code> honestly. An enum with an <code>\"other\"</code> option (plus a detail string) keeps data that doesn't fit your predefined categories instead of losing it, and an <code>\"unclear\"</code> option is honest where a forced guess would be a coin flip dressed up as a classification.</p>",
+          "questions": [
+            {
+              "id": "q_schema_design_1a",
+              "q": "An extraction schema marks discount_percentage as required. On documents with no discount mentioned, the model starts returning invented values like 0 or a plausible-sounding guess. What change fixes this?",
+              "options": [
+                "Add a discount_present boolean field alongside the existing required discount_percentage field to flag ambiguous cases.",
+                "Keep discount_percentage required as it already is, but add a separate confidence field so the model can flag whenever the invented value feels uncertain.",
+                "Change discount_percentage's type to [\"number\", \"null\"] and drop it from the required list, so absence can be represented honestly.",
+                "Change discount_percentage's type to a string instead of a number, so the model can write \"not mentioned\" as free text."
+              ],
+              "correct": 2,
+              "explain": "The fabrication is a direct symptom of requiring a field whose data isn't always present — making it nullable and non-required removes the pressure to invent a value. Adding a flag or a confidence score alongside a still-required field doesn't remove that pressure, and switching to a string just relocates the same problem into unstructured text."
+            },
+            {
+              "id": "q_schema_design_1b",
+              "q": "A classification schema's category enum has five fixed values. On a batch of real documents, roughly 8% don't fit any of the five. Which schema change addresses this without losing data?",
+              "options": [
+                "Force the model to pick whichever of the five existing values is closest, since a five-way enum should already be exhaustive.",
+                "Remove the enum constraint entirely and let category be free-text, so no document is ever forced into the wrong bucket.",
+                "Lower the required threshold so category becomes optional, letting the model omit it for documents that don't fit.",
+                "Add an \"other\" value to the enum, paired with a category_detail string field for documents that don't fit the five values."
+              ],
+              "correct": 3,
+              "explain": "An \"other\" value paired with a detail string keeps every document classifiable while preserving the specifics of the ones that don't fit the five predefined categories — no data is lost or force-fit. Forcing the closest of five wrong buckets loses information, dropping the enum constraint sacrifices the structure you need, and making the field merely optional discards the classification instead of capturing it."
+            }
+          ]
+        },
+        {
+          "id": "kp_schema_design_2",
+          "name": "What a schema catches, and what it can't",
+          "keyPrerequisites": [
+            "mt_tool_use_basics"
+          ],
+          "teach": "<p class='kp-key'>tool_use with a JSON schema guarantees syntactically valid JSON and the required structure — but it says nothing about whether the values inside are correct.</p><table><tr><th>Error type</th><th>Example</th><th>Mitigation</th></tr><tr><td>Syntax</td><td>Invalid JSON, wrong field type</td><td>tool_use + schema (eliminates it)</td></tr><tr><td>Semantic</td><td>Totals don't add up, hallucinated value</td><td>Validation checks, retry with feedback, self-correction</td></tr></table>",
+          "questions": [
+            {
+              "id": "q_schema_design_2a",
+              "q": "A tool_use response passes JSON schema validation cleanly — every required field is present with the correct type — but the invoice's line_items sum to $145 while total reads $150. What does this demonstrate?",
+              "options": [
+                "A semantic error slipped through: the JSON is syntactically valid and well-typed, but a value inside it is wrong.",
+                "The schema itself is broken, since a correctly designed schema would have caught this kind of arithmetic mismatch.",
+                "The response should have failed schema validation, so this is evidence the tool_use call was constructed incorrectly.",
+                "Nothing unusual — small arithmetic discrepancies like this are expected and don't require any further handling."
+              ],
+              "correct": 0,
+              "explain": "This is exactly what a semantic error looks like: structurally and syntactically the response is fine, but a value is wrong in a way no JSON schema check can detect. Schemas were never designed to verify arithmetic consistency, so this isn't a broken schema, a validation failure, or something to leave unhandled."
+            },
+            {
+              "id": "q_schema_design_2b",
+              "q": "Which of the following is a syntax error that tool_use with a JSON schema is specifically designed to eliminate?",
+              "options": [
+                "A price field that is technically a valid number but is off by a factor of ten from the actual value on the invoice.",
+                "A response missing a closing brace, or a field typed as a string where the schema requires a number.",
+                "A category field containing a value that isn't hallucinated but doesn't match the true category on the source document.",
+                "A summary field that is well-formed and correctly typed but omits an important caveat from the source text."
+              ],
+              "correct": 1,
+              "explain": "Malformed JSON (a missing brace) or a field with the wrong type is precisely the class of syntax error a JSON schema enforces against. A price that's numerically wrong, a mismatched category, or an incomplete-but-well-typed summary are all semantic problems — the values are wrong or incomplete, not the structure."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_schema_design_1",
+          "q": "A team believes that once their extraction schema validates cleanly against every response, they no longer need any downstream validation logic. What's wrong with that conclusion?",
+          "options": [
+            "Nothing is wrong — schema validation is a complete correctness check, so downstream validation would only be redundant.",
+            "Schema validation is unreliable enough that syntax errors can still slip through even after it reports success.",
+            "Schema validation only guarantees valid structure and types, not that the values themselves are semantically correct.",
+            "Downstream validation is only needed for numeric fields; string and enum fields are fully covered by schema validation."
+          ],
+          "correct": 2,
+          "explain": "A schema guarantees syntactic validity and structural completeness, but it has no way to check whether the values inside are actually correct — that gap is exactly what downstream semantic validation exists to close. Schema validation isn't unreliable at catching syntax errors, and the gap it leaves applies to numeric, string, and enum fields alike."
+        }
+      ]
+    }
+  ]
+}

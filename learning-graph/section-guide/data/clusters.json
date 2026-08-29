@@ -1,0 +1,122 @@
+{
+  "$comment": "Domain summaries, one per guide chapter. A cluster is a human-facing grouping of micro-topics; the graph, not the cluster, is the source of truth for ordering. Colours are chosen to stay legible against both the light and dark page background.",
+  "clusters": [
+    {
+      "id": "cl_api_fundamentals",
+      "name": "The Messages API, precisely",
+      "subject": "Community Guide: Claude Certified Architect",
+      "summary": "The request shape every call sends, the roles that populate it (including why tool results ride inside a user-role message), the stop_reason values that drive an agentic loop, and the three specific ways a context window degrades under load.",
+      "color": "#3f6b86",
+      "colorDark": "#5f9cc0",
+      "notesPart": "Chapter 1 — Claude API: Fundamentals of Model Interaction"
+    },
+    {
+      "id": "cl_tool_use_guide",
+      "name": "tool_use and schema discipline",
+      "subject": "Community Guide: Claude Certified Architect",
+      "summary": "Why a tool's description — not its name — is what Claude actually chooses between, the three tool_choice modes, and the schema-design rules (nullable fields, 'other'/'unclear' enums) that eliminate syntax errors but leave semantic ones for you to catch.",
+      "color": "#5f6b3a",
+      "colorDark": "#8ba055",
+      "notesPart": "Chapter 2 — Tools and tool_use"
+    },
+    {
+      "id": "cl_agent_sdk_guide",
+      "name": "The agentic loop and hub-and-spoke",
+      "subject": "Community Guide: Claude Certified Architect",
+      "summary": "The loop's only real branch (stop_reason, not parsed text), AgentDefinition's least-privilege allowed_tools, the coordinator/subagent topology with its isolated-context rule, spawning via Task, and the determinism test that decides hook versus prompt.",
+      "color": "#8f3f3f",
+      "colorDark": "#c67878",
+      "notesPart": "Chapter 3 — Claude Agent SDK: Building Agentic Systems"
+    },
+    {
+      "id": "cl_mcp_guide",
+      "name": "MCP: tools, resources, and honest errors",
+      "subject": "Community Guide: Claude Certified Architect",
+      "summary": "MCP's three primitives, project (.mcp.json) versus personal (~/.claude.json) server configuration, and the difference between a structured isError response a coordinator can act on and a generic one it can't.",
+      "color": "#7a4a6b",
+      "colorDark": "#a8779a",
+      "notesPart": "Chapter 4 — Model Context Protocol (MCP)"
+    },
+    {
+      "id": "cl_claude_code_guide",
+      "name": "Configuring Claude Code",
+      "subject": "Community Guide: Claude Certified Architect",
+      "summary": "The three-level CLAUDE.md hierarchy and @path imports, .claude/rules/'s path-scoped loading, commands and skills as the on-demand counterpart to always-loaded CLAUDE.md, planning mode versus direct execution, /compact and /memory, and running headless in CI.",
+      "color": "#96652a",
+      "colorDark": "#ae7531",
+      "notesPart": "Chapter 5 — Claude Code: Configuration and Workflows"
+    },
+    {
+      "id": "cl_prompt_eng_advanced",
+      "name": "Prompt engineering, made explicit",
+      "subject": "Community Guide: Claude Certified Architect",
+      "summary": "Few-shot examples over vague description, explicit falsifiable criteria in place of 'be conservative,' prompt chaining versus dynamic decomposition, the interview pattern, and validation/retry loops that catch what a schema can't.",
+      "color": "#55578f",
+      "colorDark": "#7b7db0",
+      "notesPart": "Chapter 6 — Prompt Engineering: Advanced Techniques"
+    },
+    {
+      "id": "cl_batches",
+      "name": "The Batches API",
+      "subject": "Community Guide: Claude Certified Architect",
+      "summary": "The 50%-cheaper, up-to-24-hour, no-multi-turn trade-off, custom_id-based partial-failure recovery, and planning a submission window against a real deadline.",
+      "color": "#3f8f6f",
+      "colorDark": "#6bc4a0",
+      "notesPart": "Chapter 7 — Message Batches API"
+    },
+    {
+      "id": "cl_decomposition",
+      "name": "Decomposing a task",
+      "subject": "Community Guide: Claude Certified Architect",
+      "summary": "Fixed pipelines for predictable, template-shaped work versus dynamic decomposition for open-ended investigation, worked through with multi-pass code review as the concrete example.",
+      "color": "#8f6f3f",
+      "colorDark": "#c4a06b",
+      "notesPart": "Chapter 8 — Task Decomposition Strategies"
+    },
+    {
+      "id": "cl_escalation",
+      "name": "Escalation and human-in-the-loop",
+      "subject": "Community Guide: Claude Certified Architect",
+      "summary": "Which triggers are reliable (an explicit request, a policy gap, a financial threshold) and which aren't (sentiment, self-rated confidence), the three escalation patterns, a self-contained structured handoff, and calibrated confidence routing with stratified auditing.",
+      "color": "#a84e31",
+      "colorDark": "#c96549",
+      "notesPart": "Chapter 9 — Escalation and Human-in-the-Loop"
+    },
+    {
+      "id": "cl_error_handling_guide",
+      "name": "Error handling across agents",
+      "subject": "Community Guide: Claude Certified Architect",
+      "summary": "The transient/validation/business/permission taxonomy, the four anti-patterns that starve a coordinator of the information it needs, and the structured-error-plus-coverage-annotation shape that replaces them.",
+      "color": "#6b4a7a",
+      "colorDark": "#9a77a8",
+      "notesPart": "Chapter 10 — Error Handling in Multi-agent Systems"
+    },
+    {
+      "id": "cl_context_mgmt_guide",
+      "name": "Context management in production",
+      "subject": "Community Guide: Claude Certified Architect",
+      "summary": "A facts block that survives summarization, PostToolUse trimming of oversized results, position-aware layout against lost-in-the-middle, scratchpads and subagent delegation to protect the main context, and structured state files for crash recovery.",
+      "color": "#3a6b5f",
+      "colorDark": "#63a08f",
+      "notesPart": "Chapter 11 — Context Management in Production Systems"
+    },
+    {
+      "id": "cl_provenance",
+      "name": "Preserving provenance",
+      "subject": "Community Guide: Claude Certified Architect",
+      "summary": "Why a claim without a source, date, and confidence has lost what makes it checkable, preserving conflicting values instead of silently picking one, and rendering by content type once dates resolve an apparent contradiction into a trend.",
+      "color": "#8f3f6f",
+      "colorDark": "#c478a0",
+      "notesPart": "Chapter 12 — Preserving Provenance"
+    },
+    {
+      "id": "cl_builtin_tools_guide",
+      "name": "Claude Code's built-in tools",
+      "subject": "Community Guide: Claude Certified Architect",
+      "summary": "Matching Glob, Grep, Read, Write, Edit, and Bash to the task at hand, investigating incrementally rather than reading everything up front, and the Read-then-Write fallback for when Edit can't find a unique match.",
+      "color": "#4a6b8f",
+      "colorDark": "#7896c4",
+      "notesPart": "Chapter 13 — Claude Code Built-in Tools"
+    }
+  ]
+}

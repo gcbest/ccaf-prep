@@ -1,0 +1,35 @@
+{
+  "builtAt": "2026-08-28",
+  "stats": {
+    "topics": 51,
+    "clusters": 13,
+    "dependencies": 50,
+    "hardDependencies": 50,
+    "encompassings": 37,
+    "knowledgePoints": 52,
+    "questions": 155,
+    "layers": 12,
+    "coreTopics": 15,
+    "estimatedMinutes": 454
+  },
+  "checksums": {
+    "topics.json": "sha256:30e00bd2d783a5dc",
+    "dependencies.json": "sha256:56c367a2aa688a2e",
+    "encompassings.json": "sha256:1bcebbd7efb01691",
+    "clusters.json": "sha256:d412e3c87f5950d2",
+    "curriculum-standards.json": "sha256:2c06ef68d5dc2c78",
+    "knowledge-points/agent-sdk.json": "sha256:8310ca1af024dac2",
+    "knowledge-points/api-fundamentals.json": "sha256:3f5779f058e96305",
+    "knowledge-points/batches.json": "sha256:535410bcbe2f2fe4",
+    "knowledge-points/builtin-tools.json": "sha256:34a9f06cdd848858",
+    "knowledge-points/claude-code.json": "sha256:8279494829a941a0",
+    "knowledge-points/context-mgmt.json": "sha256:5ba7e143da5d9cef",
+    "knowledge-points/decomposition.json": "sha256:5e4a380ca07120b8",
+    "knowledge-points/error-handling.json": "sha256:ffea3078bd253fe7",
+    "knowledge-points/escalation.json": "sha256:6cfc6c4a3839233d",
+    "knowledge-points/mcp.json": "sha256:693dc345e47edecd",
+    "knowledge-points/prompt-eng-advanced.json": "sha256:4462c97071dfbb8e",
+    "knowledge-points/provenance.json": "sha256:18509f5d9c742341",
+    "knowledge-points/tool-use.json": "sha256:5f58b59e8677f6e2"
+  }
+}

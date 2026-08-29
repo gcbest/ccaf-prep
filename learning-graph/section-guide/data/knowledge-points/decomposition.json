@@ -1,0 +1,112 @@
+{
+  "$comment": "Knowledge points for cl_decomposition.",
+  "cluster": "cl_decomposition",
+  "topics": [
+    {
+      "topicId": "mt_decomposition_strategies",
+      "knowledgePoints": [
+        {
+          "id": "kp_decomposition_strategies_1",
+          "name": "Known-up-front vs. discovered-along-the-way",
+          "keyPrerequisites": [
+            "mt_prompt_chaining_vs_dynamic"
+          ],
+          "teach": "<p class='kp-key'>A fixed pipeline (document → metadata → data → validation → enrichment → output) defines every step in advance, for predictable, template-shaped work where stability matters. Dynamic decomposition generates each next subtask from what the current one found — map the structure, discover 3 untested modules, prioritize the risky one, discover a dependency mid-work, adapt the plan — for open-ended work whose scope isn't known at the start.</p>",
+          "questions": [
+            {
+              "id": "q_decomposition_strategies_1a",
+              "q": "'Add tests for a legacy codebase' turns up an undocumented dependency on an external API partway through the work. What does this mid-task discovery tell you about which strategy actually fits?",
+              "options": [
+                "It confirms a fixed pipeline was right all along — the discovery is just a minor detail the original plan can absorb unchanged.",
+                "It means the task should be aborted and restarted as a fixed pipeline once every dependency has first been fully documented.",
+                "It shows dynamic decomposition fits — the next step (mocking the dependency) only became apparent from what was found mid-task.",
+                "It's irrelevant to strategy choice; both fixed pipelines and dynamic decomposition would have proceeded identically here."
+              ],
+              "correct": 2,
+              "explain": "The need to add a mock for the external API only became visible once work was already underway — that's dynamic decomposition's defining trait: the plan adapts based on what execution actually reveals. A fixed pipeline defined up front wouldn't have this step, restarting after full documentation defeats the point of adaptive discovery, and the two strategies clearly diverge here rather than behaving identically."
+            },
+            {
+              "id": "q_decomposition_strategies_1b",
+              "q": "Which project is the better fit for a fixed pipeline rather than dynamic decomposition?",
+              "options": [
+                "An open-ended investigation into why a production system intermittently fails, with no known cause yet.",
+                "A first exploration of an entirely unfamiliar codebase with no existing documentation to work from.",
+                "A research task whose specific subtopics can genuinely only be identified once the first round of search results actually comes back.",
+                "A recurring document-review workflow that always follows the same metadata-then-extraction-then-validation template."
+              ],
+              "correct": 3,
+              "explain": "A recurring workflow that always follows the same known sequence is exactly what a fixed pipeline is built for — stability and reproducibility from steps defined in advance. The other three all involve genuine unknowns that can only be resolved by executing and observing what turns up, which is dynamic decomposition's territory."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_decomposition_strategies_1",
+          "q": "What does a fixed pipeline buy you that dynamic decomposition does not, according to the guide?",
+          "options": [
+            "Stability and reproducibility, since every step is defined up front rather than generated from intermediate results.",
+            "Higher quality output on every single task, regardless of whether that task's true scope was actually known in advance or not.",
+            "The ability to handle discoveries mid-task without needing to adjust the plan at all.",
+            "Lower cost in all cases, since fixed pipelines never require more steps than dynamic decomposition would."
+          ],
+          "correct": 0,
+          "explain": "The guide's specific claim for fixed pipelines is stability and reproducibility, precisely because every step is known in advance rather than generated on the fly. It doesn't claim universally higher quality, it explicitly handles mid-task discoveries worse than dynamic decomposition (not better), and it makes no general cost claim either way."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_multipass_review",
+      "knowledgePoints": [
+        {
+          "id": "kp_multipass_review_1",
+          "name": "Per-file, then integration",
+          "keyPrerequisites": [
+            "mt_decomposition_strategies"
+          ],
+          "teach": "<p class='kp-key'>For a pull request with 10+ files, pass 1 analyzes each file individually for local issues; pass 2 is a separate integration pass looking specifically at relationships between files (inconsistent types, circular dependencies). Reviewing all 14 files in one prompt instead produces attention dilution, inconsistent flagging of the same pattern, and missed bugs from cognitive overload.</p>",
+          "questions": [
+            {
+              "id": "q_multipass_review_1a",
+              "q": "A single-prompt review of a 14-file PR flags a pattern in one file but approves the identical pattern in another. Which review structure would have caught this consistently, and which pass is responsible?",
+              "options": [
+                "Multi-pass review — but the integration pass specifically, since it's the one that examines files jointly rather than alone.",
+                "Multi-pass review — the per-file pass, since each file gets isolated, focused attention rather than being diluted across 14 at once.",
+                "A single, longer prompt with more explicit criteria added, without changing the number of passes involved.",
+                "The 14-file scope itself is the sole problem; splitting the PR into two separate 7-file pull requests would fix it on its own."
+              ],
+              "correct": 1,
+              "explain": "Consistent flagging of the same pattern within individual files is what a focused per-file pass delivers — each file gets full attention on its own rather than competing for it against 13 others. The integration pass looks at cross-file relationships, not intra-file consistency; more criteria in a single prompt doesn't solve the attention-dilution root cause; and splitting the PR by file count doesn't guarantee each half still gets focused per-file attention."
+            },
+            {
+              "id": "q_multipass_review_1b",
+              "q": "What does a multi-pass review's integration pass specifically look for that the per-file passes cannot?",
+              "options": [
+                "Local issues within one file, such as an unhandled edge case in a single function's logic.",
+                "Stylistic formatting issues, like inconsistent indentation, within any single file under review.",
+                "Relationships between files — such as inconsistent types across modules or circular dependencies.",
+                "Nothing distinct — the integration pass simply repeats the per-file passes a second time as a sanity check."
+              ],
+              "correct": 2,
+              "explain": "The integration pass is specifically scoped to cross-file relationships — type inconsistencies between modules, circular dependencies — the kind of issue that can't be seen by looking at any one file in isolation. Local issues and per-file style are exactly what the per-file passes already cover, and the integration pass isn't a repeat of that same work."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_multipass_review_1",
+          "q": "Why is reviewing 14 files in a single prompt described as risking 'missed bugs,' beyond just inconsistent flagging?",
+          "options": [
+            "Because a single prompt technically cannot include more than a handful of files at all, causing some to be silently dropped.",
+            "Because bugs are missed only when the files are unrelated to each other; related files are reviewed reliably even in one pass.",
+            "Because the risk is purely theoretical in nature — in practice, a single-pass review of many files performs just as well as a multi-pass one.",
+            "Because cognitive overload from handling many files at once can cause obvious errors to get skipped entirely, not just judged inconsistently."
+          ],
+          "correct": 3,
+          "explain": "Beyond flagging the same pattern inconsistently, the guide specifically calls out that overload from juggling many files at once can cause otherwise-obvious bugs to be skipped entirely — a distinct, more severe failure than inconsistency. A single prompt can technically include many files (nothing silently drops them), the risk isn't limited to unrelated-file sets, and the guide treats this as a real, not purely theoretical, risk."
+        }
+      ]
+    }
+  ]
+}

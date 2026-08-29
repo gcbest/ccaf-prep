@@ -1,0 +1,165 @@
+{
+  "$comment": "Knowledge points for cl_batches.",
+  "cluster": "cl_batches",
+  "topics": [
+    {
+      "topicId": "mt_batches_overview",
+      "knowledgePoints": [
+        {
+          "id": "kp_batches_overview_1",
+          "name": "50% cheaper, up to 24 hours, no one waiting",
+          "keyPrerequisites": [
+            "mt_api_request_structure"
+          ],
+          "teach": "<p class='kp-key'>The Batch API trades latency for cost: 50% savings against a processing window of up to 24 hours with no latency SLA, and no multi-turn tool calling — one request in, one response out. The deciding question is whether anyone is waiting on the result right now.</p>",
+          "questions": [
+            {
+              "id": "q_batches_overview_1a",
+              "q": "A weekly security audit and a pre-merge PR check both need Claude's involvement. Which one uses the Batch API, and what property of the other rules batching out?",
+              "options": [
+                "The PR check uses batching; the weekly audit is ruled out because it needs multi-turn tool calling the Batch API doesn't support.",
+                "Both use batching equally well; cost savings apply the same way regardless of whether a human is waiting on the result.",
+                "Neither uses batching; the Batch API is reserved for workloads with no near-term deadline of any kind, which excludes both cases.",
+                "The weekly audit uses batching; the PR check is ruled out because a developer is actively waiting and can't accept a 24-hour window."
+              ],
+              "correct": 3,
+              "explain": "The weekly audit isn't time-sensitive, so the 50% saving is worth accepting a window that could take up to 24 hours; the pre-merge check has a developer actively waiting, and that's exactly the property (someone waiting right now) that rules batching out. The 24-hour ceiling, not a tool-calling limitation specifically, is what makes it wrong for the PR check, and a 'no deadline of any kind' framing goes further than what actually disqualifies a workload."
+            },
+            {
+              "id": "q_batches_overview_1b",
+              "q": "Which limitation is specific to the Message Batches API compared to the synchronous Messages API?",
+              "options": [
+                "It does not support multi-turn tool calling — each batched request is one request in, one response out.",
+                "It cannot process more than a handful of requests in a single submission, unlike the synchronous API's higher throughput.",
+                "It cannot use tool_use at all, restricting batched requests to plain text generation only.",
+                "It requires a different model family entirely, since batch-compatible models are versioned separately from synchronous ones."
+              ],
+              "correct": 0,
+              "explain": "The batch API's stated multi-turn limitation is exactly this: one request produces one response, with no back-and-forth tool-calling loop within a single batched item. It's actually built for high-volume submissions rather than being limited to a handful, it does support tool_use as a single-turn request, and it doesn't require a separate model family."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_batches_overview_1",
+          "q": "Processing 10,000 documents overnight for a report needed by morning is a commonly cited use case for which API, and why?",
+          "options": [
+            "The synchronous API, since only it can process a volume as large as 10,000 documents within a single night.",
+            "The Batch API, since the deadline (by morning) comfortably fits its up-to-24-hour window and the 50% saving is worth taking.",
+            "The synchronous API, since the Batch API's lack of an SLA guarantee makes it unsuitable for any deadline-bound task.",
+            "Neither — a workload of this size and cadence should be split across multiple providers rather than one Batch API call."
+          ],
+          "correct": 1,
+          "explain": "An overnight-to-morning deadline comfortably fits within the batch API's up-to-24-hour window, and with nobody waiting in real time, the 50% cost saving is the natural choice — this is one of the guide's own example use cases. The synchronous API isn't required to handle this volume, the lack of an SLA guarantee is a planning consideration rather than a blanket disqualifier, and nothing here calls for splitting across providers."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_batches_custom_id_failures",
+      "knowledgePoints": [
+        {
+          "id": "kp_batches_custom_id_1",
+          "name": "custom_id turns a partial failure into a small fix",
+          "keyPrerequisites": [
+            "mt_batches_overview"
+          ],
+          "teach": "<p class='kp-key'>Every batch request carries a <code>custom_id</code> linking it to your own source document. When 95 of 100 documents succeed and 5 fail (say, from exceeding the context limit), you identify the 5 by their <code>custom_id</code>, adjust your approach for just those (like chunking a long document), and resubmit only the failures — the 95 successes never need to be redone.</p>",
+          "questions": [
+            {
+              "id": "q_batches_custom_id_1a",
+              "q": "95 of 100 batched documents succeed; 5 fail with context-limit errors. What does custom_id let you avoid doing next?",
+              "options": [
+                "Avoid needing to know which specific documents failed, since the Batch API automatically retries them without any input.",
+                "Avoid splitting the failing documents into smaller chunks, since custom_id handles context-limit errors automatically.",
+                "Avoid re-processing the 95 successful documents — you can identify and resubmit only the 5 failures by their custom_id.",
+                "Avoid submitting a second batch at all — custom_id causes failed requests to be silently completed on a delayed schedule."
+              ],
+              "correct": 2,
+              "explain": "custom_id's specific value is correlation — it lets you tell exactly which 5 of the 100 failed so only those need resubmission, sparing the 95 that already succeeded. It doesn't trigger automatic retries, doesn't chunk documents on its own, and doesn't silently complete failures on a delay — it's an identifier, not a recovery mechanism by itself."
+            },
+            {
+              "id": "q_batches_custom_id_1b",
+              "q": "What does custom_id in a batch request correlate the response back to?",
+              "options": [
+                "The specific model version used to process that particular request, mainly for auditing purposes when reviewing which model generated which output later.",
+                "The submission timestamp, allowing results to be sorted chronologically once the batch completes.",
+                "The billing account responsible for that particular request, for itemized cost tracking purposes.",
+                "The original source document or item the request represents, so a result can be matched back to what produced it."
+              ],
+              "correct": 3,
+              "explain": "custom_id is explicitly the link back to your own source document or item — that's what lets you match a result (or a failure) to what it came from. It isn't a model-version tag, a timestamp, or a billing identifier."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_batches_custom_id_1",
+          "q": "Why is chunking a long document into smaller pieces a sensible response to a context-limit failure identified via custom_id, rather than simply resubmitting the same request unchanged?",
+          "options": [
+            "Because a context-limit failure means the request itself was too large, so an unchanged resubmission would fail the same way again.",
+            "It isn't sensible — resubmitting the identical request a second time is the correct response to any batch failure, including this one.",
+            "Because chunking is required by the Batch API for every submission, regardless of whether a prior attempt failed or succeeded.",
+            "Because custom_id only accepts requests below a certain size, so chunking is a workaround for that identifier's own limitation."
+          ],
+          "correct": 0,
+          "explain": "A context-limit failure means the input itself exceeded what a single request can handle, so resubmitting it unchanged would simply reproduce the same failure — chunking actually changes the thing that caused the error. Batch submissions aren't required to be chunked in general, and custom_id is an identifier with no size constraint of its own."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_batches_sla",
+      "knowledgePoints": [
+        {
+          "id": "kp_batches_sla_1",
+          "name": "The submission window is the deadline minus 24 hours",
+          "keyPrerequisites": [
+            "mt_batches_custom_id_failures"
+          ],
+          "teach": "<p class='kp-key'>Given a deadline and the batch API's up-to-24-hour window with no SLA guarantee, the latest safe submission time is <strong>deadline − 24 hours</strong>. A recurring deadline needs a recurring submission cadence carved out of that same margin — for a nightly trigger with a 30-hour deadline, that's a 6-hour submission window, not a single fixed instant.</p>",
+          "questions": [
+            {
+              "id": "q_batches_sla_1a",
+              "q": "A result is needed within 30 hours of a nightly trigger. Given the Batch API's up-to-24-hour window, what is the latest point in that 30-hour window the batch can still be safely submitted?",
+              "options": [
+                "At the 30-hour mark itself, since the batch API's window only starts counting once the deadline has already passed.",
+                "At the 6-hour mark — submitting any later leaves less than the full 24-hour window before the 30-hour deadline arrives.",
+                "At the 24-hour mark, since the batch only needs a small buffer after its own 24-hour processing window completes.",
+                "There is no safe cutoff — the lack of an SLA guarantee means no submission time can reliably meet a fixed deadline."
+              ],
+              "correct": 1,
+              "explain": "Working backward from the 30-hour deadline by the up-to-24-hour window gives a 6-hour submission cutoff — submitting later than that risks the batch still being in flight when the deadline arrives. Submitting at hour 30 or hour 24 leaves no margin at all, and while the lack of an SLA guarantee means margin should be generous, it doesn't mean no cutoff can be planned."
+            },
+            {
+              "id": "q_batches_sla_1b",
+              "q": "Why does the Batch API's lack of a latency SLA specifically affect how a submission window should be planned, compared to an API with a guaranteed response time?",
+              "options": [
+                "It doesn't affect planning at all — an SLA and its absence lead to identical scheduling regardless of the deadline involved.",
+                "Because the lack of an SLA only matters for batches larger than 10,000 requests, below which timing is effectively guaranteed.",
+                "Because without a guarantee, 'up to 24 hours' should be treated as the planning assumption rather than an expected average.",
+                "Because an SLA's absence means the Batch API cannot be used for any task that has a hard deadline attached to it."
+              ],
+              "correct": 2,
+              "explain": "With no guaranteed latency, the safe planning assumption is the full 'up to 24 hours,' not some shorter typical-case average — that's exactly why the margin is calculated against the ceiling rather than an expected value. It does change how scheduling should be done, it isn't scoped to a request-count threshold, and it doesn't rule out the Batch API for deadline-bound work — it just requires planning around the ceiling."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_batches_sla_1",
+          "q": "A team wants results delivered by 9am and plans to submit their batch at 8am the same day. What's wrong with this plan?",
+          "options": [
+            "Nothing — a one-hour buffer is more than sufficient given the Batch API's typical actual turnaround time in practice.",
+            "Nothing is wrong structurally, but the team should switch to the synchronous API instead to guarantee the 9am deadline.",
+            "The problem is unrelated to timing — batches submitted in the morning are processed with lower priority than evening submissions.",
+            "The plan leaves almost no margin against a window that can take up to 24 hours; the batch should be submitted roughly a day earlier."
+          ],
+          "correct": 3,
+          "explain": "An 8am submission for a 9am deadline leaves essentially no margin against a window that can legitimately take up to 24 hours — the batch should go out roughly a full day ahead of the deadline instead. Relying on typical turnaround rather than the stated ceiling is exactly the planning mistake the guide warns against, switching APIs sidesteps rather than fixes the scheduling error, and there's no morning-versus-evening priority effect described anywhere in the guide."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,271 @@
+{
+  "$comment": "Knowledge points for cl_prompt_eng_advanced.",
+  "cluster": "cl_prompt_eng_advanced",
+  "topics": [
+    {
+      "topicId": "mt_few_shot_patterns",
+      "knowledgePoints": [
+        {
+          "id": "kp_few_shot_1",
+          "name": "Examples remove ambiguity a description leaves open",
+          "keyPrerequisites": [
+            "mt_schema_design_errors"
+          ],
+          "teach": "<p class='kp-key'>2–4 input/output examples show, rather than describe, expected behavior — and the model generalizes the pattern rather than repeating the examples verbatim. They're especially strong for informal measurements ('a pinch of salt'), mixed citation formats, and acceptable-vs-flagged code, where a rule alone is too varied to state cleanly.</p><p>Pair examples with explicit normalization rules (dates to ISO 8601, currency to amount+code) so the output stays syntactically valid <em>and</em> semantically consistent — a normalization rule prevents the specific class of semantic error a schema alone can't catch.</p>",
+          "questions": [
+            {
+              "id": "q_few_shot_1a",
+              "q": "An extraction prompt keeps returning dates in whatever format the source text used ('next Tuesday,' 'March 5th,' '03/05'). What kind of prompt addition fixes this most directly?",
+              "options": [
+                "A stronger single-sentence instruction: 'Always use standard date formatting,' left otherwise unchanged.",
+                "A normalization rule plus worked examples showing informal date phrases converted to ISO 8601 explicitly.",
+                "Switching the date field's JSON schema type from string to a dedicated 'date' type, which doesn't exist in JSON Schema.",
+                "Removing the date field from the schema entirely, since informal date phrasing can't be reliably normalized at all."
+              ],
+              "correct": 1,
+              "explain": "A concrete normalization rule paired with worked examples is exactly what resolves this — it shows the model the expected transformation rather than leaving 'standard formatting' open to interpretation. A vague instruction alone repeats the ambiguity, JSON Schema has no native date type, and dropping the field discards the data instead of normalizing it."
+            },
+            {
+              "id": "q_few_shot_1b",
+              "q": "Why are few-shot examples especially effective for extracting informal measurements like 'a pinch of salt' or 'two handfuls of rice'?",
+              "options": [
+                "Because the model cannot process any numeric quantity unless it first sees a worked example demonstrating the format.",
+                "Because JSON Schema requires an explicit enum of every possible measurement phrase to validate the extracted output.",
+                "Because informal measurement units are too diverse and inconsistent for a rule-based instruction to enumerate cleanly.",
+                "Because informal measurements only ever appear in cooking-related text, which the model handles as a special case."
+              ],
+              "correct": 2,
+              "explain": "The diversity of informal phrasing is exactly why a rule can't cover every case cleanly — examples let the model generalize the pattern (approximate value + original text + a precision flag) instead. The model can handle numeric quantities without an example present at all, JSON Schema doesn't require enumerating every phrase, and this isn't restricted to cooking-domain text specifically."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_few_shot_1",
+          "q": "A prompt provides three examples distinguishing acceptable code from code that should be flagged in review. What does the model do with these examples, according to the guide?",
+          "options": [
+            "It repeats the examples' exact code back whenever a similar-looking snippet appears in the file being reviewed.",
+            "It ignores the examples unless the reviewed code is byte-for-byte identical to one of the three shown.",
+            "It treats the examples purely as documentation and does not factor them into its actual review decisions.",
+            "It generalizes the underlying decision logic the examples demonstrate, applying it to new code it hasn't seen before."
+          ],
+          "correct": 3,
+          "explain": "The guide is explicit that the model generalizes the pattern the examples demonstrate rather than just repeating them — that generalization to new, unseen code is the whole value of few-shot prompting. It doesn't require an exact match to apply what it learned, and it does factor the examples into its actual decisions rather than treating them as inert documentation."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_explicit_criteria",
+      "knowledgePoints": [
+        {
+          "id": "kp_explicit_criteria_1",
+          "name": "A criterion is falsifiable; a vibe isn't",
+          "keyPrerequisites": [
+            "mt_few_shot_patterns"
+          ],
+          "teach": "<p class='kp-key'>'Be conservative, report only high-confidence findings' sounds like a rule but isn't one — nothing in it tells you whether a specific finding qualifies. A numbered list of exactly what qualifies, paired with an explicit not-this list, is a criterion. The same discipline applies to severity: pairing each tier with a concrete example (a null pointer during payment vs. a stylistic nit) removes the ambiguity a bare label like 'critical' leaves open.</p>",
+          "questions": [
+            {
+              "id": "q_explicit_criteria_1a",
+              "q": "A code-review prompt says 'flag comments that seem outdated.' Two separate runs on the same file disagree on which comments qualify. What's missing from the instruction?",
+              "options": [
+                "A numbered, falsifiable list of exactly what makes a comment outdated, plus an explicit list of what doesn't qualify.",
+                "A larger context window, so the model can see more of the file at once before making its judgment on each comment.",
+                "A few-shot example is unnecessary here; the fix is purely a matter of running the same prompt multiple times and averaging.",
+                "A stricter JSON schema for the output, since the disagreement is a structural problem rather than a criteria problem."
+              ],
+              "correct": 0,
+              "explain": "'Seems outdated' has no falsifiable boundary — the fix is exactly what explicit criteria supplies: a numbered list of what qualifies and an explicit not-this list, removing the ambiguity that produced disagreement between runs. Context window size isn't the bottleneck here, averaging multiple runs papers over the ambiguity rather than resolving it, and the output's JSON structure isn't what's in question — its judgment criteria are."
+            },
+            {
+              "id": "q_explicit_criteria_1b",
+              "q": "Why does pairing each severity tier (CRITICAL, HIGH, MEDIUM, LOW) with a concrete example reduce disagreement between separate review runs?",
+              "options": [
+                "It doesn't reduce disagreement measurably; severity labeling is inherently subjective regardless of any examples given.",
+                "Because a concrete example anchors an otherwise abstract label to a specific, checkable case the model can compare against.",
+                "Because the examples are counted toward a numeric score that mechanically determines severity, bypassing judgment entirely.",
+                "Because listing examples lets the model skip severity classification whenever the input doesn't exactly match one of them."
+              ],
+              "correct": 1,
+              "explain": "A worked example ('CRITICAL: a null pointer during payment processing') gives the model a concrete anchor to compare a new case against, instead of interpreting an abstract word like 'critical' from scratch each time — that's what narrows disagreement between runs. It isn't a scoring mechanism bypassing judgment, and it doesn't license skipping classification for non-matching cases."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_explicit_criteria_1",
+          "q": "Which instruction is an example of explicit criteria rather than a vague instruction?",
+          "options": [
+            "\"Be thorough but reasonable when flagging issues in the code under review.\"",
+            "\"Use good judgment about which findings are worth reporting to the team.\"",
+            "\"Flag a comment as problematic ONLY if it contradicts the actual code, references a non-existent function, or is a resolved TODO.\"",
+            "\"Try to focus mainly on the more serious issues rather than minor stylistic ones, where possible.\""
+          ],
+          "correct": 2,
+          "explain": "The numbered list of exactly what qualifies is falsifiable — a given comment either matches one of the three conditions or it doesn't. 'Thorough but reasonable,' 'good judgment,' and 'mainly... where possible' are all open to interpretation in the same way the guide's 'be conservative' example is, with nothing concrete to check a specific case against."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_prompt_chaining_vs_dynamic",
+      "knowledgePoints": [
+        {
+          "id": "kp_prompt_chaining_1",
+          "name": "Attention dilution is why chaining exists",
+          "keyPrerequisites": [
+            "mt_explicit_criteria"
+          ],
+          "teach": "<p class='kp-key'>Reviewing many files in one prompt causes attention dilution: deep analysis on some files, shallow commentary on others, inconsistent flagging of the same pattern across files. Chaining — one focused step per file, then a separate integration pass for cross-file issues — keeps quality consistent because each step only has one thing to look at.</p><p>Chaining suits predictable, repeatable tasks where all steps are known up front; dynamic decomposition suits open-ended investigations where the next subtask only becomes clear from the current one's results.</p>",
+          "questions": [
+            {
+              "id": "q_prompt_chaining_1a",
+              "q": "A 14-file pull request gets reviewed in a single prompt. The review flags a clear issue in one file but approves the identical pattern in another. What phenomenon is this, and which strategy fixes it?",
+              "options": [
+                "Model drift — the fix is re-running the exact same single prompt a second time and taking the more thorough of the two results.",
+                "A schema defect — the fix is tightening the output JSON schema so inconsistent findings can't be represented at all.",
+                "Insufficient context window — the fix is upgrading to a model with a larger context window and keeping the single-prompt approach.",
+                "Attention dilution — the fix is prompt chaining: one focused pass per file, then a separate integration pass for cross-file issues."
+              ],
+              "correct": 3,
+              "explain": "Inconsistent flagging of the same pattern across files is the textbook symptom of attention dilution, and prompt chaining — one file per focused pass, then integration — is exactly the guide's fix, since each pass only has one thing to look at. Re-running the same prompt doesn't address the underlying cause, this isn't a schema representation problem, and a bigger context window doesn't fix inconsistent attention across a wide single prompt."
+            },
+            {
+              "id": "q_prompt_chaining_1b",
+              "q": "Which task is a better fit for prompt chaining than for dynamic decomposition?",
+              "options": [
+                "A recurring, template-shaped code review where the same sequence of steps applies to every pull request.",
+                "An open-ended investigation into an unfamiliar codebase where the scope isn't known until discovery is underway.",
+                "A task whose next subtask can only be identified from what the current step happens to find.",
+                "A task where the full scope of work only becomes clear midway through the investigation itself."
+              ],
+              "correct": 0,
+              "explain": "A recurring, template-shaped task with a known, repeatable sequence of steps is exactly what prompt chaining is built for — stability and reproducibility from a fixed plan. The other three all describe scope becoming clear only during execution, which is the profile dynamic decomposition is suited to instead."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_prompt_chaining_1",
+          "q": "Why does a fixed pipeline like prompt chaining offer more reproducibility than dynamic decomposition, according to the guide?",
+          "options": [
+            "It doesn't — both strategies produce equally reproducible results regardless of how the subtasks are determined.",
+            "Because the steps are all defined in advance, so the same sequence runs every time rather than being generated on the fly per run.",
+            "Because dynamic decomposition is deprecated in favor of chaining for all but the smallest possible tasks.",
+            "Because chaining always ends up using fewer total steps than dynamic decomposition would, regardless of the task's actual underlying complexity."
+          ],
+          "correct": 1,
+          "explain": "Reproducibility comes from every step being fixed up front, so the same sequence of prompts runs every time rather than being freshly generated based on intermediate results — that's the trade chaining makes for stability. The two strategies are not equally reproducible, dynamic decomposition isn't deprecated, and step count isn't what drives the reproducibility difference."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_interview_pattern_guide",
+      "knowledgePoints": [
+        {
+          "id": "kp_interview_pattern_1",
+          "name": "Ask before implementing when the answer isn't yours to guess",
+          "keyPrerequisites": [
+            "mt_explicit_criteria"
+          ],
+          "teach": "<p class='kp-key'>Before implementing, Claude asks clarifying questions when the domain is unfamiliar (fintech, healthcare), the implications are non-obvious (cache invalidation strategy, acceptable staleness), or several viable approaches exist and the right one depends on context it hasn't been given.</p><p>It's the wrong move for a well-understood, single-approach task — asking questions there just adds a round trip with nothing genuinely uncertain to resolve.</p>",
+          "questions": [
+            {
+              "id": "q_interview_pattern_1a",
+              "q": "A request to 'add caching to the API' arrives with no detail on invalidation strategy, staleness tolerance, or scope (per-user vs. global). Why does the interview pattern fit here?",
+              "options": [
+                "It doesn't fit — caching is a well-understood, single-approach problem that should be implemented directly without questions.",
+                "Because the interview pattern is required by policy for any request involving performance-related infrastructure changes.",
+                "Because several viable approaches exist here and the right one depends on context (invalidation strategy, staleness tolerance) not yet supplied.",
+                "Because asking clarifying questions first is always the safer choice than implementing anything, regardless of how well-specified the original request already is."
+              ],
+              "correct": 2,
+              "explain": "Caching genuinely has multiple viable designs, and the right one depends on specifics (invalidation strategy, tolerance for stale data, scope) the request hasn't supplied — exactly the condition the guide gives for asking first. It isn't a single-approach problem, there's no blanket policy tied to 'performance' as a category, and the guide doesn't treat asking-first as universally safer regardless of how well-specified a request already is."
+            },
+            {
+              "id": "q_interview_pattern_1b",
+              "q": "A bug report includes a clear stack trace and an obvious one-line fix. Why would applying the interview pattern here be a poor fit?",
+              "options": [
+                "Because the interview pattern can only be used for architectural decisions, never for anything classified as a bug fix.",
+                "Because interview-style questions are exclusively reserved for greenfield projects, not fixes to existing codebases.",
+                "Because a one-line fix is too small in scope for the interview pattern's clarifying-questions mechanism to apply at all.",
+                "Because there is nothing genuinely uncertain to resolve — asking questions here just adds a round trip without added value."
+              ],
+              "correct": 3,
+              "explain": "The interview pattern earns its cost by resolving real ambiguity — a well-understood fix with an obvious cause has none, so asking first just delays the fix without buying any better outcome. It isn't restricted to architectural work, isn't restricted to greenfield projects, and there's no hard size threshold the pattern is gated on."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_interview_pattern_1",
+          "q": "Which condition, on its own, most clearly warrants using the interview pattern before implementing?",
+          "options": [
+            "The task involves an unfamiliar domain (e.g., healthcare compliance) with non-obvious implications the requester hasn't addressed.",
+            "The requester happened to use a slightly informal tone when phrasing their request, rather than writing out a fully detailed specification.",
+            "The task is expected to take more than a few minutes of implementation time once the approach has been decided.",
+            "The requester is a new team member rather than someone who has worked with the codebase for a long time."
+          ],
+          "correct": 0,
+          "explain": "An unfamiliar domain with non-obvious implications is exactly the condition the guide gives for asking clarifying questions first — the risk of guessing wrong is real and consequential. Informal phrasing, raw implementation time, and the requester's tenure are not the criteria the guide ties the interview pattern to."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_validation_retry_selfcorrect",
+      "knowledgePoints": [
+        {
+          "id": "kp_validation_retry_1",
+          "name": "Retry with the specific error, not just 'try again'",
+          "keyPrerequisites": [
+            "mt_schema_design_errors"
+          ],
+          "teach": "<p class='kp-key'>A useful retry includes the original document, the previous (wrong) extraction, and the specific error ('total=150 but line items sum to 145') — enough for the model to actually fix what went wrong. Retry works for format errors, structural errors, and arithmetic slips the model can re-check; it does not work when the needed information is genuinely absent from the source or lives in a document that was never provided.</p><p>Self-correction extracts both a stated value and a separately computed one, flagging <code>conflict_detected</code> when they differ — catching the same class of arithmetic error before a human, or a retry loop, ever has to.</p>",
+          "questions": [
+            {
+              "id": "q_validation_retry_1a",
+              "q": "A total doesn't match the sum of line items. A retry prompt is built that says only 'the previous answer was wrong, try again.' Why is this retry no more likely to succeed than the first attempt?",
+              "options": [
+                "Retries never help with arithmetic inconsistencies under any circumstances, regardless of what context is included with them.",
+                "It's missing the original document, the prior extraction, and the specific discrepancy — without them, the model has no new information to act on.",
+                "The retry should have used a different model entirely; the same model repeating a task never produces a different result.",
+                "The prompt is actually fine as written; the real issue is that retries always require a JSON schema, which this extraction task didn't originally specify at all."
+              ],
+              "correct": 1,
+              "explain": "A bare 'try again' gives the model nothing beyond what it already had — it needs the source document, its own prior (wrong) output, and the concrete discrepancy to actually diagnose and fix the error. Arithmetic slips are precisely the kind of thing a well-formed retry *can* fix, switching models isn't the guide's answer to this problem, and the schema's presence or absence isn't what's missing here."
+            },
+            {
+              "id": "q_validation_retry_1b",
+              "q": "Which validation failure will a retry-with-feedback loop most likely fail to resolve, no matter how well the retry prompt is constructed?",
+              "options": [
+                "A date field returned in the wrong format relative to the schema's expected ISO 8601 structure.",
+                "A required total that doesn't match the sum of the line items provided in the same extraction.",
+                "A field whose value is genuinely absent from the source document and was never supplied anywhere.",
+                "A field placed at the wrong nesting level relative to where the schema expects it to appear."
+              ],
+              "correct": 2,
+              "explain": "No amount of re-prompting can produce a value the source document simply never contained — that's the one class of failure retries can't fix by design. Format errors, arithmetic mismatches, and structural misplacement are all things the model can genuinely re-check and correct given the right feedback."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_validation_retry_1",
+          "q": "A self-correction pattern has the model output both a stated_total and a separately calculated_total field, plus a conflict_detected boolean. What does this achieve?",
+          "options": [
+            "It duplicates work the schema's required-field validation already performs, adding no benefit that plain validation didn't provide.",
+            "It guarantees the extraction is now fully correct, since the model has effectively double-checked its own output.",
+            "It only matters for currency fields; the pattern provides no benefit for other kinds of numeric extraction.",
+            "It surfaces an internal arithmetic inconsistency the moment it's produced, before a retry loop or a human even needs to catch it."
+          ],
+          "correct": 3,
+          "explain": "Having the model compute and compare two independently derived values surfaces a conflict at generation time, catching the same class of arithmetic error earlier than waiting for a downstream retry or human review to notice it. It isn't redundant with schema validation (which only checks structure/type), it doesn't guarantee full correctness, and nothing restricts the pattern to currency specifically."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,271 @@
+{
+  "$comment": "Knowledge points for cl_agent_sdk_guide.",
+  "cluster": "cl_agent_sdk_guide",
+  "topics": [
+    {
+      "topicId": "mt_agentic_loop_guide",
+      "knowledgePoints": [
+        {
+          "id": "kp_agentic_loop_1",
+          "name": "One real branch, three tempting fakes",
+          "keyPrerequisites": [
+            "mt_stop_reason"
+          ],
+          "teach": "<p class='kp-key'>The loop is: send, receive, check stop_reason, act, repeat. The only reliable completion signal is <code>stop_reason == \"end_turn\"</code>.</p><p>Three anti-patterns masquerade as completion checks: scanning assistant text for a phrase like 'Task completed,' capping iterations at an arbitrary number and treating the cap itself as done, and checking whether the assistant produced any textual content at all. Each one can fire while real work is still outstanding, or fail to fire when the model has genuinely finished.</p>",
+          "questions": [
+            {
+              "id": "q_agentic_loop_1a",
+              "q": "An implementation stops its loop as soon as the assistant's response text contains the string \"Task completed.\" Why is this an anti-pattern rather than a reasonable shortcut?",
+              "options": [
+                "The model could say that phrase mid-task while still intending further tool calls, or finish without ever saying it — text isn't the signal.",
+                "It's inefficient but not wrong — parsing assistant text for a completion phrase is slower than checking stop_reason, but in careful testing it reliably produces the exact same result.",
+                "It only fails when the model is instructed not to narrate its own completion, which is rare enough to not matter in practice.",
+                "It's an anti-pattern only when combined with an iteration cap; used alone, text-matching is a fully reliable completion signal."
+              ],
+              "correct": 0,
+              "explain": "Text content is not a structured signal — the model can produce that phrase without actually being done, or finish the task without ever producing it, so the parsing can both false-positive and false-negative independent of an iteration cap. It isn't merely slower than the reliable check; it's a different and unreliable check entirely."
+            },
+            {
+              "id": "q_agentic_loop_1b",
+              "q": "Which stop_reason value is the loop's only reliable signal that a task is genuinely finished and the result can be shown to the user?",
+              "options": [
+                "max_tokens, since a truncated response means generation stopped and no further tool calls will be issued.",
+                "end_turn, since it specifically indicates the model concluded the turn with nothing further to do.",
+                "Any stop_reason value paired with an iteration count above the configured cap for that loop.",
+                "stop_sequence, since encountering a defined sequence is the model's way of signaling task completion."
+              ],
+              "correct": 1,
+              "explain": "end_turn is the model's own signal that it's done — that's the loop's one reliable branch. max_tokens signals truncation (not completion), stop_sequence is an application-defined stopping point handled per your own logic rather than a completion signal, and an iteration cap is an arbitrary limit, not a signal the model produced at all."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_agentic_loop_1",
+          "q": "A loop implementation caps iterations at 5 and treats hitting the cap as 'task complete' if no explicit error occurred. What's the risk in this design?",
+          "options": [
+            "There is no real risk — 5 iterations is generous enough in practice that legitimate tasks essentially never need more.",
+            "The risk only applies to tasks involving subagents; single-agent loops are unaffected by an iteration cap of this kind.",
+            "The cap can be reached with real, unfinished work still pending, and treating that as completion silently ships a partial result.",
+            "The cap is fine as a completion signal as long as it's combined with a check for whether the assistant happened to produce any textual content at all."
+          ],
+          "correct": 2,
+          "explain": "An arbitrary iteration cap has no relationship to whether the underlying task is actually done — hitting it with genuine work still outstanding and treating that as success ships an incomplete result without any signal that something was cut short. The risk isn't scoped to subagents only, isn't solved by pairing it with a text-presence check, and doesn't disappear just because 5 sounds generous — it depends entirely on the task."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_agent_definition",
+      "knowledgePoints": [
+        {
+          "id": "kp_agent_definition_1",
+          "name": "allowed_tools is where least privilege lives",
+          "keyPrerequisites": [
+            "mt_agentic_loop_guide"
+          ],
+          "teach": "<p class='kp-key'><code>AgentDefinition</code> has four load-bearing fields: <code>name</code> and <code>description</code> identify the agent, <code>system_prompt</code> gives it instructions, and <code>allowed_tools</code> enforces least privilege by listing exactly what it may call.</p><p>A coordinator's <code>allowed_tools</code> includes <code>\"Task\"</code> so it can spawn subagents; a subagent's typically doesn't, since spawning further subagents isn't its job.</p>",
+          "questions": [
+            {
+              "id": "q_agent_definition_1a",
+              "q": "Two AgentDefinitions are nearly identical except one has \"Task\" in allowed_tools and the other doesn't. What role does the one with \"Task\" play, and why can't the other spawn subagents?",
+              "options": [
+                "It's a subagent; the other is the coordinator, since coordinators are generally defined as whichever AgentDefinition has the narrowest allowed_tools list of the two.",
+                "Both are coordinators; \"Task\" only controls whether an agent can read files, not whether it can spawn other agents.",
+                "The distinction is cosmetic — any AgentDefinition can spawn subagents at runtime regardless of its allowed_tools list.",
+                "It's the coordinator; the other can't spawn subagents because allowed_tools is precisely what enforces which tools an agent may call."
+              ],
+              "correct": 3,
+              "explain": "allowed_tools is the least-privilege mechanism — an agent without \"Task\" in that list simply cannot invoke it, which is exactly what keeps it from spawning subagents. Coordinators are the ones granted Task, not the ones with the narrowest tool list, and allowed_tools genuinely gates capability rather than being cosmetic."
+            },
+            {
+              "id": "q_agent_definition_1b",
+              "q": "Which AgentDefinition field carries the instructions that shape how an agent behaves once invoked?",
+              "options": [
+                "system_prompt, since it holds the instructions that define the agent's role, tone, and constraints.",
+                "description, since it's read by the model at runtime to determine the agent's own behavioral guidelines.",
+                "name, since a well-chosen identifier is what primarily determines an agent's behavior in practice.",
+                "allowed_tools, since restricting which tools are available is what shapes an agent's overall behavior."
+              ],
+              "correct": 0,
+              "explain": "system_prompt is where an agent's actual instructions live. description and name are identification metadata rather than behavioral instructions, and allowed_tools constrains capability, not the guidance an agent follows within that capability."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_agent_definition_1",
+          "q": "Why does giving every subagent in a system the same broad allowed_tools list (including Task) undermine the principle AgentDefinition is built around?",
+          "options": [
+            "It doesn't undermine anything — a broader allowed_tools list is always safer because it gives every agent more flexibility to recover from errors.",
+            "It undermines least privilege: each subagent should only have the tools its specific job requires, not everything available system-wide.",
+            "It's only a problem if the subagents actually use Task; simply having it available in allowed_tools carries no risk on its own.",
+            "It only matters for cost, since unused tools in allowed_tools slightly increase token usage but have no other effect."
+          ],
+          "correct": 1,
+          "explain": "allowed_tools is meant to scope each agent to exactly what its job requires — handing every subagent the coordinator's full tool list, Task included, defeats that principle by letting agents do far more than their role calls for. Broader access isn't inherently safer, unused permissions still represent real risk even if not immediately exercised, and the concern is about scope of capability, not just token cost."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_hub_and_spoke_guide",
+      "knowledgePoints": [
+        {
+          "id": "kp_hub_and_spoke_1",
+          "name": "Isolated context forces everything through the hub",
+          "keyPrerequisites": [
+            "mt_agent_definition"
+          ],
+          "teach": "<p class='kp-key'>Subagents do not automatically inherit the coordinator's conversation history, do not share memory with each other, and route every result back through the coordinator rather than to one another directly.</p><p>The coordinator decomposes the task, decides which subagents are needed, delegates, aggregates and validates results, handles errors and retries, and talks to the user. That's the price and the payoff of the topology: nothing crosses between spokes except through the hub, which is exactly what keeps errors and information flow observable.</p>",
+          "questions": [
+            {
+              "id": "q_hub_and_spoke_1a",
+              "q": "A colleague proposes letting the document-analysis subagent send its results directly to the synthesis subagent, bypassing the coordinator, to save a round trip. What does the hub-and-spoke topology lose if this is adopted?",
+              "options": [
+                "Nothing meaningful — the coordinator's role is only to spawn subagents, not to observe what happens between them afterward.",
+                "Only latency changes; the coordinator would still see both results eventually once the synthesis subagent finishes its work.",
+                "The coordinator's ability to observe every interaction, apply uniform error handling, and control what each subagent receives.",
+                "The subagents would need to share memory to communicate directly, which the SDK does not technically support at all."
+              ],
+              "correct": 2,
+              "explain": "Routing every exchange through the coordinator is what gives it visibility into all interactions, a single place to apply error handling uniformly, and control over exactly what each subagent sees — a direct subagent-to-subagent path bypasses all of that, not just latency. The coordinator's role is broader than spawning, and the failure mode here is architectural, not a missing-memory technical limitation."
+            },
+            {
+              "id": "q_hub_and_spoke_1b",
+              "q": "A subagent's response references a fact from an earlier, unrelated subagent call in the same session that was never included in its own prompt. What does this most likely indicate?",
+              "options": [
+                "Normal behavior — subagents share the coordinator's full conversation history by design, so this is expected.",
+                "The two subagents share memory directly with each other, which is intended when they're part of the same coordinator's system.",
+                "This is fine as long as the fact happens to be correct — isolation only matters when the leaked information is wrong.",
+                "The subagent hallucinated the fact, or the isolated-context guarantee was violated by leaking context it shouldn't have received."
+              ],
+              "correct": 3,
+              "explain": "Subagents are supposed to receive only what's explicitly passed in their own prompt — a fact from an unrelated call appearing anyway means either fabrication or an isolation violation, and either one is a bug worth investigating. It isn't expected behavior, subagents don't share memory with each other, and correctness of the leaked fact doesn't make the isolation break acceptable."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_hub_and_spoke_1",
+          "q": "Which responsibility belongs to the coordinator rather than to any individual subagent in a hub-and-spoke system?",
+          "options": [
+            "Aggregating and validating results from multiple subagents, and deciding how to handle a failure among them.",
+            "Executing the specific, narrowly scoped task it was delegated, using only the tools listed in its own allowed_tools.",
+            "Maintaining its own isolated context, receiving only what was explicitly included in its own prompt.",
+            "Returning a result formatted according to whatever structure its own assigned task required."
+          ],
+          "correct": 0,
+          "explain": "Aggregating results across subagents and deciding how to respond to a failure is squarely the coordinator's job — it's the one component with visibility across all of them. Executing a narrow delegated task, working from an isolated context, and returning results in the expected format are all subagent-level responsibilities, not the coordinator's."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_task_tool_context",
+      "knowledgePoints": [
+        {
+          "id": "kp_task_tool_1",
+          "name": "A Task prompt has to be self-contained",
+          "keyPrerequisites": [
+            "mt_hub_and_spoke_guide"
+          ],
+          "teach": "<p class='kp-key'>Because a subagent inherits nothing, a Task prompt like \"Analyze the document\" is broken — it has no document, no prior context, no output format. A working one spells out the document text, prior findings, and the expected output shape.</p><p>A coordinator can issue several Task calls in one response, and those subagents run concurrently rather than one at a time — parallel spawning is a single-response affordance, not a sequence of separate calls.</p>",
+          "questions": [
+            {
+              "id": "q_task_tool_1a",
+              "q": "A Task prompt reads only: \"Summarize the findings.\" The subagent has no document, no prior search results, and no output format specified. What principle does this violate?",
+              "options": [
+                "Least privilege — the prompt should have restricted the subagent's allowed_tools rather than given it more context.",
+                "Explicit context passing — a subagent inherits nothing automatically, so every piece of needed context must be in the prompt itself.",
+                "The determinism principle — the prompt should have specified whether to use a hook or a prompt instruction for the summary format.",
+                "Isolated context — the fix is to let this subagent inherit the coordinator's full conversation history instead of writing a longer prompt."
+              ],
+              "correct": 1,
+              "explain": "Because subagents receive nothing beyond what's explicitly in their Task prompt, an instruction with no document, no prior results, and no output format is missing exactly the context it needed to carry — that's an explicit-context-passing failure, not a tools, hooks, or inheritance issue. Isolation is the very reason context must be passed explicitly, not something to be overridden here."
+            },
+            {
+              "id": "q_task_tool_1b",
+              "q": "A coordinator's single response contains three separate Task calls: one to search, one to analyze a document, and one to search a different topic. How do these three subagents execute?",
+              "options": [
+                "Sequentially, in the order the Task calls appear within that one response, each waiting for the previous to finish.",
+                "Only the first Task call in the response actually spawns a subagent; the other two are silently ignored by the SDK.",
+                "Concurrently — multiple Task calls within one coordinator response run the corresponding subagents in parallel.",
+                "It depends on whether allowed_tools includes \"Task\" more than once — otherwise only one subagent can run at a time."
+              ],
+              "correct": 2,
+              "explain": "Multiple Task calls issued within a single coordinator response spawn their subagents to run concurrently — that's exactly what parallel spawning means in this pattern. They don't run sequentially, they aren't silently dropped, and duplicate entries in allowed_tools has nothing to do with concurrency."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_task_tool_1",
+          "q": "What distinguishes a well-formed Task prompt from a broken one like \"Analyze the document\"?",
+          "options": [
+            "A well-formed prompt is shorter, since brevity is what makes a Task prompt easy for a subagent to act on quickly.",
+            "A well-formed prompt names the target subagent explicitly by its AgentDefinition name rather than by task description.",
+            "A well-formed prompt sets tool_choice to a forced value so the subagent's very first action is fully determined.",
+            "A well-formed prompt includes the actual content, any prior relevant results, and the expected output format inline."
+          ],
+          "correct": 3,
+          "explain": "Since a subagent inherits nothing, everything it needs — the document text itself, whatever upstream results matter, and the shape the output should take — has to be spelled out in the prompt. Length isn't the deciding factor, naming a target agent isn't how Task prompts work, and tool_choice governs tool selection, not the context problem this pattern addresses."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_hooks_vs_prompts_guide",
+      "knowledgePoints": [
+        {
+          "id": "kp_hooks_vs_prompts_1",
+          "name": "Consequences decide: hook or prompt",
+          "keyPrerequisites": [
+            "mt_agentic_loop_guide"
+          ],
+          "teach": "<p class='kp-key'>A hook — like a PreToolUse check blocking refunds above $500 — is deterministic: it runs the same way, every time, 100% of occurrences. A system-prompt instruction is probabilistic: honored at high but non-zero probability, never exactly 100%.</p><p>The deciding question: does a failure here have financial, legal, or safety consequences? If yes, use a hook. If it's a general preference or formatting nicety, a prompt instruction is enough — and cheaper to write and change.</p>",
+          "questions": [
+            {
+              "id": "q_hooks_vs_prompts_1a",
+              "q": "A refund-limit rule ('never approve a refund over $500 without approval') lives only in the system prompt today, and it's occasionally skipped in production. Why would a PreToolUse hook close the gap where a stronger prompt wouldn't?",
+              "options": [
+                "A hook is code that runs deterministically on every occurrence of its event; a prompt instruction is honored with high but non-zero probability.",
+                "A hook and a stronger prompt are functionally equivalent; the gap closes only because hooks execute with lower latency than a prompt check.",
+                "A hook works because it uses a larger, more capable model internally to evaluate the refund amount than the main conversation does.",
+                "A hook only helps because it adds more few-shot examples to the effective context the model sees before approving a refund."
+              ],
+              "correct": 0,
+              "explain": "The core distinction is the guarantee: a hook runs as code on every single occurrence, while even a strongly worded prompt instruction remains probabilistic and can still be skipped some fraction of the time. It has nothing to do with latency, a larger internal model, or effectively adding few-shot examples — those don't change the probabilistic nature of prompt-based compliance."
+            },
+            {
+              "id": "q_hooks_vs_prompts_1b",
+              "q": "Which rule is the better candidate for hook enforcement rather than a prompt instruction, based on the guide's stated criterion?",
+              "options": [
+                "Formatting all monetary values in responses consistently as dollars-and-cents rather than mixing formats within one reply.",
+                "Blocking any call to process_refund until a verified customer identity has been established via get_customer.",
+                "Keeping a warm, empathetic tone in responses whenever a customer's message reads as frustrated or dissatisfied.",
+                "Preferring concise responses over long ones when the customer's question can be answered in a sentence or two."
+              ],
+              "correct": 1,
+              "explain": "Blocking a refund until identity is verified is a hard invariant with real financial consequences if skipped — exactly the profile the guide says belongs in a hook. Formatting consistency, tone, and response length are general preferences with no comparable stakes, and are well suited to a prompt instruction instead."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_hooks_vs_prompts_1",
+          "q": "A team is deciding whether a new 'always redact card numbers in logs' rule should live only in the system prompt or also be enforced with a hook. Which framing correctly applies the guide's criterion?",
+          "options": [
+            "It should be a prompt instruction only, since logging concerns are operational rather than user-facing and don't need determinism.",
+            "It should be neither — redaction is best handled by the logging infrastructure itself, entirely outside the agent's own instructions.",
+            "It should be a hook, since a redaction failure carries real compliance and safety consequences that a probabilistic instruction can't fully rule out.",
+            "It should be a prompt instruction with several carefully chosen few-shot examples of correctly redacted logs, since enough examples reliably raises compliance to effectively 100%."
+          ],
+          "correct": 2,
+          "explain": "A redaction failure has real compliance and safety consequences, which is exactly the profile the guide says calls for a hook rather than relying on a prompt's non-zero failure rate. Calling it purely operational understates the stakes, ruling it out of the agent's responsibility ignores that the agent is what's producing the log content, and no amount of few-shot examples turns a prompt instruction into a 100% guarantee."
+        }
+      ]
+    }
+  ]
+}

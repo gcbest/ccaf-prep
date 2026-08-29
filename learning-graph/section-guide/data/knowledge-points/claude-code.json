@@ -1,0 +1,377 @@
+{
+  "$comment": "Knowledge points for cl_claude_code_guide.",
+  "cluster": "cl_claude_code_guide",
+  "topics": [
+    {
+      "topicId": "mt_claudemd_hierarchy_guide",
+      "knowledgePoints": [
+        {
+          "id": "kp_claudemd_hierarchy_1",
+          "name": "Three levels, one classic misplacement",
+          "keyPrerequisites": [
+            "mt_message_roles"
+          ],
+          "teach": "<p class='kp-key'>User-level (<code>~/.claude/CLAUDE.md</code>) is personal and not shared via version control. Project-level (<code>.claude/CLAUDE.md</code> or a root <code>CLAUDE.md</code>) is version-controlled and applies to every contributor. Directory-level applies only within that subtree.</p><p>The classic mistake: a team member writes project-wide standards into their own user-level file. It works for them and silently doesn't exist for anyone else, since it was never committed.</p>",
+          "questions": [
+            {
+              "id": "q_claudemd_hierarchy_1a",
+              "q": "A new hire says they aren't seeing the team's coding standards, even though a senior engineer insists they wrote them into CLAUDE.md. What level did the senior engineer most likely use by mistake?",
+              "options": [
+                "Directory-level, scoped to a subdirectory the new hire's work happens not to touch.",
+                "Project-level, but in a branch that hasn't been merged into the one the new hire checked out.",
+                "User-level (~/.claude/CLAUDE.md), which is personal and never shared via version control.",
+                "There's no mistake here — CLAUDE.md content is always shared automatically regardless of which level it's written at."
+              ],
+              "correct": 2,
+              "explain": "This is the guide's named common mistake: standards meant for the whole team end up in the senior engineer's personal, unshared ~/.claude/CLAUDE.md instead of the version-controlled project level, so nobody else ever receives them. A directory-level mismatch or an unmerged branch would at least be visible in version control somewhere; a purely personal file never is."
+            },
+            {
+              "id": "q_claudemd_hierarchy_1b",
+              "q": "Which CLAUDE.md level is checked into version control and applies to every contributor on the project?",
+              "options": [
+                "User-level (~/.claude/CLAUDE.md), since it's the level meant for team-wide conventions.",
+                "Only directory-level CLAUDE.md files are version-controlled; the other two levels are always personal.",
+                "None of the levels are version-controlled by default; that requires a separate, manual setup step.",
+                "Project-level (.claude/CLAUDE.md or a root CLAUDE.md)."
+              ],
+              "correct": 3,
+              "explain": "Project-level CLAUDE.md is exactly the version-controlled, shared-with-every-contributor level. User-level is personal by definition, directory-level files are also committed but scoped narrower than 'every contributor,' and version control isn't an opt-in extra step for the project level — it's how that level is meant to work."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_claudemd_hierarchy_1",
+          "q": "A convention needs to apply only when working within a specific subdirectory of a large monorepo, not to the whole project. Which CLAUDE.md level fits?",
+          "options": [
+            "Directory-level — a CLAUDE.md placed in that subdirectory applies specifically when working with files there.",
+            "User-level, since personal files can be scoped to any directory the individual chooses to work in.",
+            "Project-level, since a root CLAUDE.md is the only place conventions can be written at all.",
+            "None — subdirectory-specific conventions require .claude/rules/ with a paths glob instead of any CLAUDE.md level."
+          ],
+          "correct": 0,
+          "explain": "Directory-level CLAUDE.md is exactly the mechanism for a convention scoped to one subtree. User-level files aren't dynamically scoped by directory, project-level is the wrong grain for a subdirectory-only rule, and while .claude/rules/ is a valid alternative organization, directory-level CLAUDE.md already covers this case directly."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_path_imports",
+      "knowledgePoints": [
+        {
+          "id": "kp_path_imports_1",
+          "name": "@path is resolved relative to its own file",
+          "keyPrerequisites": [
+            "mt_claudemd_hierarchy_guide"
+          ],
+          "teach": "<p class='kp-key'><code>@path</code> pulls another file's content into CLAUDE.md at that point. It's written with <code>@</code> immediately before the path (no space), resolved <strong>relative to the file that contains the import</strong> — not the working directory — and nesting can go up to five levels deep.</p><p>This is what keeps standards from being duplicated across every package's CLAUDE.md — one canonical file, imported wherever it's needed.</p>",
+          "questions": [
+            {
+              "id": "q_path_imports_1a",
+              "q": "A CLAUDE.md at packages/api/CLAUDE.md contains the line `Test requirements: @./standards/testing.md`. Relative to which location does Claude Code resolve that path?",
+              "options": [
+                "Relative to the repository root, regardless of which file the @path line actually appears in.",
+                "Relative to packages/api/ — the directory containing the file where the @path import itself appears.",
+                "Relative to the current working directory the terminal happened to be in when Claude Code was launched.",
+                "Relative to ~/.claude/, since imports are always resolved against the user-level configuration directory."
+              ],
+              "correct": 1,
+              "explain": "@path resolves relative to the file that contains the import — here, packages/api/CLAUDE.md — so ./standards/testing.md means packages/api/standards/testing.md. It isn't anchored to the repo root, the terminal's working directory, or the user-level config directory."
+            },
+            {
+              "id": "q_path_imports_1b",
+              "q": "What is the maximum nesting depth for @path imports?",
+              "options": [
+                "Three levels, matching the three levels of the CLAUDE.md hierarchy itself.",
+                "There is no limit — imports may nest as deeply as the file structure requires.",
+                "Five levels.",
+                "One level — an imported file may not itself contain further @path imports."
+              ],
+              "correct": 2,
+              "explain": "The guide states a maximum import nesting depth of five. It isn't tied to the three-level hierarchy count, it isn't unlimited, and imported files are allowed to contain their own further imports up to that five-level cap, not zero."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_path_imports_1",
+          "q": "What problem does @path solve that writing the same standards text directly into every package's CLAUDE.md would create?",
+          "options": [
+            "Performance — @path imports load faster than inline text, which is the primary reason the syntax exists.",
+            "Security — @path is specifically required to prevent one package's CLAUDE.md file from ever being able to access files located outside its own directory tree.",
+            "Nothing structural — @path is purely a stylistic shorthand with no functional difference from inline text.",
+            "Duplication — the same content would need to be kept in sync across every file that repeats it, rather than living in one canonical place."
+          ],
+          "correct": 3,
+          "explain": "Writing the same standards into every package's file means every future edit has to be repeated everywhere in sync — @path avoids that by keeping one canonical file and pulling it in wherever needed. It isn't primarily about load performance, it isn't a security boundary, and it does change behavior, not just style."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_claude_rules_guide",
+      "knowledgePoints": [
+        {
+          "id": "kp_claude_rules_1",
+          "name": "A paths glob decides whether a rule loads at all",
+          "keyPrerequisites": [
+            "mt_claudemd_hierarchy_guide"
+          ],
+          "teach": "<p class='kp-key'>Each file under <code>.claude/rules/</code> carries YAML frontmatter with a <code>paths</code> glob. The rule loads <strong>only</strong> when Claude Code is editing a file matching that pattern — saving context on rules that don't apply right now.</p><p>Choose <code>.claude/rules/</code> with <code>paths</code> when a convention applies to files scattered across many directories by type (every <code>*.test.ts</code>, wherever it lives); choose directory-level CLAUDE.md when the convention is tied to one specific place.</p>",
+          "questions": [
+            {
+              "id": "q_claude_rules_1a",
+              "q": "A testing convention needs to apply to every *.test.tsx file no matter which directory it lives in. Why does .claude/rules/testing.md with a paths glob fit better than a directory-level CLAUDE.md?",
+              "options": [
+                "Because a glob-scoped rule loads by file pattern regardless of location, while a directory-level file only covers one subtree.",
+                "Because .claude/rules/ files always take priority over CLAUDE.md files whenever both happen to apply to the same file.",
+                "Because directory-level CLAUDE.md files cannot contain YAML frontmatter, which testing conventions specifically require.",
+                "There's no real difference; either mechanism covers scattered test files equally well in current versions of Claude Code."
+              ],
+              "correct": 0,
+              "explain": "A paths glob matches by file pattern across the whole project, which is exactly what scattered *.test.tsx files need — a directory-level CLAUDE.md, by contrast, would need to exist (and be duplicated) in every directory that happens to contain a test file. It isn't about priority ordering, frontmatter isn't a CLAUDE.md limitation being worked around, and the two mechanisms are not interchangeable for this scattered case."
+            },
+            {
+              "id": "q_claude_rules_1b",
+              "q": "What triggers a .claude/rules/ file to actually load into context?",
+              "options": [
+                "It loads once per session automatically, the same way project-level CLAUDE.md does, regardless of which files are touched.",
+                "Claude Code edits a file that matches the rule's paths glob in its frontmatter — otherwise the rule stays unloaded.",
+                "The user explicitly invokes it as a slash command, the same way a custom command or skill would be invoked.",
+                "It loads whenever any file in the .claude/rules/ directory itself is opened, regardless of its own paths pattern."
+              ],
+              "correct": 1,
+              "explain": "Loading is conditional on a path match — Claude Code only pulls a rule in when it's working with a file the rule's paths glob covers, which is what saves context on irrelevant rules. It doesn't load unconditionally like a project-level CLAUDE.md, it isn't invoked like a slash command, and opening files under .claude/rules/ itself isn't what triggers loading."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_claude_rules_1",
+          "q": "A convention only ever applies to files inside src/api/, and nowhere else in the project. Which is the more natural fit: directory-level CLAUDE.md in src/api/, or .claude/rules/ with a paths glob?",
+          "options": [
+            ".claude/rules/ with a paths glob — glob-based rules are always preferred over directory-level CLAUDE.md in current practice.",
+            "Neither fits; a convention scoped to one directory can only be expressed via a root-level CLAUDE.md with conditional logic.",
+            "Directory-level CLAUDE.md in src/api/ — the convention is tied to one specific place, which is exactly what that level is for.",
+            "Both are functionally impossible for this case, since neither mechanism supports scoping by directory path in this way."
+          ],
+          "correct": 2,
+          "explain": "Since the convention is tied to one specific directory rather than a file pattern scattered across the project, directory-level CLAUDE.md in src/api/ is the more natural fit — that's precisely the distinction the guide draws. .claude/rules/ isn't universally preferred, a root CLAUDE.md with conditional logic isn't how this scoping is done, and directory-scoped conventions are exactly what directory-level CLAUDE.md supports."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_commands_skills_guide",
+      "knowledgePoints": [
+        {
+          "id": "kp_commands_skills_1",
+          "name": "On-demand vs. always-loaded",
+          "keyPrerequisites": [
+            "mt_claudemd_hierarchy_guide"
+          ],
+          "teach": "<p class='kp-key'>Slash commands (<code>.claude/commands/</code>) and skills (<code>.claude/skills/</code>, configured via SKILL.md frontmatter) both create <code>/name</code> invocations for on-demand tasks. CLAUDE.md stays always-loaded for standards that should apply on every single turn.</p><p>Skill frontmatter adds real capability: <code>context: fork</code> runs the skill in an isolated subagent so its verbose output doesn't pollute the main session, <code>allowed-tools</code> restricts what it can call, and <code>argument-hint</code> prompts for a parameter when one is expected but missing.</p>",
+          "questions": [
+            {
+              "id": "q_commands_skills_1a",
+              "q": "A team keeps adding 'when generating tests, do X' instructions into their root CLAUDE.md, and the file is growing long enough to dilute the rules that matter on every turn. What's the better home for that instruction?",
+              "options": [
+                "A directory-level CLAUDE.md placed specifically inside the test directory, so it only loads there instead of at the root.",
+                "The user-level ~/.claude/CLAUDE.md, so it stops counting against the project-level file's growing length.",
+                "It should stay in CLAUDE.md exactly where it is; skills are only appropriate for tasks that never touch project code.",
+                "A skill invoked as /generate-tests, since test generation is an on-demand task rather than something needed on every turn."
+              ],
+              "correct": 3,
+              "explain": "Test generation is invoked when needed, not required on every single turn — exactly the on-demand profile a skill fits, which also stops it from diluting the always-loaded rules in CLAUDE.md. Relocating it to a test directory's CLAUDE.md still keeps it always-loaded whenever that directory is touched, moving it to the user level just changes which file grows, and skills are routinely used for project-code tasks."
+            },
+            {
+              "id": "q_commands_skills_1b",
+              "q": "A skill's SKILL.md frontmatter sets context: fork. What does this specifically achieve?",
+              "options": [
+                "It runs the skill in an isolated subagent so its verbose output doesn't pollute the main session's context.",
+                "It restricts which built-in tools the skill is permitted to call during its execution.",
+                "It prompts the user for a required argument whenever the skill is invoked without one.",
+                "It shares the skill with every team member automatically, regardless of where the skill file is stored."
+              ],
+              "correct": 0,
+              "explain": "context: fork is specifically what isolates a skill's execution into a subagent so its output stays out of the main session. Restricting tools is allowed-tools' job, prompting for a missing parameter is argument-hint's job, and sharing has nothing to do with context: fork — it depends on whether the skill lives under the project's .claude/skills/ at all."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_commands_skills_1",
+          "q": "What is the argument-hint field in a SKILL.md frontmatter for?",
+          "options": [
+            "It restricts the skill to a specific list of allowed tools, the same role allowed-tools plays.",
+            "It's a hint shown asking for a needed parameter when the skill is invoked without one supplied.",
+            "It documents, for other developers reading the file, what the skill's overall purpose is.",
+            "It forces the skill to always run in an isolated subagent context, the same role context: fork plays."
+          ],
+          "correct": 1,
+          "explain": "argument-hint's job is prompting for a parameter the skill expects but wasn't given at invocation. Restricting tools is a separate field (allowed-tools), documenting purpose for other developers isn't what this frontmatter key does, and isolating execution is context: fork's role, not argument-hint's."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_planning_mode_guide",
+      "knowledgePoints": [
+        {
+          "id": "kp_planning_mode_1",
+          "name": "Investigate-only, versus investigate-and-act",
+          "keyPrerequisites": [
+            "mt_agentic_loop_guide"
+          ],
+          "teach": "<p class='kp-key'>Planning mode investigates with read-only tools (Read, Grep, Glob) and produces a plan the user approves before anything changes — suited to large, ambiguous, or architecturally significant work, or an unfamiliar codebase. Direct execution suits a single-file fix with a clear cause.</p><p>The Explore subagent isolates a planning-mode investigation's verbose output from the main context, returning only a summary — preventing context exhaustion during a multi-phase investigation.</p>",
+          "questions": [
+            {
+              "id": "q_planning_mode_1a",
+              "q": "A request will touch roughly 45 files as part of migrating away from a deprecated library. Should this run under planning mode or direct execution?",
+              "options": [
+                "Direct execution — since the target library to migrate away from is already known, there's nothing left worth planning regardless of how many files end up affected.",
+                "Direct execution — planning mode is reserved specifically for cases involving unfamiliar codebases, not migrations in familiar ones.",
+                "Planning mode — the scale (45 files) is exactly the kind of large, multi-file change that warrants investigation and an approved plan first.",
+                "Neither is clearly better; the choice makes no practical difference once the target library to migrate away from is already decided."
+              ],
+              "correct": 2,
+              "explain": "A 45-file library migration is exactly the scale the guide flags for planning mode — large changes benefit from investigation and an approved plan before anything is touched, regardless of whether the target library is already decided. Planning mode isn't limited to unfamiliar codebases specifically, and the scale here does make a practical difference to how safely the change can proceed."
+            },
+            {
+              "id": "q_planning_mode_1b",
+              "q": "What does the Explore subagent specifically protect during a planning-mode investigation?",
+              "options": [
+                "It protects the codebase from being modified by ensuring only read-only tools are ever available anywhere in the session.",
+                "It protects the user from needing to approve a plan, by making planning mode fully autonomous end to end.",
+                "It protects against merge conflicts by locking the files under investigation until the plan is approved.",
+                "It protects the main session's context from being filled with the verbose output of a multi-phase investigation."
+              ],
+              "correct": 3,
+              "explain": "The Explore subagent's specific job is keeping the main session's context from being consumed by an investigation's verbose output, returning only a summary instead. Read-only tool restriction is a planning-mode-wide property, not specifically the Explore subagent's contribution; user approval still remains part of the workflow; and nothing here involves file locking."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_planning_mode_1",
+          "q": "A bug report includes a clear stack trace pointing to a single line in one file, and the fix is an obvious one-line change. Which approach fits?",
+          "options": [
+            "Direct execution — a single-file fix with a clear, well-understood cause doesn't need an investigation phase first.",
+            "Planning mode, since any change to production code should always go through an investigation-and-approval step first.",
+            "Planning mode, specifically to invoke the Explore subagent so the fix's verbose diff doesn't pollute the session.",
+            "Neither — a change this small should bypass both planning mode and direct execution via a raw shell command instead."
+          ],
+          "correct": 0,
+          "explain": "A single-file fix with a clear cause is exactly the profile the guide gives for direct execution — no ambiguity to investigate, no architectural decision to weigh. Requiring planning mode for every change overstates its purpose, invoking Explore for a one-line diff misapplies a tool meant for larger investigations, and there's no third 'raw shell command' pathway being described here."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_compact_memory",
+      "knowledgePoints": [
+        {
+          "id": "kp_compact_memory_1",
+          "name": "/compact frees space; /memory persists it",
+          "keyPrerequisites": [
+            "mt_context_window_problems"
+          ],
+          "teach": "<p class='kp-key'><code>/compact</code> summarizes prior history to reclaim context window space during long sessions — at the cost of the same progressive-summarization risk from Chapter 1: exact numbers and dates can go vague.</p><p><code>/memory</code> opens CLAUDE.md itself for editing, so notes, preferences, and current work context persist and are automatically loaded into future sessions — an alternative to re-explaining the same instructions every time.</p>",
+          "questions": [
+            {
+              "id": "q_compact_memory_1a",
+              "q": "After a long investigation session runs /compact to free up context, a fact that used to read '42% of requests' now reads 'a large share of requests.' What happened?",
+              "options": [
+                "/memory silently rewrote the fact when it saved the session's notes into CLAUDE.md for future reference.",
+                "/compact's history summarization lost the exact figure, the same progressive-summarization risk the guide warns about.",
+                "This indicates a bug — /compact is guaranteed never to alter any specific numeric values during summarization.",
+                "The vague phrasing came from the original tool call, not from any compression step run afterward in the session."
+              ],
+              "correct": 1,
+              "explain": "This is exactly the risk /compact carries — summarizing history can drop exact figures and replace them with vague language, which is a known trade-off, not a bug. /memory edits CLAUDE.md rather than summarizing session history, and the scenario specifically attributes the change to running /compact, not to how the original figure was first produced."
+            },
+            {
+              "id": "q_compact_memory_1b",
+              "q": "What does /memory actually do, and why does that make it persist across sessions?",
+              "options": [
+                "It saves a snapshot of the current conversation to a temporary file, which the next session may optionally choose to load.",
+                "It compresses the current session's history the same way /compact does, but stores the result instead of discarding it.",
+                "It opens CLAUDE.md for editing, and since CLAUDE.md is loaded automatically every session, whatever's written there persists.",
+                "It sends the current context to Anthropic's servers for long-term storage, retrievable by name in any future session."
+              ],
+              "correct": 2,
+              "explain": "/memory's mechanism is direct: it opens CLAUDE.md itself for editing, and because CLAUDE.md is automatically loaded at the start of every session, anything written there is available going forward. It isn't a temporary snapshot, it isn't the same operation as /compact with different storage, and nothing about it involves server-side conversation storage."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_compact_memory_1",
+          "q": "A developer wants a project convention they keep re-explaining every session to instead persist automatically. Which command addresses this, and why not the other one?",
+          "options": [
+            "/compact, since freeing up context space is what allows more room for standing instructions to be honored going forward.",
+            "Either command works equally well here, since both /compact and /memory ultimately affect what content ends up available to the model in future sessions.",
+            "Neither — persisting a standing convention requires a dedicated configuration file outside of both /compact and /memory.",
+            "/memory, since it edits CLAUDE.md directly, which loads automatically every session — /compact only summarizes existing history, it doesn't persist anything new."
+          ],
+          "correct": 3,
+          "explain": "/memory is the right tool because it edits CLAUDE.md, which is exactly what's auto-loaded every session — /compact only summarizes what's already in the current session's history and has no role in carrying a new standing instruction forward. The two commands aren't interchangeable, and CLAUDE.md itself, edited via /memory, is that dedicated persistence mechanism."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_cli_ci_sessions",
+      "knowledgePoints": [
+        {
+          "id": "kp_cli_ci_1",
+          "name": "Headless mode's flags, and what each contributes",
+          "keyPrerequisites": [
+            "mt_planning_mode_guide"
+          ],
+          "teach": "<p class='kp-key'><code>-p</code>/<code>--print</code> is the only correct way to run Claude Code in CI: non-interactive, processes the prompt, prints to stdout, exits — it never waits for input. <code>--output-format json</code> plus <code>--json-schema</code> makes the result machine-parseable, so a pipeline can post inline PR comments automatically.</p><p>Reviewing your own generated code with the same session is weaker than an independent instance, since the original session is less likely to challenge its own reasoning — and re-reviews should include prior results so only new or unresolved issues get reported.</p>",
+          "questions": [
+            {
+              "id": "q_cli_ci_1a",
+              "q": "A CI pipeline needs a PR reviewed with the result posted as inline comments automatically, with no human present to respond to any prompts. Which flags make this possible?",
+              "options": [
+                "-p (or --print) for non-interactive execution, combined with --output-format json and --json-schema for a parseable result.",
+                "--resume paired with a named session, so the same reviewing session can be reused across every subsequent CI run.",
+                "fork_session, so the review can branch off from the code-generation session that produced the pull request originally.",
+                "--output-format json alone; -p is only needed for local interactive use and has no bearing on CI-specific behavior."
+              ],
+              "correct": 0,
+              "explain": "-p is what makes the run non-interactive at all — required for any unattended CI use — and --output-format json with --json-schema is what turns the result into something a script can parse and post as inline comments. --resume and fork_session are session-continuation tools, not what enables headless execution or structured output, and --output-format alone doesn't address the interactive-vs-headless problem -p solves."
+            },
+            {
+              "id": "q_cli_ci_1b",
+              "q": "Why does the guide recommend reviewing generated code with an independent Claude Code instance rather than the same session that wrote it?",
+              "options": [
+                "Because the same session runs measurably slower on a review pass than a freshly started one would.",
+                "Because the same session retains its original reasoning and is less likely to challenge decisions it already made.",
+                "Because a single session is technically limited to one file per invocation, which a full PR review would exceed.",
+                "There's no real reason given — the recommendation is a stylistic preference with no effect on review quality."
+              ],
+              "correct": 1,
+              "explain": "The concern is that the same session already committed to its own reasoning while writing the code, making it less likely to critically re-examine those same decisions — an independent instance has no such attachment. It isn't about execution speed, isn't a file-count limitation, and the guide gives this as a real quality concern, not a stylistic preference."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_cli_ci_1",
+          "q": "A CI pipeline re-reviews a pull request after new commits are pushed, and the same issues keep getting reported as inline comments every time, even ones already acknowledged. What should the pipeline change?",
+          "options": [
+            "Switch from -p to --resume, so the review session remembers what it already flagged across every CI run automatically.",
+            "Nothing — repeating the same findings on every commit is expected and intentional behavior for a CI review pipeline.",
+            "Include the prior review's results in the new prompt's context and instruct Claude to report only new or unresolved issues.",
+            "Disable --json-schema, since structured output is what's causing the same issues to be re-serialized on every run."
+          ],
+          "correct": 2,
+          "explain": "The fix is exactly what the guide describes: feed the prior review's results into the new prompt's context and instruct the model to report only what's new or still unresolved. Switching to --resume conflates session continuation with this filtering problem, repeating identical comments isn't the intended behavior, and --json-schema controls output shape, not which issues get re-reported."
+        }
+      ]
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 # Learning graphs
 
-Knowledge graphs for the two heaviest sections of this study system, plus a browser app
-that teaches through them. The method is from [*The Math Academy Way*](https://mathacademy.com/)
+Knowledge graphs for the two heaviest sections of this study system, plus an independent
+community study guide, and a browser app that teaches through them. The method is from [*The Math Academy Way*](https://mathacademy.com/)
 (Justin Skycak); the data format follows [`withmarbleapp/os-taxonomy`](https://github.com/withmarbleapp/os-taxonomy),
 with one file added that os-taxonomy does not have.
 
@@ -10,9 +10,10 @@ with one file added that os-taxonomy does not have.
 | **8** · The Claude Agent SDK | [`index.html`](index.html) | `data/` | `ccaf_learning_graph_v1` |
 | **3** · Building with the Claude API | [`section-03/index.html`](section-03/index.html) | `section-03/data/` | `ccaf_learning_graph_03_v1` |
 | **7** · Claude Code in Action | [`section-07/index.html`](section-07/index.html) | `section-07/data/` | `ccaf_learning_graph_07_v1` |
+| **Community Guide** · Claude Certified Architect | [`section-guide/index.html`](section-guide/index.html) | `section-guide/data/` | `ccaf_learning_graph_guide_v1` |
 
 Section 8 lives at the root because its URL predates the other graphs. One `app.js` and one
-`scripts/` directory serve all three; everything section-specific — topics, names, storage key —
+`scripts/` directory serve all four; everything section-specific — topics, names, storage key —
 arrives in that section's `graph-data.js`, built from its own `data/section.json`.
 
 Progress is tracked separately per section, so working through one never marks anything
@@ -48,7 +49,12 @@ learning-graph/
 │   ├── graph-data.js
 │   └── data/…
 │
-└── section-07/                    Section 7, same layout
+├── section-07/                    Section 7, same layout
+│   ├── index.html
+│   ├── graph-data.js
+│   └── data/…
+│
+└── section-guide/                 Community Guide, same layout
     ├── index.html
     ├── graph-data.js
     └── data/…
@@ -56,16 +62,16 @@ learning-graph/
 
 At the time of writing:
 
-| | Section 8 | Section 3 | Section 7 |
-|---|---|---|---|
-| topics | 44 | 68 | 41 |
-| clusters | 5 | 11 | 9 |
-| prerequisite edges | 64 (49 hard) | 99 (79 hard) | 45 (45 hard) |
-| encompassings | 48 | 77 | 24 |
-| knowledge points | 60 | 83 | 48 |
-| questions | 164 | 254 | 140 |
-| layers deep | 8 | 9 | 8 |
-| entry topics | 1 | 1 | 1 |
+| | Section 8 | Section 3 | Section 7 | Community Guide |
+|---|---|---|---|---|
+| topics | 44 | 68 | 41 | 51 |
+| clusters | 5 | 11 | 9 | 13 |
+| prerequisite edges | 64 (49 hard) | 99 (79 hard) | 45 (45 hard) | 50 (50 hard) |
+| encompassings | 48 | 77 | 24 | 37 |
+| knowledge points | 60 | 83 | 48 | 52 |
+| questions | 164 | 254 | 140 | 155 |
+| layers deep | 8 | 9 | 8 | 12 |
+| entry topics | 1 | 1 | 1 | 1 |
 
 ## The data model
 
@@ -186,11 +192,13 @@ Both scripts take a section argument. With none, they act on Section 8 at the ro
 node learning-graph/scripts/validate.mjs                    # Section 8
 node learning-graph/scripts/validate.mjs section-03         # Section 3
 node learning-graph/scripts/validate.mjs section-07         # Section 7
+node learning-graph/scripts/validate.mjs section-guide      # Community Guide
 node learning-graph/scripts/validate.mjs all                # every section
 
 node learning-graph/scripts/build-web-data.mjs              # Section 8
 node learning-graph/scripts/build-web-data.mjs section-03   # Section 3
 node learning-graph/scripts/build-web-data.mjs section-07   # Section 7
+node learning-graph/scripts/build-web-data.mjs section-guide # Community Guide
 ```
 
 **Edit the JSON, never `graph-data.js`.** The build inlines the data into a `<script>` tag
@@ -255,3 +263,18 @@ CCA-F practice exam — [OlivierAlter/Claude-Certified-Architect-Foundations-Cer
 against the same CCA-F Exam Guide v1.0 and the domain-3 glossary terms (`t28`–`t43`) in
 [`study-reference/ccaf_study_reference.md`](../study-reference/ccaf_study_reference.md) that neither
 other graph had picked up.
+
+**Community Guide** is the odd one out: it comes from
+[`paullarionov/claude-certified-architect`](https://github.com/paullarionov/claude-certified-architect)'s
+`guide_en.md`, a community-written CCA-F study guide independent of the official Anthropic Academy
+courses the other three graphs are built from — see
+[`reference/claude-certified-architect-guide.md`](../reference/claude-certified-architect-guide.md)
+for the full breakdown. Its 13 chapters cover Chapters 1–5 (API fundamentals, tool_use, the Agent
+SDK, MCP, Claude Code configuration) at exam-condensed depth alongside Sections 3/6/7/8's fuller
+treatment, and Chapters 6–13 (advanced prompt engineering, the Batches API, task decomposition,
+escalation/human-in-the-loop, multi-agent error handling, production context management, and
+provenance) in more depth than anything else in this repo — closest to exam Domains 4 and 5, which
+don't have a dedicated numbered course section. The guide's own 76-question practice test is
+imported separately as [`quizzes/10-guide-practice-test`](../quizzes/10-guide-practice-test/index.html)
+rather than folded into this graph's knowledge points, since its questions are scenario-based and
+cut across many topics at once.

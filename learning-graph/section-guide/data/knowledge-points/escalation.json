@@ -1,0 +1,218 @@
+{
+  "$comment": "Knowledge points for cl_escalation.",
+  "cluster": "cl_escalation",
+  "topics": [
+    {
+      "topicId": "mt_escalation_triggers",
+      "knowledgePoints": [
+        {
+          "id": "kp_escalation_triggers_1",
+          "name": "Reliable triggers are rules; unreliable ones are proxies",
+          "keyPrerequisites": [
+            "mt_hooks_vs_prompts_guide"
+          ],
+          "teach": "<p class='kp-key'>Reliable triggers: an explicit request for a human, a policy gap (the policy is simply silent), the agent making no progress after reasonable attempts, and a financial threshold — ideally hook-enforced, not prompt-requested. Multiple ambiguous customer matches should prompt for another identifier, never a guess.</p><p>Unreliable: sentiment analysis (mood doesn't track case complexity), the model's own 1–10 self-rated confidence (it can be confidently wrong), and a bolted-on classifier (overengineering, and it needs training data you may not have).</p>",
+          "questions": [
+            {
+              "id": "q_escalation_triggers_1a",
+              "q": "A team proposes escalating whenever the model rates its own confidence below 7 out of 10. Why does the guide call this an unreliable trigger?",
+              "options": [
+                "Because self-rated confidence scores are technically impossible for a language model to produce in a structured format.",
+                "Because the model's own confidence rating is poorly calibrated — it can be confidently wrong, so the score doesn't track actual risk.",
+                "Because a 7-out-of-10 threshold is too low; the same mechanism becomes reliable once the threshold is raised to 9 or above.",
+                "Because self-rated confidence scores only meaningfully apply to text generation tasks, not to the kind of decisions escalation triggers are meant to govern."
+              ],
+              "correct": 1,
+              "explain": "The problem is calibration, not format or threshold — a model can be confidently wrong, so its own numeric self-rating doesn't reliably track whether a case actually needs a human. The score is easy to produce technically, no threshold adjustment fixes a calibration problem, and the concern isn't specific to text-generation-only tasks."
+            },
+            {
+              "id": "q_escalation_triggers_1b",
+              "q": "A customer search returns three possible matches for the name and email provided, with no clearly correct single match. What should the agent do?",
+              "options": [
+                "Pick the most recently active of the three accounts, since recency is the best available proxy for correctness here.",
+                "Proceed with the first match returned by the lookup, since taking action quickly outweighs a small risk of misidentification.",
+                "Ask the customer for an additional identifier (like an order number) rather than guessing among the ambiguous matches.",
+                "Escalate to sentiment analysis first, to determine which of the three matching customers seems most likely to be upset."
+              ],
+              "correct": 2,
+              "explain": "The guide's explicit rule for multiple ambiguous matches is to ask for an additional identifier rather than guess — recency, arbitrary ordering, or any other proxy risks acting on the wrong account. Sentiment analysis has nothing to do with resolving which of several accounts is the correct one."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_escalation_triggers_1",
+          "q": "Why is a policy gap (the policy simply doesn't address the situation) considered a reliable escalation trigger?",
+          "options": [
+            "It isn't reliable — policy gaps are rare enough that building a trigger around them isn't worth the engineering effort.",
+            "Because a policy gap always indicates the customer is being deceptive about the situation they're describing.",
+            "Because policy gaps only arise for financial requests, so this trigger is really just a restatement of the financial-threshold trigger.",
+            "Because the agent has no authorized answer to give in this case at all, which is a clear, checkable condition rather than a judgment call."
+          ],
+          "correct": 3,
+          "explain": "A genuine policy gap means there is no authorized answer for the agent to give — that's a clear, checkable state rather than something requiring subjective judgment, which is exactly what makes it a reliable trigger. It isn't rare enough to dismiss, it says nothing about customer honesty, and it isn't limited to financial situations or a restatement of the threshold trigger."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_escalation_patterns",
+      "knowledgePoints": [
+        {
+          "id": "kp_escalation_patterns_1",
+          "name": "Immediate, attempted, or acknowledge-then-resolve",
+          "keyPrerequisites": [
+            "mt_escalation_triggers"
+          ],
+          "teach": "<p class='kp-key'>An explicit 'get me a manager' escalates immediately, no attempt first. A solvable complaint gets an attempt (offer a warranty replacement), escalating only if that doesn't satisfy the customer. A frustrated-but-not-yet-explicit customer gets acknowledgment plus a proposed resolution first — escalating only if they reiterate the request for a human afterward. Expressing dissatisfaction is not, on its own, the same as requesting escalation.</p>",
+          "questions": [
+            {
+              "id": "q_escalation_patterns_1a",
+              "q": "A customer writes 'This is outrageous, I'm very unhappy with the quality!' without asking for a manager. Which pattern applies, and what should happen first?",
+              "options": [
+                "Acknowledge-then-resolve — acknowledge the frustration and propose a concrete resolution before any decision to escalate.",
+                "Immediate escalation — expressing strong dissatisfaction is functionally equivalent to an explicit request for a human.",
+                "Attempted resolution only — skip acknowledgment entirely and go straight to offering a replacement or refund.",
+                "No escalation pattern applies at all — dissatisfaction expressed this way should simply be logged without a response."
+              ],
+              "correct": 0,
+              "explain": "This is exactly the acknowledge-then-resolve case: frustration is expressed but a human hasn't been explicitly requested, so the right first move is acknowledging the feeling and proposing a concrete fix — escalating only if the customer reiterates wanting a person after that. Treating dissatisfaction as equivalent to an explicit request skips a step the guide is careful to keep separate, skipping acknowledgment entirely misses half the pattern, and ignoring the message outright isn't a response option the guide describes."
+            },
+            {
+              "id": "q_escalation_patterns_1b",
+              "q": "A customer says 'I want to speak to a manager' with no prior interaction in the conversation. Which escalation pattern applies?",
+              "options": [
+                "Attempted resolution — offer a solution first, and only escalate afterward if the offer doesn't resolve the request.",
+                "Immediate escalation — this is an explicit request for a human, so the agent escalates without attempting to solve it first.",
+                "Acknowledge-then-resolve — acknowledge the request, then propose a solution before deciding whether to escalate.",
+                "No standard pattern applies; explicit requests for a manager fall outside the escalation patterns the guide describes."
+              ],
+              "correct": 1,
+              "explain": "An explicit request for a human is exactly the immediate-escalation case — the guide is specific that the agent should not attempt to resolve first when the customer has already asked for a person. Attempting a fix first, or acknowledging before resolving, are the patterns for a case where escalation hasn't explicitly been requested yet, not this one."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_escalation_patterns_1",
+          "q": "A customer's refrigerator broke two days after purchase. The agent checks the order and offers a warranty replacement, but the customer says that's not acceptable and repeats they want it refunded, not replaced, or they'll go elsewhere. What should happen next?",
+          "options": [
+            "Offer the exact same warranty replacement a second time, since repeating the offer more clearly usually resolves the disagreement.",
+            "Ignore the pushback and close the case as resolved, since a warranty replacement was already offered per policy.",
+            "Escalate — an attempted resolution was offered and rejected, which is the trigger point for the attempted-resolution pattern.",
+            "Immediately involve sentiment analysis to determine how upset the customer actually is before deciding whether to escalate."
+          ],
+          "correct": 2,
+          "explain": "This is the attempted-resolution pattern completing as designed: an offer was made, the customer wasn't satisfied by it, and that dissatisfaction after a genuine attempt is exactly the trigger to escalate. Repeating the identical rejected offer or closing the case ignores that the attempt already failed, and sentiment analysis isn't part of how this decision gets made."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_structured_handoff",
+      "knowledgePoints": [
+        {
+          "id": "kp_structured_handoff_1",
+          "name": "The human sees the summary, not the transcript",
+          "keyPrerequisites": [
+            "mt_escalation_patterns"
+          ],
+          "teach": "<p class='kp-key'>The human operator typically never sees the full conversation — only the structured handoff. It needs to independently carry: who the customer is, the issue, the order/context, the root cause, the actions already taken, any amount involved, and a recommended action with the escalation reason. Missing any of these means the human is re-doing work the agent already did, or worse, missing it entirely.</p>",
+          "questions": [
+            {
+              "id": "q_structured_handoff_1a",
+              "q": "A handoff to a human operator contains only {\"escalation_reason\": \"customer requested manager\"}. Given the human has no transcript access, what's missing?",
+              "options": [
+                "Nothing critical — the escalation_reason field alone is sufficient for a human to pick up the case from where the agent left off.",
+                "Only the refund_amount field is missing; every other piece of context is optional metadata rather than something the human needs.",
+                "The transcript itself should be attached instead of a structured summary, since transcripts are more complete than any summary.",
+                "Who the customer is, what the issue actually is, and what the agent already tried — the human has no way to reconstruct any of it."
+              ],
+              "correct": 3,
+              "explain": "With no transcript access, the human depends entirely on the structured handoff — and a bare escalation_reason leaves out who the customer is, what happened, and what's already been tried, forcing the human to start from nothing. It's far from sufficient on its own, other fields like actions_taken aren't merely optional, and the guide's whole point is that a self-contained summary is what's needed, not the raw transcript."
+            },
+            {
+              "id": "q_structured_handoff_1b",
+              "q": "Why does a structured handoff include actions_taken (what the agent already tried) even though the human wasn't present for any of it?",
+              "options": [
+                "So the human doesn't waste time repeating steps already tried, and can see what's already been ruled out as a solution.",
+                "It doesn't need to — actions_taken is purely for internal agent logging and isn't meant to inform the human's next step.",
+                "Because actions_taken is a required schema field with no functional purpose beyond satisfying the handoff's format.",
+                "Only to support later auditing of the agent's performance, not to help the human resolve the case at hand."
+              ],
+              "correct": 0,
+              "explain": "Seeing what's already been tried (verified identity, confirmed order, offered a replacement) tells the human what's already ruled out, so they don't repeat those same steps and can move straight to the next decision. It's meant to inform the human's actual next step, not just sit as internal logging, a formality, or purely after-the-fact auditing."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_structured_handoff_1",
+          "q": "A structured handoff includes a recommended_action field ('Approve a full refund') in addition to the raw facts of the case. What role does this field play?",
+          "options": [
+            "It's redundant with the other fields and could be removed without the human losing anything useful.",
+            "It gives the human a starting recommendation grounded in what the agent found, without removing the human's own final decision.",
+            "It automatically executes the recommended action without requiring the human to review or approve it first.",
+            "It's only ever included when the case happens to involve a monetary amount; purely non-financial escalations never carry this particular field."
+          ],
+          "correct": 1,
+          "explain": "recommended_action gives the human a concrete starting point grounded in what the agent already determined, while leaving the actual decision with the human — that's additive, not redundant, and it doesn't bypass human judgment by auto-executing anything. Nothing restricts this field to monetary cases specifically."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_confidence_calibration",
+      "knowledgePoints": [
+        {
+          "id": "kp_confidence_calibration_1",
+          "name": "Calibrated routing, and auditing beneath the aggregate",
+          "keyPrerequisites": [
+            "mt_escalation_triggers"
+          ],
+          "teach": "<p class='kp-key'>Field-level confidence scores route high-confidence, stable-accuracy extractions to automation and the rest to human review — but only once those scores are calibrated against a labeled validation set, not trusted raw. Even high-confidence output needs a stratified random audit by document type and field, because a 97% aggregate accuracy can hide a document type sitting at 40%.</p>",
+          "questions": [
+            {
+              "id": "q_confidence_calibration_1a",
+              "q": "A pipeline reports 97% aggregate extraction accuracy, and nobody audits further. What could that number be hiding?",
+              "options": [
+                "Nothing meaningful — a 97% aggregate figure already accounts for variation across every document type and field.",
+                "The aggregate figure could only be hidden if it were below 90%; anything at 97% or above is inherently trustworthy.",
+                "A specific document type or field performing far worse (e.g., 40%) while other segments pull the overall average up.",
+                "The 97% figure is misleading only if it was computed from fewer than 100 total documents in the validation set."
+              ],
+              "correct": 2,
+              "explain": "This is exactly the scenario the guide warns about: a strong overall average can mask one segment — a document type or a specific field — performing much worse, with other segments pulling the aggregate up. The aggregate doesn't automatically account for that variation, no accuracy threshold makes a number immune to this masking effect, and the issue isn't about sample size specifically."
+            },
+            {
+              "id": "q_confidence_calibration_1b",
+              "q": "Why does the guide say a raw, uncalibrated confidence score shouldn't be trusted directly for routing decisions?",
+              "options": [
+                "Because raw confidence scores are always higher than they should be, so a fixed downward adjustment always corrects them.",
+                "Because confidence scores are only meaningful for numeric fields, not for text or categorical extraction fields.",
+                "Because raw scores change unpredictably between runs of the identical model on the identical input document.",
+                "Because a score only reflects reality once it's been checked against a labeled validation set to see what it actually predicts."
+              ],
+              "correct": 3,
+              "explain": "Calibration means checking what a given confidence score actually predicts about real accuracy, using labeled data — without that check, there's no basis for trusting what a raw number means in practice. It isn't a simple fixed-direction bias, it isn't limited to numeric fields, and the concern isn't about run-to-run inconsistency."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_confidence_calibration_1",
+          "q": "What does a stratified random sample specifically add, compared to auditing an equal-sized random sample drawn without regard to document type?",
+          "options": [
+            "It ensures every document type and field gets meaningfully represented in the audit, rather than being drowned out by the most common type.",
+            "Nothing extra — a plain random sample of the same size provides identical visibility into per-segment accuracy either way.",
+            "It reduces the total number of documents that ultimately need to be reviewed, compared to a plain random sample drawn at that same overall confidence level.",
+            "It replaces the need for confidence scores entirely, since stratified sampling alone is sufficient to route documents correctly."
+          ],
+          "correct": 0,
+          "explain": "Stratifying by document type and field guarantees each segment gets real representation in the audit, so a rare-but-poorly-performing type doesn't get drowned out by the volume of a common, well-performing one — that's exactly the visibility a plain random sample can miss. It isn't about sample-size efficiency, and it doesn't replace confidence-based routing; the two work together."
+        }
+      ]
+    }
+  ]
+}

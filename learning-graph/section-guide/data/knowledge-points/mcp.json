@@ -1,0 +1,218 @@
+{
+  "$comment": "Knowledge points for cl_mcp_guide.",
+  "cluster": "cl_mcp_guide",
+  "topics": [
+    {
+      "topicId": "mt_mcp_overview",
+      "knowledgePoints": [
+        {
+          "id": "kp_mcp_overview_1",
+          "name": "Tools, resources, prompts — and all-at-once discovery",
+          "keyPrerequisites": [
+            "mt_tool_use_basics"
+          ],
+          "teach": "<p class='kp-key'>MCP defines three primitive types: <strong>tools</strong> (actions the agent can call — CRUD, API calls, commands), <strong>resources</strong> (data the agent can read for context, without taking an action), and <strong>prompts</strong> (predefined templates for common tasks).</p><p>Connecting to a server discovers all of its tools automatically, and tools from every connected server become available to the model at once — description quality across all of them is what determines how reliably they get used.</p>",
+          "questions": [
+            {
+              "id": "q_mcp_overview_1a",
+              "q": "A team wants an agent to read a database schema for context, without the agent taking any action on the database. Which MCP primitive is this, and how does it differ from a tool?",
+              "options": [
+                "A prompt — prompts are templates that can include schema information as part of their predefined structure for the model.",
+                "A resource — resources supply data for context without the agent invoking an action, unlike a tool, which performs one.",
+                "A tool with no side effects — a 'read-only tool' is the correct term for what MCP calls a resource in this scenario.",
+                "Neither — schema access in MCP always requires a dedicated schema-inspection tool rather than a resource of any kind."
+              ],
+              "correct": 1,
+              "explain": "A resource is exactly this: data the agent can read for context — like a schema — without it representing an action being taken. A prompt is a template rather than raw contextual data, calling it a 'read-only tool' blurs a distinction MCP draws deliberately, and resources are precisely how schema access without action-taking is meant to work."
+            },
+            {
+              "id": "q_mcp_overview_1b",
+              "q": "What happens automatically the moment an agent connects to a new MCP server?",
+              "options": [
+                "Only the server's resources become available; its tools require a separate explicit registration step by the developer.",
+                "The agent must manually enumerate the server's tools one at a time before any of them can be called.",
+                "The server's tools and resources are discovered automatically and become available for the model to use right away.",
+                "Nothing changes until the agent's system prompt is updated to explicitly list the new server's tool names."
+              ],
+              "correct": 2,
+              "explain": "Discovery happens automatically on connection — tools (and resources) from the server become available immediately, with no separate registration step, manual enumeration, or system-prompt update required to surface them."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_mcp_overview_1",
+          "q": "Why does connecting to several MCP servers at once raise the same tool-description concerns that Chapter 2 describes for tool_use in general?",
+          "options": [
+            "It doesn't — MCP servers are assumed to namespace their tools automatically behind the scenes, so overlapping descriptions across different servers can never actually cause confusion.",
+            "Because MCP tools are selected by server name rather than by description, so this concern is specific to non-MCP tools only.",
+            "Because MCP resources, not MCP tools, are the only primitive affected by description quality when multiple servers are connected.",
+            "Because tools from every connected server are available to the model together, and description overlap between any two of them causes the same misrouting."
+          ],
+          "correct": 3,
+          "explain": "Since tools from all connected servers sit in the same pool available to the model, two similarly described tools — whether from the same server or different ones — create the exact same selection ambiguity Chapter 2 warns about. There's no automatic namespacing that prevents this, selection is still description-driven rather than server-name-driven, and the concern applies to tools, not just resources."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_mcp_server_config",
+      "knowledgePoints": [
+        {
+          "id": "kp_mcp_server_config_1",
+          "name": "Shared project config vs. personal experiments",
+          "keyPrerequisites": [
+            "mt_mcp_overview"
+          ],
+          "teach": "<p class='kp-key'><code>.mcp.json</code> lives at the project root, is checked into version control, and uses <code>${VAR}</code> expansion so a token never gets committed alongside the config that needs it. Every contributor who clones the repo gets the same servers.</p><p><code>~/.claude.json</code> is personal — not shared via version control — and is where individual experimentation and one-off servers belong. Prefer existing community MCP servers for standard integrations (Jira, GitHub, Slack); build your own only for unique, team-specific workflows.</p>",
+          "questions": [
+            {
+              "id": "q_mcp_server_config_1a",
+              "q": "A new team member clones the repo, and an MCP server that everyone else has doesn't show up for them, even though .mcp.json in the repo lists it. What's the most likely explanation?",
+              "options": [
+                "Their environment is missing the environment variable .mcp.json's `${VAR}` expansion depends on for that server's credentials.",
+                ".mcp.json only applies to the contributor who originally created the file; it isn't actually shared across a team by design.",
+                "MCP servers must be re-registered manually by each new contributor even when .mcp.json already lists them correctly.",
+                "The server was defined in ~/.claude.json originally, and cloning a repository never copies another user's home directory files."
+              ],
+              "correct": 0,
+              "explain": ".mcp.json is shared and version-controlled by design, so the file itself being present is expected — a missing environment variable that its `${VAR}` expansion depends on is the most likely reason a listed server still fails to come up for a new contributor. It isn't scoped to one person, doesn't require manual re-registration, and the question already states it came from .mcp.json, not from someone's personal config."
+            },
+            {
+              "id": "q_mcp_server_config_1b",
+              "q": "Where should a developer add an MCP server they're personally experimenting with, that isn't ready to be used by the rest of the team yet?",
+              "options": [
+                "In .mcp.json, since any new server should go through the shared, version-controlled configuration regardless of its maturity.",
+                "In ~/.claude.json, since it's personal, unshared configuration suited to individual experimentation before something is team-ready.",
+                "In .mcp.json, but commented out, so it's visible to the team as a preview without actually being loaded by anyone yet.",
+                "Neither file — experimental servers require a separate staging configuration file that isn't part of the documented setup."
+              ],
+              "correct": 1,
+              "explain": "~/.claude.json is exactly the personal, unshared location meant for experimentation before something is ready for the whole team. Putting it in .mcp.json — commented out or not — pushes an unfinished server into shared, version-controlled configuration prematurely, and there's no separate staging file in this setup."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_mcp_server_config_1",
+          "q": "Why does .mcp.json use `${GITHUB_TOKEN}`-style expansion instead of embedding the token value directly in the file?",
+          "options": [
+            "It's purely a stylistic convention with no functional benefit — either form works identically once the file is loaded.",
+            "Because JSON doesn't support string values longer than a certain length, so tokens must be referenced rather than inlined.",
+            "So the token itself never gets committed to version control, even though the config file that references it does.",
+            "So that different team members can each supply a different, personal value for the same variable name automatically."
+          ],
+          "correct": 2,
+          "explain": "The whole point of ${VAR} expansion is that the secret itself lives in the environment, not the committed file — so the shared, version-controlled .mcp.json never contains a real credential. It isn't a stylistic choice with no effect, it isn't a JSON length limitation, and while different environments can supply different values, that's a side effect of the mechanism, not its stated purpose."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_mcp_iserror",
+      "knowledgePoints": [
+        {
+          "id": "kp_mcp_iserror_1",
+          "name": "A generic error tells the agent nothing to act on",
+          "keyPrerequisites": [
+            "mt_mcp_overview"
+          ],
+          "teach": "<p class='kp-key'>A structured error — <code>errorCategory</code>, <code>isRetryable</code>, a descriptive <code>message</code>, the <code>attempted_query</code>, and any <code>partial_results</code> — gives the agent what it needs to decide whether to retry, change its approach, or escalate.</p><p><code>{\"isError\": true, \"content\": \"Operation failed\"}</code> gives none of that. The flag says something went wrong; it says nothing about what, or what to do about it.</p>",
+          "questions": [
+            {
+              "id": "q_mcp_iserror_1a",
+              "q": "An MCP tool fails and returns exactly {\"isError\": true, \"content\": \"Operation failed\"}. What can't the calling agent decide because of this shape?",
+              "options": [
+                "Nothing is actually missing — isError: true is sufficient on its own for any downstream agent to proceed correctly.",
+                "Only whether the failure was transient; every other recovery decision is still fully supported by this response shape.",
+                "Only whether to escalate to a human; retry and query-adjustment decisions don't depend on the response's structure at all.",
+                "Whether to retry, adjust the request, or escalate — none of that is decidable without a category, a retryable flag, or context."
+              ],
+              "correct": 3,
+              "explain": "Without a category, a retryable flag, the attempted input, or partial results, the agent has no basis for choosing between retrying, adjusting its approach, or escalating — the bare flag rules nothing in and nothing out. It isn't sufficient on its own, and the missing information affects every one of those recovery decisions, not just one."
+            },
+            {
+              "id": "q_mcp_iserror_1b",
+              "q": "Which addition to an MCP error response most directly helps the coordinator decide whether it's worth retrying automatically?",
+              "options": [
+                "An isRetryable boolean alongside an errorCategory, explicitly signaling whether this class of failure is safe to retry.",
+                "A partial_results field on its own, since simply seeing whatever partial output exists is what determines whether attempting a retry is worthwhile.",
+                "A longer, more detailed message string describing the failure in plain language for a human reader.",
+                "The attempted_query field alone, since knowing what was attempted implies whether retrying makes sense."
+              ],
+              "correct": 0,
+              "explain": "An explicit isRetryable flag paired with the error category is the direct signal for a retry decision — it tells the caller, not just describes the failure. A longer message helps a human read the failure but doesn't structurally signal retryability, partial_results is useful for salvaging value rather than deciding on retry, and attempted_query alone doesn't say whether retrying is safe."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_mcp_iserror_1",
+          "q": "A well-structured MCP error response includes partial_results even though the call ultimately failed. What is that field for?",
+          "options": [
+            "It's a debugging artifact only, intended purely for developers reading logs later, and never meant to influence the coordinator's actual runtime decisions.",
+            "It preserves whatever useful output was produced before the failure, so the coordinator can decide to use it instead of discarding everything.",
+            "It duplicates the message field in a different format, mainly to satisfy schema validation requirements.",
+            "It exists only for failures categorized as transient; other categories never populate a partial_results field."
+          ],
+          "correct": 1,
+          "explain": "partial_results lets a failed call still hand over whatever it managed to produce, so the coordinator can choose to salvage that value rather than treat the whole call as a total loss. It's meant to inform runtime decisions, not just debugging, isn't a redundant restatement of message, and isn't restricted to any one error category."
+        }
+      ]
+    },
+    {
+      "topicId": "mt_mcp_resources",
+      "knowledgePoints": [
+        {
+          "id": "kp_mcp_resources_1",
+          "name": "A map instead of exploratory calls",
+          "keyPrerequisites": [
+            "mt_mcp_overview"
+          ],
+          "teach": "<p class='kp-key'>A resource — a content catalog, a database schema, a documentation set, an issue summary — hands the agent an immediate picture of what data exists. Without one, the agent has to spend exploratory tool calls discovering the same structure the resource could have handed over directly.</p>",
+          "questions": [
+            {
+              "id": "q_mcp_resources_1a",
+              "q": "Without a resource exposing a project's database schema, how does an agent typically end up learning the table and column names it needs?",
+              "options": [
+                "It can't — without a resource, schema information is permanently inaccessible to the agent under the MCP model.",
+                "The model already has the schema memorized from its training data, so no additional discovery is required at all.",
+                "Through a series of exploratory tool calls that probe the database piece by piece to reconstruct the same structure.",
+                "It reads the schema directly from the .mcp.json configuration file, which always documents the full database structure."
+              ],
+              "correct": 2,
+              "explain": "Absent a resource, the agent has to spend a series of exploratory tool calls piecing together the same structural picture a resource would have handed over immediately. It isn't permanently inaccessible, the model has no memorized knowledge of a specific project's live schema, and .mcp.json configures servers rather than documenting database structure."
+            },
+            {
+              "id": "q_mcp_resources_1b",
+              "q": "A documentation set describing an internal API is available to an agent. Why does the guide frame this as a resource rather than a tool?",
+              "options": [
+                "Because documentation is always too large to fit a tool's input_schema, forcing it to be modeled as a resource instead.",
+                "Because tools are reserved exclusively for write operations under MCP's model, and any read-only capability must always be modeled as a resource instead.",
+                "There's no real distinction — 'resource' and 'tool' are interchangeable terms MCP uses for the same underlying concept.",
+                "Because it's data the agent reads for context rather than an action the agent takes — that distinction is what defines a resource."
+              ],
+              "correct": 3,
+              "explain": "The tool/resource line is drawn by whether something is an action to take versus data to read for context — documentation the agent consults is squarely the latter. It isn't a matter of size, tools aren't reserved for writes only (a read-only lookup can be a tool too), and the two terms name genuinely distinct primitives."
+            }
+          ]
+        }
+      ],
+      "reviewQuestions": [
+        {
+          "id": "r_mcp_resources_1",
+          "q": "A hierarchical list of every project task is exposed to an agent. Which MCP primitive does this best fit, and why?",
+          "options": [
+            "A resource — it's a content catalog the agent can read for orientation, not an action it takes on the project.",
+            "A tool, since 'listing tasks' sounds like an action even though nothing about the underlying data changes when it's read.",
+            "A prompt, since a hierarchical structure resembles a predefined template more closely than a data set does.",
+            "None of the three — task lists fall outside what MCP's primitives are designed to represent in any form."
+          ],
+          "correct": 0,
+          "explain": "A content catalog like a hierarchical task list is precisely a resource — data for the agent to read and orient itself with, not an action it performs. Framing it as a tool just because 'list' sounds action-like misses that nothing is being changed, it isn't a predefined prompt template, and it fits comfortably within what MCP's resource primitive is for."
+        }
+      ]
+    }
+  ]
+}
