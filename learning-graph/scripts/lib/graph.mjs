@@ -57,7 +57,15 @@ export function load(root = ROOT) {
     }
   }
 
-  return { root, data: DATA, meta, clusters, standards, topics, dependencies, encompassings, kpByTopic, kpFiles };
+  /* Optional: a section can ship a practice-test-map.json pointing its own quiz's
+     question ids at the topics they test, so the learning graph can prioritize
+     what a wrong answer there points at. Most sections don't have one. */
+  const practiceTestPath = join(DATA, "practice-test-map.json");
+  const practiceTest = existsSync(practiceTestPath)
+    ? (({ storageKey, questionTopics }) => ({ storageKey, questionTopics }))(readJson(practiceTestPath))
+    : null;
+
+  return { root, data: DATA, meta, clusters, standards, topics, dependencies, encompassings, kpByTopic, kpFiles, practiceTest };
 }
 
 /* ---------- validation ---------- */
@@ -137,6 +145,15 @@ export function validate(g) {
   for (const q of allQuestions(g)) {
     if (seenQ.has(q.id)) errors.push(`duplicate question id ${q.id}`);
     seenQ.add(q.id);
+  }
+
+  if (g.practiceTest) {
+    if (!g.practiceTest.storageKey) errors.push("practice-test-map.json: missing storageKey");
+    for (const [qid, topicId] of Object.entries(g.practiceTest.questionTopics || {})) {
+      if (!topicIds.has(topicId)) {
+        errors.push(`practice-test-map.json: ${qid} references unknown topic ${topicId}`);
+      }
+    }
   }
 
   warnings.push(...checkAnswerTells(allQuestions(g)));

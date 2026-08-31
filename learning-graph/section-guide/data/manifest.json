@@ -1,5 +1,5 @@
 {
-  "builtAt": "2026-08-28",
+  "builtAt": "2026-08-31",
   "stats": {
     "topics": 51,
     "clusters": 13,
@@ -30,6 +30,7 @@
     "knowledge-points/mcp.json": "sha256:693dc345e47edecd",
     "knowledge-points/prompt-eng-advanced.json": "sha256:4462c97071dfbb8e",
     "knowledge-points/provenance.json": "sha256:18509f5d9c742341",
-    "knowledge-points/tool-use.json": "sha256:5f58b59e8677f6e2"
+    "knowledge-points/tool-use.json": "sha256:5f58b59e8677f6e2",
+    "practice-test-map.json": "sha256:c292bfd15e680997"
   }
 }

@@ -172,18 +172,57 @@
     return ids.filter(function (id) { return !covered[id]; });
   }
 
+  /* ---------- practice-test-driven prioritization ---------- */
+
+  /* A section can ship data/practice-test-map.json pointing its own quiz's question
+     ids at the topics they test (see graph.mjs). If it did, read that quiz's own
+     localStorage — a separate page, a separate key — and surface the topic ids
+     behind whichever questions are currently marked wrong there. Absent G.practiceTest,
+     this is a no-op, so sections without a quiz map are unaffected. */
+  function practiceTestWeakTopics() {
+    var weak = {};
+    if (!G.practiceTest) return weak;
+    try {
+      var raw = localStorage.getItem(G.practiceTest.storageKey);
+      var qState = raw ? JSON.parse(raw) : null;
+      if (!qState || !qState.q) return weak;
+      Object.keys(qState.q).forEach(function (qid) {
+        var st = qState.q[qid];
+        if (!st || st.lastResult !== "wrong") return;
+        var topicId = G.practiceTest.questionTopics[qid];
+        if (topicId && topicById[topicId]) weak[topicId] = true;
+      });
+    } catch (e) {}
+    return weak;
+  }
+
   /* Core topics first, then the ones the most other topics are waiting on, then the
-     shallowest — so foundations get more total practice by the end. */
-  function frontierTopics() {
+     shallowest — so foundations get more total practice by the end. A topic tied to
+     a question you currently have wrong on the practice test jumps ahead of all of
+     that: real gaps the test just found you take priority over the graph's own
+     ordering. */
+  function frontierTopics(weak) {
+    weak = weak || {};
     return G.topics.filter(function (t) { return isReady(t.id); }).sort(function (a, b) {
+      var wa = !!weak[a.id], wb = !!weak[b.id];
+      if (wa !== wb) return wa ? -1 : 1;
       if (!!b.core !== !!a.core) return b.core ? 1 : -1;
       if (b.centrality !== a.centrality) return b.centrality - a.centrality;
       return a.layer - b.layer;
     });
   }
 
+  var PRACTICE_TEST_NOTE = "you missed a related question on the practice test";
+
   function buildQueue() {
     var tasks = [];
+    var weak = practiceTestWeakTopics();
+
+    // A weak topic already mastered here isn't "new material" — it needs review,
+    // so it goes through the same remedial path a stalled lesson would.
+    Object.keys(weak).forEach(function (topicId) {
+      if (isMastered(topicId)) queueRemedial(topicId, PRACTICE_TEST_NOTE);
+    });
 
     state.remedials.forEach(function (r) {
       tasks.push({ type: "remediate", topicId: r.topicId, note: r.reason });
@@ -193,8 +232,8 @@
       return ts(a).due - ts(b).due;
     }).map(function (id) { return { type: "review", topicId: id }; });
 
-    var learns = frontierTopics().map(function (t) {
-      return { type: "learn", topicId: t.id };
+    var learns = frontierTopics(weak).map(function (t) {
+      return { type: "learn", topicId: t.id, note: weak[t.id] ? PRACTICE_TEST_NOTE : null };
     });
 
     // Interleave so a review backlog never blocks new material, and vice versa.
@@ -383,7 +422,7 @@
       s.status = "learning";
       runner = {
         type: "learn", topic: t, kpIndex: s.kpIndex || 0,
-        qIndex: 0, wrongThisKp: false, kpFirstTry: true, order: null
+        qIndex: 0, wrongThisKp: false, kpFirstTry: true, order: null, note: task.note
       };
     } else if (task.type === "review") {
       runner = { type: "review", topic: t, items: reviewItems(t), idx: 0, right: 0 };
@@ -770,6 +809,9 @@
     card.style.setProperty("--accent", accentFor(t.id));
     card.appendChild(el("span", "kicker", "Lesson · " + clusterById[t.cluster].name));
     card.appendChild(el("h3", null, t.name));
+    if (runner.note) {
+      card.appendChild(el("p", "small muted", "Queued because " + runner.note + "."));
+    }
 
     var dots = el("div", "kp-progress");
     kps.forEach(function (_, i) {

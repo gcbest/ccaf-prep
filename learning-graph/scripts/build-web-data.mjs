@@ -68,6 +68,7 @@ const payload = {
   encompassings: g.encompassings,
   layout: { width: layout.width, height: layout.height },
 };
+if (g.practiceTest) payload.practiceTest = g.practiceTest;
 
 const banner =
   "/* GENERATED FILE — do not edit.\n" +
@@ -87,7 +88,8 @@ function sha(file) {
 const files = [
   "topics.json", "dependencies.json", "encompassings.json",
   "clusters.json", "curriculum-standards.json",
-].concat(g.kpFiles.map((f) => `knowledge-points/${f}`));
+].concat(g.kpFiles.map((f) => `knowledge-points/${f}`))
+  .concat(g.practiceTest ? ["practice-test-map.json"] : []);
 
 const manifest = {
   builtAt: payload.builtAt,
