@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>(function(){try{var t=localStorage.getItem('ccaf-theme');if(!t){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<title>Drill review — questions with no lesson link</title>
+<style>
+:root {
+  --ink: #242321;
+  --muted: #706b63;
+  --paper: #f7f3ec;
+  --paper-deep: #ece4d7;
+  --rust: #a84e31;
+  --rust-dark: #7d3825;
+  --line: #d6ccbd;
+  --white: #fffdfa;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #ece7de;
+  --muted: #a89d8f;
+  --paper: #17140f;
+  --paper-deep: #221e17;
+  --line: #3a3327;
+  --white: #211d16;
+  --rust-dark: #c96549;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 17px/1.7 Georgia, 'Times New Roman', serif;
+}
+main { max-width: 860px; margin: 0 auto; padding: 30px 24px 80px; }
+a { color: var(--rust-dark); }
+code { background: var(--paper-deep); color: var(--ink); padding: .08em .28em; border-radius: 3px; font-size: .92em; }
+.home-link { display: inline-block; margin-bottom: 8px; color: var(--muted); font: 600 12.5px/1.4 system-ui, sans-serif; text-decoration: none; border-bottom: 1px solid var(--line); }
+.home-link:hover { color: var(--rust-dark); border-color: var(--rust-dark); }
+.topbar { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+h1 { margin: 10px 0 8px; font: 700 clamp(1.8rem, 5vw, 2.6rem)/1.1 Georgia, serif; letter-spacing: -.02em; }
+.dek { max-width: 66ch; color: var(--muted); font-size: 1.02rem; margin: 0 0 6px; }
+.src-note { font-size: .85rem; color: var(--muted); margin: 0 0 24px; }
+.src-note a { color: var(--rust-dark); }
+.theme-toggle {
+  flex: none; width: 28px; height: 28px; padding: 0; margin: 0; border-radius: 999px;
+  border: 1px solid var(--line); background: none; color: var(--muted);
+  font-size: 13px; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+}
+.theme-toggle:hover, .theme-toggle:focus-visible { background: var(--paper-deep); color: var(--ink); outline: none; }
+
+.jumpnav { border: 1px solid var(--line); border-radius: 4px; background: var(--white); color: var(--ink); padding: 12px 16px; margin: 0 0 30px; font: 500 13.5px/1.9 system-ui, sans-serif; }
+.jumpnav .jumpnav-label { display: block; font: 600 11px/1.6 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.jumpnav a { color: var(--rust-dark); text-decoration: none; border-bottom: 1px solid transparent; margin-right: 14px; white-space: nowrap; }
+.jumpnav a:hover { border-bottom-color: var(--rust-dark); }
+.count { display: inline-block; min-width: 20px; text-align: center; border-radius: 999px; background: var(--paper-deep); color: var(--ink); font: 600 11px/1.6 system-ui, sans-serif; padding: 0 6px; vertical-align: 1px; }
+
+.group { margin: 0 0 46px; }
+.group h2 { margin: 0 0 4px; font: 700 1.45rem/1.25 Georgia, serif; letter-spacing: -.01em; }
+.group-why { margin: 0 0 18px; color: var(--muted); font-size: .95rem; max-width: 66ch; }
+
+.qcard { border: 1px solid var(--line); border-radius: 4px; background: var(--white); color: var(--ink); padding: 18px 20px 16px; margin: 0 0 18px; }
+.qmeta { margin: 0 0 10px; display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
+.pill { font: 600 11px/1.5 system-ui, sans-serif; letter-spacing: .04em; border-radius: 3px; background: var(--rust); color: #fffdfa; padding: 1px 7px; }
+.pill-soft { background: var(--paper-deep); color: var(--muted); font-weight: 500; }
+.stem { margin: 0 0 12px; font-size: 1.05rem; }
+.opts { list-style: none; margin: 0 0 4px; padding: 0; display: grid; gap: 9px; }
+.opt { display: flex; gap: 10px; align-items: flex-start; }
+.opt-letter { flex: none; font: 700 12px/1.9 system-ui, sans-serif; color: var(--muted); }
+.opt-body { display: block; }
+.opt-text { display: inline; }
+.opt-why { display: block; color: var(--muted); font-size: .88rem; line-height: 1.55; }
+.opt.correct { border-left: 3px solid var(--rust); background: var(--paper-deep); color: var(--ink); margin-left: -13px; padding: 6px 10px 6px 10px; border-radius: 0 3px 3px 0; }
+.opt.correct .opt-letter { color: var(--rust-dark); }
+.tick { color: var(--rust-dark); font-weight: 700; }
+.rationale { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 10px; }
+.rationale-label { margin: 0; font: 600 11px/1.6 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.rationale-text { margin: 4px 0 6px; }
+.rationale-src { margin: 0; font: 500 13px/1.7 system-ui, sans-serif; color: var(--muted); }
+.rationale-src a { color: var(--rust-dark); }
+.sep { color: var(--muted); }
+
+footer { max-width: 860px; margin: 0 auto; padding: 0 24px 60px; color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+<a class="home-link" href="../index.html">&larr; Home</a>
+<div class="topbar"><h1>Drill review — no lesson link</h1><button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button></div>
+<p class="dek">13 of the 254 questions in claudecertificationguide.com's CCAR-F drill bank have a “Where this comes from” section that cites only external documentation — no on-site lesson. Grouped here for review, with the correct answer marked and jump links to each source built into the rationale.</p>
+<p class="src-note">Extracted from the drill question bank on <a href="https://claudecertificationguide.com/learn/drill" target="_blank" rel="noopener noreferrer">claudecertificationguide.com/learn/drill</a>&nbsp;↗ on 2026-09-02. (A full markdown capture of all 13 questions also sits in the local, untracked <code>outputs/</code> folder.)</p>
+<nav class="jumpnav">
+  <span class="jumpnav-label">Jump to</span>
+  <a href="#hooks">Claude Code Hooks <span class="count">7</span></a>
+      <a href="#allowed-tools">Skills allowed-tools &amp; settings permissions <span class="count">2</span></a>
+      <a href="#worktrees">Parallel Claude Code instances with git worktrees <span class="count">3</span></a>
+      <a href="#mcp-protocol">MCP wire protocol <span class="count">1</span></a>
+</nav>
+
+  <section class="group" id="hooks">
+    <h2>Claude Code Hooks <span class="count">7</span></h2>
+    <p class="group-why">The site has no lesson on hooks — every hooks question cites the official Claude Code hooks documentation directly.</p>
+    
+  <article class="qcard" id="q-3-1-011">
+    <p class="qmeta"><span class="pill">q-3-1-011</span><span class="pill pill-soft">Domain 3 · Claude Code Configuration &amp; Workflows</span><span class="pill pill-soft">3.1 claude-md-hierarchy / hook-types</span></p>
+    <p class="stem">In Claude Code, which hook fires before a tool is invoked (and can allow, deny, or modify the tool call), and which fires immediately after a tool completes successfully (and can modify the result or feed corrective context back to the model)?</p>
+    <ul class="opts">
+      <li class="opt correct">
+        <span class="opt-letter">A</span>
+        <span class="opt-body"><span class="opt-text">PreToolUse runs before the tool and can allow, deny, or modify the input; PostToolUse runs after it and can modify the result</span> <span class="tick" aria-label="correct">✓</span>
+        <span class="opt-why">PreToolUse is the gating hook on tool calls: it runs after the model emits the tool call but before execution, so it can short-circuit (allow/deny/ask) or rewrite the tool input. PostToolUse runs immediately after a successful tool call and can transform the result or feed corrective context back to the model. Claude Code exposes many other lifecycle hooks (UserPromptSubmit, SessionStart, Stop, PreCompact, Notification, and others), but PreToolUse and PostToolUse are the pair that wraps the tool call itself.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">B</span>
+        <span class="opt-body"><span class="opt-text">BeforeToolCall fires before invocation; AfterToolCall fires after — both can only observe and log, not modify or block the tool call.</span>
+        <span class="opt-why">The canonical names are PreToolUse and PostToolUse, not BeforeToolCall/AfterToolCall. More importantly, both hooks can modify behaviour — PreToolUse can deny or rewrite the input, and PostToolUse can transform the result and feed context back — so framing them as observe-only misses the primary use case.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">C</span>
+        <span class="opt-body"><span class="opt-text">UserPromptSubmit fires before the tool is invoked, and Stop fires immediately after the tool has completed its work and returned.</span>
+        <span class="opt-why">UserPromptSubmit and Stop are real Claude Code hooks, but they fire on different events. UserPromptSubmit fires after a user submits a prompt (before Claude processes it), not before each tool call. Stop fires when the main agent finishes responding to the user, not after every individual tool call.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">D</span>
+        <span class="opt-body"><span class="opt-text">PreCompact fires before any tool runs, and PostCompact fires immediately after each tool call has completed and returned its result.</span>
+        <span class="opt-why">PreCompact and PostCompact are real hooks, but they wrap conversation-history compaction events (when the transcript is summarised to free up context), not individual tool calls. They never fire on a per-tool basis.</span></span>
+      </li>
+    </ul>
+    <div class="rationale">
+      <p class="rationale-label">Rationale</p>
+      <p class="rationale-text">PreToolUse is the gating hook on tool calls: it runs after the model emits the tool call but before execution, and can allow, deny, or modify the input. PostToolUse runs immediately after a successful tool call and can transform the result or feed corrective context back to the model. These are the two foundational hooks for tool automation. Claude Code also exposes many other lifecycle hooks (UserPromptSubmit, SessionStart, SubagentStop, Stop, PreCompact, PostCompact, Notification, and others), but those wrap different events in the agentic loop, not the tool call itself.</p>
+      <p class="rationale-src">Source: <a href="https://code.claude.com/docs/en/hooks" target="_blank" rel="noopener noreferrer">Claude Code: Hooks&nbsp;↗</a> <span class="sep">·</span> <a href="https://platform.claude.com/docs/en/agent-sdk/hooks" target="_blank" rel="noopener noreferrer">Anthropic: Agent SDK Hooks&nbsp;↗</a></p>
+    </div>
+  </article>
+
+  <article class="qcard" id="q-3-1-012">
+    <p class="qmeta"><span class="pill">q-3-1-012</span><span class="pill pill-soft">Domain 3 · Claude Code Configuration &amp; Workflows</span><span class="pill pill-soft">3.1 claude-md-hierarchy / posttooluse-validation</span></p>
+    <p class="stem">A team wants to enforce that all SQL migration files created by Claude Code follow a strict naming convention (YYYYMMDD_HHMMSS_description.sql) and contain a rollback section. Which approach provides deterministic enforcement without relying on the model's judgment?</p>
+    <ul class="opts">
+      <li class="opt correct">
+        <span class="opt-letter">A</span>
+        <span class="opt-body"><span class="opt-text">Add a PostToolUse hook on file creation that validates the filename pattern and checks for a rollback section</span> <span class="tick" aria-label="correct">✓</span>
+        <span class="opt-why">PostToolUse hooks run deterministic validation code after tool execution. A hook that checks filename patterns and content requirements provides reliable, automated enforcement that does not depend on the model remembering or correctly interpreting naming conventions.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">B</span>
+        <span class="opt-body"><span class="opt-text">Document the naming convention and rollback requirement in the project CLAUDE.md with clear examples</span>
+        <span class="opt-why">CLAUDE.md instructions rely on the model's interpretation and compliance. While useful as guidance, they do not provide deterministic enforcement. The model may occasionally deviate from the convention, especially under complex prompts.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">C</span>
+        <span class="opt-body"><span class="opt-text">Create a .claude/rules/migrations.md file with paths: [&quot;**/migrations/**/*.sql&quot;] containing the naming convention</span>
+        <span class="opt-why">Rules files provide context-specific instructions but still rely on the model to follow them. They do not provide deterministic enforcement. A hook-based approach guarantees compliance through automated validation.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">D</span>
+        <span class="opt-body"><span class="opt-text">Use a PreToolUse hook to inject the naming convention into every prompt before file creation occurs</span>
+        <span class="opt-why">PreToolUse hooks fire before tool execution and are better suited for blocking or modifying tool calls. Injecting instructions into prompts still relies on the model's compliance. PostToolUse validation provides deterministic enforcement by checking the actual output.</span></span>
+      </li>
+    </ul>
+    <div class="rationale">
+      <p class="rationale-label">Rationale</p>
+      <p class="rationale-text">PostToolUse hooks run deterministic validation code after tool execution. A hook that checks filename patterns and content requirements provides reliable, automated enforcement that does not depend on the model remembering or correctly interpreting naming conventions.</p>
+      <p class="rationale-src">Source: <a href="https://code.claude.com/docs/en/hooks" target="_blank" rel="noopener noreferrer">Claude Code: Hooks&nbsp;↗</a></p>
+    </div>
+  </article>
+
+  <article class="qcard" id="q-3-1-014">
+    <p class="qmeta"><span class="pill">q-3-1-014</span><span class="pill pill-soft">Domain 3 · Claude Code Configuration &amp; Workflows</span><span class="pill pill-soft">3.1 claude-md-hierarchy / posttooluse-enforcement</span></p>
+    <p class="stem">A fintech company requires that all API response payloads are normalised to snake_case before being logged, and that any file write to the src/api/ directory is automatically linted. They want these enforcements to be deterministic and not rely on the model remembering instructions. Which hook configuration achieves both requirements?</p>
+    <ul class="opts">
+      <li class="opt">
+        <span class="opt-letter">A</span>
+        <span class="opt-body"><span class="opt-text">A PreToolUse hook on file writes that runs the linter before the write completes, and a PostToolUse hook on API response handling that normalises field names to snake_case</span>
+        <span class="opt-why">PreToolUse fires before the tool runs, so there is no file content to lint yet. Linting must happen after the file is written (PostToolUse). The ordering of hooks to actions is incorrect here.</span></span>
+      </li>
+      <li class="opt correct">
+        <span class="opt-letter">B</span>
+        <span class="opt-body"><span class="opt-text">A PostToolUse hook on file writes to src/api/ that runs the linter on the created file, and a PostToolUse hook on data processing that normalises response payloads to snake_case</span> <span class="tick" aria-label="correct">✓</span>
+        <span class="opt-why">Both are PostToolUse hooks because both act on completed outputs. The linter runs after a file write to src/api/ is complete, validating the written content. The normalisation hook processes API response data after it is retrieved, converting fields to snake_case before logging. Both provide deterministic enforcement independent of model instructions.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">C</span>
+        <span class="opt-body"><span class="opt-text">Add both requirements to CLAUDE.md with clear examples, and add a PreToolUse hook that reminds the model about these rules before each tool call</span>
+        <span class="opt-why">CLAUDE.md instructions and PreToolUse reminders both rely on the model's compliance, which is not deterministic. The requirement explicitly states that enforcement must not depend on the model remembering instructions.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">D</span>
+        <span class="opt-body"><span class="opt-text">A PreToolUse hook that blocks any file write to src/api/ unless the file has already been linted, and a PreToolUse hook that blocks API calls unless snake_case normalisation is configured</span>
+        <span class="opt-why">PreToolUse blocking assumes the file exists before the write, which is contradictory. You cannot lint a file that has not been written yet. PostToolUse hooks that process output after completion are the correct approach for validation and normalisation.</span></span>
+      </li>
+    </ul>
+    <div class="rationale">
+      <p class="rationale-label">Rationale</p>
+      <p class="rationale-text">Both are PostToolUse hooks because both act on completed outputs. The linter runs after a file write to src/api/ is complete, validating the written content. The normalisation hook processes API response data after it is retrieved, converting fields to snake_case before logging. Both provide deterministic enforcement independent of model instructions.</p>
+      <p class="rationale-src">Source: <a href="https://code.claude.com/docs/en/hooks" target="_blank" rel="noopener noreferrer">Claude Code: Hooks&nbsp;↗</a></p>
+    </div>
+  </article>
+
+  <article class="qcard" id="q-3-1-016">
+    <p class="qmeta"><span class="pill">q-3-1-016</span><span class="pill pill-soft">Domain 3 · Claude Code Configuration &amp; Workflows</span><span class="pill pill-soft">3.1 claude-md-hierarchy / posttooluse-formatting</span></p>
+    <p class="stem">The team wants to ensure that every Java file written by Claude Code during refactoring is automatically formatted with the project's Checkstyle rules before being saved. Developers occasionally forget to run the formatter manually. What is the correct hook configuration?</p>
+    <ul class="opts">
+      <li class="opt">
+        <span class="opt-letter">A</span>
+        <span class="opt-body"><span class="opt-text">A PreToolUse hook on the Write tool that runs Checkstyle on the content before the file is written</span>
+        <span class="opt-why">PreToolUse fires before the tool executes. The file has not been written yet, so there is no file on disk to format. PreToolUse is suited for blocking or validating inputs, not for post-processing outputs.</span></span>
+      </li>
+      <li class="opt correct">
+        <span class="opt-letter">B</span>
+        <span class="opt-body"><span class="opt-text">A PostToolUse hook on file write operations that runs the Checkstyle formatter on the written file, automatically correcting any style violations</span> <span class="tick" aria-label="correct">✓</span>
+        <span class="opt-why">PostToolUse fires after the file is written to disk. A hook that runs the Checkstyle formatter on the output file ensures every written Java file conforms to the project's style rules, regardless of what the model generated. This provides deterministic enforcement without relying on prompt instructions.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">C</span>
+        <span class="opt-body"><span class="opt-text">Add 'Always run Checkstyle before saving files' to the CLAUDE.md system prompt</span>
+        <span class="opt-why">Prompt instructions are probabilistic. The question states developers 'occasionally forget', and an LLM-based instruction has the same failure mode. A hook provides deterministic enforcement that cannot be skipped.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">D</span>
+        <span class="opt-body"><span class="opt-text">A PreToolUse hook on the Read tool that verifies all Java files are Checkstyle-compliant before they are read into context</span>
+        <span class="opt-why">Checking files on read does not address the requirement. The goal is to format files when they are written, not to validate files when they are read. Existing legacy files may not be Checkstyle-compliant and should not block reading.</span></span>
+      </li>
+    </ul>
+    <div class="rationale">
+      <p class="rationale-label">Rationale</p>
+      <p class="rationale-text">PostToolUse fires after the file is written to disk. A hook that runs the Checkstyle formatter on the output file ensures every written Java file conforms to the project's style rules, regardless of what the model generated. This provides deterministic enforcement without relying on prompt instructions.</p>
+      <p class="rationale-src">Source: <a href="https://code.claude.com/docs/en/hooks" target="_blank" rel="noopener noreferrer">Claude Code: Hooks&nbsp;↗</a> <span class="sep">·</span> <a href="https://platform.claude.com/docs/en/agent-sdk/hooks" target="_blank" rel="noopener noreferrer">Anthropic: Agent SDK Hooks&nbsp;↗</a></p>
+    </div>
+  </article>
+
+  <article class="qcard" id="q-3-1-017">
+    <p class="qmeta"><span class="pill">q-3-1-017</span><span class="pill pill-soft">Domain 3 · Claude Code Configuration &amp; Workflows</span><span class="pill pill-soft">3.1 claude-md-hierarchy / posttooluse-linting</span></p>
+    <p class="stem">The team configures a hook to run their Java linter after every file write. Which hook type and trigger point is correct for this enforcement?</p>
+    <ul class="opts">
+      <li class="opt">
+        <span class="opt-letter">A</span>
+        <span class="opt-body"><span class="opt-text">A PreToolUse hook that runs a shell command executing the linter before the file is written</span>
+        <span class="opt-why">PreToolUse fires before the file write occurs. There is no file on disk to lint yet. PreToolUse is suited for blocking operations based on input validation, not for post-processing written files.</span></span>
+      </li>
+      <li class="opt correct">
+        <span class="opt-letter">B</span>
+        <span class="opt-body"><span class="opt-text">A PostToolUse hook that runs a shell command executing the linter on the written file</span> <span class="tick" aria-label="correct">✓</span>
+        <span class="opt-why">PostToolUse fires after the file write completes, when the file exists on disk. A shell command hook can execute the Java linter on the newly written file, catching any violations immediately after writing. This is the correct combination of trigger point (post-write) and hook type (shell command).</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">C</span>
+        <span class="opt-body"><span class="opt-text">A PreToolUse hook that runs a bash script validating the file content before write</span>
+        <span class="opt-why">While bash hooks can access tool call inputs, linting the content before it is written as a file is fragile — it requires extracting content from the tool call arguments and writing to a temp file. PostToolUse linting the actual written file is simpler and more reliable.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">D</span>
+        <span class="opt-body"><span class="opt-text">A PostToolUse hook that modifies the CLAUDE.md configuration to include the lint results</span>
+        <span class="opt-why">Hooks should perform their enforcement action directly (running the linter), not modify configuration files. CLAUDE.md is for persistent instructions, not for storing transient lint results.</span></span>
+      </li>
+    </ul>
+    <div class="rationale">
+      <p class="rationale-label">Rationale</p>
+      <p class="rationale-text">PostToolUse fires after the file write completes, when the file exists on disk. A shell command hook can execute the Java linter on the newly written file, catching any violations immediately after writing. This is the correct combination of trigger point (post-write) and hook type (shell command).</p>
+      <p class="rationale-src">Source: <a href="https://code.claude.com/docs/en/hooks" target="_blank" rel="noopener noreferrer">Claude Code: Hooks&nbsp;↗</a></p>
+    </div>
+  </article>
+
+  <article class="qcard" id="q-3-1-018">
+    <p class="qmeta"><span class="pill">q-3-1-018</span><span class="pill pill-soft">Domain 3 · Claude Code Configuration &amp; Workflows</span><span class="pill pill-soft">3.1 claude-md-hierarchy / precompact-hook</span></p>
+    <p class="stem">A documentation team wants to archive the full conversation transcript to a log file every time Claude Code runs /compact, so that context lost during compaction can be reviewed later. Which hook configuration achieves this?</p>
+    <ul class="opts">
+      <li class="opt">
+        <span class="opt-letter">A</span>
+        <span class="opt-body"><span class="opt-text">A PostToolUse hook on Write that snapshots the transcript whenever a file is written, on the assumption /compact will eventually run</span>
+        <span class="opt-why">Write and compaction are unrelated. PostToolUse on Write would fire on every file write whether or not /compact is about to run, producing noise rather than a transcript at the right moment. The dedicated PreCompact event is the correct hook.</span></span>
+      </li>
+      <li class="opt correct">
+        <span class="opt-letter">B</span>
+        <span class="opt-body"><span class="opt-text">A PreCompact hook that writes the current transcript to a timestamped log file before /compact summarises the conversation</span> <span class="tick" aria-label="correct">✓</span>
+        <span class="opt-why">PreCompact is a first-class hook event in Claude Code that fires immediately before /compact (or auto-compaction) runs. The hook receives the full pre-compaction transcript path and can copy or process it before summarisation discards detail. This is the documented mechanism for exactly this use case.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">C</span>
+        <span class="opt-body"><span class="opt-text">A PreToolUse hook configured on a built-in 'Compact' tool, matching tool name 'Compact'</span>
+        <span class="opt-why">There is no 'Compact' tool exposed to PreToolUse. Compaction is a Claude Code lifecycle operation, not a model-invoked tool, so it has its own dedicated PreCompact event rather than being hooked via PreToolUse.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">D</span>
+        <span class="opt-body"><span class="opt-text">A PostToolUse hook on all tools that appends each tool result to a running log file, creating a continuous archive</span>
+        <span class="opt-why">Logging every tool result creates enormous log files and does not capture conversation context (reasoning, planning, user messages). The targeted PreCompact event captures the full transcript at the critical moment without per-tool noise.</span></span>
+      </li>
+    </ul>
+    <div class="rationale">
+      <p class="rationale-label">Rationale</p>
+      <p class="rationale-text">PreCompact is a first-class hook event in Claude Code that fires immediately before /compact (or auto-compaction) runs. The hook receives the full pre-compaction transcript path and can copy or process it before summarisation discards detail. This is the documented mechanism for exactly this use case.</p>
+      <p class="rationale-src">Source: <a href="https://code.claude.com/docs/en/hooks" target="_blank" rel="noopener noreferrer">Claude Code: Hooks&nbsp;↗</a></p>
+    </div>
+  </article>
+
+  <article class="qcard" id="q-3-1-019">
+    <p class="qmeta"><span class="pill">q-3-1-019</span><span class="pill pill-soft">Domain 3 · Claude Code Configuration &amp; Workflows</span><span class="pill pill-soft">3.1 claude-md-hierarchy / hook-matching</span></p>
+    <p class="stem">A documentation team wants a PostToolUse hook that automatically runs a link checker after every file write to a documentation directory. The hook should only trigger for writes to files under docs/. What determines whether a hook fires for a given tool invocation?</p>
+    <ul class="opts">
+      <li class="opt correct">
+        <span class="opt-letter">A</span>
+        <span class="opt-body"><span class="opt-text">Hook configuration supports an `if` field using permission-rule syntax like Edit(*.ts) to match the tool name and arguments together</span> <span class="tick" aria-label="correct">✓</span>
+        <span class="opt-why">Claude Code hooks are filtered by two configuration fields. `matcher` selects the tool name (e.g., 'Write|Edit'). `if` uses permission-rule syntax to filter on tool name and arguments together, so `Edit(*.ts)` runs only for TypeScript files and `Write(docs/**)` runs only for writes under docs/. Without an `if` field, the hook fires on every invocation that matches the matcher.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">B</span>
+        <span class="opt-body"><span class="opt-text">Hooks support a `paths:` glob array in settings.json, the same field name .claude/rules/ files use, that filters which file writes fire the hook</span>
+        <span class="opt-why">There is no `paths:` field on hooks. That frontmatter belongs to .claude/rules/ files. Hook path filtering is done with the `if` field using permission-rule syntax, so this conflates two different mechanisms.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">C</span>
+        <span class="opt-body"><span class="opt-text">Hooks can be scoped to specific directories by placing the hook configuration file in that directory</span>
+        <span class="opt-why">Hook configuration is defined in settings.json at the project or user level, not in directory-specific configuration files. Hooks do not have directory-scoped placement.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">D</span>
+        <span class="opt-body"><span class="opt-text">Hooks fire only when the tool is invoked from a skill that has a matching paths: frontmatter</span>
+        <span class="opt-why">Hooks are independent of skills. They fire based on tool invocations regardless of whether those invocations originate from a skill, direct user interaction, or any other context.</span></span>
+      </li>
+    </ul>
+    <div class="rationale">
+      <p class="rationale-label">Rationale</p>
+      <p class="rationale-text">Claude Code hooks are filtered by two configuration fields. `matcher` selects the tool name (e.g., 'Write|Edit'). `if` uses permission-rule syntax to filter on tool name and arguments together, so `Edit(*.ts)` runs only for TypeScript files and `Write(docs/**)` runs only for writes under docs/. Without an `if` field, the hook fires on every invocation that matches the matcher.</p>
+      <p class="rationale-src">Source: <a href="https://code.claude.com/docs/en/hooks" target="_blank" rel="noopener noreferrer">Claude Code: Hooks&nbsp;↗</a></p>
+    </div>
+  </article>
+  </section>
+
+  <section class="group" id="allowed-tools">
+    <h2>Skills allowed-tools &amp; settings permissions <span class="count">2</span></h2>
+    <p class="group-why">Permission/allowlist questions cite the Claude Code settings and skills docs — there is no dedicated lesson for them.</p>
+    
+  <article class="qcard" id="q-3-2-010">
+    <p class="qmeta"><span class="pill">q-3-2-010</span><span class="pill pill-soft">Domain 3 · Claude Code Configuration &amp; Workflows</span><span class="pill pill-soft">3.2 slash-commands-skills / allowed-tools</span></p>
+    <p class="stem">What does the allowedTools configuration control in Claude Code?</p>
+    <ul class="opts">
+      <li class="opt">
+        <span class="opt-letter">A</span>
+        <span class="opt-body"><span class="opt-text">It specifies which MCP servers are permitted to connect to the Claude Code session</span>
+        <span class="opt-why">MCP server connections are managed through MCP configuration, not through allowedTools. allowedTools operates at the individual tool level within a session or skill.</span></span>
+      </li>
+      <li class="opt correct">
+        <span class="opt-letter">B</span>
+        <span class="opt-body"><span class="opt-text">It defines tool-level permissions, restricting which tools a session or skill can invoke</span> <span class="tick" aria-label="correct">✓</span>
+        <span class="opt-why">allowedTools provides granular, tool-level access control. It can be used in skills (via SKILL.md frontmatter) or session configuration to restrict which tools are available, enabling least-privilege security for specific workflows.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">C</span>
+        <span class="opt-body"><span class="opt-text">It lists the external CLI tools that Claude Code is permitted to install on the system</span>
+        <span class="opt-why">allowedTools does not manage system-level tool installation. It controls which Claude Code tools (Read, Write, Bash, Grep, etc.) are available within a session or skill.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">D</span>
+        <span class="opt-body"><span class="opt-text">It determines which programming languages Claude Code is allowed to generate code in</span>
+        <span class="opt-why">allowedTools does not restrict programming languages. It restricts which tools (such as file operations, search, or execution tools) can be used, not the content or language of generated code.</span></span>
+      </li>
+    </ul>
+    <div class="rationale">
+      <p class="rationale-label">Rationale</p>
+      <p class="rationale-text">allowedTools provides granular, tool-level access control. It can be used in skills (via SKILL.md frontmatter) or session configuration to restrict which tools are available, enabling least-privilege security for specific workflows. Current state (checked 14 August 2026): the live skills reference defines `allowed-tools` as &quot;Tools Claude can use without asking permission during the turn that invokes this skill&quot;, with `disallowed-tools` removing tools from the pool. The exam guide frames it as restricting access, so answer that on the exam.</p>
+      <p class="rationale-src">Source: <a href="https://code.claude.com/docs/en/settings" target="_blank" rel="noopener noreferrer">Claude Code: Settings&nbsp;↗</a> <span class="sep">·</span> <a href="https://code.claude.com/docs/en/skills" target="_blank" rel="noopener noreferrer">Claude Code Documentation — Skills&nbsp;↗</a></p>
+    </div>
+  </article>
+
+  <article class="qcard" id="q-3-2-012">
+    <p class="qmeta"><span class="pill">q-3-2-012</span><span class="pill pill-soft">Domain 3 · Claude Code Configuration &amp; Workflows</span><span class="pill pill-soft">3.2 slash-commands-skills / allowed-tools-scoping</span></p>
+    <p class="stem">A junior developer is using Claude Code to refactor a payment processing module. The team lead wants to ensure Claude Code cannot accidentally delete production configuration files or modify the database migration directory during the refactoring session. What is the most appropriate approach?</p>
+    <ul class="opts">
+      <li class="opt">
+        <span class="opt-letter">A</span>
+        <span class="opt-body"><span class="opt-text">Instruct the developer to use plan mode so Claude Code will ask for approval before each file change</span>
+        <span class="opt-why">Plan mode helps with evaluating strategies for complex tasks, but it does not provide file-level access control. Even in plan mode, the model can still access all tools and directories once execution begins.</span></span>
+      </li>
+      <li class="opt correct">
+        <span class="opt-letter">B</span>
+        <span class="opt-body"><span class="opt-text">Use allowedTools to limit the session to Read, Grep, Glob, and Write within the payment module</span> <span class="tick" aria-label="correct">✓</span>
+        <span class="opt-why">allowedTools provides tool-level permission control that can restrict which tools are available and their scope. By limiting write access to the payment module directory and keeping read access for context, the team lead ensures Claude Code cannot modify production config or migration files.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">C</span>
+        <span class="opt-body"><span class="opt-text">Add a rule in CLAUDE.md stating 'Never modify files in the config/ or migrations/ directories'</span>
+        <span class="opt-why">CLAUDE.md instructions rely on the model's compliance and are not deterministic safeguards. For production-critical protection, tool-level permission restrictions provide reliable enforcement rather than natural language instructions.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">D</span>
+        <span class="opt-body"><span class="opt-text">Set the whole repository to read-only at the filesystem level before the refactoring session starts.</span>
+        <span class="opt-why">Making the entire repository read-only would prevent Claude Code from making any changes, including the legitimate refactoring of the payment module. The requirement is selective protection, not blanket read-only access.</span></span>
+      </li>
+    </ul>
+    <div class="rationale">
+      <p class="rationale-label">Rationale</p>
+      <p class="rationale-text">allowedTools provides tool-level permission control that can restrict which tools are available and their scope. By limiting write access to the payment module directory and keeping read access for context, the team lead ensures Claude Code cannot modify production config or migration files. Current state (checked 14 August 2026): the live skills reference defines `allowed-tools` as &quot;Tools Claude can use without asking permission during the turn that invokes this skill&quot;, with `disallowed-tools` removing tools from the pool. The exam guide frames it as restricting access, so answer that on the exam.</p>
+      <p class="rationale-src">Source: <a href="https://code.claude.com/docs/en/settings" target="_blank" rel="noopener noreferrer">Claude Code: Settings&nbsp;↗</a></p>
+    </div>
+  </article>
+  </section>
+
+  <section class="group" id="worktrees">
+    <h2>Parallel Claude Code instances with git worktrees <span class="count">3</span></h2>
+    <p class="group-why">The worktree coordination pattern is documented only in the CLI reference and git documentation.</p>
+    
+  <article class="qcard" id="q-3-6-008">
+    <p class="qmeta"><span class="pill">q-3-6-008</span><span class="pill pill-soft">Domain 3 · Claude Code Configuration &amp; Workflows</span><span class="pill pill-soft">3.6 cicd-integration / worktree-parallel</span></p>
+    <p class="stem">The team wants three Claude Code instances working in parallel: one extracting the authentication service, one extracting the billing service, and one updating shared libraries. All three need to commit to the same repository without conflicts. What is the correct setup?</p>
+    <ul class="opts">
+      <li class="opt">
+        <span class="opt-letter">A</span>
+        <span class="opt-body"><span class="opt-text">Run all three instances in the same working directory on separate branches, switching branches as needed</span>
+        <span class="opt-why">Multiple Claude Code instances in the same working directory will cause file system conflicts, dirty working trees, and race conditions, even on different branches. Git branch switching affects the entire working directory.</span></span>
+      </li>
+      <li class="opt correct">
+        <span class="opt-letter">B</span>
+        <span class="opt-body"><span class="opt-text">Use git worktree to create three separate working directories, each on its own branch, with one Claude Code instance per worktree</span> <span class="tick" aria-label="correct">✓</span>
+        <span class="opt-why">git worktree creates multiple working directories from the same repository, each checked out to a different branch. Each Claude Code instance operates in its own isolated file system while sharing the same git history. This eliminates file system conflicts between parallel instances.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">C</span>
+        <span class="opt-body"><span class="opt-text">Clone the repository three times into separate directories and merge the results manually</span>
+        <span class="opt-why">Three separate clones create divergent git histories that must be reconciled manually. git worktree provides the same isolation with a shared repository, making merges straightforward through normal branch operations.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">D</span>
+        <span class="opt-body"><span class="opt-text">Use fork_session to run the three tasks as parallel branches within a single Claude Code session</span>
+        <span class="opt-why">fork_session creates parallel exploration branches within Claude Code's conversation context, not separate file system environments. Three large extraction tasks each need their own working directory to avoid file conflicts, which requires git worktree.</span></span>
+      </li>
+    </ul>
+    <div class="rationale">
+      <p class="rationale-label">Rationale</p>
+      <p class="rationale-text">git worktree creates multiple working directories from the same repository, each checked out to a different branch. Each Claude Code instance operates in its own isolated file system while sharing the same git history. This eliminates file system conflicts between parallel instances.</p>
+      <p class="rationale-src">Source: <a href="https://code.claude.com/docs/en/cli-reference" target="_blank" rel="noopener noreferrer">Claude Code Documentation — CLI Reference&nbsp;↗</a> <span class="sep">·</span> <a href="https://git-scm.com/docs/git-worktree" target="_blank" rel="noopener noreferrer">Git: Worktrees&nbsp;↗</a></p>
+    </div>
+  </article>
+
+  <article class="qcard" id="q-3-6-009">
+    <p class="qmeta"><span class="pill">q-3-6-009</span><span class="pill pill-soft">Domain 3 · Claude Code Configuration &amp; Workflows</span><span class="pill pill-soft">3.6 cicd-integration / worktree-coordination</span></p>
+    <p class="stem">Two Claude Code instances are running in separate git worktrees: Instance A is extracting the payment service (branch: extract/payment) and Instance B is extracting the inventory service (branch: extract/inventory). Both instances need to modify the shared OrderService.java file — Instance A to remove payment logic and Instance B to remove inventory logic. How should the team coordinate this?</p>
+    <ul class="opts">
+      <li class="opt">
+        <span class="opt-letter">A</span>
+        <span class="opt-body"><span class="opt-text">Let both instances modify OrderService.java independently on their branches and resolve the merge conflict when merging to main</span>
+        <span class="opt-why">Allowing both instances to make independent, potentially contradictory modifications to the same file risks complex merge conflicts that are difficult to resolve correctly. Coordinating changes to shared files upfront is safer.</span></span>
+      </li>
+      <li class="opt correct">
+        <span class="opt-letter">B</span>
+        <span class="opt-body"><span class="opt-text">Have Instance A complete and merge first, then Instance B rebases onto the updated main before modifying OrderService.java</span> <span class="tick" aria-label="correct">✓</span>
+        <span class="opt-why">Sequencing modifications to shared files avoids merge conflicts. Instance A completes its changes to OrderService.java and merges. Instance B then rebases onto the updated main, seeing Instance A's changes, and makes its modifications with full awareness of the current state. This is the standard coordination pattern for parallel Claude Code instances modifying shared files.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">C</span>
+        <span class="opt-body"><span class="opt-text">Create a third Claude Code instance dedicated to modifying only shared files, with Instances A and B handling everything else</span>
+        <span class="opt-why">A dedicated shared-file instance adds coordination complexity without clear benefit. It needs to understand both extraction contexts to make correct modifications. Sequential merging with rebasing is simpler and more reliable.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">D</span>
+        <span class="opt-body"><span class="opt-text">Use file locking via git to prevent both instances from modifying OrderService.java simultaneously</span>
+        <span class="opt-why">Git does not have built-in file locking for standard workflows. While Git LFS supports file locking, it is designed for binary files, not source code coordination. Sequential merge-and-rebase is the standard approach for coordinating parallel branches.</span></span>
+      </li>
+    </ul>
+    <div class="rationale">
+      <p class="rationale-label">Rationale</p>
+      <p class="rationale-text">Sequencing modifications to shared files avoids merge conflicts. Instance A completes its changes to OrderService.java and merges. Instance B then rebases onto the updated main, seeing Instance A's changes, and makes its modifications with full awareness of the current state. This is the standard coordination pattern for parallel Claude Code instances modifying shared files.</p>
+      <p class="rationale-src">Source: <a href="https://code.claude.com/docs/en/cli-reference" target="_blank" rel="noopener noreferrer">Claude Code Documentation — CLI Reference&nbsp;↗</a> <span class="sep">·</span> <a href="https://git-scm.com/docs/git-worktree" target="_blank" rel="noopener noreferrer">Git: Worktrees&nbsp;↗</a></p>
+    </div>
+  </article>
+
+  <article class="qcard" id="q-3-6-010">
+    <p class="qmeta"><span class="pill">q-3-6-010</span><span class="pill pill-soft">Domain 3 · Claude Code Configuration &amp; Workflows</span><span class="pill pill-soft">3.6 cicd-integration / worktree-parallel</span></p>
+    <p class="stem">A documentation team needs to simultaneously update API reference docs for three independent microservices after a breaking change. Each update requires reading source code, updating Markdown files, and validating links. A single Claude Code session would exhaust the context window trying to hold all three services' code simultaneously. What is the recommended approach?</p>
+    <ul class="opts">
+      <li class="opt">
+        <span class="opt-letter">A</span>
+        <span class="opt-body"><span class="opt-text">Process the three services sequentially in the same session, running /compact between each service to free context</span>
+        <span class="opt-why">Even with /compact, each service's context (source code, documentation, edits) is substantial. Sequential processing risks context degradation as compaction summaries lose detail from earlier services, and it is slower than parallel processing.</span></span>
+      </li>
+      <li class="opt correct">
+        <span class="opt-letter">B</span>
+        <span class="opt-body"><span class="opt-text">Use git worktree for three branches, each with its own Claude Code session on one service, then merge the results</span> <span class="tick" aria-label="correct">✓</span>
+        <span class="opt-why">git worktree creates separate working directories on different branches, each with its own isolated Claude Code session. Each session has a full context budget dedicated to one service. The three updates run in parallel without interfering with each other, and results are merged via standard git workflows.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">C</span>
+        <span class="opt-body"><span class="opt-text">Create a single skill with context: fork that processes all three services in parallel within one session</span>
+        <span class="opt-why">context: fork isolates a skill's output from the main conversation but does not create multiple parallel execution contexts. A single skill cannot simultaneously process three independent services in parallel.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">D</span>
+        <span class="opt-body"><span class="opt-text">Split the documentation files into smaller chunks and process each chunk in a separate API call using the batch API</span>
+        <span class="opt-why">The batch API is for high-throughput, latency-tolerant workloads — not for interactive Claude Code sessions. Documentation updates require interactive exploration of source code and iterative editing, which the batch API does not support.</span></span>
+      </li>
+    </ul>
+    <div class="rationale">
+      <p class="rationale-label">Rationale</p>
+      <p class="rationale-text">git worktree creates separate working directories on different branches, each with its own isolated Claude Code session. Each session has a full context budget dedicated to one service. The three updates run in parallel without interfering with each other, and results are merged via standard git workflows.</p>
+      <p class="rationale-src">Source: <a href="https://code.claude.com/docs/en/cli-reference" target="_blank" rel="noopener noreferrer">Claude Code Documentation — CLI Reference&nbsp;↗</a> <span class="sep">·</span> <a href="https://git-scm.com/docs/git-worktree" target="_blank" rel="noopener noreferrer">Git: Worktrees&nbsp;↗</a></p>
+    </div>
+  </article>
+  </section>
+
+  <section class="group" id="mcp-protocol">
+    <h2>MCP wire protocol <span class="count">1</span></h2>
+    <p class="group-why">The JSON-RPC 2.0 message format question cites the MCP specification itself.</p>
+    
+  <article class="qcard" id="q-2-4-011">
+    <p class="qmeta"><span class="pill">q-2-4-011</span><span class="pill pill-soft">Domain 2 · Tool Design &amp; MCP Integration</span><span class="pill pill-soft">2.4 mcp-server-integration / mcp-protocol</span></p>
+    <p class="stem">What message format does the Model Context Protocol (MCP) use for communication between clients and servers?</p>
+    <ul class="opts">
+      <li class="opt">
+        <span class="opt-letter">A</span>
+        <span class="opt-body"><span class="opt-text">REST over HTTP with standard GET/POST methods.</span>
+        <span class="opt-why">MCP does not use REST. It uses JSON-RPC 2.0 to encode all messages, regardless of which transport (stdio or Streamable HTTP) carries them.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">B</span>
+        <span class="opt-body"><span class="opt-text">GraphQL over WebSocket for real-time bidirectional queries.</span>
+        <span class="opt-why">MCP does not use GraphQL. It uses JSON-RPC 2.0, a simpler remote-procedure-call format designed for structured tool invocations.</span></span>
+      </li>
+      <li class="opt correct">
+        <span class="opt-letter">C</span>
+        <span class="opt-body"><span class="opt-text">JSON-RPC 2.0 for structured request-response messaging.</span> <span class="tick" aria-label="correct">✓</span>
+        <span class="opt-why">Per the MCP specification, MCP uses JSON-RPC 2.0 to encode messages. JSON-RPC is the message format; the actual transports are stdio (for local servers) and Streamable HTTP (for remote servers). Don't confuse the two — JSON-RPC defines the envelope, the transport defines how bytes move.</span></span>
+      </li>
+      <li class="opt">
+        <span class="opt-letter">D</span>
+        <span class="opt-body"><span class="opt-text">gRPC with Protocol Buffers for high-performance serialisation.</span>
+        <span class="opt-why">MCP does not use gRPC or Protocol Buffers. It uses JSON-RPC 2.0 with JSON serialisation for simplicity and broad compatibility.</span></span>
+      </li>
+    </ul>
+    <div class="rationale">
+      <p class="rationale-label">Rationale</p>
+      <p class="rationale-text">Per the MCP specification, MCP uses JSON-RPC 2.0 to encode messages. JSON-RPC is the message format; the actual transports are stdio (for local servers) and Streamable HTTP (for remote servers). Don't confuse the two — JSON-RPC defines the envelope, the transport defines how bytes move.</p>
+      <p class="rationale-src">Source: <a href="https://modelcontextprotocol.io/docs/concepts/tools" target="_blank" rel="noopener noreferrer">MCP: Tools Specification&nbsp;↗</a> <span class="sep">·</span> <a href="https://modelcontextprotocol.io/specification" target="_blank" rel="noopener noreferrer">MCP: Specification&nbsp;↗</a></p>
+    </div>
+  </article>
+  </section>
+</main>
+<footer><p>Each question keeps its original ID (e.g. <code>q-3-1-011</code>) so it can be matched against the drill site.</p></footer>
+<script>
+function toggleTheme(){var html=document.documentElement;var next=html.getAttribute('data-theme')==='dark'?'light':'dark';html.setAttribute('data-theme',next);try{localStorage.setItem('ccaf-theme',next);}catch(e){}var btn=document.getElementById('themeToggle');if(btn)btn.textContent=next==='dark'?'☀️':'🌙';}
+(function(){var btn=document.getElementById('themeToggle');if(btn)btn.textContent=document.documentElement.getAttribute('data-theme')==='dark'?'☀️':'🌙';})();
+</script>
+  <script src="../assets/js/header-scroll.js"></script>
+</body>
+</html>
