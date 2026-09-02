@@ -122,6 +122,16 @@ details.index summary:hover { color: var(--rust); }
 .index-list .n { flex: none; font: 600 11px/1.6 system-ui, sans-serif; color: var(--rust-dark); min-width: 2.2em; }
 .index-list .tag { flex: none; font: 700 9.5px/1.6 system-ui, sans-serif; letter-spacing: .05em; color: var(--muted); text-transform: uppercase; }
 footer.page-foot { margin-top: 34px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: .85rem; max-width: 70ch; }
+
+.sync-panel { border: 1px solid var(--line); border-radius: 6px; background: var(--white); color: var(--ink); padding: 16px 18px; margin: 26px 0 0; }
+.sync-panel .row-between { display: flex; justify-content: space-between; align-items: center; }
+.sync-panel .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.sync-panel .small { font: 400 13px/1.5 Georgia, serif; color: var(--muted); }
+.sync-panel .small.sys { font: 400 12.5px/1.5 system-ui, sans-serif; color: var(--muted); }
+button.primary { padding: 9px 18px; border-radius: 4px; border: 1px solid var(--rust-deep); background: var(--rust-deep); color: #fffdfa; font: 600 13px/1.4 system-ui, sans-serif; cursor: pointer; }
+button.primary:hover, button.primary:focus-visible { background: var(--rust); border-color: var(--rust); color: #fffdfa; outline: none; }
+button.ghost { padding: 9px 18px; border-radius: 4px; border: 1px solid var(--line); background: var(--white); color: var(--ink); font: 600 13px/1.4 system-ui, sans-serif; cursor: pointer; }
+button.ghost:hover, button.ghost:focus-visible { background: var(--paper-deep); color: var(--ink); outline: none; }
 @media (max-width: 560px) {
   main { padding: 22px 16px 60px; }
   .card { padding: 20px 18px 18px; min-height: 280px; }
@@ -163,16 +173,19 @@ footer.page-foot { margin-top: 34px; padding-top: 14px; border-top: 1px solid va
     <p class="status-line" id="statusLine"></p>
   </div>
 
+  <div class="sync-panel" id="syncPanel"></div>
+
   <details class="index">
     <summary>Card index — browse all questions in this deck</summary>
     <ol class="index-list" id="indexList"></ol>
   </details>
 
   <footer class="page-foot">
-    <p>Progress is saved in this browser (localStorage) per card. Weights shown on the domain chips are the official exam weightings — Domain 1 alone is over a quarter of the score. Pair this page with the <a href="../quizzes/index.html">section quizzes</a> for recall under pressure.</p>
+    <p>Marked cards are saved in this browser and, once you connect a GitHub token below, synced across your devices through the same private Gist as every other progress tracker on this site. Weights shown on the domain chips are the official exam weightings — Domain 1 alone is over a quarter of the score. Pair this page with the <a href="../quizzes/index.html">section quizzes</a> for recall under pressure.</p>
   </footer>
 </main>
 
+<script src="../assets/js/gist-sync.js"></script>
 <script>
 var CARDS = [
 {id:'d1-01',d:1,t:0,q:'What is the only reliable signal for controlling an agentic loop?',a:'<code>stop_reason</code> from the Messages API response — it is deterministic and unambiguous. Never parse natural-language phrases ("task complete"), never check assistant text content, and never use iteration caps as the primary stopping mechanism.'},
@@ -323,12 +336,42 @@ var DOMAINS = [
   {n:5, name:'Context & Reliability', w:'15%'}
 ];
 var TYPE_LABEL = ['Key concept', 'Exam trap'];
-var STORE_KEY = 'ccaf-flashcards-v1';
-var status = {};
-try { status = JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch(e) { status = {}; }
+var STORAGE_KEY = 'ccaf_flashcards_v1';
+var LEGACY_KEY = 'ccaf-flashcards-v1';
+function loadState() {
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      var s = JSON.parse(raw);
+      if (s && typeof s === 'object') { if (!s.status) s.status = {}; return s; }
+    }
+    var legacy = localStorage.getItem(LEGACY_KEY);
+    if (legacy) {
+      var st = JSON.parse(legacy);
+      if (st && typeof st === 'object' && !st.status) return { status: st, _updatedAt: 0 };
+    }
+  } catch(e) {}
+  return { status: {}, _updatedAt: 0 };
+}
+var progress = loadState();
 var state = { domain: 0, type: 'all', reviewOnly: false, shuffled: false, deck: [], pos: 0, flipped: false };
 
-function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(status)); } catch(e) {} }
+var sync = window.GistSync ? window.GistSync.create(STORAGE_KEY, {
+  getState: function(){ return progress; },
+  getUpdatedAt: function(){ return progress._updatedAt || 0; },
+  setState: function(remote){
+    progress = (remote && typeof remote === 'object' && remote.status) ? remote : { status: {}, _updatedAt: 0 };
+    if (!progress.status) progress.status = {};
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); } catch(e) {}
+    renderStats(); rebuild();
+  }
+}) : null;
+
+function save() {
+  progress._updatedAt = Date.now();
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); } catch(e) {}
+  if (sync) sync.schedulePush();
+}
 function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function buildChips() {
@@ -368,7 +411,7 @@ function buildChips() {
   rst.type='button'; rst.className='chip';
   rst.textContent = 'Reset progress';
   rst.onclick = function(){
-    if (confirm('Clear all marked cards and restart progress?')) { status = {}; save(); renderStats(); rebuild(); }
+    if (confirm('Clear all marked cards and restart progress? This also removes them from the synced gist on next push.')) { progress.status = {}; save(); renderStats(); rebuild(); }
   };
   mHost.appendChild(rst);
 }
@@ -385,7 +428,7 @@ function rebuild() {
   var deck = CARDS.filter(function(c){
     if (state.domain && c.d !== state.domain) return false;
     if (state.type !== 'all' && (state.type==='trap') !== !!c.t) return false;
-    if (state.reviewOnly && status[c.id] !== 'review') return false;
+    if (state.reviewOnly && progress.status[c.id] !== 'review') return false;
     return true;
   });
   if (state.shuffled) {
@@ -411,7 +454,7 @@ function renderCard() {
   if (state.pos >= state.deck.length) state.pos = 0;
   var c = state.deck[state.pos];
   var dm = DOMAINS[c.d-1];
-  var st = status[c.id];
+  var st = progress.status[c.id];
   host.innerHTML =
     '<div class="card" id="cardBox" role="button" tabindex="0" aria-label="Flash card, click or press space to flip" onclick="flip()">' +
       '<div class="meta-row">' +
@@ -443,8 +486,8 @@ function markGot(){ setMark('known'); }
 function markAgain(){ setMark('review'); }
 function setMark(v){
   var c = state.deck[state.pos]; if (!c) return;
-  status[c.id] = (status[c.id] === v) ? undefined : v;
-  if (!status[c.id]) delete status[c.id];
+  progress.status[c.id] = (progress.status[c.id] === v) ? undefined : v;
+  if (!progress.status[c.id]) delete progress.status[c.id];
   save(); renderStats();
   if (state.pos + 1 < state.deck.length) { state.pos++; } else { state.pos = 0; }
   state.flipped = false; renderCard();
@@ -455,7 +498,7 @@ function renderStats(){
   var html = '';
   DOMAINS.forEach(function(dm){
     var cards = CARDS.filter(function(c){ return c.d===dm.n; });
-    var known = cards.filter(function(c){ return status[c.id]==='known'; }).length;
+    var known = cards.filter(function(c){ return progress.status[c.id]==='known'; }).length;
     totalKnown += known;
     var pct = cards.length ? Math.round(100*known/cards.length) : 0;
     html += '<div class="dom-row"><span class="lbl">D'+dm.n+' '+esc(dm.name)+'</span>' +
@@ -499,6 +542,7 @@ function toggleTheme(){
   var btn = document.getElementById('themeToggle');
   if (btn) btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
   buildChips(); rebuild();
+  if (sync) { sync.mountUI(document.getElementById('syncPanel')); sync.syncOnLoad(); }
 })();
 </script>
   <script src="../assets/js/header-scroll.js"></script>
